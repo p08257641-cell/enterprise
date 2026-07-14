@@ -1,0 +1,380 @@
+@import "tailwindcss";
+
+/* ─── Typography Tokens ───────────────────────────────────────────────────── */
+@theme {
+  /* Primary UI font — Plus Jakarta Sans */
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Monospace — JetBrains Mono for numbers, codes, IDs */
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, "Courier New", monospace;
+}
+
+/* ─── CSS Custom Properties ───────────────────────────────────────────────── */
+:root {
+  /* Font families */
+  --ff-sans:  "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ff-mono:  "JetBrains Mono", Consolas, "Courier New", monospace;
+
+  /* Type scale — Scaled up slightly for better accessibility and readability */
+  --fs-2xs:   0.8125rem;   /*  13px */
+  --fs-xs:    0.875rem;    /*  14px */
+  --fs-sm:    0.9375rem;   /*  15px */
+  --fs-base:  1rem;        /*  16px — body default */
+  --fs-md:    1.0625rem;   /*  17px */
+  --fs-lg:    1.125rem;    /*  18px */
+  --fs-xl:    1.25rem;     /*  20px */
+  --fs-2xl:   1.5rem;      /*  24px */
+  --fs-3xl:   1.875rem;    /*  30px */
+  --fs-4xl:   2.25rem;     /*  36px */
+
+  /* Font weights */
+  --fw-light:    300;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-extrabold: 800;
+
+  /* Line heights */
+  --lh-tight:   1.2;
+  --lh-snug:    1.375;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.625;
+
+  /* Letter spacing */
+  --ls-tighter: -0.03em;
+  --ls-tight:   -0.01em;
+  --ls-normal:   0em;
+  --ls-wide:     0.01em;
+  --ls-wider:    0.03em;
+  --ls-widest:   0.06em;
+}
+
+/* ─── Global Reset & Base ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--ff-sans);
+  font-size: var(--fs-base);       /* 16px — comfortable, modern spacing */
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  letter-spacing: var(--ls-normal);
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+/* ─── Form Controls ───────────────────────────────────────────────────────── */
+input,
+select,
+textarea,
+button {
+  font-family: var(--ff-sans);
+  font-size: var(--fs-xs);       /* 14px for better readability */
+  font-weight: var(--fw-regular);
+}
+
+/* ─── Table Typography ────────────────────────────────────────────────────── */
+table {
+  font-family: var(--ff-sans);
+  font-size: var(--fs-xs);             /* 13px by default */
+  font-variant-numeric: tabular-nums;  /* Aligned numbers in tables */
+}
+
+th {
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  font-size: var(--fs-2xs);            /* 12px for better readability */
+  color: #64748b;                      /* slate-500 */
+}
+
+td {
+  font-size: var(--fs-xs);             /* 13px for data density */
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-snug);
+  color: #334155;                      /* slate-700 */
+}
+
+/* ─── Monospace: Codes, IDs, Badges, Amounts ─────────────────────────────── */
+.font-mono,
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--ff-mono) !important;
+  font-size: 0.9em;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* Numeric values in tables/cards should always use tabular figures */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ─── Heading Hierarchy ───────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--ff-sans);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+h1 { font-size: var(--fs-2xl); font-weight: var(--fw-bold); }
+h2 { font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+h3 { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+h4 { font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+h5 { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+h6 { font-size: var(--fs-xs); font-weight: var(--fw-medium); }
+
+/* ─── Sidebar Typography ──────────────────────────────────────────────────── */
+/* Group labels */
+.sidebar-group-label {
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+/* Nav items */
+.sidebar-nav-item {
+  font-size: var(--fs-sm);          /* 15px */
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  line-height: var(--lh-snug);
+}
+
+/* Sub-menu items */
+.sidebar-sub-item {
+  font-size: var(--fs-xs);          /* 14px */
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-normal);
+}
+
+/* ─── Card & Panel Text ───────────────────────────────────────────────────── */
+.card-title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.card-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+.stat-value {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tighter);
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+
+.stat-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* ─── Page Content Typography ─────────────────────────────────────────────────── */
+.page-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.page-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+.page-text {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #475569;
+}
+
+.page-text-small {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+/* ─── Consistent Component Sizing ───────────────────────────────────────────── */
+.page-header-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.page-header-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+.section-title {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.data-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: #64748b;
+}
+
+.data-value {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #0f172a;
+}
+
+.data-value-small {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+/* ─── Badge / Pill Typography ─────────────────────────────────────────────── */
+.badge {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  line-height: 1;
+}
+
+/* ─── Button Typography ─────────────────────────────────────────────────────── */
+.btn {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-tight);
+}
+
+.btn-small {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-normal);
+}
+
+/* ─── Avatar Typography ─────────────────────────────────────────────────────── */
+.avatar-text {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+}
+
+.avatar-text-large {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+
+/* ─── Icon Typography ───────────────────────────────────────────────────────── */
+.icon-small {
+  font-size: var(--fs-xs);
+}
+
+.icon-medium {
+  font-size: var(--fs-sm);
+}
+
+.icon-large {
+  font-size: var(--fs-md);
+}
+
+/* ─── Table Cell Typography ─────────────────────────────────────────────────── */
+.table-cell {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+}
+
+.table-cell-semibold {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.table-cell-mono {
+  font-size: var(--fs-xs);
+  font-family: var(--ff-mono);
+  font-weight: var(--fw-regular);
+}
+
+/* ─── Form Label Typography ─────────────────────────────────────────────────── */
+.form-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.form-input {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+}
+
+/* ─── Section Headers ─────────────────────────────────────────────────────── */
+.section-header {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.section-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+  line-height: var(--lh-relaxed);
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ─── Focus Rings ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Selection ───────────────────────────────────────────────────────────── */
+::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+/* ─── Typography Sizing Adjustments ───────────────────────────────────────── */
+/* Override Tailwind tiny arbitrary sizes for better legibility */
+.text-\[8px\]  { font-size: 11px !important; }
+.text-\[9px\]  { font-size: 12px !important; }
+.text-\[10px\] { font-size: 13px !important; }
+.text-\[11px\] { font-size: 14px !important; }
+
+/* Ensure Tailwind default text-xs and text-sm are comfortably readable */
+aside .text-xs  { font-size: 13px !important; }
+aside .text-sm  { font-size: 15px !important; }
+aside .text-\[11px\] { font-size: 14px !important; }

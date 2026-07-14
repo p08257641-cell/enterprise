@@ -1,0 +1,6 @@
+{
+  "name": "Enterprise ERP SaaS",
+  "description": "A multi-tenant, scalable, enterprise-grade ERP SaaS platform featuring HR, CRM, Accounting, Inventory, and Help Desk modules with automation workflows and Gemini AI Co-pilot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
