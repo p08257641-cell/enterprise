@@ -65,10 +65,10 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
   const companyTransactions = bankTransactions.filter(t => t.companyId === selectedCompany.id);
 
   // Calculate cross-module metrics
-  const totalRevenue = companyInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalRevenue = companyInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const totalPayroll = companyPayslips.reduce((sum, p) => sum + p.gross, 0);
   const totalExpenses = companyExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const closedDeals = companyLeads.filter(l => l.stage === 'Closed Won').length;
+  const closedDeals = companyLeads.filter(l => l.status === 'Won').length;
   const conversionRate = companyLeads.length > 0 ? ((closedDeals / companyLeads.length) * 100).toFixed(1) : '0';
   const openTickets = companyTickets.filter(t => t.status !== 'Closed').length;
   const avgTicketResolution = companyTickets.length > 0 ? '2.4 days' : 'N/A';
@@ -87,11 +87,11 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
   })).sort((a, b) => b.headcount - a.headcount);
 
   // Lead pipeline by stage
-  const stages = ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
+  const stages = ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'];
   const pipelineData = stages.map(stage => ({
     stage,
-    count: companyLeads.filter(l => l.stage === stage).length,
-    value: companyLeads.filter(l => l.stage === stage).reduce((sum, l) => sum + l.dealValue, 0),
+    count: companyLeads.filter(l => l.status === stage).length,
+    value: companyLeads.filter(l => l.status === stage).reduce((sum, l) => sum + l.value, 0),
   }));
   const maxPipelineCount = Math.max(...pipelineData.map(p => p.count), 1);
 
@@ -139,7 +139,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="From invoices" trend="+12.5%" trendUp />
             <StatCard label="Workforce" value={companyEmployees.length} icon="bi bi-people" sub="Active employees" trend="+3" trendUp />
-            <StatCard label="Pipeline Value" value={`$${companyLeads.reduce((s, l) => s + l.dealValue, 0).toLocaleString()}`} icon="bi bi-funnel" sub={`${companyLeads.length} leads`} />
+            <StatCard label="Pipeline Value" value={`$${companyLeads.reduce((s, l) => s + l.value, 0).toLocaleString()}`} icon="bi bi-funnel" sub={`${companyLeads.length} leads`} />
             <StatCard label="Open Tickets" value={openTickets} icon="bi bi-headset" sub={avgTicketResolution + ' avg'} />
           </div>
 
@@ -191,7 +191,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                         <span className="text-slate-500">{d.headcount} employees</span>
                       </div>
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-slate-800 rounded-full" style={{ width: `${(d.headcount / companyEmployees.length) * 100}%` }} />
+                        <div className="h-full bg-slate-800 rounded-full" style={{ width: `${companyEmployees.length ? (d.headcount / companyEmployees.length) * 100 : 0}%` }} />
                       </div>
                     </div>
                     <span className="ml-4 text-xs font-semibold text-slate-600 tabular-nums w-20 text-right">${d.payroll.toLocaleString()}</span>
@@ -223,7 +223,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="From all invoices" />
             <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon="bi bi-bullseye" sub={`${closedDeals} deals won`} />
-            <StatCard label="Avg Deal Size" value={`$${companyLeads.length > 0 ? Math.round(companyLeads.reduce((s, l) => s + l.dealValue, 0) / companyLeads.length).toLocaleString() : 0}`} icon="bi bi-cash-coin" sub="Per lead" />
+            <StatCard label="Avg Deal Size" value={`$${companyLeads.length > 0 ? Math.round(companyLeads.reduce((s, l) => s + l.value, 0) / companyLeads.length).toLocaleString() : 0}`} icon="bi bi-cash-coin" sub="Per lead" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
@@ -244,11 +244,11 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                   <tr key={inv.id} className="hover:bg-slate-50/40">
                     <td className="px-4 py-3 text-xs font-mono text-slate-600">{inv.id}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{inv.customerName}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900 tabular-nums">${inv.totalAmount.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-900 tabular-nums">${inv.total.toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                         inv.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' :
-                        inv.status === 'Pending' ? 'bg-amber-50 text-amber-700' :
+                        inv.status === 'Draft' ? 'bg-amber-50 text-amber-700' :
                         'bg-slate-100 text-slate-600'
                       }`}>{inv.status}</span>
                     </td>
@@ -317,7 +317,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                         ticket.status === 'Open' ? 'bg-blue-50 text-blue-700' :
-                        ticket.status === 'Pending' ? 'bg-amber-50 text-amber-700' :
+                        ticket.status === 'In Progress' ? 'bg-amber-50 text-amber-700' :
                         ticket.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700' :
                         'bg-slate-100 text-slate-600'
                       }`}>{ticket.status}</span>
@@ -358,7 +358,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                   <div key={e.category} className="flex items-center gap-3">
                     <span className="text-xs text-slate-500 w-20">{e.category}</span>
                     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${e.color}`} style={{ width: `${(e.amount / (totalPayroll + totalExpenses)) * 100}%` }} />
+                      <div className={`h-full rounded-full ${e.color}`} style={{ width: `${(totalPayroll + totalExpenses) ? (e.amount / (totalPayroll + totalExpenses)) * 100 : 0}%` }} />
                     </div>
                     <span className="text-xs font-semibold text-slate-700 w-20 text-right tabular-nums">${e.amount.toLocaleString()}</span>
                   </div>

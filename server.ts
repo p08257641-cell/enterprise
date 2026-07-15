@@ -7,325 +7,11 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import {
-  INITIAL_COMPANIES,
-  INITIAL_USERS,
-  INITIAL_DEPARTMENTS,
-  INITIAL_BRANCHES,
-  INITIAL_EMPLOYEES,
-  INITIAL_LEADS,
-  INITIAL_GL_ACCOUNTS,
-  INITIAL_INVOICES,
-  INITIAL_INVENTORY,
-  INITIAL_TICKETS,
-  INITIAL_WORKFLOWS,
-  INITIAL_AUDIT_LOGS,
-  INITIAL_POS_CATEGORIES,
-  INITIAL_POS_PRODUCTS,
-  INITIAL_POS_TERMINALS,
-  INITIAL_POS_CUSTOMERS,
-  INITIAL_POS_SHIFTS,
-  INITIAL_POS_SALES,
-  INITIAL_POS_DISCOUNTS,
-  INITIAL_POS_RETURNS,
-  INITIAL_POS_DAILY_REPORTS,
-  INITIAL_JOURNAL_ENTRIES,
-  INITIAL_EXPENSES,
-  INITIAL_FISCAL_PERIODS,
-  INITIAL_OPENING_BALANCES,
-  INITIAL_BILLS,
-  INITIAL_BILL_PAYMENTS,
-  INITIAL_CUSTOMER_PAYMENTS,
-  INITIAL_BANK_ACCOUNTS,
-  INITIAL_BANK_TRANSACTIONS,
-  INITIAL_BANK_RECONCILIATIONS,
-  INITIAL_FIXED_ASSETS,
-  INITIAL_DEPRECIATION_ENTRIES,
-  INITIAL_BUDGETS,
-  INITIAL_COST_CENTERS,
-  INITIAL_CURRENCY_RATES,
-  INITIAL_TAX_CODES,
-  INITIAL_TAX_RETURNS,
-  INITIAL_INTERCOMPANY_TXNS,
-  INITIAL_CONSOLIDATION_RULES,
-  INITIAL_COMPLIANCE_CHECKS,
-  INITIAL_AUDIT_SNAPSHOTS,
-  INITIAL_POLICY_DOCUMENTS,
-  INITIAL_FILING_DEADLINES,
-  INITIAL_CRM_ACTIVITIES,
-  INITIAL_CRM_TASKS,
-  INITIAL_CRM_EMAILS
-} from './src/data/mockData';
 import { Company, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline } from './src/types';
+import * as schema from './db/schema';
+import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb } from './db/repo';
 
-// In-memory data store for live session
-let companies: Company[] = [...INITIAL_COMPANIES];
-let users = [...INITIAL_USERS];
-
-// Shared HR & Payroll state tables (Synchronized across perspectives)
-let leaveRequests: LeaveRequest[] = [
-  {
-    id: 'lr-1',
-    companyId: 'c-acme',
-    employeeId: 'emp-3', // David Vance
-    leaveType: 'Annual',
-    startDate: '2026-07-14',
-    endDate: '2026-07-20',
-    reason: 'Family summer trip to Cape Coast',
-    status: 'Pending',
-    days: 5
-  },
-  {
-    id: 'lr-2',
-    companyId: 'c-acme',
-    employeeId: 'emp-4', // Samantha Brady
-    leaveType: 'Sick',
-    startDate: '2026-07-15',
-    endDate: '2026-07-16',
-    reason: 'Annual dental clean and crown check',
-    status: 'Pending',
-    days: 1
-  },
-  {
-    id: 'lr-3',
-    companyId: 'c-acme',
-    employeeId: 'emp-5', // Michael Chang
-    leaveType: 'Annual',
-    startDate: '2026-07-10',
-    endDate: '2026-07-18',
-    reason: 'Moving to new apartment near factory',
-    status: 'Approved',
-    days: 6
-  }
-];
-
-let attendanceRecords: AttendanceRecord[] = [
-  {
-    id: 'att-1',
-    companyId: 'c-acme',
-    employeeId: 'emp-1',
-    date: '2026-07-13',
-    checkIn: '08:55 AM',
-    status: 'Present',
-    locationType: 'Office'
-  },
-  {
-    id: 'att-2',
-    companyId: 'c-acme',
-    employeeId: 'emp-2',
-    date: '2026-07-13',
-    checkIn: '09:02 AM',
-    status: 'Late',
-    locationType: 'Remote'
-  },
-  {
-    id: 'att-3',
-    companyId: 'c-acme',
-    employeeId: 'emp-3',
-    date: '2026-07-13',
-    checkIn: '08:43 AM',
-    status: 'Present',
-    locationType: 'Office'
-  },
-  {
-    id: 'att-4',
-    companyId: 'c-acme',
-    employeeId: 'emp-4',
-    date: '2026-07-13',
-    checkIn: '09:10 AM',
-    status: 'Present',
-    locationType: 'Office'
-  }
-];
-
-let okrs: OKRRecord[] = [
-  {
-    id: 'okr-1',
-    companyId: 'c-acme',
-    employeeId: 'emp-1',
-    employeeName: 'Alex Mercer',
-    department: 'Operations',
-    title: 'Optimize operations pipeline capacity by 15%',
-    keyResult: 'Increase daily output to 12k units.',
-    progress: 60,
-    status: 'On Track',
-    period: 'Q3 2026'
-  },
-  {
-    id: 'okr-2',
-    companyId: 'c-acme',
-    employeeId: 'emp-2',
-    employeeName: 'Elena Rostova',
-    department: 'Human Resources',
-    title: 'Complete hiring cycle for 3 senior engineers',
-    keyResult: 'Onboard candidates by August 30.',
-    progress: 80,
-    status: 'On Track',
-    period: 'Q3 2026'
-  },
-  {
-    id: 'okr-3',
-    companyId: 'c-acme',
-    employeeId: 'emp-3',
-    employeeName: 'David Vance',
-    department: 'Finance',
-    title: 'Prepare compliance documentation for annual audit',
-    keyResult: 'Submit complete package to external auditors.',
-    progress: 45,
-    status: 'At Risk',
-    period: 'Q3 2026'
-  },
-  {
-    id: 'okr-4',
-    companyId: 'c-acme',
-    employeeId: 'emp-4',
-    employeeName: 'Samantha Brady',
-    department: 'Sales',
-    title: 'Close 5 enterprise customer contracts',
-    keyResult: 'Achieve $250k new ARR.',
-    progress: 30,
-    status: 'At Risk',
-    period: 'Q3 2026'
-  },
-  {
-    id: 'okr-5',
-    companyId: 'c-acme',
-    employeeId: 'emp-5',
-    employeeName: 'Michael Chang',
-    department: 'Logistics & Stock',
-    title: 'Reorganize primary warehouse stock labeling',
-    keyResult: 'Reduce stock locator errors to under 1%.',
-    progress: 95,
-    status: 'Completed',
-    period: 'Q3 2026'
-  }
-];
-
-let payslips: PayslipRecord[] = [
-  {
-    id: 'ps-1',
-    companyId: 'c-acme',
-    employeeId: 'emp-1',
-    employeeName: 'Alex Mercer',
-    department: 'Operations',
-    period: 'June 2026',
-    gross: 12500,
-    deductions: 3125,
-    net: 9375,
-    status: 'Paid',
-    baseSalary: 12500,
-    overtimePay: 0,
-    allowances: 0,
-    tax: 1500,
-    socialSec: 775,
-    medicare: 181,
-    healthIns: 669
-  },
-  {
-    id: 'ps-2',
-    companyId: 'c-acme',
-    employeeId: 'emp-2',
-    employeeName: 'Elena Rostova',
-    department: 'Human Resources',
-    period: 'June 2026',
-    gross: 8200,
-    deductions: 2050,
-    net: 6150,
-    status: 'Paid',
-    baseSalary: 8200,
-    overtimePay: 0,
-    allowances: 0,
-    tax: 984,
-    socialSec: 508,
-    medicare: 119,
-    healthIns: 439
-  },
-  {
-    id: 'ps-3',
-    companyId: 'c-acme',
-    employeeId: 'emp-3',
-    employeeName: 'David Vance',
-    department: 'Finance',
-    period: 'June 2026',
-    gross: 9500,
-    deductions: 2375,
-    net: 7125,
-    status: 'Paid',
-    baseSalary: 9500,
-    overtimePay: 0,
-    allowances: 0,
-    tax: 1140,
-    socialSec: 589,
-    medicare: 138,
-    healthIns: 508
-  }
-];
-let departments = [...INITIAL_DEPARTMENTS];
-let branches = [...INITIAL_BRANCHES];
-let employees: Employee[] = [...INITIAL_EMPLOYEES];
-let leads: CRMLead[] = [...INITIAL_LEADS];
-let crmActivities: CRMActivityLog[] = [...INITIAL_CRM_ACTIVITIES];
-let crmTasks: CRMTask[] = [...INITIAL_CRM_TASKS];
-let crmEmails: CRMEmailLog[] = [...INITIAL_CRM_EMAILS];
-let glAccounts: GLAccount[] = [...INITIAL_GL_ACCOUNTS];
-let invoices: Invoice[] = [...INITIAL_INVOICES];
-let inventory = [...INITIAL_INVENTORY];
-let tickets: SupportTicket[] = [...INITIAL_TICKETS];
-let workflows: ERPWorkflow[] = [...INITIAL_WORKFLOWS];
-let auditLogs: AuditLog[] = [...INITIAL_AUDIT_LOGS];
-let apiKeys: APIKey[] = [
-  {
-    id: 'key-1',
-    companyId: 'c-acme',
-    name: 'Production Webhook CRM Sync',
-    key: 'erp_live_sec_7df98a90c8aef98e',
-    permissions: 'Full Access',
-    createdAt: '2025-06-01T12:00:00Z',
-    expiresAt: '2026-12-31T23:59:59Z'
-  }
-];
-
-// POS Module Data Stores
-let posCategories: POSCategory[] = [...INITIAL_POS_CATEGORIES];
-let posProducts: POSProduct[] = [...INITIAL_POS_PRODUCTS];
-let posTerminals: POSTerminal[] = [...INITIAL_POS_TERMINALS];
-let posCustomers: POSCustomer[] = [...INITIAL_POS_CUSTOMERS];
-let posShifts: POSShift[] = [...INITIAL_POS_SHIFTS];
-let posSales: POSSale[] = [...INITIAL_POS_SALES];
-let posDiscounts: POSDiscount[] = [...INITIAL_POS_DISCOUNTS];
-let posReturns: POSReturn[] = [...INITIAL_POS_RETURNS];
-let posDailyReports: POSDailyReport[] = [...INITIAL_POS_DAILY_REPORTS];
-
-// Core Ledger Data Stores
-let journalEntries: JournalEntry[] = [...INITIAL_JOURNAL_ENTRIES];
-let expenses: Expense[] = [...INITIAL_EXPENSES];
-let fiscalPeriods: FiscalPeriod[] = [...INITIAL_FISCAL_PERIODS];
-let openingBalances: OpeningBalance[] = [...INITIAL_OPENING_BALANCES];
-
-// Tier 2 Data Stores
-let bills: Bill[] = [...INITIAL_BILLS];
-let billPayments: BillPayment[] = [...INITIAL_BILL_PAYMENTS];
-let customerPayments: CustomerPayment[] = [...INITIAL_CUSTOMER_PAYMENTS];
-let bankAccounts: BankAccount[] = [...INITIAL_BANK_ACCOUNTS];
-let bankTransactions: BankTransaction[] = [...INITIAL_BANK_TRANSACTIONS];
-let bankReconciliations: BankReconciliation[] = [...INITIAL_BANK_RECONCILIATIONS];
-let fixedAssets: FixedAsset[] = [...INITIAL_FIXED_ASSETS];
-let depreciationEntries: DepreciationEntry[] = [...INITIAL_DEPRECIATION_ENTRIES];
-let budgets: Budget[] = [...INITIAL_BUDGETS];
-let costCenters: CostCenter[] = [...INITIAL_COST_CENTERS];
-let currencyRates: CurrencyRate[] = [...INITIAL_CURRENCY_RATES];
-
-// Tier 3 Data Stores
-let taxCodes: TaxCode[] = [...INITIAL_TAX_CODES];
-let taxReturns: TaxReturn[] = [...INITIAL_TAX_RETURNS];
-let intercompanyTxns: IntercompanyTransaction[] = [...INITIAL_INTERCOMPANY_TXNS];
-let consolidationRules: ConsolidationRule[] = [...INITIAL_CONSOLIDATION_RULES];
-let complianceChecks: ComplianceCheck[] = [...INITIAL_COMPLIANCE_CHECKS];
-let auditSnapshots: AuditSnapshot[] = [...INITIAL_AUDIT_SNAPSHOTS];
-let policyDocuments: PolicyDocument[] = [...INITIAL_POLICY_DOCUMENTS];
-let filingDeadlines: FilingDeadline[] = [...INITIAL_FILING_DEADLINES];
-
-// Lazy load Gemini AI Client
+// In-memory data store for live session (being migrated to PostgreSQL per-entity)
 let aiInstance: GoogleGenAI | null = null;
 
 function getAIClient(): GoogleGenAI | null {
@@ -359,7 +45,7 @@ function logAudit(companyId: string | undefined, userId: string, userName: strin
     ipAddress: '127.0.0.1',
     timestamp: new Date().toISOString()
   };
-  auditLogs.unshift(newLog);
+  logAuditDb(newLog);
 }
 
 const app = express();
@@ -370,21 +56,11 @@ app.use(express.json());
 // --- ERP API ROUTES ---
 
 // 1. Tenants (Companies)
-app.get('/api/companies', (req, res) => {
-  res.json(companies);
+app.get('/api/companies', async (req, res) => {
+  res.json(await dbAll(schema.companies));
 });
 
-// 1.1 Departments
-app.get('/api/departments', (req, res) => {
-  res.json(departments);
-});
-
-// 1.2 Branches
-app.get('/api/branches', (req, res) => {
-  res.json(branches);
-});
-
-app.post('/api/companies', (req, res) => {
+app.post('/api/companies', async (req, res) => {
   const { name, industry, currency, timezone, language, billingPlan } = req.body;
   const id = `c-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
   const newCompany: Company = {
@@ -402,7 +78,7 @@ app.post('/api/companies', (req, res) => {
     billingStatus: 'Trialing',
     createdAt: new Date().toISOString()
   };
-  companies.push(newCompany);
+  await dbInsert(schema.companies, newCompany);
 
   // Seed initial values for the newly created tenant
   const initialGL: GLAccount[] = [
@@ -411,44 +87,44 @@ app.post('/api/companies', (req, res) => {
     { id: `gl-4010-${id}`, companyId: id, code: '4010', name: 'Services Revenue', type: 'Revenue', balance: 0.00 },
     { id: `gl-5010-${id}`, companyId: id, code: '5010', name: 'Cost of Services', type: 'Expense', balance: 0.00 }
   ];
-  glAccounts.push(...initialGL);
+  await dbInsertMany(schema.glAccounts, initialGL);
 
   logAudit(undefined, 'u-super', 'Sarah Connor', 'CREATE_TENANT', 'Administration', `Created new tenant company: ${name} (${id})`);
   res.status(201).json(newCompany);
 });
 
 // Update tenant active modules/feature packs
-app.post('/api/companies/:id/subscription', (req, res) => {
+app.post('/api/companies/:id/subscription', async (req, res) => {
   const { id } = req.params;
   const { activeModules, premiumFeatures, billingPlan } = req.body;
 
-  const companyIndex = companies.findIndex(c => c.id === id);
-  if (companyIndex === -1) {
+  const company = await dbById(schema.companies, id);
+  if (!company) {
     return res.status(404).json({ error: 'Company not found' });
   }
 
-  companies[companyIndex] = {
-    ...companies[companyIndex],
-    activeModules: activeModules || companies[companyIndex].activeModules,
-    premiumFeatures: premiumFeatures || companies[companyIndex].premiumFeatures,
-    billingPlan: billingPlan || companies[companyIndex].billingPlan
-  };
+  const updated = await dbUpdate(schema.companies, id, {
+    activeModules: activeModules || company.activeModules,
+    premiumFeatures: premiumFeatures || company.premiumFeatures,
+    billingPlan: billingPlan || company.billingPlan
+  });
 
   logAudit(id, 'u-super', 'Sarah Connor', 'UPDATE_SUBSCRIPTION', 'Administration', `Updated modules: [${activeModules?.join(', ')}], features: [${premiumFeatures?.join(', ')}]`);
-  res.json(companies[companyIndex]);
+  res.json(updated);
 });
 
 // 2. Users & Departments
-app.get('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
   const { companyId } = req.query;
+  const all = await dbAll<any>(schema.users);
   if (companyId) {
-    res.json(users.filter(u => u.companyId === companyId || u.companyId === ''));
+    res.json(all.filter((u: any) => u.companyId === companyId || u.companyId === ''));
   } else {
-    res.json(users);
+    res.json(all);
   }
 });
 
-app.post('/api/users/invite', (req, res) => {
+app.post('/api/users/invite', async (req, res) => {
   const { companyId, name, email, role, roles, department, branch } = req.body;
   const newUser = {
     id: `u-${Date.now()}`,
@@ -465,48 +141,51 @@ app.post('/api/users/invite', (req, res) => {
     status: 'Active' as const,
     createdAt: new Date().toISOString()
   };
-  users.push(newUser);
+  await dbInsert(schema.users, newUser);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'INVITE_USER', 'Administration', `Invited user ${name} (${email}) as ${role} with roles: ${roles?.join(', ') || role}`);
   res.status(201).json(newUser);
 });
 
-app.post('/api/users/:id/switch-role', (req, res) => {
+app.post('/api/users/:id/switch-role', async (req, res) => {
   const { id } = req.params;
   const { newRole } = req.body;
-  const userIndex = users.findIndex(u => u.id === id);
-  if (userIndex === -1) {
+  const user = await dbById<any>(schema.users, id);
+  if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
 
   // Verify the user has this role assigned
-  if (!users[userIndex].roles.includes(newRole)) {
+  if (!user.roles.includes(newRole)) {
     return res.status(400).json({ error: 'User does not have this role assigned' });
   }
 
-  const oldRole = users[userIndex].activeRole;
-  users[userIndex].activeRole = newRole;
+  const oldRole = user.activeRole;
+  const updated = await dbUpdate(schema.users, id, { activeRole: newRole });
 
-  logAudit(users[userIndex].companyId, users[userIndex].id, users[userIndex].name, 'ROLE_SWITCH', 'User Management', `Switched active role from ${oldRole} to ${newRole}`);
-  res.json(users[userIndex]);
+  logAudit(user.companyId, user.id, user.name, 'ROLE_SWITCH', 'User Management', `Switched active role from ${oldRole} to ${newRole}`);
+  res.json(updated);
 });
 
-app.get('/api/departments', (req, res) => {
+app.get('/api/departments', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? departments.filter(d => d.companyId === companyId) : departments);
+  const all = await dbAll<any>(schema.departments);
+  res.json(companyId ? all.filter((d: any) => d.companyId === companyId) : all);
 });
 
-app.get('/api/branches', (req, res) => {
+app.get('/api/branches', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? branches.filter(b => b.companyId === companyId) : branches);
+  const all = await dbAll<any>(schema.branches);
+  res.json(companyId ? all.filter((b: any) => b.companyId === companyId) : all);
 });
 
 // 3. HR & Employees
-app.get('/api/employees', (req, res) => {
+app.get('/api/employees', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? employees.filter(e => e.companyId === companyId) : employees);
+  const all = await dbAll<any>(schema.employees);
+  res.json(companyId ? all.filter((e: any) => e.companyId === companyId) : all);
 });
 
-app.post('/api/employees', (req, res) => {
+app.post('/api/employees', async (req, res) => {
   const { companyId, firstName, lastName, email, department, designation, branch, salary } = req.body;
 
   const empId = `emp-${Date.now()}`;
@@ -527,7 +206,7 @@ app.post('/api/employees', (req, res) => {
     salary: Number(salary) || 5000
   };
 
-  employees.push(newEmp);
+  await dbInsert(schema.employees, newEmp);
 
   // AUTOMATION TRIGGER 1: Employee Created Automation Flow
   // 1. Generate local email
@@ -551,51 +230,52 @@ app.post('/api/employees', (req, res) => {
 });
 
 // 3.0.1 Update Employee Status (with cross-module sync)
-app.put('/api/employees/:id', (req, res) => {
-  const idx = employees.findIndex(e => e.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Employee not found' });
+app.put('/api/employees/:id', async (req, res) => {
+  const emp = await dbById<any>(schema.employees, req.params.id);
+  if (!emp) return res.status(404).json({ error: 'Employee not found' });
   
-  const oldStatus = employees[idx].status;
+  const oldStatus = emp.status;
   const newStatus = req.body.status || oldStatus;
   
   // Update employee
-  employees[idx] = { ...employees[idx], ...req.body };
+  const updated = await dbUpdate(schema.employees, emp.id, req.body);
   
   // Cross-module sync: When employee is terminated, unassign from active tasks/leads
   if (newStatus === 'Terminated' && oldStatus !== 'Terminated') {
-    const userId = employees[idx].userId || employees[idx].id;
-    
+    const userId = updated!.userId || updated!.id;
+
     // Unassign from active CRM leads
-    leads.forEach(lead => {
+    const compLeads = await dbByCompany<any>(schema.crmLeads, updated!.companyId);
+    for (const lead of compLeads) {
       if (lead.assignedTo === userId && lead.status !== 'Won' && lead.status !== 'Lost') {
-        lead.assignedTo = undefined;
-        lead.assignedToName = undefined;
+        await dbUpdate(schema.crmLeads, lead.id, { assignedTo: undefined, assignedToName: undefined });
       }
-    });
-    
+    }
+
     // Mark active CRM tasks as cancelled
-    crmTasks.forEach(task => {
+    const compTasks = await dbByCompany<any>(schema.crmTasks, updated!.companyId);
+    for (const task of compTasks) {
       if (task.assignedTo === userId && task.status !== 'Completed') {
-        task.status = 'Cancelled';
+        await dbUpdate(schema.crmTasks, task.id, { status: 'Cancelled' });
       }
-    });
-    
-    logAudit(employees[idx].companyId, userId, `${employees[idx].firstName} ${employees[idx].lastName}`, 'EMPLOYEE_TERMINATED', 'HR', `Employee terminated. Unassigned from active leads and tasks.`);
+    }
+
+    logAudit(updated!.companyId, userId, `${updated!.firstName} ${updated!.lastName}`, 'EMPLOYEE_TERMINATED', 'HR', `Employee terminated. Unassigned from active leads and tasks.`);
   }
   
-  res.json(employees[idx]);
+  res.json(updated);
 });
 
 // 3.1 HR Leaves
-app.get('/api/leaves', (req, res) => {
+app.get('/api/leaves', async (req, res) => {
   const { companyId, employeeId } = req.query;
-  let filtered = leaveRequests;
-  if (companyId) filtered = filtered.filter(l => l.companyId === companyId);
-  if (employeeId) filtered = filtered.filter(l => l.employeeId === employeeId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.leaves);
+  if (companyId) all = all.filter((l: any) => l.companyId === companyId);
+  if (employeeId) all = all.filter((l: any) => l.employeeId === employeeId);
+  res.json(all);
 });
 
-app.post('/api/leaves', (req, res) => {
+app.post('/api/leaves', async (req, res) => {
   const { companyId, employeeId, employeeName, department, leaveType, startDate, endDate, reason, days } = req.body;
   const newLeave: LeaveRequest = {
     id: `lr-${Date.now()}`,
@@ -609,60 +289,63 @@ app.post('/api/leaves', (req, res) => {
     days: Number(days) || 1
   };
 
-  leaveRequests.push(newLeave);
+  await dbInsert(schema.leaves, newLeave);
   logAudit(companyId, employeeId, employeeName, 'LEAVE_REQUEST', 'HR', `Submitted ${leaveType} leave request: ${startDate} to ${endDate}. Reason: ${reason}`);
   res.status(201).json(newLeave);
 });
 
-app.post('/api/leaves/:id/approve', (req, res) => {
+app.post('/api/leaves/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const leave = leaveRequests.find(l => l.id === id);
+  const leave = await dbById<any>(schema.leaves, id);
   if (!leave) return res.status(404).json({ error: 'Leave request not found' });
 
-  leave.status = 'Approved';
-  leave.approvedBy = userName || 'Admin';
+  const updatedLeave = await dbUpdate(schema.leaves, id, {
+    status: 'Approved',
+    approvedBy: userName || 'Admin'
+  });
 
   // Update employee status to 'On Leave'
-  const emp = employees.find(e => e.id === leave.employeeId);
-  if (emp) emp.status = 'On Leave';
+  const emp = await dbById<any>(schema.employees, leave.employeeId);
+  if (emp) await dbUpdate(schema.employees, emp.id, { status: 'On Leave' });
 
   logAudit(leave.companyId, userId, userName, 'LEAVE_APPROVE', 'HR', `Approved ${leave.leaveType} leave request for ${emp ? emp.firstName + ' ' + emp.lastName : 'employee'}.`);
-  res.json(leave);
+  res.json(updatedLeave);
 });
 
-app.post('/api/leaves/:id/decline', (req, res) => {
+app.post('/api/leaves/:id/decline', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const leave = leaveRequests.find(l => l.id === id);
+  const leave = await dbById<any>(schema.leaves, id);
   if (!leave) return res.status(404).json({ error: 'Leave request not found' });
 
-  leave.status = 'Rejected';
+  const updatedLeave = await dbUpdate(schema.leaves, id, { status: 'Rejected' });
 
   // Revert employee status to 'Active'
-  const emp = employees.find(e => e.id === leave.employeeId);
-  if (emp && emp.status === 'On Leave') emp.status = 'Active';
+  const emp = await dbById<any>(schema.employees, leave.employeeId);
+  if (emp && emp.status === 'On Leave') await dbUpdate(schema.employees, emp.id, { status: 'Active' });
 
   logAudit(leave.companyId, userId, userName, 'LEAVE_DECLINE', 'HR', `Declined ${leave.leaveType} leave request for ${emp ? emp.firstName + ' ' + emp.lastName : 'employee'}.`);
-  res.json(leave);
+  res.json(updatedLeave);
 });
 
 // 3.2 HR Attendance
-app.get('/api/attendance', (req, res) => {
+app.get('/api/attendance', async (req, res) => {
   const { companyId } = req.query;
-  let filtered = attendanceRecords;
-  if (companyId) filtered = filtered.filter(a => a.companyId === companyId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.attendance);
+  if (companyId) all = all.filter((a: any) => a.companyId === companyId);
+  res.json(all);
 });
 
-app.post('/api/attendance/clock', (req, res) => {
+app.post('/api/attendance/clock', async (req, res) => {
   const { companyId, employeeId, employeeName, department, action, locationType } = req.body;
   const todayStr = new Date().toISOString().split('T')[0];
   const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
   if (action === 'in') {
     // Check if already clocked in today
-    let record = attendanceRecords.find(a => a.employeeId === employeeId && a.date === todayStr);
+    const all = await dbAll<any>(schema.attendance);
+    let record = all.find((a: any) => a.employeeId === employeeId && a.date === todayStr);
     if (!record) {
       record = {
         id: `att-${Date.now()}`,
@@ -673,17 +356,18 @@ app.post('/api/attendance/clock', (req, res) => {
         status: 'Present',
         locationType: locationType || 'Office'
       };
-      attendanceRecords.push(record);
+      await dbInsert(schema.attendance, record);
       logAudit(companyId, employeeId, employeeName, 'ATTENDANCE_IN', 'HR', `Clocked in today at ${timeStr} via ${locationType}`);
     }
     res.json(record);
   } else {
     // Clock out
-    const record = attendanceRecords.find(a => a.employeeId === employeeId && a.date === todayStr);
+    const all = await dbAll<any>(schema.attendance);
+    const record = all.find((a: any) => a.employeeId === employeeId && a.date === todayStr);
     if (record) {
-      record.checkOut = timeStr;
+      const updated = await dbUpdate(schema.attendance, record.id, { checkOut: timeStr });
       logAudit(companyId, employeeId, employeeName, 'ATTENDANCE_OUT', 'HR', `Clocked out today at ${timeStr}`);
-      res.json(record);
+      res.json(updated);
     } else {
       res.status(400).json({ error: 'No active clock-in session found for today' });
     }
@@ -691,15 +375,15 @@ app.post('/api/attendance/clock', (req, res) => {
 });
 
 // 3.3 HR OKRs
-app.get('/api/okrs', (req, res) => {
+app.get('/api/okrs', async (req, res) => {
   const { companyId, employeeId } = req.query;
-  let filtered = okrs;
-  if (companyId) filtered = filtered.filter(o => o.companyId === companyId);
-  if (employeeId) filtered = filtered.filter(o => o.employeeId === employeeId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.okrs);
+  if (companyId) all = all.filter((o: any) => o.companyId === companyId);
+  if (employeeId) all = all.filter((o: any) => o.employeeId === employeeId);
+  res.json(all);
 });
 
-app.post('/api/okrs', (req, res) => {
+app.post('/api/okrs', async (req, res) => {
   const { companyId, employeeId, employeeName, department, title, keyResult, status, period } = req.body;
   const newOkr: OKRRecord = {
     id: `okr-${Date.now()}`,
@@ -713,46 +397,47 @@ app.post('/api/okrs', (req, res) => {
     status: status || 'On Track',
     period: period || 'Q3 2026'
   };
-  okrs.push(newOkr);
+  await dbInsert(schema.okrs, newOkr);
   logAudit(companyId, 'u-acme-hr', 'Elena Rostova', 'OKR_CREATE', 'HR', `Assigned new OKR to ${employeeName}: "${title}"`);
   res.status(201).json(newOkr);
 });
 
-app.post('/api/okrs/:id/progress', (req, res) => {
+app.post('/api/okrs/:id/progress', async (req, res) => {
   const { id } = req.params;
   const { progress } = req.body;
-  const okr = okrs.find(o => o.id === id);
+  const okr = await dbById<any>(schema.okrs, id);
   if (!okr) return res.status(404).json({ error: 'OKR not found' });
 
-  okr.progress = Number(progress);
-  if (okr.progress >= 100) {
-    okr.status = 'Completed';
-  } else if (okr.progress < 40) {
-    okr.status = 'At Risk';
-  } else {
-    okr.status = 'On Track';
-  }
+  const prog = Number(progress);
+  let status = okr.status;
+  if (prog >= 100) status = 'Completed';
+  else if (prog < 40) status = 'At Risk';
+  else status = 'On Track';
+
+  const updated = await dbUpdate(schema.okrs, id, { progress: prog, status });
 
   logAudit(okr.companyId, okr.employeeId, okr.employeeName, 'OKR_UPDATE', 'HR', `Updated OKR "${okr.title}" progress to ${progress}%`);
-  res.json(okr);
+  res.json(updated);
 });
 
 // 3.4 Payslips & Payroll
-app.get('/api/payslips', (req, res) => {
+app.get('/api/payslips', async (req, res) => {
   const { companyId, employeeId } = req.query;
-  let filtered = payslips;
-  if (companyId) filtered = filtered.filter(p => p.companyId === companyId);
-  if (employeeId) filtered = filtered.filter(p => p.employeeId === employeeId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.payslips);
+  if (companyId) all = all.filter((p: any) => p.companyId === companyId);
+  if (employeeId) all = all.filter((p: any) => p.employeeId === employeeId);
+  res.json(all);
 });
 
-app.post('/api/payroll/run', (req, res) => {
+app.post('/api/payroll/run', async (req, res) => {
   const { companyId, period, structure, userId, userName } = req.body;
-  const compEmployees = employees.filter(e => e.companyId === companyId);
+  const allEmployees = await dbAll<any>(schema.employees);
+  const compEmployees = allEmployees.filter((e: any) => e.companyId === companyId);
 
-  const generatedSlips: PayslipRecord[] = [];
+  const allPayslips = await dbAll<any>(schema.payslips);
+  const generatedSlips: any[] = [];
 
-  compEmployees.forEach(emp => {
+  for (const emp of compEmployees) {
     const baseSalary = emp.salary;
     const overtimePay = Math.round(baseSalary * 0.05); // Simulated overtime
     const allowances = 350;
@@ -766,9 +451,9 @@ app.post('/api/payroll/run', (req, res) => {
     const net = gross - deductions;
 
     // Check if payslip already exists for this period and employee
-    const existingIndex = payslips.findIndex(p => p.employeeId === emp.id && p.period === period);
+    const existingIndex = allPayslips.findIndex((p: any) => p.employeeId === emp.id && p.period === period);
     const slip: PayslipRecord = {
-      id: existingIndex >= 0 ? payslips[existingIndex].id : `ps-${Date.now()}-${emp.id}`,
+      id: existingIndex >= 0 ? allPayslips[existingIndex].id : `ps-${Date.now()}-${emp.id}`,
       companyId,
       employeeId: emp.id,
       employeeName: `${emp.firstName} ${emp.lastName}`,
@@ -788,21 +473,22 @@ app.post('/api/payroll/run', (req, res) => {
     };
 
     if (existingIndex >= 0) {
-      payslips[existingIndex] = slip;
+      await dbUpdate(schema.payslips, allPayslips[existingIndex].id, slip);
     } else {
-      payslips.push(slip);
+      await dbInsert(schema.payslips, slip);
     }
     generatedSlips.push(slip);
-  });
+  }
 
-  logAudit(companyId, userId, userName, 'PAYROLL_RUN', 'Payroll', `Processed monthly payroll for ${period}. Net disbursed: $${generatedSlips.reduce((sum, s) => sum + s.net, 0).toLocaleString()}`);
+  logAudit(companyId, userId, userName, 'PAYROLL_RUN', 'Payroll', `Processed monthly payroll for ${period}. Net disbursed: $${generatedSlips.reduce((sum: number, s: any) => sum + s.net, 0).toLocaleString()}`);
   res.json(generatedSlips);
 });
 
 // 4. CRM Leads
-app.get('/api/leads', (req, res) => {
+app.get('/api/leads', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? leads.filter(l => l.companyId === companyId) : leads);
+  const all = await dbAll<any>(schema.crmLeads);
+  res.json(companyId ? all.filter((l: any) => l.companyId === companyId) : all);
 });
 
 app.post('/api/leads', async (req, res) => {
@@ -851,7 +537,7 @@ app.post('/api/leads', async (req, res) => {
     }
   }
 
-  leads.push(newLead);
+  await dbInsert(schema.crmLeads, newLead);
 
   // AUTOMATION TRIGGER 2: Lead Created CRM automation
   // If Lead value > 50000, trigger specialized high-value alert action!
@@ -869,18 +555,18 @@ app.post('/api/leads', async (req, res) => {
   });
 });
 
-app.post('/api/leads/:id/move', (req, res) => {
+app.post('/api/leads/:id/move', async (req, res) => {
   const { id } = req.params;
   const { status, companyId } = req.body;
-  const leadIndex = leads.findIndex(l => l.id === id);
-  if (leadIndex === -1) {
+  const lead = await dbById<any>(schema.crmLeads, id);
+  if (!lead) {
     return res.status(404).json({ error: 'Lead not found' });
   }
 
-  const oldStatus = leads[leadIndex].status;
-  leads[leadIndex].status = status;
+  const oldStatus = lead.status;
+  await dbUpdate(schema.crmLeads, id, { status });
 
-  logAudit(companyId, 'u-acme-sales', 'Samantha Brady', 'LEAD_STAGE_MOVE', 'CRM', `Moved Lead ${leads[leadIndex].firstName} from ${oldStatus} to ${status}`);
+  logAudit(companyId, 'u-acme-sales', 'Samantha Brady', 'LEAD_STAGE_MOVE', 'CRM', `Moved Lead ${lead.firstName} from ${oldStatus} to ${status}`);
 
   // Deal Won AUTOMATION TRIGGER
   let triggerInvoice = null;
@@ -890,63 +576,71 @@ app.post('/api/leads/:id/move', (req, res) => {
     const invNumber = `INV-2026-0${Math.floor(400 + Math.random() * 599)}`;
     triggerInvoice = {
       id: invId,
-      companyId: leads[leadIndex].companyId,
+      companyId: lead.companyId,
       invoiceNumber: invNumber,
-      customerId: leads[leadIndex].id,
-      customerName: leads[leadIndex].companyName,
+      customerId: lead.id,
+      customerName: lead.companyName,
       issueDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      subtotal: leads[leadIndex].value,
-      tax: leads[leadIndex].value * 0.08,
-      total: leads[leadIndex].value * 1.08,
+      subtotal: lead.value,
+      tax: lead.value * 0.08,
+      total: lead.value * 1.08,
       status: 'Draft' as const
     };
-    invoices.push(triggerInvoice);
-    logAudit(leads[leadIndex].companyId, 'u-acme-finance', 'David Vance', 'INVOICE_AUTO_GENERATE', 'Accounting', `Automated billing trigger: Generated draft invoice ${invNumber} for Won Lead of $${leads[leadIndex].value}`);
+    await dbInsert(schema.invoices, triggerInvoice);
+    logAudit(lead.companyId, 'u-acme-finance', 'David Vance', 'INVOICE_AUTO_GENERATE', 'Accounting', `Automated billing trigger: Generated draft invoice ${invNumber} for Won Lead of $${lead.value}`);
   }
 
+  const updatedLead = await dbById<any>(schema.crmLeads, id);
   res.json({
-    lead: leads[leadIndex],
+    lead: updatedLead,
     invoiceCreated: triggerInvoice
   });
 });
 
-app.patch('/api/leads/:id', (req, res) => {
+app.patch('/api/leads/:id', async (req, res) => {
   const { id } = req.params;
-  const idx = leads.findIndex(l => l.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Lead not found' });
-  leads[idx] = { ...leads[idx], ...req.body };
-  res.json(leads[idx]);
+  const lead = await dbById<any>(schema.crmLeads, id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+  const updated = await dbUpdate(schema.crmLeads, id, req.body);
+  res.json(updated);
 });
 
-app.post('/api/leads/:id/assign', (req, res) => {
+app.post('/api/leads/:id/assign', async (req, res) => {
   const { id } = req.params;
-  const idx = leads.findIndex(l => l.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Lead not found' });
+  const lead = await dbById<any>(schema.crmLeads, id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
   const { assignedTo, assignedToName, department } = req.body;
   
   // Validate assignment against active employees
+  let newAssignedTo = lead.assignedTo;
+  let newAssignedToName = lead.assignedToName;
   if (assignedTo) {
-    const employee = employees.find(e => (e.userId === assignedTo || e.id === assignedTo) && e.status === 'Active');
+    const allEmployees = await dbAll<any>(schema.employees);
+    const employee = allEmployees.find((e: any) => (e.userId === assignedTo || e.id === assignedTo) && e.status === 'Active');
     if (!employee) {
       return res.status(400).json({ error: 'Assigned employee not found or not active in HR' });
     }
     // Use employee data as source of truth
-    leads[idx].assignedTo = employee.userId || employee.id;
-    leads[idx].assignedToName = `${employee.firstName} ${employee.lastName}`;
+    newAssignedTo = employee.userId || employee.id;
+    newAssignedToName = `${employee.firstName} ${employee.lastName}`;
   } else {
-    leads[idx].assignedTo = undefined;
-    leads[idx].assignedToName = undefined;
+    newAssignedTo = undefined;
+    newAssignedToName = undefined;
   }
-  leads[idx].department = department || undefined;
-  logAudit(leads[idx].companyId, assignedTo, assignedToName || 'System', 'ASSIGN_LEAD', 'CRM', `Assigned lead ${leads[idx].firstName} ${leads[idx].lastName} to ${leads[idx].assignedToName}`);
-  res.json(leads[idx]);
+  const updated = await dbUpdate(schema.crmLeads, id, {
+    assignedTo: newAssignedTo,
+    assignedToName: newAssignedToName,
+    department: department || undefined
+  });
+  logAudit(lead.companyId, assignedTo, assignedToName || 'System', 'ASSIGN_LEAD', 'CRM', `Assigned lead ${lead.firstName} ${lead.lastName} to ${newAssignedToName}`);
+  res.json(updated);
 });
 
-app.post('/api/leads/:id/comments', (req, res) => {
+app.post('/api/leads/:id/comments', async (req, res) => {
   const { id } = req.params;
-  const idx = leads.findIndex(l => l.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Lead not found' });
+  const lead = await dbById<any>(schema.crmLeads, id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
   const comment = {
     id: `comment-${Date.now()}`,
     leadId: id,
@@ -956,21 +650,22 @@ app.post('/api/leads/:id/comments', (req, res) => {
     content: req.body.content,
     timestamp: new Date().toISOString()
   };
-  leads[idx].comments = [...(leads[idx].comments || []), comment];
-  logAudit(leads[idx].companyId, req.body.userId, req.body.userName, 'ADD_COMMENT', 'CRM', `Commented on lead ${leads[idx].firstName} ${leads[idx].lastName}`);
-  res.json(leads[idx]);
+  const comments = [...(lead.comments || []), comment];
+  const updated = await dbUpdate(schema.crmLeads, id, { comments });
+  logAudit(lead.companyId, req.body.userId, req.body.userName, 'ADD_COMMENT', 'CRM', `Commented on lead ${lead.firstName} ${lead.lastName}`);
+  res.json(updated);
 });
 
 // CRM Activities
-app.get('/api/crm-activities', (req, res) => {
+app.get('/api/crm-activities', async (req, res) => {
   const { companyId, leadId } = req.query;
-  let result = crmActivities;
-  if (companyId) result = result.filter(a => a.companyId === companyId);
-  if (leadId) result = result.filter(a => a.leadId === leadId);
-  res.json(result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  let all = await dbAll<any>(schema.crmActivities);
+  if (companyId) all = all.filter((a: any) => a.companyId === companyId);
+  if (leadId) all = all.filter((a: any) => a.leadId === leadId);
+  res.json(all.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
 });
 
-app.post('/api/crm-activities', (req, res) => {
+app.post('/api/crm-activities', async (req, res) => {
   const activity: CRMActivityLog = {
     id: `act-${Date.now()}`,
     companyId: req.body.companyId,
@@ -982,28 +677,29 @@ app.post('/api/crm-activities', (req, res) => {
     performedByName: req.body.performedByName,
     createdAt: new Date().toISOString()
   };
-  crmActivities.push(activity);
+  await dbInsert(schema.crmActivities, activity);
   logAudit(req.body.companyId, req.body.performedBy, req.body.performedByName, 'LOG_ACTIVITY', 'CRM', `Logged ${activity.type}: ${activity.subject}`);
   res.status(201).json(activity);
 });
 
 // CRM Tasks
-app.get('/api/crm-tasks', (req, res) => {
+app.get('/api/crm-tasks', async (req, res) => {
   const { companyId, leadId, status } = req.query;
-  let result = crmTasks;
-  if (companyId) result = result.filter(t => t.companyId === companyId);
-  if (leadId) result = result.filter(t => t.leadId === leadId);
-  if (status) result = result.filter(t => t.status === status);
-  res.json(result.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
+  let all = await dbAll<any>(schema.crmTasks);
+  if (companyId) all = all.filter((t: any) => t.companyId === companyId);
+  if (leadId) all = all.filter((t: any) => t.leadId === leadId);
+  if (status) all = all.filter((t: any) => t.status === status);
+  res.json(all.sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
 });
 
-app.post('/api/crm-tasks', (req, res) => {
+app.post('/api/crm-tasks', async (req, res) => {
   let assignedTo = req.body.assignedTo;
   let assignedToName = req.body.assignedToName;
   
   // Validate assignment against active employees
   if (assignedTo) {
-    const employee = employees.find(e => (e.userId === assignedTo || e.id === assignedTo) && e.status === 'Active');
+    const allEmployees = await dbAll<any>(schema.employees);
+    const employee = allEmployees.find((e: any) => (e.userId === assignedTo || e.id === assignedTo) && e.status === 'Active');
     if (!employee) {
       return res.status(400).json({ error: 'Assigned employee not found or not active in HR' });
     }
@@ -1027,32 +723,33 @@ app.post('/api/crm-tasks', (req, res) => {
     dueDate: req.body.dueDate,
     createdAt: new Date().toISOString()
   };
-  crmTasks.push(task);
+  await dbInsert(schema.crmTasks, task);
   logAudit(req.body.companyId, assignedTo, assignedToName, 'CREATE_TASK', 'CRM', `Created task: ${task.title}`);
   res.status(201).json(task);
 });
 
-app.patch('/api/crm-tasks/:id', (req, res) => {
-  const idx = crmTasks.findIndex(t => t.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Task not found' });
-  crmTasks[idx] = { ...crmTasks[idx], ...req.body };
-  if (req.body.status === 'Completed' && !crmTasks[idx].completedAt) {
-    crmTasks[idx].completedAt = new Date().toISOString();
+app.patch('/api/crm-tasks/:id', async (req, res) => {
+  const task = await dbById<any>(schema.crmTasks, req.params.id);
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  const values: any = { ...req.body };
+  if (req.body.status === 'Completed' && !task.completedAt) {
+    values.completedAt = new Date().toISOString();
   }
-  logAudit(crmTasks[idx].companyId, req.body.completedBy || crmTasks[idx].assignedTo, req.body.completedByName || crmTasks[idx].assignedToName, 'UPDATE_TASK', 'CRM', `Updated task: ${crmTasks[idx].title} → ${crmTasks[idx].status}`);
-  res.json(crmTasks[idx]);
+  const updated = await dbUpdate(schema.crmTasks, task.id, values);
+  logAudit(task.companyId, req.body.completedBy || task.assignedTo, req.body.completedByName || task.assignedToName, 'UPDATE_TASK', 'CRM', `Updated task: ${task.title} → ${updated!.status}`);
+  res.json(updated);
 });
 
 // CRM Emails
-app.get('/api/crm-emails', (req, res) => {
+app.get('/api/crm-emails', async (req, res) => {
   const { companyId, leadId } = req.query;
-  let result = crmEmails;
-  if (companyId) result = result.filter(e => e.companyId === companyId);
-  if (leadId) result = result.filter(e => e.leadId === leadId);
-  res.json(result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  let all = await dbAll<any>(schema.crmEmails);
+  if (companyId) all = all.filter((e: any) => e.companyId === companyId);
+  if (leadId) all = all.filter((e: any) => e.leadId === leadId);
+  res.json(all.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
 });
 
-app.post('/api/crm-emails', (req, res) => {
+app.post('/api/crm-emails', async (req, res) => {
   const email: CRMEmailLog = {
     id: `email-${Date.now()}`,
     companyId: req.body.companyId,
@@ -1064,7 +761,7 @@ app.post('/api/crm-emails', (req, res) => {
     sentByName: req.body.sentByName,
     createdAt: new Date().toISOString()
   };
-  crmEmails.push(email);
+  await dbInsert(schema.crmEmails, email);
   // Also log as activity
   const activity: CRMActivityLog = {
     id: `act-${Date.now()}`,
@@ -1077,21 +774,20 @@ app.post('/api/crm-emails', (req, res) => {
     performedByName: email.sentByName,
     createdAt: email.createdAt
   };
-  crmActivities.push(activity);
+  await dbInsert(schema.crmActivities, activity);
   logAudit(req.body.companyId, req.body.sentBy, req.body.sentByName, 'SEND_EMAIL', 'CRM', `Sent email: ${email.subject}`);
   res.status(201).json(email);
 });
 
 // 5. Accounting & Ledger
-app.get('/api/accounting', (req, res) => {
+app.get('/api/accounting', async (req, res) => {
   const { companyId } = req.query;
-  res.json({
-    accounts: companyId ? glAccounts.filter(g => g.companyId === companyId) : glAccounts,
-    invoices: companyId ? invoices.filter(i => i.companyId === companyId) : invoices
-  });
+  const accounts = companyId ? await dbByCompany<any>(schema.glAccounts, companyId as string) : await dbAll<any>(schema.glAccounts);
+  const invoicesAll = companyId ? await dbByCompany<any>(schema.invoices, companyId as string) : await dbAll<any>(schema.invoices);
+  res.json({ accounts, invoices: invoicesAll });
 });
 
-app.post('/api/invoices', (req, res) => {
+app.post('/api/invoices', async (req, res) => {
   const { companyId, customerName, subtotal, tax, dueDate } = req.body;
   const total = Number(subtotal) + Number(tax);
   const invNumber = `INV-2026-0${Math.floor(400 + Math.random() * 599)}`;
@@ -1110,42 +806,44 @@ app.post('/api/invoices', (req, res) => {
     status: 'Sent'
   };
 
-  invoices.push(newInvoice);
+  await dbInsert(schema.invoices, newInvoice);
 
   // Re-calculate General Ledger balances to reflect transaction journalizing
   // Debit Accounts Receivable, Credit Revenue
-  const arAccountIndex = glAccounts.findIndex(a => a.companyId === companyId && a.code === '1200');
-  const revAccountIndex = glAccounts.findIndex(a => a.companyId === companyId && a.code === '4010');
+  const allGL = await dbByCompany<any>(schema.glAccounts, companyId);
+  const ar = allGL.find((a: any) => a.code === '1200');
+  const rev = allGL.find((a: any) => a.code === '4010');
 
-  if (arAccountIndex !== -1) glAccounts[arAccountIndex].balance += total;
-  if (revAccountIndex !== -1) glAccounts[revAccountIndex].balance += Number(subtotal);
+  if (ar) await dbUpdate(schema.glAccounts, ar.id, { balance: Number(ar.balance) + total });
+  if (rev) await dbUpdate(schema.glAccounts, rev.id, { balance: Number(rev.balance) + Number(subtotal) });
 
   logAudit(companyId, 'u-acme-finance', 'David Vance', 'INVOICE_CREATE', 'Accounting', `Dispatched Invoice ${invNumber} of $${total} to ${customerName}. Adjusting general ledger accounts: DR Accounts Receivable, CR Sales Revenue`);
 
   res.status(201).json(newInvoice);
 });
 
-app.post('/api/invoices/:id/pay', (req, res) => {
+app.post('/api/invoices/:id/pay', async (req, res) => {
   const { id } = req.params;
   const { companyId } = req.body;
-  const invIndex = invoices.findIndex(i => i.id === id);
-  if (invIndex === -1) {
+  const inv = await dbById<any>(schema.invoices, id);
+  if (!inv) {
     return res.status(404).json({ error: 'Invoice not found' });
   }
 
-  invoices[invIndex].status = 'Paid';
-  const amount = invoices[invIndex].total;
+  const amount = inv.total;
+  const updatedInv = await dbUpdate(schema.invoices, id, { status: 'Paid' });
 
   // Debit Cash Account, Credit Accounts Receivable
-  const cashAccountIndex = glAccounts.findIndex(a => a.companyId === companyId && a.code === '1010');
-  const arAccountIndex = glAccounts.findIndex(a => a.companyId === companyId && a.code === '1200');
+  const allGL = await dbByCompany<any>(schema.glAccounts, companyId);
+  const cash = allGL.find((a: any) => a.code === '1010');
+  const ar = allGL.find((a: any) => a.code === '1200');
 
-  if (cashAccountIndex !== -1) glAccounts[cashAccountIndex].balance += amount;
-  if (arAccountIndex !== -1) glAccounts[arAccountIndex].balance -= amount;
+  if (cash) await dbUpdate(schema.glAccounts, cash.id, { balance: Number(cash.balance) + Number(amount) });
+  if (ar) await dbUpdate(schema.glAccounts, ar.id, { balance: Number(ar.balance) - Number(amount) });
 
-  logAudit(companyId, 'u-acme-finance', 'David Vance', 'INVOICE_PAY', 'Accounting', `Processed payment for invoice ${invoices[invIndex].invoiceNumber}. DR Cash Operating Account ($${amount}), CR Accounts Receivable`);
+  logAudit(companyId, 'u-acme-finance', 'David Vance', 'INVOICE_PAY', 'Accounting', `Processed payment for invoice ${inv.invoiceNumber}. DR Cash Operating Account ($${amount}), CR Accounts Receivable`);
 
-  res.json(invoices[invIndex]);
+  res.json(updatedInv);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1153,14 +851,16 @@ app.post('/api/invoices/:id/pay', (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // 5.1 GL Account CRUD
-app.get('/api/gl-accounts', (req, res) => {
+app.get('/api/gl-accounts', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? glAccounts.filter(a => a.companyId === companyId) : glAccounts);
+  const all = companyId ? await dbByCompany<any>(schema.glAccounts, companyId as string) : await dbAll<any>(schema.glAccounts);
+  res.json(all);
 });
 
-app.post('/api/gl-accounts', (req, res) => {
+app.post('/api/gl-accounts', async (req, res) => {
   const { companyId, code, name, type } = req.body;
-  const existing = glAccounts.find(a => a.companyId === companyId && a.code === code);
+  const allGL = await dbByCompany<any>(schema.glAccounts, companyId);
+  const existing = allGL.find((a: any) => a.code === code);
   if (existing) {
     return res.status(400).json({ error: 'Account code already exists for this company' });
   }
@@ -1172,42 +872,44 @@ app.post('/api/gl-accounts', (req, res) => {
     type,
     balance: 0
   };
-  glAccounts.push(newAccount);
+  await dbInsert(schema.glAccounts, newAccount);
   logAudit(companyId, 'u-acme-finance', 'David Vance', 'GL_ACCOUNT_CREATE', 'Accounting', `Created new GL account: ${code} - ${name} (${type})`);
   res.status(201).json(newAccount);
 });
 
-app.put('/api/gl-accounts/:id', (req, res) => {
+app.put('/api/gl-accounts/:id', async (req, res) => {
   const { id } = req.params;
   const { name, type } = req.body;
-  const index = glAccounts.findIndex(a => a.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Account not found' });
-  if (name) glAccounts[index].name = name;
-  if (type) glAccounts[index].type = type;
-  logAudit(glAccounts[index].companyId, 'u-acme-finance', 'David Vance', 'GL_ACCOUNT_UPDATE', 'Accounting', `Updated GL account: ${glAccounts[index].code} - ${glAccounts[index].name}`);
-  res.json(glAccounts[index]);
+  const account = await dbById<any>(schema.glAccounts, id);
+  if (!account) return res.status(404).json({ error: 'Account not found' });
+  const values: any = {};
+  if (name) values.name = name;
+  if (type) values.type = type;
+  const updated = await dbUpdate(schema.glAccounts, id, values);
+  logAudit(account.companyId, 'u-acme-finance', 'David Vance', 'GL_ACCOUNT_UPDATE', 'Accounting', `Updated GL account: ${account.code} - ${account.name}`);
+  res.json(updated);
 });
 
-app.delete('/api/gl-accounts/:id', (req, res) => {
+app.delete('/api/gl-accounts/:id', async (req, res) => {
   const { id } = req.params;
-  const index = glAccounts.findIndex(a => a.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Account not found' });
-  const account = glAccounts[index];
-  if (account.balance !== 0) {
+  const account = await dbById<any>(schema.glAccounts, id);
+  if (!account) return res.status(404).json({ error: 'Account not found' });
+  if (Number(account.balance) !== 0) {
     return res.status(400).json({ error: 'Cannot delete account with non-zero balance' });
   }
-  glAccounts.splice(index, 1);
+  await dbDelete(schema.glAccounts, id);
   logAudit(account.companyId, 'u-acme-finance', 'David Vance', 'GL_ACCOUNT_DELETE', 'Accounting', `Deleted GL account: ${account.code} - ${account.name}`);
   res.json({ success: true });
 });
 
 // 5.2 Journal Entries
-app.get('/api/journal-entries', (req, res) => {
+app.get('/api/journal-entries', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? journalEntries.filter(j => j.companyId === companyId) : journalEntries);
+  const all = companyId ? await dbByCompany<any>(schema.journalEntries, companyId as string) : await dbAll<any>(schema.journalEntries);
+  res.json(all);
 });
 
-app.post('/api/journal-entries', (req, res) => {
+app.post('/api/journal-entries', async (req, res) => {
   const { companyId, date, description, reference, lines, createdBy, createdByName } = req.body;
 
   const totalDebit = lines.reduce((sum: number, l: any) => sum + (Number(l.debit) || 0), 0);
@@ -1217,7 +919,8 @@ app.post('/api/journal-entries', (req, res) => {
     return res.status(400).json({ error: 'Debit and credit totals must be equal' });
   }
 
-  const entryNumber = `JE-2026-${String(journalEntries.length + 1).padStart(3, '0')}`;
+  const allJE = await dbByCompany<any>(schema.journalEntries, companyId);
+  const entryNumber = `JE-2026-${String(allJE.length + 1).padStart(3, '0')}`;
   const newEntry: JournalEntry = {
     id: `je-${Date.now()}`,
     companyId,
@@ -1242,74 +945,72 @@ app.post('/api/journal-entries', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  journalEntries.push(newEntry);
+  await dbInsert(schema.journalEntries, newEntry);
   logAudit(companyId, createdBy, createdByName, 'JOURNAL_ENTRY_CREATE', 'Accounting', `Created journal entry ${entryNumber}: ${description}. Total: $${totalDebit}`);
   res.status(201).json(newEntry);
 });
 
-app.post('/api/journal-entries/:id/post', (req, res) => {
+app.post('/api/journal-entries/:id/post', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const entry = journalEntries.find(j => j.id === id);
+  const entry = await dbById<any>(schema.journalEntries, id);
   if (!entry) return res.status(404).json({ error: 'Journal entry not found' });
   if (entry.status !== 'Draft') return res.status(400).json({ error: 'Only draft entries can be posted' });
 
   // Update GL account balances
-  entry.lines.forEach(line => {
-    const accountIndex = glAccounts.findIndex(a => a.id === line.accountId);
-    if (accountIndex !== -1) {
-      glAccounts[accountIndex].balance += line.debit - line.credit;
+  for (const line of entry.lines) {
+    const acc = await dbById<any>(schema.glAccounts, line.accountId);
+    if (acc) {
+      await dbUpdate(schema.glAccounts, line.accountId, { balance: Number(acc.balance) + Number(line.debit) - Number(line.credit) });
     }
-  });
+  }
 
-  entry.status = 'Posted';
-  entry.postedAt = new Date().toISOString();
+  const updated = await dbUpdate(schema.journalEntries, id, { status: 'Posted', postedAt: new Date().toISOString() });
   logAudit(entry.companyId, userId, userName, 'JOURNAL_ENTRY_POST', 'Accounting', `Posted journal entry ${entry.entryNumber}. Total: $${entry.totalDebit}`);
-  res.json(entry);
+  res.json(updated);
 });
 
-app.post('/api/journal-entries/:id/approve', (req, res) => {
+app.post('/api/journal-entries/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const entry = journalEntries.find(j => j.id === id);
+  const entry = await dbById<any>(schema.journalEntries, id);
   if (!entry) return res.status(404).json({ error: 'Journal entry not found' });
   if (entry.status !== 'Posted') return res.status(400).json({ error: 'Only posted entries can be approved' });
 
-  entry.status = 'Approved';
-  entry.approvedBy = userId;
-  entry.approvedByName = userName;
+  const updated = await dbUpdate(schema.journalEntries, id, { status: 'Approved', approvedBy: userId, approvedByName: userName });
   logAudit(entry.companyId, userId, userName, 'JOURNAL_ENTRY_APPROVE', 'Accounting', `Approved journal entry ${entry.entryNumber}`);
-  res.json(entry);
+  res.json(updated);
 });
 
-app.post('/api/journal-entries/:id/void', (req, res) => {
+app.post('/api/journal-entries/:id/void', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const entry = journalEntries.find(j => j.id === id);
+  const entry = await dbById<any>(schema.journalEntries, id);
   if (!entry) return res.status(404).json({ error: 'Journal entry not found' });
 
   // Reverse GL balances if entry was posted or approved
   if (entry.status === 'Posted' || entry.status === 'Approved') {
-    entry.lines.forEach(line => {
-      const accountIndex = glAccounts.findIndex(a => a.id === line.accountId);
-      if (accountIndex !== -1) {
-        glAccounts[accountIndex].balance -= line.debit - line.credit;
+    for (const line of entry.lines) {
+      const acc = await dbById<any>(schema.glAccounts, line.accountId);
+      if (acc) {
+        await dbUpdate(schema.glAccounts, line.accountId, { balance: Number(acc.balance) - (Number(line.debit) - Number(line.credit)) });
       }
-    });
+    }
   }
 
-  entry.status = 'Void';
+  const updated = await dbUpdate(schema.journalEntries, id, { status: 'Void' });
   logAudit(entry.companyId, userId, userName, 'JOURNAL_ENTRY_VOID', 'Accounting', `Voided journal entry ${entry.entryNumber}`);
-  res.json(entry);
+  res.json(updated);
 });
 
 // 5.3 Expenses (rewritten with persistence + GL posting)
-app.get('/api/expenses', (req, res) => {
+app.get('/api/expenses', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? expenses.filter(e => e.companyId === companyId) : expenses);
+  const all = companyId ? await dbByCompany<any>(schema.expenses, companyId as string) : await dbAll<any>(schema.expenses);
+  res.json(all);
 });
 
-app.post('/api/expenses', (req, res) => {
+app.post('/api/expenses', async (req, res) => {
   const { companyId, description, category, department, amount, createdBy } = req.body;
 
   const newExpense: Expense = {
@@ -1325,65 +1026,65 @@ app.post('/api/expenses', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  expenses.push(newExpense);
+  await dbInsert(schema.expenses, newExpense);
   logAudit(companyId, createdBy || 'u-acme-finance', 'David Vance', 'EXPENSE_CREATE', 'Accounting', `Created expense: ${description} of $${amount} in ${category}`);
   res.status(201).json(newExpense);
 });
 
-app.post('/api/expenses/:id/approve', (req, res) => {
+app.post('/api/expenses/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const expIndex = expenses.findIndex(e => e.id === id);
-  if (expIndex === -1) return res.status(404).json({ error: 'Expense not found' });
-
-  expenses[expIndex].status = 'Approved';
+  const expense = await dbById<any>(schema.expenses, id);
+  if (!expense) return res.status(404).json({ error: 'Expense not found' });
 
   // Auto-create journal entry for approved expense
-  const expenseAccountId = glAccounts.find(a => a.companyId === expenses[expIndex].companyId && a.type === 'Expense')?.id || 'gl-5010';
-  const cashAccountId = glAccounts.find(a => a.companyId === expenses[expIndex].companyId && a.code === '1010')?.id || 'gl-1010';
+  const allGL = await dbByCompany<any>(schema.glAccounts, expense.companyId);
+  const expenseAccountId = allGL.find((a: any) => a.type === 'Expense')?.id || 'gl-5010';
+  const cashAccountId = allGL.find((a: any) => a.code === '1010')?.id || 'gl-1010';
 
-  const entryNumber = `JE-2026-${String(journalEntries.length + 1).padStart(3, '0')}`;
+  const allJE = await dbByCompany<any>(schema.journalEntries, expense.companyId);
+  const entryNumber = `JE-2026-${String(allJE.length + 1).padStart(3, '0')}`;
   const newEntry: JournalEntry = {
     id: `je-${Date.now()}`,
-    companyId: expenses[expIndex].companyId,
+    companyId: expense.companyId,
     entryNumber,
-    date: expenses[expIndex].date,
-    description: `Expense: ${expenses[expIndex].description}`,
-    reference: expenses[expIndex].id,
+    date: expense.date,
+    description: `Expense: ${expense.description}`,
+    reference: expense.id,
     lines: [
-      { id: `jl-${Date.now()}-1`, accountId: expenseAccountId, accountCode: '5010', accountName: 'Expense Account', debit: expenses[expIndex].amount, credit: 0, description: expenses[expIndex].description },
-      { id: `jl-${Date.now()}-2`, accountId: cashAccountId, accountCode: '1010', accountName: 'Operating Cash Account', debit: 0, credit: expenses[expIndex].amount, description: 'Cash payment' }
+      { id: `jl-${Date.now()}-1`, accountId: expenseAccountId, accountCode: '5010', accountName: 'Expense Account', debit: expense.amount, credit: 0, description: expense.description },
+      { id: `jl-${Date.now()}-2`, accountId: cashAccountId, accountCode: '1010', accountName: 'Operating Cash Account', debit: 0, credit: expense.amount, description: 'Cash payment' }
     ],
-    totalDebit: expenses[expIndex].amount,
-    totalCredit: expenses[expIndex].amount,
+    totalDebit: expense.amount,
+    totalCredit: expense.amount,
     status: 'Posted',
     createdBy: userId || 'u-acme-finance',
     createdByName: userName || 'David Vance',
     postedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   };
-  journalEntries.push(newEntry);
-  expenses[expIndex].journalEntryId = newEntry.id;
+  await dbInsert(schema.journalEntries, newEntry);
 
   // Update GL balances
-  const expAccIdx = glAccounts.findIndex(a => a.id === expenseAccountId);
-  const cashAccIdx = glAccounts.findIndex(a => a.id === cashAccountId);
-  if (expAccIdx !== -1) glAccounts[expAccIdx].balance += expenses[expIndex].amount;
-  if (cashAccIdx !== -1) glAccounts[cashAccIdx].balance -= expenses[expIndex].amount;
+  const expAcc = allGL.find((a: any) => a.id === expenseAccountId);
+  const cashAcc = allGL.find((a: any) => a.id === cashAccountId);
+  if (expAcc) await dbUpdate(schema.glAccounts, expenseAccountId, { balance: Number(expAcc.balance) + expense.amount });
+  if (cashAcc) await dbUpdate(schema.glAccounts, cashAccountId, { balance: Number(cashAcc.balance) - expense.amount });
 
-  logAudit(expenses[expIndex].companyId, userId, userName, 'EXPENSE_APPROVE', 'Accounting', `Approved expense: ${expenses[expIndex].description}. Auto-posted JE ${entryNumber}`);
-  res.json(expenses[expIndex]);
+  const updated = await dbUpdate(schema.expenses, id, { status: 'Approved', journalEntryId: newEntry.id });
+  logAudit(expense.companyId, userId, userName, 'EXPENSE_APPROVE', 'Accounting', `Approved expense: ${expense.description}. Auto-posted JE ${entryNumber}`);
+  res.json(updated);
 });
 
 // 5.4 Trial Balance
-app.get('/api/trial-balance', (req, res) => {
+app.get('/api/trial-balance', async (req, res) => {
   const { companyId } = req.query;
-  const accounts = companyId ? glAccounts.filter(a => a.companyId === companyId) : glAccounts;
+  const accounts = companyId ? await dbByCompany<any>(schema.glAccounts, companyId as string) : await dbAll<any>(schema.glAccounts);
 
   let totalDebits = 0;
   let totalCredits = 0;
 
-  const trialBalance = accounts.map(acc => {
+  const trialBalance = accounts.map((acc: any) => {
     let debit = 0;
     let credit = 0;
     if (acc.type === 'Asset' || acc.type === 'Expense') {
@@ -1413,12 +1114,13 @@ app.get('/api/trial-balance', (req, res) => {
 });
 
 // 5.5 Fiscal Periods
-app.get('/api/fiscal-periods', (req, res) => {
+app.get('/api/fiscal-periods', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? fiscalPeriods.filter(f => f.companyId === companyId) : fiscalPeriods);
+  const all = companyId ? await dbByCompany<any>(schema.fiscalPeriods, companyId as string) : await dbAll<any>(schema.fiscalPeriods);
+  res.json(all);
 });
 
-app.post('/api/fiscal-periods', (req, res) => {
+app.post('/api/fiscal-periods', async (req, res) => {
   const { companyId, name, startDate, endDate } = req.body;
   const newPeriod: FiscalPeriod = {
     id: `fp-${Date.now()}`,
@@ -1428,41 +1130,40 @@ app.post('/api/fiscal-periods', (req, res) => {
     endDate,
     status: 'Open'
   };
-  fiscalPeriods.push(newPeriod);
+  await dbInsert(schema.fiscalPeriods, newPeriod);
   logAudit(companyId, 'u-acme-finance', 'David Vance', 'FISCAL_PERIOD_CREATE', 'Accounting', `Created fiscal period: ${name}`);
   res.status(201).json(newPeriod);
 });
 
-app.post('/api/fiscal-periods/:id/close', (req, res) => {
+app.post('/api/fiscal-periods/:id/close', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const period = fiscalPeriods.find(f => f.id === id);
+  const period = await dbById<any>(schema.fiscalPeriods, id);
   if (!period) return res.status(404).json({ error: 'Fiscal period not found' });
   if (period.status !== 'Open') return res.status(400).json({ error: 'Only open periods can be closed' });
 
-  period.status = 'Closed';
-  period.closedBy = userId;
-  period.closedAt = new Date().toISOString();
+  const updated = await dbUpdate(schema.fiscalPeriods, id, { status: 'Closed', closedBy: userId, closedAt: new Date().toISOString() });
   logAudit(period.companyId, userId, userName, 'FISCAL_PERIOD_CLOSE', 'Accounting', `Closed fiscal period: ${period.name}`);
-  res.json(period);
+  res.json(updated);
 });
 
 // 5.6 Opening Balances
-app.get('/api/opening-balances', (req, res) => {
+app.get('/api/opening-balances', async (req, res) => {
   const { companyId, periodId } = req.query;
-  let filtered = openingBalances;
-  if (companyId) filtered = filtered.filter(o => o.companyId === companyId);
-  if (periodId) filtered = filtered.filter(o => o.periodId === periodId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.openingBalances);
+  if (companyId) all = all.filter(o => o.companyId === companyId);
+  if (periodId) all = all.filter(o => o.periodId === periodId);
+  res.json(all);
 });
 
-app.post('/api/opening-balances', (req, res) => {
+app.post('/api/opening-balances', async (req, res) => {
   const { companyId, accountId, accountCode, accountName, periodId, debit, credit } = req.body;
 
   // Check if balance already exists for this account and period
-  const existingIndex = openingBalances.findIndex(o => o.companyId === companyId && o.accountId === accountId && o.periodId === periodId);
+  const all = await dbAll<any>(schema.openingBalances);
+  const existing = all.find(o => o.companyId === companyId && o.accountId === accountId && o.periodId === periodId);
   const newBalance: OpeningBalance = {
-    id: existingIndex >= 0 ? openingBalances[existingIndex].id : `ob-${Date.now()}`,
+    id: existing ? existing.id : `ob-${Date.now()}`,
     companyId,
     accountId,
     accountCode,
@@ -1473,10 +1174,10 @@ app.post('/api/opening-balances', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  if (existingIndex >= 0) {
-    openingBalances[existingIndex] = newBalance;
+  if (existing) {
+    await dbUpdate(schema.openingBalances, existing.id, newBalance);
   } else {
-    openingBalances.push(newBalance);
+    await dbInsert(schema.openingBalances, newBalance);
   }
 
   logAudit(companyId, 'u-acme-finance', 'David Vance', 'OPENING_BALANCE_SET', 'Accounting', `Set opening balance for ${accountCode} - ${accountName}: DR $${debit} CR $${credit}`);
@@ -1488,12 +1189,13 @@ app.post('/api/opening-balances', (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // --- Accounts Payable (Bills) ---
-app.get('/api/bills', (req, res) => {
+app.get('/api/bills', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? bills.filter(b => b.companyId === companyId) : bills);
+  const all = companyId ? await dbByCompany<any>(schema.bills, companyId as string) : await dbAll<any>(schema.bills);
+  res.json(all);
 });
 
-app.post('/api/bills', (req, res) => {
+app.post('/api/bills', async (req, res) => {
   const { companyId, vendorName, vendorId, billNumber, invoiceDate, dueDate, description, subtotal, tax, total, createdBy, createdByName } = req.body;
   const newBill: Bill = {
     id: `bill-${Date.now()}`,
@@ -1502,123 +1204,126 @@ app.post('/api/bills', (req, res) => {
     amountPaid: 0, status: 'Pending', createdBy, createdByName,
     createdAt: new Date().toISOString()
   };
-  bills.push(newBill);
+  await dbInsert(schema.bills, newBill);
   logAudit(companyId, createdBy, createdByName, 'CREATE_BILL', 'Accounting', `Created bill ${billNumber} from ${vendorName}: $${total}`);
   res.status(201).json(newBill);
 });
 
-app.post('/api/bills/:id/pay', (req, res) => {
+app.post('/api/bills/:id/pay', async (req, res) => {
   const { id } = req.params;
   const { amount, paymentDate, paymentMethod, reference, bankAccountId, createdBy } = req.body;
-  const idx = bills.findIndex(b => b.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Bill not found' });
-  bills[idx].amountPaid += Number(amount);
-  bills[idx].status = bills[idx].amountPaid >= bills[idx].total ? 'Paid' : 'Partially Paid';
+  const bill = await dbById<any>(schema.bills, id);
+  if (!bill) return res.status(404).json({ error: 'Bill not found' });
+  const amountPaid = Number(bill.amountPaid) + Number(amount);
+  const status = amountPaid >= bill.total ? 'Paid' : 'Partially Paid';
+  const updated = await dbUpdate(schema.bills, id, { amountPaid, status });
   const payment: BillPayment = {
-    id: `bp-${Date.now()}`, companyId: bills[idx].companyId, billId: id,
+    id: `bp-${Date.now()}`, companyId: bill.companyId, billId: id,
     amount: Number(amount), paymentDate, paymentMethod, reference, bankAccountId,
     createdBy, createdAt: new Date().toISOString()
   };
-  billPayments.push(payment);
+  await dbInsert(schema.billPayments, payment);
   // Update bank balance
   if (bankAccountId) {
-    const baIdx = bankAccounts.findIndex(b => b.id === bankAccountId);
-    if (baIdx !== -1) bankAccounts[baIdx].balance -= Number(amount);
+    const ba = await dbById<any>(schema.bankAccounts, bankAccountId);
+    if (ba) await dbUpdate(schema.bankAccounts, bankAccountId, { balance: Number(ba.balance) - Number(amount) });
   }
-  logAudit(bills[idx].companyId, createdBy, 'System', 'PAY_BILL', 'Accounting', `Paid $${amount} on bill ${bills[idx].billNumber}`);
-  res.json(bills[idx]);
+  logAudit(bill.companyId, createdBy, 'System', 'PAY_BILL', 'Accounting', `Paid $${amount} on bill ${bill.billNumber}`);
+  res.json(updated);
 });
 
-app.post('/api/bills/:id/approve', (req, res) => {
+app.post('/api/bills/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = bills.findIndex(b => b.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Bill not found' });
-  bills[idx].status = 'Approved';
-  logAudit(bills[idx].companyId, userId, userName, 'APPROVE_BILL', 'Accounting', `Approved bill ${bills[idx].billNumber}`);
-  res.json(bills[idx]);
+  const bill = await dbById<any>(schema.bills, id);
+  if (!bill) return res.status(404).json({ error: 'Bill not found' });
+  const updated = await dbUpdate(schema.bills, id, { status: 'Approved' });
+  logAudit(bill.companyId, userId, userName, 'APPROVE_BILL', 'Accounting', `Approved bill ${bill.billNumber}`);
+  res.json(updated);
 });
 
 // --- Accounts Receivable (Customer Payments) ---
-app.get('/api/customer-payments', (req, res) => {
+app.get('/api/customer-payments', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? customerPayments.filter(p => p.companyId === companyId) : customerPayments);
+  const all = companyId ? await dbByCompany<any>(schema.customerPayments, companyId as string) : await dbAll<any>(schema.customerPayments);
+  res.json(all);
 });
 
-app.post('/api/customer-payments', (req, res) => {
+app.post('/api/customer-payments', async (req, res) => {
   const { companyId, invoiceId, customerName, amount, paymentDate, paymentMethod, reference, bankAccountId, createdBy } = req.body;
   const payment: CustomerPayment = {
     id: `cp-${Date.now()}`, companyId, invoiceId, customerName,
     amount: Number(amount), paymentDate, paymentMethod, reference, bankAccountId,
     createdBy, createdAt: new Date().toISOString()
   };
-  customerPayments.push(payment);
+  await dbInsert(schema.customerPayments, payment);
   // Update invoice status
-  const invIdx = invoices.findIndex(i => i.id === invoiceId);
-  if (invIdx !== -1) {
-    invoices[invIdx].status = 'Paid';
+  if (invoiceId) {
+    await dbUpdate(schema.invoices, invoiceId, { status: 'Paid' });
   }
   // Update bank balance
   if (bankAccountId) {
-    const baIdx = bankAccounts.findIndex(b => b.id === bankAccountId);
-    if (baIdx !== -1) bankAccounts[baIdx].balance += Number(amount);
+    const ba = await dbById<any>(schema.bankAccounts, bankAccountId);
+    if (ba) await dbUpdate(schema.bankAccounts, bankAccountId, { balance: Number(ba.balance) + Number(amount) });
   }
   logAudit(companyId, createdBy, 'System', 'RECEIVE_PAYMENT', 'Accounting', `Received $${amount} from ${customerName}`);
   res.status(201).json(payment);
 });
 
 // --- Bank Accounts ---
-app.get('/api/bank-accounts', (req, res) => {
+app.get('/api/bank-accounts', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? bankAccounts.filter(b => b.companyId === companyId) : bankAccounts);
+  const all = companyId ? await dbByCompany<any>(schema.bankAccounts, companyId as string) : await dbAll<any>(schema.bankAccounts);
+  res.json(all);
 });
 
-app.post('/api/bank-accounts', (req, res) => {
+app.post('/api/bank-accounts', async (req, res) => {
   const { companyId, name, bankName, accountNumber, accountType, glAccountId } = req.body;
   const newAccount: BankAccount = {
     id: `ba-${Date.now()}`, companyId, name, bankName, accountNumber, accountType, glAccountId,
     balance: 0, isActive: true, createdAt: new Date().toISOString()
   };
-  bankAccounts.push(newAccount);
+  await dbInsert(schema.bankAccounts, newAccount);
   logAudit(companyId, 'u-acme-finance', 'David Vance', 'CREATE_BANK_ACCOUNT', 'Accounting', `Created bank account ${name}`);
   res.status(201).json(newAccount);
 });
 
 // --- Bank Transactions ---
-app.get('/api/bank-transactions', (req, res) => {
+app.get('/api/bank-transactions', async (req, res) => {
   const { companyId, bankAccountId } = req.query;
-  let filtered = bankTransactions;
-  if (companyId) filtered = filtered.filter(t => t.companyId === companyId);
-  if (bankAccountId) filtered = filtered.filter(t => t.bankAccountId === bankAccountId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.bankTransactions);
+  if (companyId) all = all.filter(t => t.companyId === companyId);
+  if (bankAccountId) all = all.filter(t => t.bankAccountId === bankAccountId);
+  res.json(all);
 });
 
-app.post('/api/bank-transactions', (req, res) => {
+app.post('/api/bank-transactions', async (req, res) => {
   const { companyId, bankAccountId, date, description, type, amount, reference, createdBy } = req.body;
   const tx: BankTransaction = {
     id: `btx-${Date.now()}`, companyId, bankAccountId, date, description, type,
     amount: Number(amount), reconciled: false, reference,
     createdAt: new Date().toISOString()
   };
-  bankTransactions.push(tx);
+  await dbInsert(schema.bankTransactions, tx);
   // Update bank balance
-  const baIdx = bankAccounts.findIndex(b => b.id === bankAccountId);
-  if (baIdx !== -1) {
-    bankAccounts[baIdx].balance += type === 'Credit' ? Number(amount) : -Number(amount);
+  const ba = await dbById<any>(schema.bankAccounts, bankAccountId);
+  if (ba) {
+    await dbUpdate(schema.bankAccounts, bankAccountId, { balance: Number(ba.balance) + (type === 'Credit' ? Number(amount) : -Number(amount)) });
   }
   logAudit(companyId, createdBy, 'System', 'BANK_TRANSACTION', 'Accounting', `${type} $${amount}: ${description}`);
   res.status(201).json(tx);
 });
 
 // --- Bank Reconciliation ---
-app.get('/api/bank-reconciliations', (req, res) => {
+app.get('/api/bank-reconciliations', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? bankReconciliations.filter(r => r.companyId === companyId) : bankReconciliations);
+  const all = companyId ? await dbByCompany<any>(schema.bankReconciliations, companyId as string) : await dbAll<any>(schema.bankReconciliations);
+  res.json(all);
 });
 
-app.post('/api/bank-reconciliations', (req, res) => {
+app.post('/api/bank-reconciliations', async (req, res) => {
   const { companyId, bankAccountId, periodStartDate, periodEndDate, statementBalance, reconciledTransactionIds, completedBy, completedByName } = req.body;
-  const ba = bankAccounts.find(b => b.id === bankAccountId);
+  const ba = await dbById<any>(schema.bankAccounts, bankAccountId);
   const bookBalance = ba ? ba.balance : 0;
   const newRec: BankReconciliation = {
     id: `br-${Date.now()}`, companyId, bankAccountId, periodStartDate, periodEndDate,
@@ -1629,26 +1334,26 @@ app.post('/api/bank-reconciliations', (req, res) => {
     completedBy, completedByName,
     completedAt: new Date().toISOString(), createdAt: new Date().toISOString()
   };
-  bankReconciliations.push(newRec);
+  await dbInsert(schema.bankReconciliations, newRec);
   // Mark transactions as reconciled
-  (reconciledTransactionIds || []).forEach((txId: string) => {
-    const txIdx = bankTransactions.findIndex(t => t.id === txId);
-    if (txIdx !== -1) {
-      bankTransactions[txIdx].reconciled = true;
-      bankTransactions[txIdx].reconciledDate = periodEndDate;
+  for (const txId of (reconciledTransactionIds || [])) {
+    const tx = await dbById<any>(schema.bankTransactions, txId);
+    if (tx) {
+      await dbUpdate(schema.bankTransactions, txId, { reconciled: true, reconciledDate: periodEndDate });
     }
-  });
+  }
   logAudit(companyId, completedBy, completedByName, 'BANK_RECONCILIATION', 'Accounting', `Reconciled ${bankAccountId} for period ending ${periodEndDate}`);
   res.status(201).json(newRec);
 });
 
 // --- Fixed Assets ---
-app.get('/api/fixed-assets', (req, res) => {
+app.get('/api/fixed-assets', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? fixedAssets.filter(a => a.companyId === companyId) : fixedAssets);
+  const all = companyId ? await dbByCompany<any>(schema.fixedAssets, companyId as string) : await dbAll<any>(schema.fixedAssets);
+  res.json(all);
 });
 
-app.post('/api/fixed-assets', (req, res) => {
+app.post('/api/fixed-assets', async (req, res) => {
   const { companyId, assetCode, name, description, category, purchaseDate, purchasePrice, salvageValue, usefulLifeYears, depreciationMethod, location, createdBy } = req.body;
   const newAsset: FixedAsset = {
     id: `fa-${Date.now()}`, companyId, assetCode, name, description, category, purchaseDate,
@@ -1657,77 +1362,76 @@ app.post('/api/fixed-assets', (req, res) => {
     currentBookValue: Number(purchasePrice), location, status: 'Active',
     createdAt: new Date().toISOString()
   };
-  fixedAssets.push(newAsset);
+  await dbInsert(schema.fixedAssets, newAsset);
   logAudit(companyId, createdBy, 'System', 'CREATE_FIXED_ASSET', 'Accounting', `Registered asset ${assetCode}: ${name}`);
   res.status(201).json(newAsset);
 });
 
-app.post('/api/fixed-assets/:id/dispose', (req, res) => {
+app.post('/api/fixed-assets/:id/dispose', async (req, res) => {
   const { id } = req.params;
   const { disposalPrice, disposalDate, userId, userName } = req.body;
-  const idx = fixedAssets.findIndex(a => a.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Asset not found' });
-  fixedAssets[idx].status = 'Disposed';
-  fixedAssets[idx].disposalDate = disposalDate;
-  fixedAssets[idx].disposalPrice = Number(disposalPrice);
-  logAudit(fixedAssets[idx].companyId, userId, userName, 'DISPOSE_ASSET', 'Accounting', `Disposed asset ${fixedAssets[idx].assetCode}: ${fixedAssets[idx].name}`);
-  res.json(fixedAssets[idx]);
+  const asset = await dbById<any>(schema.fixedAssets, id);
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+  const updated = await dbUpdate(schema.fixedAssets, id, { status: 'Disposed', disposalDate, disposalPrice: Number(disposalPrice) });
+  logAudit(asset.companyId, userId, userName, 'DISPOSE_ASSET', 'Accounting', `Disposed asset ${asset.assetCode}: ${asset.name}`);
+  res.json(updated);
 });
 
 // --- Depreciation Entries ---
-app.get('/api/depreciation-entries', (req, res) => {
+app.get('/api/depreciation-entries', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? depreciationEntries.filter(d => d.companyId === companyId) : depreciationEntries);
+  const all = companyId ? await dbByCompany<any>(schema.depreciationEntries, companyId as string) : await dbAll<any>(schema.depreciationEntries);
+  res.json(all);
 });
 
-app.post('/api/depreciation-entries/run', (req, res) => {
+app.post('/api/depreciation-entries/run', async (req, res) => {
   const { companyId, period, createdBy } = req.body;
-  const activeAssets = fixedAssets.filter(a => a.companyId === companyId && a.status === 'Active');
+  const allAssets = await dbByCompany<any>(schema.fixedAssets, companyId);
+  const activeAssets = allAssets.filter((a: any) => a.status === 'Active');
   const newEntries: DepreciationEntry[] = [];
-  activeAssets.forEach(asset => {
+  for (const asset of activeAssets) {
     const annualDep = (asset.purchasePrice - asset.salvageValue) / asset.usefulLifeYears;
     const monthlyDep = Math.round(annualDep / 12 * 100) / 100;
     const entry: DepreciationEntry = {
       id: `de-${Date.now()}-${asset.id}`, companyId, assetId: asset.id,
       assetCode: asset.assetCode, assetName: asset.name, period,
       depreciationAmount: monthlyDep,
-      accumulatedDepreciation: asset.accumulatedDepreciation + monthlyDep,
-      bookValue: asset.currentBookValue - monthlyDep,
+      accumulatedDepreciation: Number(asset.accumulatedDepreciation) + monthlyDep,
+      bookValue: Number(asset.currentBookValue) - monthlyDep,
       status: 'Draft', createdAt: new Date().toISOString()
     };
-    depreciationEntries.push(entry);
+    await dbInsert(schema.depreciationEntries, entry);
     newEntries.push(entry);
     // Update asset
-    const aIdx = fixedAssets.findIndex(a => a.id === asset.id);
-    if (aIdx !== -1) {
-      fixedAssets[aIdx].accumulatedDepreciation += monthlyDep;
-      fixedAssets[aIdx].currentBookValue -= monthlyDep;
-      if (fixedAssets[aIdx].currentBookValue <= fixedAssets[aIdx].salvageValue) {
-        fixedAssets[aIdx].status = 'Fully Depreciated';
-      }
-    }
-  });
+    const status = (Number(asset.currentBookValue) - monthlyDep) <= Number(asset.salvageValue) ? 'Fully Depreciated' : 'Active';
+    await dbUpdate(schema.fixedAssets, asset.id, {
+      accumulatedDepreciation: Number(asset.accumulatedDepreciation) + monthlyDep,
+      currentBookValue: Number(asset.currentBookValue) - monthlyDep,
+      status
+    });
+  }
   logAudit(companyId, createdBy, 'System', 'RUN_DEPRECIATION', 'Accounting', `Ran depreciation for ${activeAssets.length} assets - ${period}`);
   res.status(201).json(newEntries);
 });
 
-app.post('/api/depreciation-entries/:id/post', (req, res) => {
+app.post('/api/depreciation-entries/:id/post', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = depreciationEntries.findIndex(d => d.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Depreciation entry not found' });
-  depreciationEntries[idx].status = 'Posted';
-  logAudit(depreciationEntries[idx].companyId, userId, userName, 'POST_DEPRECIATION', 'Accounting', `Posted depreciation for ${depreciationEntries[idx].assetCode}`);
-  res.json(depreciationEntries[idx]);
+  const entry = await dbById<any>(schema.depreciationEntries, id);
+  if (!entry) return res.status(404).json({ error: 'Depreciation entry not found' });
+  const updated = await dbUpdate(schema.depreciationEntries, id, { status: 'Posted' });
+  logAudit(entry.companyId, userId, userName, 'POST_DEPRECIATION', 'Accounting', `Posted depreciation for ${entry.assetCode}`);
+  res.json(updated);
 });
 
 // --- Budgets ---
-app.get('/api/budgets', (req, res) => {
+app.get('/api/budgets', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? budgets.filter(b => b.companyId === companyId) : budgets);
+  const all = companyId ? await dbByCompany<any>(schema.budgets, companyId as string) : await dbAll<any>(schema.budgets);
+  res.json(all);
 });
 
-app.post('/api/budgets', (req, res) => {
+app.post('/api/budgets', async (req, res) => {
   const { companyId, name, fiscalYear, glAccountId, accountCode, accountName, budgetAmount, period, createdBy } = req.body;
   const newBudget: Budget = {
     id: `bud-${Date.now()}`, companyId, name, fiscalYear, glAccountId, accountCode, accountName,
@@ -1735,61 +1439,63 @@ app.post('/api/budgets', (req, res) => {
     variancePercent: 100, period, status: 'Draft', createdBy,
     createdAt: new Date().toISOString()
   };
-  budgets.push(newBudget);
+  await dbInsert(schema.budgets, newBudget);
   logAudit(companyId, createdBy, 'System', 'CREATE_BUDGET', 'Accounting', `Created budget ${name}: $${budgetAmount}`);
   res.status(201).json(newBudget);
 });
 
-app.post('/api/budgets/:id/approve', (req, res) => {
+app.post('/api/budgets/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = budgets.findIndex(b => b.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Budget not found' });
-  budgets[idx].status = 'Approved';
-  budgets[idx].status = 'Active';
-  logAudit(budgets[idx].companyId, userId, userName, 'APPROVE_BUDGET', 'Accounting', `Approved budget ${budgets[idx].name}`);
-  res.json(budgets[idx]);
+  const budget = await dbById<any>(schema.budgets, id);
+  if (!budget) return res.status(404).json({ error: 'Budget not found' });
+  const updated = await dbUpdate(schema.budgets, id, { status: 'Active' });
+  logAudit(budget.companyId, userId, userName, 'APPROVE_BUDGET', 'Accounting', `Approved budget ${budget.name}`);
+  res.json(updated);
 });
 
 // --- Cost Centers ---
-app.get('/api/cost-centers', (req, res) => {
+app.get('/api/cost-centers', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? costCenters.filter(c => c.companyId === companyId) : costCenters);
+  const all = companyId ? await dbByCompany<any>(schema.costCenters, companyId as string) : await dbAll<any>(schema.costCenters);
+  res.json(all);
 });
 
-app.post('/api/cost-centers', (req, res) => {
+app.post('/api/cost-centers', async (req, res) => {
   const { companyId, code, name, departmentId, departmentName, managerName, budget, createdBy } = req.body;
   const newCC: CostCenter = {
     id: `cc-${Date.now()}`, companyId, code, name, departmentId, departmentName, managerName,
     budget: Number(budget), actualSpend: 0, status: 'Active',
     createdAt: new Date().toISOString()
   };
-  costCenters.push(newCC);
+  await dbInsert(schema.costCenters, newCC);
   logAudit(companyId, createdBy, 'System', 'CREATE_COST_CENTER', 'Accounting', `Created cost center ${code}: ${name}`);
   res.status(201).json(newCC);
 });
 
 // --- Multi-Currency ---
-app.get('/api/currency-rates', (req, res) => {
+app.get('/api/currency-rates', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? currencyRates.filter(r => r.companyId === companyId) : currencyRates);
+  const all = companyId ? await dbByCompany<any>(schema.currencyRates, companyId as string) : await dbAll<any>(schema.currencyRates);
+  res.json(all);
 });
 
-app.post('/api/currency-rates', (req, res) => {
+app.post('/api/currency-rates', async (req, res) => {
   const { companyId, baseCurrency, targetCurrency, rate, source, createdBy } = req.body;
   const newRate: CurrencyRate = {
     id: `cr-${Date.now()}`, companyId, baseCurrency, targetCurrency,
     rate: Number(rate), effectiveDate: new Date().toISOString().split('T')[0],
     source, createdAt: new Date().toISOString()
   };
-  currencyRates.push(newRate);
+  await dbInsert(schema.currencyRates, newRate);
   logAudit(companyId, createdBy, 'System', 'UPDATE_CURRENCY_RATE', 'Accounting', `Updated ${baseCurrency}/${targetCurrency} rate: ${rate}`);
   res.status(201).json(newRate);
 });
 
-app.post('/api/currency-rates/convert', (req, res) => {
+app.post('/api/currency-rates/convert', async (req, res) => {
   const { companyId, amount, fromCurrency, toCurrency } = req.body;
-  const rate = currencyRates.find(r => r.companyId === companyId && r.baseCurrency === fromCurrency && r.targetCurrency === toCurrency);
+  const all = await dbByCompany<any>(schema.currencyRates, companyId);
+  const rate = all.find((r: any) => r.baseCurrency === fromCurrency && r.targetCurrency === toCurrency);
   if (!rate) return res.status(404).json({ error: 'Exchange rate not found' });
   res.json({ amount: Number(amount), fromCurrency, toCurrency, rate: rate.rate, convertedAmount: Math.round(Number(amount) * rate.rate * 100) / 100 });
 });
@@ -1799,241 +1505,248 @@ app.post('/api/currency-rates/convert', (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 // --- Tax Codes ---
-app.get('/api/tax-codes', (req, res) => {
+app.get('/api/tax-codes', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? taxCodes.filter(t => t.companyId === companyId) : taxCodes);
+  const all = companyId ? await dbByCompany<any>(schema.taxCodes, companyId as string) : await dbAll<any>(schema.taxCodes);
+  res.json(all);
 });
 
-app.post('/api/tax-codes', (req, res) => {
+app.post('/api/tax-codes', async (req, res) => {
   const { companyId, code, name, rate, type, glAccountId, createdBy } = req.body;
   const newCode: TaxCode = {
     id: `tc-${Date.now()}`, companyId, code, name, rate: Number(rate), type, glAccountId,
     isActive: true, createdAt: new Date().toISOString()
   };
-  taxCodes.push(newCode);
+  await dbInsert(schema.taxCodes, newCode);
   logAudit(companyId, createdBy, 'System', 'CREATE_TAX_CODE', 'Accounting', `Created tax code ${code}: ${name} (${rate}%)`);
   res.status(201).json(newCode);
 });
 
 // --- Tax Returns ---
-app.get('/api/tax-returns', (req, res) => {
+app.get('/api/tax-returns', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? taxReturns.filter(t => t.companyId === companyId) : taxReturns);
+  const all = companyId ? await dbByCompany<any>(schema.taxReturns, companyId as string) : await dbAll<any>(schema.taxReturns);
+  res.json(all);
 });
 
-app.post('/api/tax-returns', (req, res) => {
+app.post('/api/tax-returns', async (req, res) => {
   const { companyId, period, taxCodeId, taxCodeName, taxableAmount, taxAmount, dueDate, createdBy } = req.body;
   const newReturn: TaxReturn = {
     id: `tr-${Date.now()}`, companyId, period, taxCodeId, taxCodeName,
     taxableAmount: Number(taxableAmount), taxAmount: Number(taxAmount),
     status: 'Draft', dueDate, createdBy, createdAt: new Date().toISOString()
   };
-  taxReturns.push(newReturn);
+  await dbInsert(schema.taxReturns, newReturn);
   logAudit(companyId, createdBy, 'System', 'CREATE_TAX_RETURN', 'Accounting', `Created tax return for ${period}: $${taxAmount}`);
   res.status(201).json(newReturn);
 });
 
-app.post('/api/tax-returns/:id/file', (req, res) => {
+app.post('/api/tax-returns/:id/file', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = taxReturns.findIndex(t => t.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Tax return not found' });
-  taxReturns[idx].status = 'Filed';
-  taxReturns[idx].filedDate = new Date().toISOString().split('T')[0];
-  logAudit(taxReturns[idx].companyId, userId, userName, 'FILE_TAX_RETURN', 'Accounting', `Filed tax return ${taxReturns[idx].period}`);
-  res.json(taxReturns[idx]);
+  const ret = await dbById<any>(schema.taxReturns, id);
+  if (!ret) return res.status(404).json({ error: 'Tax return not found' });
+  const updated = await dbUpdate(schema.taxReturns, id, { status: 'Filed', filedDate: new Date().toISOString().split('T')[0] });
+  logAudit(ret.companyId, userId, userName, 'FILE_TAX_RETURN', 'Accounting', `Filed tax return ${ret.period}`);
+  res.json(updated);
 });
 
 // --- Intercompany Transactions ---
-app.get('/api/intercompany-transactions', (req, res) => {
+app.get('/api/intercompany-transactions', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? intercompanyTxns.filter(t => t.companyId === companyId || t.fromCompanyId === companyId || t.toCompanyId === companyId) : intercompanyTxns);
+  const all = await dbAll<any>(schema.intercompanyTxns);
+  res.json(companyId ? all.filter((t: any) => t.companyId === companyId || t.fromCompanyId === companyId || t.toCompanyId === companyId) : all);
 });
 
-app.post('/api/intercompany-transactions', (req, res) => {
+app.post('/api/intercompany-transactions', async (req, res) => {
   const { companyId, fromCompanyId, fromCompanyName, toCompanyId, toCompanyName, type, amount, description, createdBy } = req.body;
   const newTx: IntercompanyTransaction = {
     id: `ic-${Date.now()}`, companyId, fromCompanyId, fromCompanyName, toCompanyId, toCompanyName,
     type, amount: Number(amount), description, status: 'Pending',
     createdBy, createdAt: new Date().toISOString()
   };
-  intercompanyTxns.push(newTx);
+  await dbInsert(schema.intercompanyTxns, newTx);
   logAudit(companyId, createdBy, 'System', 'CREATE_INTERCOMPANY', 'Accounting', `Created intercompany ${type}: $${amount} from ${fromCompanyName} to ${toCompanyName}`);
   res.status(201).json(newTx);
 });
 
-app.post('/api/intercompany-transactions/:id/approve', (req, res) => {
+app.post('/api/intercompany-transactions/:id/approve', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = intercompanyTxns.findIndex(t => t.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Transaction not found' });
-  intercompanyTxns[idx].status = 'Approved';
-  logAudit(intercompanyTxns[idx].companyId, userId, userName, 'APPROVE_INTERCOMPANY', 'Accounting', `Approved intercompany transaction ${id}`);
-  res.json(intercompanyTxns[idx]);
+  const tx = await dbById<any>(schema.intercompanyTxns, id);
+  if (!tx) return res.status(404).json({ error: 'Transaction not found' });
+  const updated = await dbUpdate(schema.intercompanyTxns, id, { status: 'Approved' });
+  logAudit(tx.companyId, userId, userName, 'APPROVE_INTERCOMPANY', 'Accounting', `Approved intercompany transaction ${id}`);
+  res.json(updated);
 });
 
-app.post('/api/intercompany-transactions/:id/eliminate', (req, res) => {
+app.post('/api/intercompany-transactions/:id/eliminate', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = intercompanyTxns.findIndex(t => t.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Transaction not found' });
-  intercompanyTxns[idx].status = 'Eliminated';
-  intercompanyTxns[idx].eliminationEntryId = `elim-${Date.now()}`;
-  logAudit(intercompanyTxns[idx].companyId, userId, userName, 'ELIMINATE_INTERCOMPANY', 'Accounting', `Eliminated intercompany transaction ${id}`);
-  res.json(intercompanyTxns[idx]);
+  const tx = await dbById<any>(schema.intercompanyTxns, id);
+  if (!tx) return res.status(404).json({ error: 'Transaction not found' });
+  const updated = await dbUpdate(schema.intercompanyTxns, id, { status: 'Eliminated', eliminationEntryId: `elim-${Date.now()}` });
+  logAudit(tx.companyId, userId, userName, 'ELIMINATE_INTERCOMPANY', 'Accounting', `Eliminated intercompany transaction ${id}`);
+  res.json(updated);
 });
 
 // --- Consolidation Rules ---
-app.get('/api/consolidation-rules', (req, res) => {
+app.get('/api/consolidation-rules', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? consolidationRules.filter(r => r.companyId === companyId) : consolidationRules);
+  const all = companyId ? await dbByCompany<any>(schema.consolidationRules, companyId as string) : await dbAll<any>(schema.consolidationRules);
+  res.json(all);
 });
 
-app.post('/api/consolidation-rules', (req, res) => {
+app.post('/api/consolidation-rules', async (req, res) => {
   const { companyId, subsidiaryId, subsidiaryName, eliminationAccount, minorityInterestPct, createdBy } = req.body;
   const newRule: ConsolidationRule = {
     id: `constr-${Date.now()}`, companyId, subsidiaryId, subsidiaryName, eliminationAccount,
     minorityInterestPct: Number(minorityInterestPct), isActive: true,
     createdAt: new Date().toISOString()
   };
-  consolidationRules.push(newRule);
+  await dbInsert(schema.consolidationRules, newRule);
   logAudit(companyId, createdBy, 'System', 'CREATE_CONSOLIDATION_RULE', 'Accounting', `Created consolidation rule for ${subsidiaryName}`);
   res.status(201).json(newRule);
 });
 
 // --- Compliance Checks ---
-app.get('/api/compliance-checks', (req, res) => {
+app.get('/api/compliance-checks', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? complianceChecks.filter(c => c.companyId === companyId) : complianceChecks);
+  const all = companyId ? await dbByCompany<any>(schema.complianceChecks, companyId as string) : await dbAll<any>(schema.complianceChecks);
+  res.json(all);
 });
 
-app.post('/api/compliance-checks', (req, res) => {
+app.post('/api/compliance-checks', async (req, res) => {
   const { companyId, category, title, description, dueDate, assignee, assigneeName, createdBy } = req.body;
   const newCheck: ComplianceCheck = {
     id: `comp-${Date.now()}`, companyId, category, title, description,
     status: 'Open', dueDate, assignee, assigneeName,
     createdAt: new Date().toISOString()
   };
-  complianceChecks.push(newCheck);
+  await dbInsert(schema.complianceChecks, newCheck);
   logAudit(companyId, createdBy, 'System', 'CREATE_COMPLIANCE_CHECK', 'Compliance', `Created compliance check: ${title}`);
   res.status(201).json(newCheck);
 });
 
-app.post('/api/compliance-checks/:id/resolve', (req, res) => {
+app.post('/api/compliance-checks/:id/resolve', async (req, res) => {
   const { id } = req.params;
   const { status, userId, userName } = req.body;
-  const idx = complianceChecks.findIndex(c => c.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Compliance check not found' });
-  complianceChecks[idx].status = status || 'Compliant';
-  complianceChecks[idx].lastChecked = new Date().toISOString().split('T')[0];
-  logAudit(complianceChecks[idx].companyId, userId, userName, 'RESOLVE_COMPLIANCE', 'Compliance', `Resolved compliance check: ${complianceChecks[idx].title}`);
-  res.json(complianceChecks[idx]);
+  const check = await dbById<any>(schema.complianceChecks, id);
+  if (!check) return res.status(404).json({ error: 'Compliance check not found' });
+  const updated = await dbUpdate(schema.complianceChecks, id, { status: status || 'Compliant', lastChecked: new Date().toISOString().split('T')[0] });
+  logAudit(check.companyId, userId, userName, 'RESOLVE_COMPLIANCE', 'Compliance', `Resolved compliance check: ${check.title}`);
+  res.json(updated);
 });
 
 // --- Audit Snapshots ---
-app.get('/api/audit-snapshots', (req, res) => {
+app.get('/api/audit-snapshots', async (req, res) => {
   const { companyId, entityType, entityId } = req.query;
-  let filtered = auditSnapshots;
-  if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
-  if (entityType) filtered = filtered.filter(s => s.entityType === entityType);
-  if (entityId) filtered = filtered.filter(s => s.entityId === entityId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.auditSnapshots);
+  if (companyId) all = all.filter(s => s.companyId === companyId);
+  if (entityType) all = all.filter(s => s.entityType === entityType);
+  if (entityId) all = all.filter(s => s.entityId === entityId);
+  res.json(all);
 });
 
 // --- Policy Documents ---
-app.get('/api/policy-documents', (req, res) => {
+app.get('/api/policy-documents', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? policyDocuments.filter(p => p.companyId === companyId) : policyDocuments);
+  const all = companyId ? await dbByCompany<any>(schema.policyDocuments, companyId as string) : await dbAll<any>(schema.policyDocuments);
+  res.json(all);
 });
 
-app.post('/api/policy-documents', (req, res) => {
+app.post('/api/policy-documents', async (req, res) => {
   const { companyId, title, category, version, content, dueDate, createdBy } = req.body;
   const newPolicy: PolicyDocument = {
     id: `pd-${Date.now()}`, companyId, title, category, version, content,
     acknowledgedBy: [], totalEmployees: 0, dueDate,
     createdAt: new Date().toISOString()
   };
-  policyDocuments.push(newPolicy);
+  await dbInsert(schema.policyDocuments, newPolicy);
   logAudit(companyId, createdBy, 'System', 'CREATE_POLICY', 'Compliance', `Created policy document: ${title}`);
   res.status(201).json(newPolicy);
 });
 
-app.post('/api/policy-documents/:id/acknowledge', (req, res) => {
+app.post('/api/policy-documents/:id/acknowledge', async (req, res) => {
   const { id } = req.params;
   const { employeeId } = req.body;
-  const idx = policyDocuments.findIndex(p => p.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Policy not found' });
-  if (!policyDocuments[idx].acknowledgedBy.includes(employeeId)) {
-    policyDocuments[idx].acknowledgedBy.push(employeeId);
+  const policy = await dbById<any>(schema.policyDocuments, id);
+  if (!policy) return res.status(404).json({ error: 'Policy not found' });
+  const acknowledgedBy = Array.isArray(policy.acknowledgedBy) ? policy.acknowledgedBy : [];
+  if (!acknowledgedBy.includes(employeeId)) {
+    acknowledgedBy.push(employeeId);
   }
-  res.json(policyDocuments[idx]);
+  const updated = await dbUpdate(schema.policyDocuments, id, { acknowledgedBy });
+  res.json(updated);
 });
 
 // --- Filing Deadlines ---
-app.get('/api/filing-deadlines', (req, res) => {
+app.get('/api/filing-deadlines', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? filingDeadlines.filter(f => f.companyId === companyId) : filingDeadlines);
+  const all = companyId ? await dbByCompany<any>(schema.filingDeadlines, companyId as string) : await dbAll<any>(schema.filingDeadlines);
+  res.json(all);
 });
 
-app.post('/api/filing-deadlines', (req, res) => {
+app.post('/api/filing-deadlines', async (req, res) => {
   const { companyId, filingType, jurisdiction, dueDate, assignee, assigneeName, notes, createdBy } = req.body;
   const newFiling: FilingDeadline = {
     id: `fd-${Date.now()}`, companyId, filingType, jurisdiction, dueDate,
     status: 'Upcoming', assignee, assigneeName, notes,
     createdAt: new Date().toISOString()
   };
-  filingDeadlines.push(newFiling);
+  await dbInsert(schema.filingDeadlines, newFiling);
   logAudit(companyId, createdBy, 'System', 'CREATE_FILING', 'Compliance', `Created filing deadline: ${filingType} - ${jurisdiction}`);
   res.status(201).json(newFiling);
 });
 
-app.post('/api/filing-deadlines/:id/file', (req, res) => {
+app.post('/api/filing-deadlines/:id/file', async (req, res) => {
   const { id } = req.params;
   const { userId, userName } = req.body;
-  const idx = filingDeadlines.findIndex(f => f.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Filing deadline not found' });
-  filingDeadlines[idx].status = 'Filed';
-  logAudit(filingDeadlines[idx].companyId, userId, userName, 'FILE_DEADLINE', 'Compliance', `Filed: ${filingDeadlines[idx].filingType}`);
-  res.json(filingDeadlines[idx]);
+  const filing = await dbById<any>(schema.filingDeadlines, id);
+  if (!filing) return res.status(404).json({ error: 'Filing deadline not found' });
+  const updated = await dbUpdate(schema.filingDeadlines, id, { status: 'Filed' });
+  logAudit(filing.companyId, userId, userName, 'FILE_DEADLINE', 'Compliance', `Filed: ${filing.filingType}`);
+  res.json(updated);
 });
 
 // --- Advanced Reporting ---
-app.get('/api/reports/profit-loss', (req, res) => {
+app.get('/api/reports/profit-loss', async (req, res) => {
   const { companyId, period } = req.query;
-  const companyGL = glAccounts.filter(g => g.companyId === companyId);
-  const revenue = companyGL.filter(a => a.type === 'Revenue').map(a => ({ account: a.name, code: a.code, amount: Math.abs(a.balance) }));
-  const expenses = companyGL.filter(a => a.type === 'Expense').map(a => ({ account: a.name, code: a.code, amount: a.balance }));
-  const totalRevenue = revenue.reduce((s, r) => s + r.amount, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const companyGL = await dbByCompany<any>(schema.glAccounts, companyId as string);
+  const revenue = companyGL.filter((a: any) => a.type === 'Revenue').map((a: any) => ({ account: a.name, code: a.code, amount: Math.abs(a.balance) }));
+  const expenses = companyGL.filter((a: any) => a.type === 'Expense').map((a: any) => ({ account: a.name, code: a.code, amount: a.balance }));
+  const totalRevenue = revenue.reduce((s: number, r: any) => s + r.amount, 0);
+  const totalExpenses = expenses.reduce((s: number, e: any) => s + e.amount, 0);
   res.json({ period: period || 'Q3 2026', revenue, expenses, totalRevenue, totalExpenses, netIncome: totalRevenue - totalExpenses });
 });
 
-app.get('/api/reports/balance-sheet', (req, res) => {
+app.get('/api/reports/balance-sheet', async (req, res) => {
   const { companyId } = req.query;
-  const companyGL = glAccounts.filter(g => g.companyId === companyId);
-  const assets = companyGL.filter(a => a.type === 'Asset').map(a => ({ account: a.name, code: a.code, amount: a.balance }));
-  const liabilities = companyGL.filter(a => a.type === 'Liability').map(a => ({ account: a.name, code: a.code, amount: a.balance }));
-  const equity = companyGL.filter(a => a.type === 'Equity').map(a => ({ account: a.name, code: a.code, amount: a.balance }));
-  const totalAssets = assets.reduce((s, a) => s + a.amount, 0);
-  const totalLiabilities = liabilities.reduce((s, l) => s + l.amount, 0);
-  const totalEquity = equity.reduce((s, e) => s + e.amount, 0);
+  const companyGL = await dbByCompany<any>(schema.glAccounts, companyId as string);
+  const assets = companyGL.filter((a: any) => a.type === 'Asset').map((a: any) => ({ account: a.name, code: a.code, amount: a.balance }));
+  const liabilities = companyGL.filter((a: any) => a.type === 'Liability').map((a: any) => ({ account: a.name, code: a.code, amount: a.balance }));
+  const equity = companyGL.filter((a: any) => a.type === 'Equity').map((a: any) => ({ account: a.name, code: a.code, amount: a.balance }));
+  const totalAssets = assets.reduce((s: number, a: any) => s + a.amount, 0);
+  const totalLiabilities = liabilities.reduce((s: number, l: any) => s + l.amount, 0);
+  const totalEquity = equity.reduce((s: number, e: any) => s + e.amount, 0);
   res.json({ assets, liabilities, equity, totalAssets, totalLiabilities, totalEquity });
 });
 
-app.get('/api/reports/cash-flow', (req, res) => {
+app.get('/api/reports/cash-flow', async (req, res) => {
   const { companyId } = req.query;
-  const companyJE = journalEntries.filter(j => j.companyId === companyId && j.status === 'Posted');
-  const operating = companyJE.filter(j => j.description.toLowerCase().includes('revenue') || j.description.toLowerCase().includes('expense') || j.description.toLowerCase().includes('payroll'))
-    .reduce((s, j) => s + j.totalDebit - j.totalCredit, 0);
+  const companyJE = (await dbByCompany<any>(schema.journalEntries, companyId as string)).filter((j: any) => j.status === 'Posted');
+  const operating = companyJE.filter((j: any) => j.description.toLowerCase().includes('revenue') || j.description.toLowerCase().includes('expense') || j.description.toLowerCase().includes('payroll'))
+    .reduce((s: number, j: any) => s + j.totalDebit - j.totalCredit, 0);
   const investing = -5000;
   const financing = -12000;
   res.json({ operating, investing, financing, netCashFlow: operating + investing + financing, period: 'Q3 2026' });
 });
 
-app.get('/api/reports/aging', (req, res) => {
+app.get('/api/reports/aging', async (req, res) => {
   const { companyId, type } = req.query;
   if (type === 'ar') {
-    const outstanding = invoices.filter(i => i.companyId === companyId && i.status !== 'Paid' && i.status !== 'Void');
+    const allInv = await dbByCompany<any>(schema.invoices, companyId as string);
+    const outstanding = allInv.filter((i: any) => i.status !== 'Paid' && i.status !== 'Void');
     const aging = { current: 0, days30: 0, days60: 0, days90: 0, over90: 0 };
     outstanding.forEach(inv => {
       const days = Math.floor((Date.now() - new Date(inv.dueDate).getTime()) / 86400000);
@@ -2045,9 +1758,10 @@ app.get('/api/reports/aging', (req, res) => {
     });
     res.json({ type: 'AR', aging, total: outstanding.reduce((s, i) => s + i.total, 0), count: outstanding.length });
   } else {
-    const outstanding = bills.filter(b => b.companyId === companyId && b.status !== 'Paid' && b.status !== 'Void');
+    const allBills = await dbByCompany<any>(schema.bills, companyId as string);
+    const outstanding = allBills.filter((b: any) => b.status !== 'Paid' && b.status !== 'Void');
     const aging = { current: 0, days30: 0, days60: 0, days90: 0, over90: 0 };
-    outstanding.forEach(bill => {
+    outstanding.forEach((bill: any) => {
       const days = Math.floor((Date.now() - new Date(bill.dueDate).getTime()) / 86400000);
       const owed = bill.total - bill.amountPaid;
       if (days <= 0) aging.current += owed;
@@ -2056,48 +1770,52 @@ app.get('/api/reports/aging', (req, res) => {
       else if (days <= 90) aging.days90 += owed;
       else aging.over90 += owed;
     });
-    res.json({ type: 'AP', aging, total: outstanding.reduce((s, b) => s + (b.total - b.amountPaid), 0), count: outstanding.length });
+    res.json({ type: 'AP', aging, total: outstanding.reduce((s: number, b: any) => s + (b.total - b.amountPaid), 0), count: outstanding.length });
   }
 });
 
 // 6. Inventory Items
-app.get('/api/inventory', (req, res) => {
+app.get('/api/inventory', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? inventory.filter(i => i.companyId === companyId) : inventory);
+  const all = companyId ? await dbByCompany<any>(schema.inventory, companyId as string) : await dbAll<any>(schema.inventory);
+  res.json(all);
 });
 
-app.post('/api/inventory/adjust', (req, res) => {
+app.post('/api/inventory/adjust', async (req, res) => {
   const { id, adjustment, companyId } = req.body;
-  const itemIndex = inventory.findIndex(i => i.id === id);
-  if (itemIndex === -1) {
+  const item = await dbById<any>(schema.inventory, id);
+  if (!item) {
     return res.status(404).json({ error: 'Item not found' });
   }
 
-  const oldStock = inventory[itemIndex].stockLevel;
-  inventory[itemIndex].stockLevel = Math.max(0, inventory[itemIndex].stockLevel + Number(adjustment));
+  const oldStock = item.stockLevel;
+  const newStock = Math.max(0, item.stockLevel + Number(adjustment));
 
-  logAudit(companyId, 'u-acme-inventory', 'Marcus Brody', 'STOCK_ADJUST', 'Inventory', `Adjusted SKU ${inventory[itemIndex].sku} stock level by ${adjustment} (from ${oldStock} to ${inventory[itemIndex].stockLevel})`);
+  const updated = await dbUpdate(schema.inventory, id, { stockLevel: newStock });
+
+  logAudit(companyId, 'u-acme-inventory', 'Marcus Brody', 'STOCK_ADJUST', 'Inventory', `Adjusted SKU ${item.sku} stock level by ${adjustment} (from ${oldStock} to ${newStock})`);
 
   // Low stock trigger automation dispatch
   let lowStockAlert = false;
-  if (inventory[itemIndex].stockLevel <= inventory[itemIndex].minStockLevel) {
+  if (newStock <= item.minStockLevel) {
     lowStockAlert = true;
-    console.log(`[LOW STOCK AUTOMATION TRIGGERED] Creating purchase order request draft with Supplier: ${inventory[itemIndex].supplier}`);
+    console.log(`[LOW STOCK AUTOMATION TRIGGERED] Creating purchase order request draft with Supplier: ${item.supplier}`);
   }
 
   res.json({
-    item: inventory[itemIndex],
+    item: updated,
     lowStockAlert
   });
 });
 
 // 7. Support Tickets
-app.get('/api/tickets', (req, res) => {
+app.get('/api/tickets', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? tickets.filter(t => t.companyId === companyId) : tickets);
+  const all = companyId ? await dbByCompany<any>(schema.tickets, companyId as string) : await dbAll<any>(schema.tickets);
+  res.json(all);
 });
 
-app.post('/api/tickets', (req, res) => {
+app.post('/api/tickets', async (req, res) => {
   const { companyId, customerName, customerEmail, subject, description, category, priority } = req.body;
   const ticketId = `tick-${Date.now()}`;
   const tktNumber = `TKT-10${Math.floor(10 + Math.random() * 89)}`;
@@ -2117,19 +1835,20 @@ app.post('/api/tickets', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  tickets.push(newTicket);
+  await dbInsert(schema.tickets, newTicket);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'TICKET_CREATE', 'Help Desk', `Received support ticket ${tktNumber} from ${customerName}. Category: ${category}`);
 
   res.status(201).json(newTicket);
 });
 
 // 8. Workflows (Automation Builder)
-app.get('/api/workflows', (req, res) => {
+app.get('/api/workflows', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? workflows.filter(w => w.companyId === companyId) : workflows);
+  const all = companyId ? await dbByCompany<any>(schema.workflows, companyId as string) : await dbAll<any>(schema.workflows);
+  res.json(all);
 });
 
-app.post('/api/workflows', (req, res) => {
+app.post('/api/workflows', async (req, res) => {
   const { companyId, name, description, blocks } = req.body;
   const newWf: ERPWorkflow = {
     id: `wf-${Date.now()}`,
@@ -2140,18 +1859,19 @@ app.post('/api/workflows', (req, res) => {
     blocks: blocks || [],
     createdAt: new Date().toISOString()
   };
-  workflows.push(newWf);
+  await dbInsert(schema.workflows, newWf);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'WORKFLOW_CREATE', 'Administration', `Configured cross-module workflow: ${name}`);
   res.status(201).json(newWf);
 });
 
 // 9. API Keys settings
-app.get('/api/apikeys', (req, res) => {
+app.get('/api/apikeys', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? apiKeys.filter(k => k.companyId === companyId) : apiKeys);
+  const all = companyId ? await dbByCompany<any>(schema.apiKeys, companyId as string) : await dbAll<any>(schema.apiKeys);
+  res.json(all);
 });
 
-app.post('/api/apikeys', (req, res) => {
+app.post('/api/apikeys', async (req, res) => {
   const { companyId, name, permissions } = req.body;
   const newKey: APIKey = {
     id: `key-${Date.now()}`,
@@ -2162,7 +1882,7 @@ app.post('/api/apikeys', (req, res) => {
     createdAt: new Date().toISOString(),
     expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
   };
-  apiKeys.push(newKey);
+  await dbInsert(schema.apiKeys, newKey);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'API_KEY_GENERATE', 'Administration', `Generated Public API Key: ${name}`);
   res.status(201).json(newKey);
 });
@@ -2170,12 +1890,13 @@ app.post('/api/apikeys', (req, res) => {
 // --- POS MODULE API ROUTES ---
 
 // 1. POS Categories
-app.get('/api/pos/categories', (req, res) => {
+app.get('/api/pos/categories', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? posCategories.filter(c => c.companyId === companyId) : posCategories);
+  const all = companyId ? await dbByCompany<any>(schema.posCategories, companyId as string) : await dbAll<any>(schema.posCategories);
+  res.json(all);
 });
 
-app.post('/api/pos/categories', (req, res) => {
+app.post('/api/pos/categories', async (req, res) => {
   const { companyId, name, description, parentId, color, icon } = req.body;
   const newCategory: POSCategory = {
     id: `pos-cat-${Date.now()}`,
@@ -2188,22 +1909,22 @@ app.post('/api/pos/categories', (req, res) => {
     isActive: true,
     createdAt: new Date().toISOString()
   };
-  posCategories.push(newCategory);
+  await dbInsert(schema.posCategories, newCategory);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'CREATE_POS_CATEGORY', 'POS', `Created category: ${name}`);
   res.status(201).json(newCategory);
 });
 
 // 2. POS Products
-app.get('/api/pos/products', (req, res) => {
+app.get('/api/pos/products', async (req, res) => {
   const { companyId, category, isActive } = req.query;
-  let filtered = posProducts;
-  if (companyId) filtered = filtered.filter(p => p.companyId === companyId);
-  if (category) filtered = filtered.filter(p => p.category === category);
-  if (isActive !== undefined) filtered = filtered.filter(p => p.isActive === (isActive === 'true'));
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posProducts);
+  if (companyId) all = all.filter(p => p.companyId === companyId);
+  if (category) all = all.filter(p => p.category === category);
+  if (isActive !== undefined) all = all.filter(p => p.isActive === (isActive === 'true'));
+  res.json(all);
 });
 
-app.post('/api/pos/products', (req, res) => {
+app.post('/api/pos/products', async (req, res) => {
   const { companyId, sku, name, description, category, barcode, unitPrice, costPrice, taxRate, discountPrice, discountStartDate, discountEndDate, image, stockLevel, reorderLevel } = req.body;
   const newProduct: POSProduct = {
     id: `pos-prod-${Date.now()}`,
@@ -2226,14 +1947,15 @@ app.post('/api/pos/products', (req, res) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  posProducts.push(newProduct);
+  await dbInsert(schema.posProducts, newProduct);
 
   // Update inventory if exists
-  const existingInventory = inventory.find(i => i.sku === sku);
+  const allInv = await dbByCompany<any>(schema.inventory, companyId);
+  const existingInventory = allInv.find((i: any) => i.sku === sku);
   if (existingInventory) {
-    existingInventory.stockLevel = Number(stockLevel);
+    await dbUpdate(schema.inventory, existingInventory.id, { stockLevel: Number(stockLevel) });
   } else {
-    inventory.push({
+    await dbInsert(schema.inventory, {
       id: `inv-${Date.now()}`,
       companyId,
       sku,
@@ -2251,38 +1973,37 @@ app.post('/api/pos/products', (req, res) => {
   res.status(201).json(newProduct);
 });
 
-app.put('/api/pos/products/:id', (req, res) => {
+app.put('/api/pos/products/:id', async (req, res) => {
   const { id } = req.params;
-  const index = posProducts.findIndex(p => p.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Product not found' });
+  const product = await dbById<any>(schema.posProducts, id);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
 
-  posProducts[index] = {
-    ...posProducts[index],
-    ...req.body,
-    updatedAt: new Date().toISOString()
-  };
+  const updated = await dbUpdate(schema.posProducts, id, { ...req.body, updatedAt: new Date().toISOString() });
 
   // Sync with inventory
-  const invIndex = inventory.findIndex(i => i.sku === posProducts[index].sku);
-  if (invIndex !== -1) {
-    inventory[invIndex].stockLevel = posProducts[index].stockLevel;
-    inventory[invIndex].unitPrice = posProducts[index].unitPrice;
+  const allInv = await dbByCompany<any>(schema.inventory, product.companyId);
+  const inv = allInv.find((i: any) => i.sku === updated!.sku);
+  if (inv) {
+    await dbUpdate(schema.inventory, inv.id, {
+      stockLevel: updated!.stockLevel,
+      unitPrice: updated!.unitPrice
+    });
   }
 
-  logAudit(posProducts[index].companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_POS_PRODUCT', 'POS', `Updated product: ${posProducts[index].name}`);
-  res.json(posProducts[index]);
+  logAudit(product.companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_POS_PRODUCT', 'POS', `Updated product: ${product.name}`);
+  res.json(updated);
 });
 
 // 3. POS Terminals
-app.get('/api/pos/terminals', (req, res) => {
+app.get('/api/pos/terminals', async (req, res) => {
   const { companyId, branchId } = req.query;
-  let filtered = posTerminals;
-  if (companyId) filtered = filtered.filter(t => t.companyId === companyId);
-  if (branchId) filtered = filtered.filter(t => t.branchId === branchId);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posTerminals);
+  if (companyId) all = all.filter(t => t.companyId === companyId);
+  if (branchId) all = all.filter(t => t.branchId === branchId);
+  res.json(all);
 });
 
-app.post('/api/pos/terminals', (req, res) => {
+app.post('/api/pos/terminals', async (req, res) => {
   const { companyId, name, location, branchId } = req.body;
   const newTerminal: POSTerminal = {
     id: `pos-term-${Date.now()}`,
@@ -2294,29 +2015,29 @@ app.post('/api/pos/terminals', (req, res) => {
     lastSync: new Date().toISOString(),
     createdAt: new Date().toISOString()
   };
-  posTerminals.push(newTerminal);
+  await dbInsert(schema.posTerminals, newTerminal);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'CREATE_POS_TERMINAL', 'POS', `Created terminal: ${name}`);
   res.status(201).json(newTerminal);
 });
 
 // 4. POS Customers
-app.get('/api/pos/customers', (req, res) => {
+app.get('/api/pos/customers', async (req, res) => {
   const { companyId, search } = req.query;
-  let filtered = posCustomers;
-  if (companyId) filtered = filtered.filter(c => c.companyId === companyId);
+  let all = await dbAll<any>(schema.posCustomers);
+  if (companyId) all = all.filter(c => c.companyId === companyId);
   if (search) {
-    const searchLower = search.toString().toLowerCase();
-    filtered = filtered.filter(c =>
+    const searchLower = (search as string).toLowerCase();
+    all = all.filter(c =>
       c.firstName.toLowerCase().includes(searchLower) ||
       c.lastName.toLowerCase().includes(searchLower) ||
       c.email?.toLowerCase().includes(searchLower) ||
       c.phone?.includes(searchLower)
     );
   }
-  res.json(filtered);
+  res.json(all);
 });
 
-app.post('/api/pos/customers', (req, res) => {
+app.post('/api/pos/customers', async (req, res) => {
   const { companyId, firstName, lastName, email, phone, dateOfBirth, address, notes } = req.body;
   const newCustomer: POSCustomer = {
     id: `pos-cust-${Date.now()}`,
@@ -2337,10 +2058,10 @@ app.post('/api/pos/customers', (req, res) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  posCustomers.push(newCustomer);
+  await dbInsert(schema.posCustomers, newCustomer);
 
   // Sync with CRM leads if possible
-  leads.push({
+  await dbInsert(schema.crmLeads, {
     id: `lead-${Date.now()}`,
     companyId,
     firstName,
@@ -2358,32 +2079,28 @@ app.post('/api/pos/customers', (req, res) => {
   res.status(201).json(newCustomer);
 });
 
-app.put('/api/pos/customers/:id', (req, res) => {
+app.put('/api/pos/customers/:id', async (req, res) => {
   const { id } = req.params;
-  const index = posCustomers.findIndex(c => c.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Customer not found' });
+  const customer = await dbById<any>(schema.posCustomers, id);
+  if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
-  posCustomers[index] = {
-    ...posCustomers[index],
-    ...req.body,
-    updatedAt: new Date().toISOString()
-  };
+  const updated = await dbUpdate(schema.posCustomers, id, { ...req.body, updatedAt: new Date().toISOString() });
 
-  logAudit(posCustomers[index].companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_POS_CUSTOMER', 'POS', `Updated customer: ${posCustomers[index].firstName} ${posCustomers[index].lastName}`);
-  res.json(posCustomers[index]);
+  logAudit(customer.companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_POS_CUSTOMER', 'POS', `Updated customer: ${customer.firstName} ${customer.lastName}`);
+  res.json(updated);
 });
 
 // 5. POS Shifts
-app.get('/api/pos/shifts', (req, res) => {
+app.get('/api/pos/shifts', async (req, res) => {
   const { companyId, terminalId, status } = req.query;
-  let filtered = posShifts;
-  if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
-  if (terminalId) filtered = filtered.filter(s => s.terminalId === terminalId);
-  if (status) filtered = filtered.filter(s => s.status === status);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posShifts);
+  if (companyId) all = all.filter(s => s.companyId === companyId);
+  if (terminalId) all = all.filter(s => s.terminalId === terminalId);
+  if (status) all = all.filter(s => s.status === status);
+  res.json(all);
 });
 
-app.post('/api/pos/shifts', (req, res) => {
+app.post('/api/pos/shifts', async (req, res) => {
   const { companyId, terminalId, employeeId, employeeName, openingBalance } = req.body;
   const newShift: POSShift = {
     id: `pos-shift-${Date.now()}`,
@@ -2402,42 +2119,41 @@ app.post('/api/pos/shifts', (req, res) => {
     status: 'Open',
     createdAt: new Date().toISOString()
   };
-  posShifts.push(newShift);
+  await dbInsert(schema.posShifts, newShift);
   logAudit(companyId, employeeId, employeeName, 'START_POS_SHIFT', 'POS', `Started shift at terminal ${terminalId}`);
   res.status(201).json(newShift);
 });
 
-app.post('/api/pos/shifts/:id/close', (req, res) => {
+app.post('/api/pos/shifts/:id/close', async (req, res) => {
   const { id } = req.params;
   const { closingBalance, notes } = req.body;
-  const index = posShifts.findIndex(s => s.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Shift not found' });
+  const shift = await dbById<any>(schema.posShifts, id);
+  if (!shift) return res.status(404).json({ error: 'Shift not found' });
 
-  posShifts[index] = {
-    ...posShifts[index],
+  const updated = await dbUpdate(schema.posShifts, id, {
     endTime: new Date().toISOString(),
     closingBalance: Number(closingBalance),
     status: 'Closed',
     notes
-  };
+  });
 
-  logAudit(posShifts[index].companyId, posShifts[index].employeeId, posShifts[index].employeeName, 'CLOSE_POS_SHIFT', 'POS', `Closed shift - Sales: $${posShifts[index].totalSales}`);
-  res.json(posShifts[index]);
+  logAudit(shift.companyId, shift.employeeId, shift.employeeName, 'CLOSE_POS_SHIFT', 'POS', `Closed shift - Sales: $${shift.totalSales}`);
+  res.json(updated);
 });
 
 // 6. POS Sales
-app.get('/api/pos/sales', (req, res) => {
+app.get('/api/pos/sales', async (req, res) => {
   const { companyId, terminalId, shiftId, startDate, endDate } = req.query;
-  let filtered = posSales;
-  if (companyId) filtered = filtered.filter(s => s.companyId === companyId);
-  if (terminalId) filtered = filtered.filter(s => s.terminalId === terminalId);
-  if (shiftId) filtered = filtered.filter(s => s.shiftId === shiftId);
-  if (startDate) filtered = filtered.filter(s => s.date >= startDate.toString());
-  if (endDate) filtered = filtered.filter(s => s.date <= endDate.toString());
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posSales);
+  if (companyId) all = all.filter(s => s.companyId === companyId);
+  if (terminalId) all = all.filter(s => s.terminalId === terminalId);
+  if (shiftId) all = all.filter(s => s.shiftId === shiftId);
+  if (startDate) all = all.filter(s => s.date >= startDate.toString());
+  if (endDate) all = all.filter(s => s.date <= endDate.toString());
+  res.json(all);
 });
 
-app.post('/api/pos/sales', (req, res) => {
+app.post('/api/pos/sales', async (req, res) => {
   const { companyId, terminalId, shiftId, employeeId, employeeName, customerId, customerName, items, payments, notes } = req.body;
 
   // Calculate totals
@@ -2473,53 +2189,64 @@ app.post('/api/pos/sales', (req, res) => {
     updatedAt: new Date().toISOString()
   };
 
-  posSales.push(newSale);
+  await dbInsert(schema.posSales, newSale);
 
   // Update shift totals
-  const shiftIndex = posShifts.findIndex(s => s.id === shiftId);
-  if (shiftIndex !== -1) {
-    posShifts[shiftIndex].totalSales += total;
-    posShifts[shiftIndex].cashSales += payments.filter((p: any) => p.method === 'Cash').reduce((sum: number, p: any) => sum + p.amount, 0);
-    posShifts[shiftIndex].cardSales += payments.filter((p: any) => p.method === 'Card').reduce((sum: number, p: any) => sum + p.amount, 0);
-    posShifts[shiftIndex].digitalWalletSales += payments.filter((p: any) => p.method === 'Digital Wallet').reduce((sum: number, p: any) => sum + p.amount, 0);
-    posShifts[shiftIndex].storeCreditSales += payments.filter((p: any) => p.method === 'Store Credit').reduce((sum: number, p: any) => sum + p.amount, 0);
+  if (shiftId) {
+    const shift = await dbById<any>(schema.posShifts, shiftId);
+    if (shift) {
+      await dbUpdate(schema.posShifts, shiftId, {
+        totalSales: Number(shift.totalSales) + total,
+        cashSales: Number(shift.cashSales) + payments.filter((p: any) => p.method === 'Cash').reduce((sum: number, p: any) => sum + p.amount, 0),
+        cardSales: Number(shift.cardSales) + payments.filter((p: any) => p.method === 'Card').reduce((sum: number, p: any) => sum + p.amount, 0),
+        digitalWalletSales: Number(shift.digitalWalletSales) + payments.filter((p: any) => p.method === 'Digital Wallet').reduce((sum: number, p: any) => sum + p.amount, 0),
+        storeCreditSales: Number(shift.storeCreditSales) + payments.filter((p: any) => p.method === 'Store Credit').reduce((sum: number, p: any) => sum + p.amount, 0)
+      });
+    }
   }
 
   // Update product stock
-  items.forEach((item: any) => {
-    const prodIndex = posProducts.findIndex(p => p.id === item.productId);
-    if (prodIndex !== -1) {
-      posProducts[prodIndex].stockLevel -= item.quantity;
-      posProducts[prodIndex].updatedAt = new Date().toISOString();
+  for (const item of items) {
+    const product = await dbById<any>(schema.posProducts, item.productId);
+    if (product) {
+      await dbUpdate(schema.posProducts, item.productId, {
+        stockLevel: Number(product.stockLevel) - item.quantity,
+        updatedAt: new Date().toISOString()
+      });
     }
 
     // Update inventory
-    const invIndex = inventory.findIndex(i => i.sku === item.sku);
-    if (invIndex !== -1) {
-      inventory[invIndex].stockLevel -= item.quantity;
+    const allInv = await dbByCompany<any>(schema.inventory, companyId);
+    const inv = allInv.find((i: any) => i.sku === item.sku);
+    if (inv) {
+      await dbUpdate(schema.inventory, inv.id, { stockLevel: Number(inv.stockLevel) - item.quantity });
     }
-  });
+  }
 
   // Update customer
   if (customerId) {
-    const custIndex = posCustomers.findIndex(c => c.id === customerId);
-    if (custIndex !== -1) {
-      posCustomers[custIndex].totalPurchases += 1;
-      posCustomers[custIndex].totalSpent += total;
-      posCustomers[custIndex].loyaltyPoints += Math.floor(total / 10); // 1 point per $10
-      posCustomers[custIndex].updatedAt = new Date().toISOString();
-
-      // Update tier
-      if (posCustomers[custIndex].loyaltyPoints >= 5000) posCustomers[custIndex].tier = 'Platinum';
-      else if (posCustomers[custIndex].loyaltyPoints >= 2000) posCustomers[custIndex].tier = 'Gold';
-      else if (posCustomers[custIndex].loyaltyPoints >= 1000) posCustomers[custIndex].tier = 'Silver';
+    const customer = await dbById<any>(schema.posCustomers, customerId);
+    if (customer) {
+      const loyaltyPoints = Number(customer.loyaltyPoints) + Math.floor(total / 10);
+      let tier = customer.tier;
+      if (loyaltyPoints >= 5000) tier = 'Platinum';
+      else if (loyaltyPoints >= 2000) tier = 'Gold';
+      else if (loyaltyPoints >= 1000) tier = 'Silver';
+      await dbUpdate(schema.posCustomers, customerId, {
+        totalPurchases: Number(customer.totalPurchases) + 1,
+        totalSpent: Number(customer.totalSpent) + total,
+        loyaltyPoints,
+        tier,
+        updatedAt: new Date().toISOString()
+      });
     }
   }
 
   // Post to accounting
-  const salesAccountId = glAccounts.find(a => a.companyId === companyId && a.type === 'Revenue')?.id;
+  const allGL = await dbByCompany<any>(schema.glAccounts, companyId);
+  const salesAccountId = allGL.find((a: any) => a.type === 'Revenue')?.id;
   if (salesAccountId) {
-    glAccounts.push({
+    await dbInsert(schema.glAccounts, {
       id: `txn-${Date.now()}`,
       companyId,
       accountId: salesAccountId,
@@ -2535,43 +2262,45 @@ app.post('/api/pos/sales', (req, res) => {
   res.status(201).json(newSale);
 });
 
-app.post('/api/pos/sales/:id/void', (req, res) => {
+app.post('/api/pos/sales/:id/void', async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
-  const index = posSales.findIndex(s => s.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Sale not found' });
+  const sale = await dbById<any>(schema.posSales, id);
+  if (!sale) return res.status(404).json({ error: 'Sale not found' });
 
   // Restore stock
-  posSales[index].items.forEach(item => {
-    const prodIndex = posProducts.findIndex(p => p.id === item.productId);
-    if (prodIndex !== -1) {
-      posProducts[prodIndex].stockLevel += item.quantity;
-      posProducts[prodIndex].updatedAt = new Date().toISOString();
+  for (const item of sale.items) {
+    const product = await dbById<any>(schema.posProducts, item.productId);
+    if (product) {
+      await dbUpdate(schema.posProducts, item.productId, {
+        stockLevel: Number(product.stockLevel) + item.quantity,
+        updatedAt: new Date().toISOString()
+      });
     }
 
-    const invIndex = inventory.findIndex(i => i.sku === item.sku);
-    if (invIndex !== -1) {
-      inventory[invIndex].stockLevel += item.quantity;
+    const allInv = await dbByCompany<any>(schema.inventory, sale.companyId);
+    const inv = allInv.find((i: any) => i.sku === item.sku);
+    if (inv) {
+      await dbUpdate(schema.inventory, inv.id, { stockLevel: Number(inv.stockLevel) + item.quantity });
     }
-  });
+  }
 
-  posSales[index].status = 'Void';
-  posSales[index].updatedAt = new Date().toISOString();
+  const updated = await dbUpdate(schema.posSales, id, { status: 'Void', updatedAt: new Date().toISOString() });
 
-  logAudit(posSales[index].companyId, posSales[index].employeeId, posSales[index].employeeName, 'VOID_POS_SALE', 'POS', `Voided sale ${posSales[index].saleNumber} - Reason: ${reason}`);
-  res.json(posSales[index]);
+  logAudit(sale.companyId, sale.employeeId, sale.employeeName, 'VOID_POS_SALE', 'POS', `Voided sale ${sale.saleNumber} - Reason: ${reason}`);
+  res.json(updated);
 });
 
 // 7. POS Discounts
-app.get('/api/pos/discounts', (req, res) => {
+app.get('/api/pos/discounts', async (req, res) => {
   const { companyId, isActive } = req.query;
-  let filtered = posDiscounts;
-  if (companyId) filtered = filtered.filter(d => d.companyId === companyId);
-  if (isActive !== undefined) filtered = filtered.filter(d => d.isActive === (isActive === 'true'));
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posDiscounts);
+  if (companyId) all = all.filter(d => d.companyId === companyId);
+  if (isActive !== undefined) all = all.filter(d => d.isActive === (isActive === 'true'));
+  res.json(all);
 });
 
-app.post('/api/pos/discounts', (req, res) => {
+app.post('/api/pos/discounts', async (req, res) => {
   const { companyId, name, type, value, applicableProducts, applicableCategories, minPurchaseAmount, maxDiscountAmount, startDate, endDate, maxUsage } = req.body;
   const newDiscount: POSDiscount = {
     id: `pos-disc-${Date.now()}`,
@@ -2590,37 +2319,34 @@ app.post('/api/pos/discounts', (req, res) => {
     maxUsage: maxUsage ? Number(maxUsage) : undefined,
     createdAt: new Date().toISOString()
   };
-  posDiscounts.push(newDiscount);
+  await dbInsert(schema.posDiscounts, newDiscount);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'CREATE_POS_DISCOUNT', 'POS', `Created discount: ${name}`);
   res.status(201).json(newDiscount);
 });
 
-app.put('/api/pos/discounts/:id', (req, res) => {
+app.put('/api/pos/discounts/:id', async (req, res) => {
   const { id } = req.params;
-  const index = posDiscounts.findIndex(d => d.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Discount not found' });
+  const discount = await dbById<any>(schema.posDiscounts, id);
+  if (!discount) return res.status(404).json({ error: 'Discount not found' });
 
-  posDiscounts[index] = {
-    ...posDiscounts[index],
-    ...req.body
-  };
+  const updated = await dbUpdate(schema.posDiscounts, id, req.body);
 
-  logAudit(posDiscounts[index].companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_POS_DISCOUNT', 'POS', `Updated discount: ${posDiscounts[index].name}`);
-  res.json(posDiscounts[index]);
+  logAudit(discount.companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_POS_DISCOUNT', 'POS', `Updated discount: ${discount.name}`);
+  res.json(updated);
 });
 
 // 8. POS Returns
-app.get('/api/pos/returns', (req, res) => {
+app.get('/api/pos/returns', async (req, res) => {
   const { companyId, terminalId, startDate, endDate } = req.query;
-  let filtered = posReturns;
-  if (companyId) filtered = filtered.filter(r => r.companyId === companyId);
-  if (terminalId) filtered = filtered.filter(r => r.terminalId === terminalId);
-  if (startDate) filtered = filtered.filter(r => r.date >= startDate.toString());
-  if (endDate) filtered = filtered.filter(r => r.date <= endDate.toString());
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posReturns);
+  if (companyId) all = all.filter(r => r.companyId === companyId);
+  if (terminalId) all = all.filter(r => r.terminalId === terminalId);
+  if (startDate) all = all.filter(r => r.date >= startDate.toString());
+  if (endDate) all = all.filter(r => r.date <= endDate.toString());
+  res.json(all);
 });
 
-app.post('/api/pos/returns', (req, res) => {
+app.post('/api/pos/returns', async (req, res) => {
   const { companyId, terminalId, employeeId, employeeName, customerId, customerName, originalSaleId, originalSaleNumber, items, refundMethod, reason, notes } = req.body;
 
   const subtotal = items.reduce((sum: number, item: any) => sum + (item.unitPrice * item.quantity), 0);
@@ -2652,83 +2378,88 @@ app.post('/api/pos/returns', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  posReturns.push(newReturn);
+  await dbInsert(schema.posReturns, newReturn);
   logAudit(companyId, employeeId, employeeName, 'CREATE_POS_RETURN', 'POS', `Return ${returnNumber} - Original sale: ${originalSaleNumber}`);
   res.status(201).json(newReturn);
 });
 
-app.post('/api/pos/returns/:id/approve', (req, res) => {
+app.post('/api/pos/returns/:id/approve', async (req, res) => {
   const { id } = req.params;
-  const index = posReturns.findIndex(r => r.id === id);
-  if (index === -1) return res.status(404).json({ error: 'Return not found' });
+  const ret = await dbById<any>(schema.posReturns, id);
+  if (!ret) return res.status(404).json({ error: 'Return not found' });
 
   // Restore stock
-  posReturns[index].items.forEach(item => {
-    const prodIndex = posProducts.findIndex(p => p.id === item.productId);
-    if (prodIndex !== -1) {
-      posProducts[prodIndex].stockLevel += item.quantity;
-      posProducts[prodIndex].updatedAt = new Date().toISOString();
+  for (const item of ret.items) {
+    const product = await dbById<any>(schema.posProducts, item.productId);
+    if (product) {
+      await dbUpdate(schema.posProducts, item.productId, {
+        stockLevel: Number(product.stockLevel) + item.quantity,
+        updatedAt: new Date().toISOString()
+      });
     }
 
-    const invIndex = inventory.findIndex(i => i.sku === item.sku);
-    if (invIndex !== -1) {
-      inventory[invIndex].stockLevel += item.quantity;
+    const allInv = await dbByCompany<any>(schema.inventory, ret.companyId);
+    const inv = allInv.find((i: any) => i.sku === item.sku);
+    if (inv) {
+      await dbUpdate(schema.inventory, inv.id, { stockLevel: Number(inv.stockLevel) + item.quantity });
     }
-  });
+  }
 
   // Process refund to customer
-  if (posReturns[index].customerId) {
-    const custIndex = posCustomers.findIndex(c => c.id === posReturns[index].customerId);
-    if (custIndex !== -1 && posReturns[index].refundMethod === 'Store Credit') {
-      posCustomers[custIndex].storeCredit += posReturns[index].total;
-      posCustomers[custIndex].updatedAt = new Date().toISOString();
+  if (ret.customerId && ret.refundMethod === 'Store Credit') {
+    const customer = await dbById<any>(schema.posCustomers, ret.customerId);
+    if (customer) {
+      await dbUpdate(schema.posCustomers, ret.customerId, {
+        storeCredit: Number(customer.storeCredit) + ret.total,
+        updatedAt: new Date().toISOString()
+      });
     }
   }
 
   // Update shift
-  const shiftIndex = posShifts.findIndex(s => s.id === posShifts.find(s => s.terminalId === posReturns[index].terminalId && s.status === 'Open')?.id);
-  if (shiftIndex !== -1) {
-    posShifts[shiftIndex].refunds += posReturns[index].total;
+  const allShifts = await dbByCompany<any>(schema.posShifts, ret.companyId);
+  const openShift = allShifts.find((s: any) => s.terminalId === ret.terminalId && s.status === 'Open');
+  if (openShift) {
+    await dbUpdate(schema.posShifts, openShift.id, { refunds: Number(openShift.refunds) + ret.total });
   }
 
-  posReturns[index].refundStatus = 'Processed';
-  posReturns[index].processedAt = new Date().toISOString();
+  const updated = await dbUpdate(schema.posReturns, id, { refundStatus: 'Processed', processedAt: new Date().toISOString() });
 
-  logAudit(posReturns[index].companyId, posReturns[index].employeeId, posReturns[index].employeeName, 'APPROVE_POS_RETURN', 'POS', `Approved return ${posReturns[index].returnNumber} - $${posReturns[index].total}`);
-  res.json(posReturns[index]);
+  logAudit(ret.companyId, ret.employeeId, ret.employeeName, 'APPROVE_POS_RETURN', 'POS', `Approved return ${ret.returnNumber} - $${ret.total}`);
+  res.json(updated);
 });
 
 // 9. POS Reports
-app.get('/api/pos/reports/daily', (req, res) => {
+app.get('/api/pos/reports/daily', async (req, res) => {
   const { companyId, branchId, terminalId, date } = req.query;
-  let filtered = posDailyReports;
-  if (companyId) filtered = filtered.filter(r => r.companyId === companyId);
-  if (branchId) filtered = filtered.filter(r => r.branchId === branchId);
-  if (terminalId) filtered = filtered.filter(r => r.terminalId === terminalId);
-  if (date) filtered = filtered.filter(r => r.date === date);
-  res.json(filtered);
+  let all = await dbAll<any>(schema.posDailyReports);
+  if (companyId) all = all.filter(r => r.companyId === companyId);
+  if (branchId) all = all.filter(r => r.branchId === branchId);
+  if (terminalId) all = all.filter(r => r.terminalId === terminalId);
+  if (date) all = all.filter(r => r.date === date);
+  res.json(all);
 });
 
-app.post('/api/pos/reports/generate', (req, res) => {
+app.post('/api/pos/reports/generate', async (req, res) => {
   const { companyId, branchId, terminalId, date } = req.body;
 
   // Filter sales for the date
-  const daySales = posSales.filter(s =>
-    s.companyId === companyId &&
+  const allSales = await dbByCompany<any>(schema.posSales, companyId);
+  const daySales = allSales.filter((s: any) =>
     s.terminalId === terminalId &&
     s.date.startsWith(date)
   );
 
-  const totalSales = daySales.reduce((sum, s) => sum + s.total, 0);
-  const cashSales = daySales.reduce((sum, s) => sum + s.payments.filter((p: any) => p.method === 'Cash').reduce((sum: number, p: any) => sum + p.amount, 0), 0);
-  const cardSales = daySales.reduce((sum, s) => sum + s.payments.filter((p: any) => p.method === 'Card').reduce((sum: number, p: any) => sum + p.amount, 0), 0);
-  const digitalWalletSales = daySales.reduce((sum, s) => sum + s.payments.filter((p: any) => p.method === 'Digital Wallet').reduce((sum: number, p: any) => sum + p.amount, 0), 0);
-  const storeCreditSales = daySales.reduce((sum, s) => sum + s.payments.filter((p: any) => p.method === 'Store Credit').reduce((sum: number, p: any) => sum + p.amount, 0), 0);
+  const totalSales = daySales.reduce((sum: number, s: any) => sum + s.total, 0);
+  const cashSales = daySales.reduce((sum: number, s: any) => sum + s.payments.filter((p: any) => p.method === 'Cash').reduce((sum2: number, p: any) => sum2 + p.amount, 0), 0);
+  const cardSales = daySales.reduce((sum: number, s: any) => sum + s.payments.filter((p: any) => p.method === 'Card').reduce((sum2: number, p: any) => sum2 + p.amount, 0), 0);
+  const digitalWalletSales = daySales.reduce((sum: number, s: any) => sum + s.payments.filter((p: any) => p.method === 'Digital Wallet').reduce((sum2: number, p: any) => sum2 + p.amount, 0), 0);
+  const storeCreditSales = daySales.reduce((sum: number, s: any) => sum + s.payments.filter((p: any) => p.method === 'Store Credit').reduce((sum2: number, p: any) => sum2 + p.amount, 0), 0);
 
   // Calculate top selling products
   const productSales: Record<string, { productName: string; quantity: number; revenue: number }> = {};
-  daySales.forEach(sale => {
-    sale.items.forEach(item => {
+  daySales.forEach((sale: any) => {
+    sale.items.forEach((item: any) => {
       if (!productSales[item.productId]) {
         productSales[item.productId] = { productName: item.productName, quantity: 0, revenue: 0 };
       }
@@ -2749,12 +2480,13 @@ app.post('/api/pos/reports/generate', (req, res) => {
     transactions: 0
   }));
 
-  daySales.forEach(sale => {
+  daySales.forEach((sale: any) => {
     const hour = new Date(sale.date).getHours();
     hourlySales[hour].sales += sale.total;
     hourlySales[hour].transactions += 1;
   });
 
+  const allReturns = await dbByCompany<any>(schema.posReturns, companyId);
   const newReport: POSDailyReport = {
     id: `pos-report-${Date.now()}`,
     companyId,
@@ -2768,9 +2500,9 @@ app.post('/api/pos/reports/generate', (req, res) => {
     cardSales,
     digitalWalletSales,
     storeCreditSales,
-    refunds: posReturns.filter(r => r.companyId === companyId && r.terminalId === terminalId && r.date.startsWith(date) && r.refundStatus === 'Processed').reduce((sum, r) => sum + r.total, 0),
-    discounts: daySales.reduce((sum, s) => sum + s.discount, 0),
-    taxCollected: daySales.reduce((sum, s) => sum + s.tax, 0),
+    refunds: allReturns.filter((r: any) => r.terminalId === terminalId && r.date.startsWith(date) && r.refundStatus === 'Processed').reduce((sum: number, r: any) => sum + r.total, 0),
+    discounts: daySales.reduce((sum: number, s: any) => sum + s.discount, 0),
+    taxCollected: daySales.reduce((sum: number, s: any) => sum + s.tax, 0),
     topSellingProducts,
     paymentMethods: [
       { method: 'Cash', amount: cashSales, percentage: totalSales > 0 ? (cashSales / totalSales) * 100 : 0 },
@@ -2782,14 +2514,15 @@ app.post('/api/pos/reports/generate', (req, res) => {
     createdAt: new Date().toISOString()
   };
 
-  posDailyReports.push(newReport);
+  await dbInsert(schema.posDailyReports, newReport);
   res.status(201).json(newReport);
 });
 
 // 10. Audit Logs
-app.get('/api/audit-logs', (req, res) => {
+app.get('/api/audit-logs', async (req, res) => {
   const { companyId } = req.query;
-  res.json(companyId ? auditLogs.filter(l => l.companyId === companyId) : auditLogs);
+  const all = await dbAll<any>(schema.auditLogs);
+  res.json(companyId ? all.filter((l: any) => l.companyId === companyId) : all);
 });
 
 
@@ -2806,15 +2539,17 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 
   // Inject current ERP database context dynamically depending on selected company
-  const compData = companies.find(c => c.id === selectedCompanyId) || companies[0];
-  const compEmployees = employees.filter(e => e.companyId === selectedCompanyId);
-  const compLeads = leads.filter(l => l.companyId === selectedCompanyId);
-  const compGL = glAccounts.filter(g => g.companyId === selectedCompanyId);
-  const compInvoices = invoices.filter(i => i.companyId === selectedCompanyId);
-  const compStock = inventory.filter(v => v.companyId === selectedCompanyId);
-  const compPOSSales = posSales.filter(s => s.companyId === selectedCompanyId);
-  const compPOSProducts = posProducts.filter(p => p.companyId === selectedCompanyId);
-  const compPOSCustomers = posCustomers.filter(c => c.companyId === selectedCompanyId);
+  const allCompanies = await dbAll<any>(schema.companies);
+  const compData = allCompanies.find((c: any) => c.id === selectedCompanyId) || allCompanies[0];
+  const compEmployees = await dbByCompany<any>(schema.employees, selectedCompanyId);
+  const compLeads = await dbByCompany<any>(schema.crmLeads, selectedCompanyId);
+  const compGL = await dbByCompany<any>(schema.glAccounts, selectedCompanyId);
+  const compInvoices = await dbByCompany<any>(schema.invoices, selectedCompanyId);
+  const compStock = await dbByCompany<any>(schema.inventory, selectedCompanyId);
+  const compPOSSales = await dbByCompany<any>(schema.posSales, selectedCompanyId);
+  const compPOSProducts = await dbByCompany<any>(schema.posProducts, selectedCompanyId);
+  const compPOSCustomers = await dbByCompany<any>(schema.posCustomers, selectedCompanyId);
+  const compDepartments = await dbByCompany<any>(schema.departments, selectedCompanyId);
 
   const databaseContextString = `
     CURRENT ERP DB DUMP FOR SYSTEM CONTEXT (Tenant: ${compData.name}):
@@ -2822,14 +2557,14 @@ app.post('/api/ai/chat', async (req, res) => {
     Premium Feature Packs Enabled: ${compData.premiumFeatures.join(', ')}
     Currency: ${compData.currency}
     Timezone: ${compData.timezone}
-    Department Count: ${departments.filter(d => d.companyId === selectedCompanyId).length}
-    Total Employees Registered: ${compEmployees.length} (Key: ${compEmployees.map(e => `${e.firstName} ${e.lastName} - ${e.designation}`).join(', ')})
-    Active Sales Leads: ${compLeads.map(l => `${l.companyName} ($${l.value}, score: ${l.aiLeadScore}, Status: ${l.status})`).join('; ')}
-    Financial Accounts Balances: ${compGL.map(a => `${a.name} (Code ${a.code}): ${compData.currency} ${a.balance}`).join('; ')}
-    Recent Invoices Issued: ${compInvoices.map(i => `${i.invoiceNumber} to ${i.customerName} ($${i.total}, Status: ${i.status})`).join('; ')}
-    Critical Warehoused Assets: ${compStock.map(s => `${s.name} (Stock: ${s.stockLevel}, Min limit: ${s.minStockLevel})`).join('; ')}
-    POS Today's Sales: ${compPOSSales.length} transactions totaling $${compPOSSales.reduce((sum, s) => sum + s.total, 0).toFixed(2)}
-    POS Products: ${compPOSProducts.length} items across ${new Set(compPOSProducts.map(p => p.category)).size} categories
+    Department Count: ${compDepartments.length}
+    Total Employees Registered: ${compEmployees.length} (Key: ${compEmployees.map((e: any) => `${e.firstName} ${e.lastName} - ${e.designation}`).join(', ')})
+    Active Sales Leads: ${compLeads.map((l: any) => `${l.companyName} ($${l.value}, score: ${l.aiLeadScore}, Status: ${l.status})`).join('; ')}
+    Financial Accounts Balances: ${compGL.map((a: any) => `${a.name} (Code ${a.code}): ${compData.currency} ${a.balance}`).join('; ')}
+    Recent Invoices Issued: ${compInvoices.map((i: any) => `${i.invoiceNumber} to ${i.customerName} ($${i.total}, Status: ${i.status})`).join('; ')}
+    Critical Warehoused Assets: ${compStock.map((s: any) => `${s.name} (Stock: ${s.stockLevel}, Min limit: ${s.minStockLevel})`).join('; ')}
+    POS Today's Sales: ${compPOSSales.length} transactions totaling $${compPOSSales.reduce((sum: number, s: any) => sum + s.total, 0).toFixed(2)}
+    POS Products: ${compPOSProducts.length} items across ${new Set(compPOSProducts.map((p: any) => p.category)).size} categories
     POS Customers: ${compPOSCustomers.length} registered customers
   `;
 

@@ -15,7 +15,7 @@ export const INITIAL_COMPANIES: Company[] = [
     currency: 'USD',
     timezone: 'America/New_York',
     language: 'English',
-    activeModules: ['Administration', 'HR', 'CRM', 'Accounting', 'Inventory', 'Help Desk', 'Project Management', 'POS'],
+    activeModules: ['Administration', 'HR', 'Payroll', 'Accounting', 'CRM', 'Inventory', 'POS', 'Sales', 'Procurement', 'Manufacturing', 'Project Management', 'AI Assistant', 'Reports & Analytics', 'Workflow & Automation', 'Communication', 'Compliance', 'Learning Management (LMS)', 'Document Management', 'Visitor Management', 'Asset Management', 'Help Desk'],
     premiumFeatures: ['GPS Attendance', 'AI Lead Scoring', 'Financial Forecasting', 'Auto Reordering'],
     billingPlan: 'Enterprise',
     billingStatus: 'Active',

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Company, User } from '../types';
+import { ROLE_MODULES as rolePermissions, ROLE_SUBMENUS as submenuPermissions } from '../permissions';
 
 interface SidebarProps {
   selectedCompany: Company;
@@ -64,44 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'Payroll': 'bi bi-wallet2',
   };
 
-  // Role-based module access permissions
-  const rolePermissions: Record<string, string[]> = {
-    'Super Admin': ['Platform Management'], // Platform-level tenant and subscription management
-    'Company Admin': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'Point of Sale (POS)', 'Intelligence'],
-    'CEO': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'Point of Sale (POS)', 'Intelligence'], // Full company access
-    'HR Manager': ['HR', 'Payroll', 'Intelligence'],
-    'HR Officer': ['HR', 'Payroll', 'Intelligence'],
-    'Accountant': ['Accounting', 'Intelligence'],
-    'Finance Manager': ['Accounting', 'Administration', 'Intelligence'],
-    'Sales Manager': ['CRM', 'Sales', 'Point of Sale (POS)', 'Intelligence'],
-    'Sales Rep': ['CRM', 'Sales', 'Intelligence'],
-    'Sales Executive': ['CRM', 'Sales', 'Intelligence'],
-    'Inventory Manager': ['Operations', 'Point of Sale (POS)', 'Intelligence'],
-    'Store Keeper': ['Operations', 'Intelligence'],
-    'Support Agent': ['Help Desk', 'Intelligence'],
-    'Department Head': ['HR', 'Administration', 'Intelligence'], // Department heads can manage their department
-    'Employee': ['HR', 'Payroll'] // Limited access for regular employees
-  };
-
-  // Role-based submenu access permissions
-  const submenuPermissions: Record<string, string[]> = {
-    'Super Admin': ['platform-tenants', 'platform-billing', 'platform-subscriptions', 'platform-analytics', 'platform-settings', 'platform-users'], // Platform management submenus
-    'Company Admin': ['*'], // Access to all submenus within their modules
-    'CEO': ['*'], // Full access like Company Admin
-    'HR Manager': ['hr-employees', 'hr-attendance', 'hr-leave', 'hr-recruitment', 'hr-onboarding', 'hr-performance', 'hr-orgchart', 'hr-exit', 'hr-departments', 'payroll-run', 'payroll-slips', 'payroll-tax', 'payroll-overtime', 'rep-dashboard', 'rep-revenue', 'rep-workforce', 'rep-financial'],
-    'HR Officer': ['hr-employees', 'hr-attendance', 'hr-leave', 'hr-recruitment', 'hr-onboarding', 'hr-performance', 'hr-orgchart', 'hr-departments', 'payroll-run', 'payroll-slips', 'rep-dashboard', 'rep-workforce'],
-    'Accountant': ['hr-employees', 'hr-orgchart', 'hr-departments', 'accounting', 'acc-journal', 'acc-trial', 'acc-invoices', 'acc-expenses', 'acc-opening-balances', 'acc-fiscal-periods', 'acc-ap', 'acc-ar', 'acc-bank', 'acc-assets', 'acc-budgets', 'acc-costcenters', 'acc-currency', 'acc-tax', 'acc-tax-returns', 'acc-intercompany', 'acc-consolidation', 'acc-compliance', 'acc-audit-trail', 'acc-policies', 'acc-filing-deadlines', 'acc-reports', 'acc-reports-pl', 'acc-reports-bs', 'acc-reports-cf', 'acc-reports-aging', 'rep-dashboard', 'rep-revenue', 'rep-financial'],
-    'Finance Manager': ['hr-employees', 'hr-orgchart', 'hr-departments', 'accounting', 'acc-journal', 'acc-trial', 'acc-invoices', 'acc-expenses', 'acc-opening-balances', 'acc-fiscal-periods', 'acc-ap', 'acc-ar', 'acc-bank', 'acc-assets', 'acc-budgets', 'acc-costcenters', 'acc-currency', 'acc-tax', 'acc-tax-returns', 'acc-intercompany', 'acc-consolidation', 'acc-compliance', 'acc-audit-trail', 'acc-policies', 'acc-filing-deadlines', 'acc-reports', 'acc-reports-pl', 'acc-reports-bs', 'acc-reports-cf', 'acc-reports-aging', 'admin-users', 'admin-roles', 'admin-settings', 'rep-dashboard', 'rep-revenue', 'rep-financial'],
-    'Sales Manager': ['hr-employees', 'hr-orgchart', 'hr-departments', 'crm-pipeline', 'crm-contacts', 'crm-activities', 'crm-tasks', 'crm-emails', 'crm-reports', 'sales-orders', 'sales-quotes', 'sales-customers', 'sales-targets', 'pos-register', 'pos-sessions', 'pos-reports', 'rep-dashboard', 'rep-revenue'],
-    'Sales Rep': ['hr-employees', 'hr-orgchart', 'crm-pipeline', 'crm-contacts', 'crm-activities', 'crm-tasks', 'crm-emails', 'crm-reports', 'sales-orders', 'sales-quotes', 'sales-customers', 'rep-dashboard'],
-    'Sales Executive': ['hr-employees', 'hr-orgchart', 'crm-pipeline', 'crm-contacts', 'crm-activities', 'crm-tasks', 'crm-emails', 'crm-reports', 'sales-orders', 'sales-quotes', 'sales-customers', 'sales-targets', 'rep-dashboard', 'rep-revenue'],
-    'Inventory Manager': ['hr-employees', 'hr-orgchart', 'inv-stock', 'inv-warehouses', 'inv-transfers', 'inv-valuation', 'proc-pos', 'proc-vendors', 'proc-rfq', 'pos-register', 'pos-sessions', 'pos-reports', 'rep-dashboard', 'rep-operations'],
-    'Store Keeper': ['hr-employees', 'hr-orgchart', 'inv-stock', 'inv-warehouses', 'inv-transfers', 'inv-valuation', 'rep-dashboard', 'rep-operations'],
-    'Support Agent': ['hr-employees', 'hr-orgchart', 'help-tickets', 'help-requests', 'help-knowledge', 'help-communication', 'rep-dashboard', 'rep-operations'],
-    'Department Head': ['hr-employees', 'hr-attendance', 'hr-leave', 'hr-orgchart', 'hr-departments', 'admin-users', 'admin-roles', 'rep-dashboard', 'rep-workforce'], // Limited admin access for department management
-    'Employee': ['hr-employees', 'hr-attendance', 'hr-leave', 'hr-orgchart', 'hr-performance', 'payroll-slips'] // Employee Self Service access
-  };
-
+  // Role→module and role→submenu maps are owned by src/permissions.ts (single source of truth).
   // Check if user has access to a module
   const hasModuleAccess = (moduleId: string): boolean => {
     if (moduleId === 'Dashboard') return true;
@@ -231,9 +195,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'sales-quotes', label: 'Quotations', viewId: 'sales-quotes', iconClass: 'bi bi-file-earmark-check' },
             { id: 'sales-customers', label: 'Customers', viewId: 'sales-customers', iconClass: 'bi bi-people' },
             { id: 'sales-targets', label: 'Sales Targets', viewId: 'sales-targets', iconClass: 'bi bi-bullseye' },
-            { id: 'pos-register', label: 'POS Cash Register', viewId: 'pos', iconClass: 'bi bi-cash-coin', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-sessions', label: 'POS Sessions', viewId: 'pos-sessions', iconClass: 'bi bi-clock', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-reports', label: 'POS Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'Point of Sale (POS)' },
+            { id: 'pos-register', label: 'POS Cash Register', viewId: 'pos', iconClass: 'bi bi-cash-coin', moduleId: 'POS' },
+            { id: 'pos-sessions', label: 'POS Sessions', viewId: 'pos-sessions', iconClass: 'bi bi-clock', moduleId: 'POS' },
+            { id: 'pos-reports', label: 'POS Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'POS' },
+          ]
+        },
+        {
+          id: 'POS', label: 'Point of Sale', iconClass: 'bi bi-cash-coin', viewId: 'pos',
+          subMenus: [
+            { id: 'pos-terminal', label: 'POS Terminal', viewId: 'pos', iconClass: 'bi bi-cash-stack', moduleId: 'POS' },
+            { id: 'pos-products', label: 'Products', viewId: 'pos-products', iconClass: 'bi bi-box-seam', moduleId: 'POS' },
+            { id: 'pos-customers', label: 'Customers', viewId: 'pos-customers', iconClass: 'bi bi-people', moduleId: 'POS' },
+            { id: 'pos-shifts', label: 'Shifts', viewId: 'pos-shifts', iconClass: 'bi bi-clock-history', moduleId: 'POS' },
+            { id: 'pos-sales', label: 'Sales History', viewId: 'pos-sales', iconClass: 'bi bi-receipt', moduleId: 'POS' },
+            { id: 'pos-discounts', label: 'Discounts', viewId: 'pos-discounts', iconClass: 'bi bi-tags', moduleId: 'POS' },
+            { id: 'pos-returns', label: 'Returns', viewId: 'pos-returns', iconClass: 'bi bi-arrow-return-left', moduleId: 'POS' },
+            { id: 'pos-reports', label: 'Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'POS' },
           ]
         },
       ]
@@ -267,20 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ]
         },
         {
-          id: 'POS', label: 'Point of Sale', iconClass: 'bi bi-cash-coin', viewId: 'pos',
-          subMenus: [
-            { id: 'pos-terminal', label: 'POS Terminal', viewId: 'pos', iconClass: 'bi bi-cash-stack', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-products', label: 'Products', viewId: 'pos-products', iconClass: 'bi bi-box-seam', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-customers', label: 'Customers', viewId: 'pos-customers', iconClass: 'bi bi-people', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-shifts', label: 'Shifts', viewId: 'pos-shifts', iconClass: 'bi bi-clock-history', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-sales', label: 'Sales History', viewId: 'pos-sales', iconClass: 'bi bi-receipt', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-discounts', label: 'Discounts', viewId: 'pos-discounts', iconClass: 'bi bi-tags', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-returns', label: 'Returns', viewId: 'pos-returns', iconClass: 'bi bi-arrow-return-left', moduleId: 'Point of Sale (POS)' },
-            { id: 'pos-reports', label: 'Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'Point of Sale (POS)' },
-          ]
-        },
-        {
-          id: 'Engagement', label: 'Engagement & Compliance', iconClass: 'bi bi-heart-pulse', viewId: 'helpdesk',
+          id: 'Help Desk', label: 'Help Desk', iconClass: 'bi bi-heart-pulse', viewId: 'helpdesk',
           subMenus: [
             { id: 'hd-tickets', label: 'Support Tickets', viewId: 'helpdesk', iconClass: 'bi bi-ticket-detailed', moduleId: 'Help Desk' },
             { id: 'hd-sla', label: 'SLA Monitor', viewId: 'hd-sla', iconClass: 'bi bi-speedometer', moduleId: 'Help Desk' },
@@ -302,11 +266,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           id: 'Intelligence', label: 'Intelligence & Analytics', iconClass: 'bi bi-cpu', viewId: 'reports',
           subMenus: [
-            { id: 'rep-dashboard', label: 'Reports Dashboard', viewId: 'reports', iconClass: 'bi bi-graph-up', moduleId: 'Reports & Analytics' },
-            { id: 'rep-revenue', label: 'Revenue & Sales', viewId: 'reports-revenue', iconClass: 'bi bi-currency-dollar', moduleId: 'Reports & Analytics' },
-            { id: 'rep-workforce', label: 'Workforce Analytics', viewId: 'reports-workforce', iconClass: 'bi bi-people', moduleId: 'Reports & Analytics' },
-            { id: 'rep-operations', label: 'Operations', viewId: 'reports-operations', iconClass: 'bi bi-gear', moduleId: 'Reports & Analytics' },
-            { id: 'rep-financial', label: 'Financial Summary', viewId: 'reports-financial', iconClass: 'bi bi-cash-stack', moduleId: 'Reports & Analytics' },
             { id: 'wf-builder', label: 'Flow Builder', viewId: 'workflow', iconClass: 'bi bi-diagram-3', moduleId: 'Workflow & Automation' },
             { id: 'wf-triggers', label: 'Triggers', viewId: 'wf-triggers', iconClass: 'bi bi-lightning', moduleId: 'Workflow & Automation' },
             { id: 'wf-logs', label: 'Workflow Run Logs', viewId: 'wf-logs', iconClass: 'bi bi-list-check', moduleId: 'Workflow & Automation' },
@@ -373,12 +332,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <nav className="space-y-0.5">
               {group.modules.map((mod) => {
+                const moduleSubIds = mod.subMenus
+                  ? Array.from(new Set(mod.subMenus.map(s => s.moduleId).filter((m): m is string => Boolean(m))))
+                  : [];
                 const isInstalled =
                   mod.id === 'Dashboard' ||
-                  mod.id === 'Operations' ||
-                  mod.id === 'Engagement' ||
-                  mod.id === 'Intelligence' ||
-                  selectedCompany.activeModules.includes(mod.id);
+                  selectedCompany.activeModules.includes(mod.id) ||
+                  moduleSubIds.some(mid => selectedCompany.activeModules.includes(mid));
                 const hasModuleAccessPermission = hasModuleAccess(mod.id);
                 const hasSubMenus = mod.subMenus && mod.subMenus.length > 0;
                 const expanded = isModuleExpanded(mod);

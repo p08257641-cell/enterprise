@@ -4,7 +4,57 @@
  */
 
 import React, { useState } from 'react';
-import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest } from '../types';
+import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord } from '../types';
+
+// Role → quick-access module shortcuts for the generic Business Overview dashboard
+const BUSINESS_SHORTCUTS: Record<string, { label: string; view: string; icon: string }[]> = {
+  'Accountant': [
+    { label: 'General Ledger', view: 'accounting', icon: 'bi bi-journal-text' },
+    { label: 'Invoices', view: 'acc-invoices', icon: 'bi bi-receipt' },
+    { label: 'Expenses', view: 'acc-expenses', icon: 'bi bi-credit-card' },
+    { label: 'Financial Reports', view: 'acc-reports', icon: 'bi bi-graph-up' },
+  ],
+  'Finance Manager': [
+    { label: 'General Ledger', view: 'accounting', icon: 'bi bi-journal-text' },
+    { label: 'Invoices', view: 'acc-invoices', icon: 'bi bi-receipt' },
+    { label: 'User Management', view: 'admin-users', icon: 'bi bi-people' },
+    { label: 'Financial Reports', view: 'acc-reports', icon: 'bi bi-graph-up' },
+  ],
+  'Sales Manager': [
+    { label: 'CRM Pipeline', view: 'crm-pipeline', icon: 'bi bi-funnel' },
+    { label: 'Sales Orders', view: 'sales-orders', icon: 'bi bi-cart' },
+    { label: 'Sales Targets', view: 'sales-targets', icon: 'bi bi-bullseye' },
+    { label: 'POS Register', view: 'pos-register', icon: 'bi bi-cash-register' },
+  ],
+  'Sales Executive': [
+    { label: 'CRM Pipeline', view: 'crm-pipeline', icon: 'bi bi-funnel' },
+    { label: 'Sales Orders', view: 'sales-orders', icon: 'bi bi-cart' },
+    { label: 'Sales Targets', view: 'sales-targets', icon: 'bi bi-bullseye' },
+  ],
+  'Inventory Manager': [
+    { label: 'Stock Control', view: 'inv-stock', icon: 'bi bi-box-seam' },
+    { label: 'Warehouses', view: 'inv-warehouses', icon: 'bi bi-building' },
+    { label: 'Procurement', view: 'proc-pos', icon: 'bi bi-truck' },
+    { label: 'POS Register', view: 'pos-register', icon: 'bi bi-cash-register' },
+  ],
+  'Store Keeper': [
+    { label: 'Stock Control', view: 'inv-stock', icon: 'bi bi-box-seam' },
+    { label: 'Warehouses', view: 'inv-warehouses', icon: 'bi bi-building' },
+    { label: 'Stock Transfers', view: 'inv-transfers', icon: 'bi bi-arrow-left-right' },
+  ],
+  'Department Head': [
+    { label: 'My Team', view: 'hr-employees', icon: 'bi bi-people' },
+    { label: 'Attendance', view: 'hr-attendance', icon: 'bi bi-calendar-check' },
+    { label: 'Leave Requests', view: 'hr-leave', icon: 'bi bi-calendar-x' },
+    { label: 'User Management', view: 'admin-users', icon: 'bi bi-people-gear' },
+  ],
+  'CEO': [
+    { label: 'Financial Reports', view: 'acc-reports', icon: 'bi bi-graph-up' },
+    { label: 'CRM Pipeline', view: 'crm-pipeline', icon: 'bi bi-funnel' },
+    { label: 'Sales Targets', view: 'sales-targets', icon: 'bi bi-bullseye' },
+    { label: 'Operations', view: 'inv-stock', icon: 'bi bi-box-seam' },
+  ],
+};
 
 // ── SVG Pie Chart Component ────────────────────────────────────────────────
 const PieChart = ({ data, title }: { data: { label: string; value: number; color: string }[]; title: string }) => {
@@ -39,8 +89,8 @@ const PieChart = ({ data, title }: { data: { label: string; value: number; color
           {slices.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="text-[11px] text-slate-700 font-medium truncate">{s.label}</span>
-              <span className="text-[10px] text-slate-400 font-sans tabular-nums ml-auto shrink-0">{s.percentage}%</span>
+              <span className="text-[10px] text-slate-600 font-medium truncate" style={{ fontFamily: 'system-ui' }}>{s.label}</span>
+              <span className="text-[10px] text-slate-500 font-mono tabular-nums ml-auto shrink-0" style={{ fontFamily: 'system-ui, monospace' }}>{s.percentage}%</span>
             </div>
           ))}
         </div>
@@ -92,6 +142,9 @@ interface RoleDashboardsProps {
   companies: Company[];
   departments: Department[];
   leaves: LeaveRequest[];
+  attendance: AttendanceRecord[];
+  okrs: OKRRecord[];
+  payslips: PayslipRecord[];
   onApproveLeave: (empId: string) => void;
   onRejectLeave: (empId: string) => void;
   onPayInvoice: (invId: string) => void;
@@ -797,7 +850,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   // ════════════════════════════════════════════════════════════════════════════
   // SALES MANAGER / SALES EXECUTIVE
   // ════════════════════════════════════════════════════════════════════════════
-  if (role === 'Sales Manager' || role === 'Sales Executive') {
+  if (role === 'Sales Manager' || role === 'Sales Executive' || role === 'Sales Rep') {
     const hasCRMModule = selectedCompany.activeModules.includes('CRM');
     
     if (!hasCRMModule) {
@@ -1127,9 +1180,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // DEFAULT DASHBOARD — Help Desk / Support / General Staff
+  // SUPPORT / HELP DESK DASHBOARD — Support Agent
   // ════════════════════════════════════════════════════════════════════════════
-  return (
+  if (role === 'Support Agent') {
+    return (
     <div className="space-y-6">
       <div className="flex items-start justify-between pb-4 border-b border-slate-200">
         <div>
@@ -1189,6 +1243,163 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           )}
         </div>
       </div>
+    </div>
+  );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // DEPARTMENT HEAD — Team oversight & approvals
+  // ════════════════════════════════════════════════════════════════
+  if (role === 'Department Head') {
+    const pendingLeaves = leaves.filter(l => l.status === 'Pending' && l.companyId === selectedCompany.id);
+    const depts = [...new Set(localEmployees.map(e => e.department))] as string[];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+          <div>
+            <span className="inline-flex items-center gap-1.5 bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+              Department Head
+            </span>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">Team Command Center</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Oversee your department, approve leave and act on team requests.</p>
+          </div>
+          <button onClick={() => onNavigateView('hr')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">
+            <i className="bi bi-people text-xs"></i> My Team
+          </button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Headcount" value={localEmployees.length} sub={`${depts.length} departments`} icon="bi bi-people" />
+          <StatCard label="Pending Leaves" value={pendingLeaves.length} sub="Awaiting your approval" icon="bi bi-calendar-check" accent />
+          <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length} sub="Across the company" icon="bi bi-ticket" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+        </div>
+
+        <AnalyticsRow
+          pie={
+            <PieChart
+              title="Workforce Distribution"
+              data={depts.slice(0, 6).map((dept, i) => ({
+                label: dept,
+                value: localEmployees.filter(e => e.department === dept).length,
+                color: CHART_PALETTE[i],
+              }))}
+            />
+          }
+          bar={
+            <BarGraph
+              title="Department Headcount"
+              data={depts.slice(0, 6).map((dept, i) => ({
+                label: dept.length > 14 ? dept.slice(0, 12) + '…' : dept,
+                value: localEmployees.filter(e => e.department === dept).length,
+                color: CHART_PALETTE[i],
+              }))}
+            />
+          }
+        />
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Pending Leave Approvals */}
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Leave Approvals</h3>
+            <div className="space-y-3">
+              {pendingLeaves.length === 0 && (
+                <div className="text-xs text-slate-400 italic">No pending requests</div>
+              )}
+              {pendingLeaves.map(req => {
+                const emp = localEmployees.find(e => e.id === req.employeeId);
+                const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
+                const empDept = emp?.department || '';
+                return (
+                  <div key={req.id} className="p-4 rounded-xl border border-slate-100 bg-amber-50/30 hover:border-slate-200 transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">{empName} <span className="font-normal text-slate-500">· {empDept}</span></div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}</div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => onApproveLeave(req.id)} className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all">
+                          Approve
+                        </button>
+                        <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all">
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Quick Shortcuts */}
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              {[
+                { label: 'My Team', icon: 'bi bi-people', view: 'hr-employees' },
+                { label: 'Attendance', icon: 'bi bi-calendar-check', view: 'hr-attendance' },
+                { label: 'Leave Requests', icon: 'bi bi-calendar-x', view: 'hr-leave' },
+                { label: 'User Management', icon: 'bi bi-people-gear', view: 'admin-users' },
+              ].map(sc => (
+                <button
+                  key={sc.view}
+                  onClick={() => onNavigateView(sc.view)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-semibold transition-all cursor-pointer text-left"
+                >
+                  <span className="flex items-center gap-2">
+                    <i className={`${sc.icon} text-slate-400`}></i>
+                    {sc.label}
+                  </span>
+                  <i className="bi bi-chevron-right text-[10px] text-slate-400"></i>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // BUSINESS OVERVIEW — default dashboard for roles without a bespoke one
+  // (none of the 15 defined roles reach here; kept as a safe fallback)
+  // ════════════════════════════════════════════════════════════════
+  const shortcuts = BUSINESS_SHORTCUTS[role] || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div>
+          <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            {role}
+          </span>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">Business Overview</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Key metrics and quick access for your role at {selectedCompany.name}.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Employees" value={localEmployees.length} sub={`${departments.length} departments`} icon="bi bi-people" />
+        <StatCard label="Open Invoices" value={localInvoices.filter(i => i.status !== 'Paid').length} sub={`$${localInvoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-receipt" accent />
+        <StatCard label="Open Tickets" value={localTickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length} sub="Awaiting resolution" icon="bi bi-ticket" />
+        <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+      </div>
+
+      {shortcuts.length > 0 && (
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Your Modules</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {shortcuts.map(sc => (
+              <button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-semibold transition-all cursor-pointer text-left">
+                <span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span>
+                <i className="bi bi-chevron-right text-[10px] text-slate-400"></i>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -803,6 +803,8 @@ export interface TaxCode {
   type: 'VAT' | 'GST' | 'WHT' | 'Sales Tax' | 'Exempt';
   glAccountId?: string;
   isActive: boolean;
+  jurisdiction?: string;
+  accountName?: string;
   createdAt: string;
 }
 
@@ -819,6 +821,13 @@ export interface TaxReturn {
   dueDate: string;
   createdBy: string;
   createdAt: string;
+  type?: string;
+  jurisdiction?: string;
+  taxableIncome?: number;
+  taxDue?: number;
+  credits?: number;
+  netPayable?: number;
+  filedBy?: string;
 }
 
 export interface IntercompanyTransaction {
@@ -835,6 +844,8 @@ export interface IntercompanyTransaction {
   eliminationEntryId?: string;
   createdBy: string;
   createdAt: string;
+  currency?: string;
+  date?: string;
 }
 
 export interface ConsolidationRule {
@@ -846,6 +857,12 @@ export interface ConsolidationRule {
   minorityInterestPct: number;
   isActive: boolean;
   createdAt: string;
+  name?: string;
+  description?: string;
+  parentAccountName?: string;
+  method?: string;
+  subsidiaryIds?: string[];
+  intercompanyEliminationAccountId?: string;
 }
 
 export interface ComplianceCheck {
@@ -875,6 +892,9 @@ export interface AuditSnapshot {
   userName: string;
   ipAddress: string;
   timestamp: string;
+  performedByName?: string;
+  oldValue?: any;
+  newValue?: any;
 }
 
 export interface PolicyDocument {
@@ -888,6 +908,8 @@ export interface PolicyDocument {
   totalEmployees: number;
   dueDate: string;
   createdAt: string;
+  status?: string;
+  requiresAcknowledgmentFrom?: string[];
 }
 
 export interface FilingDeadline {
@@ -901,4 +923,10 @@ export interface FilingDeadline {
   assigneeName: string;
   notes?: string;
   createdAt: string;
+  title?: string;
+  type?: string;
+  relatedTaxReturnId?: string;
+  description?: string;
+  filedDate?: string;
+  filedBy?: string;
 }

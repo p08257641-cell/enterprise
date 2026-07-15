@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord } from '../types';
+import { isAdminRole, isHRRole } from '../permissions';
 
 interface HRModuleProps {
   activeView: string;
@@ -140,8 +141,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
   onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress,
 }) => {
   const userRole = selectedUser.activeRole || selectedUser.role;
-  const isAdmin = userRole === 'Company Admin';
-  const isHR = userRole === 'HR Manager' || userRole === 'HR Officer';
+  const isAdmin = isAdminRole(userRole);
+  const isHR = isHRRole(userRole);
   const isDeptHead = userRole === 'Department Head';
   const isHRorAdmin = isAdmin || isHR;
   const isEmployee = !isHRorAdmin && !isDeptHead;

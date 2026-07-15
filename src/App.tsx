@@ -12,8 +12,8 @@ import { WorkflowBuilder } from './components/WorkflowBuilder';
 import { AIAssistant } from './components/AIAssistant';
 import { ModuleViews } from './components/ModuleViews';
 import { TenantSetup } from './components/TenantSetup';
-import { POSView } from './components/POSView';
 import { FadeIn, Skeleton } from './components/ui';
+import { ErrorBoundary } from './components/ErrorBoundary';
 // No lucide-react imports needed
 
 export default function App() {
@@ -253,12 +253,15 @@ export default function App() {
   // Update states whenever selected company is switched to maintain full tenant isolation
   const handleSelectCompany = (company: Company) => {
     setSelectedCompany(company);
-    
+
     // Auto align user perspective to matching tenant's admin, or keep Super Admin
     if (selectedUser?.role !== 'Super Admin') {
       const match = users.find(u => u.companyId === company.id);
       if (match) setSelectedUser(match);
     }
+
+    // Reset to dashboard so we never land on a view that doesn't belong to the new tenant/role
+    setActiveView('dashboard');
   };
 
   // --- ACTIONS HANDLERS (PERSIST ON EXPRESS BACKEND IN MEMORY) ---
@@ -501,16 +504,17 @@ export default function App() {
       // If switching the current user's role, update selectedUser as well
       if (selectedUser && selectedUser.id === userId) {
         setSelectedUser(updatedUser);
+        setActiveView('dashboard');
       }
     } catch (err) {
       console.error('Failed to switch role:', err);
     }
   };
 
-  // Reset view to dashboard when selected user or active role changes to avoid desyncs
-  useEffect(() => {
+  const handleSelectUser = (user: User) => {
+    setSelectedUser(user);
     setActiveView('dashboard');
-  }, [selectedUser?.id, selectedUser?.activeRole]);
+  };
 
   const handleApproveLeave = async (leaveId: string) => {
     if (!selectedUser || !selectedCompany) return;
@@ -1636,7 +1640,7 @@ export default function App() {
           onSelectCompany={handleSelectCompany}
           users={users}
           selectedUser={selectedUser}
-          onSelectUser={setSelectedUser}
+          onSelectUser={handleSelectUser}
           notificationCount={notificationCount}
           onClearNotifications={handleClearNotifications}
           onSearch={setSearchTerm}
@@ -1678,6 +1682,7 @@ export default function App() {
             </div>
           )}
 
+          <ErrorBoundary resetKey={activeView}>
           <FadeIn key={activeView}>
           {activeView === 'dashboard' ? (
             <RoleDashboards
@@ -1702,23 +1707,15 @@ export default function App() {
               onAdjustStock={handleAdjustStock}
               onNavigateView={setActiveView}
             />
-          ) : activeView === 'workflow' ? (
+          ) : activeView === 'workflow' || activeView.startsWith('wf-') ? (
             <WorkflowBuilder
               selectedCompany={selectedCompany}
               workflows={workflows}
               onSaveWorkflow={handleSaveWorkflow}
               onToggleWorkflow={handleToggleWorkflow}
             />
-          ) : activeView === 'ai-copilot' ? (
+          ) : activeView === 'ai-copilot' || activeView.startsWith('ai-') ? (
             <AIAssistant selectedCompany={selectedCompany} />
-          ) : activeView === 'pos' ? (
-            <POSView
-              companyId={selectedCompany.id}
-              activeTab={activeView}
-              onAddProduct={handleAddPOSProduct}
-              onAddCustomer={handleAddPOSCustomer}
-              onCreateSale={handleCreatePOSSale}
-            />
           ) : (
             <ModuleViews
               activeView={activeView}
@@ -1825,6 +1822,7 @@ export default function App() {
             />
           )}
           </FadeIn>
+          </ErrorBoundary>
         </main>
       </div>
 
