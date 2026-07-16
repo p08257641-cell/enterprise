@@ -1446,12 +1446,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
           </div>
           {children.length > 0 && <div className="w-px h-5 bg-slate-300"></div>}
           {children.length > 0 && (
-            <div className="flex items-start">
+            <div className="flex items-start gap-6">
               {children.map((child, ci) => (
                 <div key={child.id} className="flex flex-col items-center">
                   <div className="w-px h-5 bg-slate-300"></div>
                   <OrgNode dept={child} colorI={colorI + ci + 1} />
-                  {ci < children.length - 1 && <div className="w-5"></div>}
                 </div>
               ))}
             </div>
@@ -1465,12 +1464,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
         <SectionHeader title="Organisation Chart" subtitle={`${selectedCompany.name} · Reporting structure`} />
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-8 overflow-x-auto">
           <div className="flex flex-col items-center min-w-[600px]">
-            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }} className="rounded-2xl px-8 py-4 text-center shadow-lg">
+            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }} className="rounded-2xl px-8 py-4 text-center shadow-lg mb-6">
               <div className="text-white font-bold text-sm">Company CEO</div>
               <div className="text-slate-400 text-xs mt-0.5">Managing Director</div>
             </div>
             {roots.length > 0 ? (
-              <div className="flex items-start gap-0 mt-0">
+              <div className="flex items-start gap-8 mt-0">
                 {roots.map((dept, i) => (
                   <OrgNode key={dept.id} dept={dept} colorI={i} />
                 ))}
