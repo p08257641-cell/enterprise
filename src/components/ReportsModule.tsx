@@ -7,6 +7,8 @@
 
 import React, { useState } from 'react';
 import { Company, User, Employee, CRMLead, Invoice, PayslipRecord, SupportTicket, Expense, BankTransaction } from '../types';
+import { downloadCSV } from '../utils/export';
+import { ViewModal, useRowModal, RowModal } from './moduleViews/shared';
 
 interface ReportsModuleProps {
   selectedCompany: Company;
@@ -64,6 +66,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
   const companyExpenses = expenses.filter(e => e.companyId === selectedCompany.id);
   const companyTransactions = bankTransactions.filter(t => t.companyId === selectedCompany.id);
 
+  const repInvModal = useRowModal<Invoice>();
+  const repTicketModal = useRowModal<SupportTicket>();
+
   // Calculate cross-module metrics
   const totalRevenue = companyInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const totalPayroll = companyPayslips.reduce((sum, p) => sum + p.gross, 0);
@@ -111,7 +116,29 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <h1 className="text-xl font-bold tracking-tight text-slate-900">Reports & Analytics</h1>
           <p className="text-sm text-slate-500 mt-0.5">Cross-module business intelligence and insights.</p>
         </div>
-        <button className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer transition-all">
+        <button onClick={() => {
+          let headers: string[] = [];
+          let rows: (string | number)[][] = [];
+          if (activeCategory === 'revenue') {
+            headers = ['Invoice #', 'Customer', 'Amount', 'Status'];
+            rows = companyInvoices.map(i => [i.id, i.customerName, i.total, i.status]);
+          } else if (activeCategory === 'operations') {
+            headers = ['Ticket', 'Subject', 'Status', 'Priority'];
+            rows = companyTickets.map(t => [t.id, (t as any).subject || (t as any).title || '', t.status, t.priority]);
+          } else if (activeCategory === 'financial') {
+            headers = ['Metric', 'Amount'];
+            rows = [
+              ['Total Revenue', totalRevenue],
+              ['Total Payroll', totalPayroll],
+              ['Total Expenses', totalExpenses],
+              ['Net Income', totalRevenue - totalPayroll - totalExpenses],
+            ];
+          } else {
+            headers = ['Department', 'Headcount', 'Payroll'];
+            rows = deptBreakdown.map(d => [d.dept, d.headcount, d.payroll]);
+          }
+          downloadCSV(`report-${activeCategory}-${selectedCompany.id}`, headers, rows);
+        }} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer transition-all">
           <i className="bi bi-download text-xs"></i> Export Report
         </button>
       </div>
@@ -137,8 +164,8 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       {activeCategory === 'overview' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="From invoices" trend="+12.5%" trendUp />
-            <StatCard label="Workforce" value={companyEmployees.length} icon="bi bi-people" sub="Active employees" trend="+3" trendUp />
+            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="From invoices" />
+            <StatCard label="Workforce" value={companyEmployees.length} icon="bi bi-people" sub="Active employees" />
             <StatCard label="Pipeline Value" value={`$${companyLeads.reduce((s, l) => s + l.value, 0).toLocaleString()}`} icon="bi bi-funnel" sub={`${companyLeads.length} leads`} />
             <StatCard label="Open Tickets" value={openTickets} icon="bi bi-headset" sub={avgTicketResolution + ' avg'} />
           </div>
@@ -241,7 +268,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {companyInvoices.slice(0, 10).map(inv => (
-                  <tr key={inv.id} className="hover:bg-slate-50/40">
+                  <tr key={inv.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => repInvModal.open(inv)}>
                     <td className="px-4 py-3 text-xs font-mono text-slate-600">{inv.id}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{inv.customerName}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900 tabular-nums">${inv.total.toLocaleString()}</td>
@@ -311,7 +338,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {companyTickets.slice(0, 10).map(ticket => (
-                  <tr key={ticket.id} className="hover:bg-slate-50/40">
+                  <tr key={ticket.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => repTicketModal.open(ticket)}>
                     <td className="px-4 py-3 text-xs font-mono text-slate-600">{ticket.id}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{ticket.subject}</td>
                     <td className="px-4 py-3">
@@ -341,7 +368,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       {activeCategory === 'financial' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-arrow-up-right" sub="Inflows" trend="+12.5%" trendUp />
+            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-arrow-up-right" sub="Inflows" />
             <StatCard label="Total Expenses" value={`$${totalExpenses.toLocaleString()}`} icon="bi bi-arrow-down-right" sub="Operating costs" />
             <StatCard label="Payroll" value={`$${totalPayroll.toLocaleString()}`} icon="bi bi-people" sub="Monthly payroll" />
             <StatCard label="Net Income" value={`$${(totalRevenue - totalPayroll - totalExpenses).toLocaleString()}`} icon="bi bi-graph-up" sub="Profit/Loss" trend={totalRevenue - totalPayroll - totalExpenses >= 0 ? '+Profit' : '-Loss'} trendUp={totalRevenue - totalPayroll - totalExpenses >= 0} />
@@ -390,6 +417,45 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           </div>
         </div>
       )}
+
+      <RowModal
+        row={repInvModal.selected}
+        onClose={repInvModal.close}
+        title={(r) => r.invoiceNumber}
+        subtitle={(r) => r.customerName}
+        size="lg"
+        fields={[
+          { label: 'Invoice #', key: 'invoiceNumber', mono: true },
+          { label: 'Customer', key: 'customerName' },
+          { label: 'Customer ID', key: 'customerId', mono: true },
+          { label: 'Issue Date', key: 'issueDate', mono: true },
+          { label: 'Due Date', key: 'dueDate', mono: true },
+          { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}` },
+          { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}` },
+          { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}` },
+          { label: 'Status', key: 'status' },
+          { label: 'ID', key: 'id', mono: true },
+        ]}
+      />
+
+      <RowModal
+        row={repTicketModal.selected}
+        onClose={repTicketModal.close}
+        title={(r) => r.subject}
+        subtitle={(r) => r.ticketNumber}
+        size="lg"
+        fields={[
+          { label: 'Ticket #', key: 'ticketNumber', mono: true },
+          { label: 'Subject', key: 'subject' },
+          { label: 'Customer', key: 'customerName' },
+          { label: 'Category', key: 'category' },
+          { label: 'Priority', key: 'priority' },
+          { label: 'Status', key: 'status' },
+          { label: 'Assigned To', key: 'assignedTo' },
+          { label: 'Created At', key: 'createdAt', mono: true },
+          { label: 'ID', key: 'id', mono: true },
+        ]}
+      />
     </div>
   );
 };

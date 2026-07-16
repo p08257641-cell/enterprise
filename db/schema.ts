@@ -93,6 +93,20 @@ export const leaves = pgTable('leaves', {
   days: integer('days'),
 });
 
+export const onboardings = pgTable('onboardings', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  employeeId: text('employeeId'),
+  employeeName: text('employeeName'),
+  department: text('department'),
+  role: text('role'),
+  phase: text('phase'),
+  tasks: jsonb('tasks'),
+  completedTasks: jsonb('completedTasks'),
+  status: text('status'),
+  startDate: text('startDate'),
+});
+
 export const okrs = pgTable('okrs', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),
@@ -124,6 +138,27 @@ export const payslips = pgTable('payslips', {
   socialSec: real('socialSec'),
   medicare: real('medicare'),
   healthIns: real('healthIns'),
+});
+
+export const payrollGroups = pgTable('payroll_groups', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  description: text('description'),
+  employeeIds: text('employeeIds').array(),
+  createdBy: text('createdBy'),
+  createdAt: text('createdAt'),
+});
+
+export const salaryBands = pgTable('salary_bands', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  minSalary: real('minSalary'),
+  maxSalary: real('maxSalary'),
+  employeeCount: integer('employeeCount'),
+  createdBy: text('createdBy'),
+  createdAt: text('createdAt'),
 });
 
 /* ── CRM ───────────────────────────────────────────────────────────────── */
@@ -558,6 +593,72 @@ export const customerPayments = pgTable('customer_payments', {
   bankAccountId: text('bankAccountId'),
   journalEntryId: text('journalEntryId'),
   createdBy: text('createdBy'),
+  createdAt: text('createdAt'),
+});
+
+export const salesOrders = pgTable('sales_orders', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  orderNumber: text('orderNumber'),
+  customerName: text('customerName'),
+  customerId: text('customerId'),
+  items: jsonb('items'),
+  subtotal: real('subtotal'),
+  tax: real('tax'),
+  discount: real('discount'),
+  total: real('total'),
+  status: text('status'),
+  priority: text('priority'),
+  assignedTo: text('assignedTo'),
+  assignedToName: text('assignedToName'),
+  orderDate: text('orderDate'),
+  expectedDelivery: text('expectedDelivery'),
+  notes: text('notes'),
+  createdAt: text('createdAt'),
+});
+
+export const salesCustomers = pgTable('sales_customers', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  email: text('email'),
+  phone: text('phone'),
+  company: text('company'),
+  address: text('address'),
+  totalOrders: real('totalOrders'),
+  totalSpend: real('totalSpend'),
+  lastOrderDate: text('lastOrderDate'),
+  notes: text('notes'),
+  createdAt: text('createdAt'),
+});
+
+export const salesQuotations = pgTable('sales_quotations', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  quoteNumber: text('quoteNumber'),
+  customerName: text('customerName'),
+  customerId: text('customerId'),
+  items: jsonb('items'),
+  subtotal: real('subtotal'),
+  tax: real('tax'),
+  total: real('total'),
+  validUntil: text('validUntil'),
+  status: text('status'),
+  assignedTo: text('assignedTo'),
+  assignedToName: text('assignedToName'),
+  notes: text('notes'),
+  createdAt: text('createdAt'),
+});
+
+export const salesTargets = pgTable('sales_targets', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  repId: text('repId'),
+  repName: text('repName'),
+  month: text('month'),
+  year: text('year'),
+  targetAmount: real('targetAmount'),
+  actualAmount: real('actualAmount'),
   createdAt: text('createdAt'),
 });
 

@@ -26,7 +26,7 @@ export const ReportsView: React.FC<ModuleViewsProps> = (props) => {
         bankTransactions={bankTransactions}
       />
       <div className="bg-slate-900 rounded-xl p-5 text-white">
-        <div className="flex items-center gap-2 mb-3"><i className="bi bi-robot text-slate-400 text-sm"></i><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Business Insight</span></div>
+        <div className="flex items-center gap-2 mb-3"><i className="bi bi-robot text-slate-400 text-sm"></i><span className="section-title text-slate-400">AI Business Insight</span></div>
         {aiInsight ? (
           <p className="text-xs text-slate-300 leading-relaxed">{aiInsight}</p>
         ) : (

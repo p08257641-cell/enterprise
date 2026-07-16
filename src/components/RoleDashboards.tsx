@@ -85,12 +85,12 @@ const PieChart = ({ data, title }: { data: { label: string; value: number; color
             <path key={i} d={s.path} fill={s.color} stroke="white" strokeWidth="0.8" className="transition-opacity hover:opacity-80 cursor-default" />
           ))}
         </svg>
-        <div className="space-y-2 min-w-0">
+        <div className="space-y-2.5 min-w-0">
           {slices.map((s, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="text-[10px] text-slate-600 font-medium truncate" style={{ fontFamily: 'system-ui' }}>{s.label}</span>
-              <span className="text-[10px] text-slate-500 font-mono tabular-nums ml-auto shrink-0" style={{ fontFamily: 'system-ui, monospace' }}>{s.percentage}%</span>
+            <div key={i} className="flex items-center gap-2.5">
+              <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+              <span className="text-sm text-slate-700 font-medium truncate">{s.label}</span>
+              <span className="text-sm text-slate-500 font-sans tabular-nums ml-auto shrink-0 font-semibold">{s.percentage}%</span>
             </div>
           ))}
         </div>
@@ -208,6 +208,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   companies,
   departments,
   leaves,
+  attendance,
+  okrs,
   onApproveLeave,
   onRejectLeave,
   onPayInvoice,
@@ -283,7 +285,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Active Tenants" value={activeCount} sub={`${trialCount} on trial · ${companies.length} total registered`} icon="bi bi-building" />
           <StatCard label="Monthly Recurring" value={`$${totalMRR.toLocaleString()}`} sub="Based on active billing plans" icon="bi bi-currency-dollar" accent />
-          <StatCard label="Platform Uptime" value="99.99%" sub="Express server · All routes nominal" icon="bi bi-activity" />
+          <StatCard label="System Events" value={auditLogs.length} sub="Recorded in audit log" icon="bi bi-activity" />
           <StatCard label="Avg Modules / Tenant" value={avgModules} sub={`Across ${companies.length} tenant orgs`} icon="bi bi-grid" />
         </div>
 
@@ -582,7 +584,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Total Headcount" value={localEmployees.length} sub="All registered personnel" icon="bi bi-people" />
           <StatCard label="Active Today" value={localEmployees.filter(e => e.status === 'Active').length} sub="Clocked in / present" icon="bi bi-check-circle" />
           <StatCard label="On Leave" value={localEmployees.filter(e => e.status === 'On Leave').length} sub="Approved leave requests" icon="bi bi-calendar-check" accent />
-          <StatCard label="Open Positions" value={3} sub="Roles currently recruiting" icon="bi bi-briefcase" />
+          <StatCard label="Departments" value={departments.filter(d => d.companyId === selectedCompany.id).length} sub="Organizational units" icon="bi bi-briefcase" />
         </div>
 
         {/* Charts Row — Pie Chart + Bar Graph */}
@@ -1087,10 +1089,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Leave Balance" value="14 Days" sub="Annual leave remaining" icon="bi bi-calendar-range" />
-          <StatCard label="Clock-In Status" value="09:00 AM" sub="Clocked in today · HQ Location" icon="bi bi-clock-history" accent />
-          <StatCard label="Last Payslip" value={`${selectedCompany.currency} ${baseSalary.toLocaleString()}`} sub="Paid for June 2026" icon="bi bi-cash-stack" />
-          <StatCard label="Active OKRs / Tasks" value="4 Active" sub="Q3 performance cycle" icon="bi bi-graph-up" />
+          <StatCard label="Leave Balance" value={`${21 - leaves.filter(l => l.employeeId === empRecord?.id && l.status === 'Approved').reduce((s, l) => s + l.days, 0)} Days`} sub="Annual leave remaining" icon="bi bi-calendar-range" />
+          <StatCard label="Clock-In Status" value={(() => { const today = new Date().toISOString().split('T')[0]; const rec = attendance.find(a => a.employeeId === empRecord?.id && a.date === today); return rec?.checkIn || 'Not clocked in'; })()} sub={(() => { const today = new Date().toISOString().split('T')[0]; const rec = attendance.find(a => a.employeeId === empRecord?.id && a.date === today); return rec?.checkOut ? `Clocked out at ${rec.checkOut}` : 'Clocked in today'; })()} icon="bi bi-clock-history" accent />
+          <StatCard label="Last Payslip" value={`${selectedCompany.currency} ${baseSalary.toLocaleString()}`} sub={`Paid for ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`} icon="bi bi-cash-stack" />
+          <StatCard label="Active OKRs / Tasks" value={`${okrs.filter(o => o.employeeId === empRecord?.id && o.status !== 'Completed').length} Active`} sub="Performance cycle" icon="bi bi-graph-up" />
         </div>
 
         {/* Charts Row — Pie Chart + Bar Graph */}

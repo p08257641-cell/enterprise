@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, ViewModal } from './shared';
 
 export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
   const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
@@ -32,6 +32,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
   ];
 
   const bomTotal = bomData.reduce((s, b) => s + b.qty * b.cost, 0);
+  const bomModal = useRowModal<typeof bomData[0]>();
 
   return (
     <div>
@@ -77,7 +78,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               <TableHead cols={[{ label: '#' }, { label: 'Component' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Unit Cost', right: true }, { label: 'Line Total', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {bomData.map((b, i) => (
-                  <tr key={b.part} className="hover:bg-slate-50/40">
+                  <tr key={b.part} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => bomModal.open(b)}>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{i + 1}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{b.part}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700">{b.qty}</td>
@@ -109,6 +110,22 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           ))}
         </div>
+      )}
+      {bomModal.selected && (
+        <ViewModal title={bomModal.selected.part} subtitle={`${bomProduct} — BOM Component`} onClose={bomModal.close}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Component', value: bomModal.selected.part },
+              { label: 'Quantity', value: bomModal.selected.qty },
+              { label: 'Unit', value: bomModal.selected.unit },
+              { label: 'Unit Cost', value: `$${bomModal.selected.cost.toFixed(2)}` },
+              { label: 'Line Total', value: `$${(bomModal.selected.qty * bomModal.selected.cost).toFixed(2)}` },
+              { label: 'Product', value: bomProduct },
+            ].map(f => (
+              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
+            ))}
+          </div>
+        </ViewModal>
       )}
     </div>
   );

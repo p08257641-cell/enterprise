@@ -159,6 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           subMenus: [
             { id: 'payroll-run', label: 'Run Payroll', viewId: 'payroll', iconClass: 'bi bi-play-circle' },
             { id: 'payroll-slips', label: 'Payslips', viewId: 'payroll-slips', iconClass: 'bi bi-receipt-cutoff' },
+            { id: 'payroll-groups', label: 'Payroll Groups', viewId: 'payroll-groups', iconClass: 'bi bi-folder' },
             { id: 'payroll-tax', label: 'Tax & Deductions', viewId: 'payroll-tax', iconClass: 'bi bi-percent' },
             { id: 'payroll-overtime', label: 'Overtime', viewId: 'payroll-overtime', iconClass: 'bi bi-hourglass-split' },
           ]
@@ -195,7 +196,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'sales-quotes', label: 'Quotations', viewId: 'sales-quotes', iconClass: 'bi bi-file-earmark-check' },
             { id: 'sales-customers', label: 'Customers', viewId: 'sales-customers', iconClass: 'bi bi-people' },
             { id: 'sales-targets', label: 'Sales Targets', viewId: 'sales-targets', iconClass: 'bi bi-bullseye' },
-            { id: 'pos-register', label: 'POS Cash Register', viewId: 'pos', iconClass: 'bi bi-cash-coin', moduleId: 'POS' },
+            { id: 'pos-register', label: 'POS Cash Register', viewId: 'pos-register', iconClass: 'bi bi-cash-coin', moduleId: 'POS' },
             { id: 'pos-sessions', label: 'POS Sessions', viewId: 'pos-sessions', iconClass: 'bi bi-clock', moduleId: 'POS' },
             { id: 'pos-reports', label: 'POS Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'POS' },
           ]

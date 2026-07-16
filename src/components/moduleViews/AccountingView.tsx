@@ -4,13 +4,15 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { downloadCSV, downloadPDF, rowsToHtmlTable } from '../../utils/export';
+import { modalAlert, modalConfirm, modalPrompt } from '../../utils/modal';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
-import { GLAccount } from '../../types';
+import { GLAccount, TaxCode, ComplianceCheck, FilingDeadline, TaxReturn } from '../../types';
 
 export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onUpdateTaxReturn, onDeleteTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onCreateComplianceCheck, onUpdateComplianceCheck, onDeleteComplianceCheck, onAcknowledgePolicy, onFileDeadline, onCreateFilingDeadline, onUpdateFilingDeadline, onDeleteFilingDeadline, onCreateTaxCode, onUpdateTaxCode, onDeleteTaxCode, tenants, onAssignPlan } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
@@ -35,6 +37,17 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const localFixedAssets = fixedAssets.filter(a => a.companyId === selectedCompany.id);
   const localDepreciationEntries = depreciationEntries.filter(d => d.companyId === selectedCompany.id);
   const localBudgets = budgets.filter(b => b.companyId === selectedCompany.id);
+  const accGLModal = useRowModal<typeof localGL[0]>();
+  const accInvoiceModal = useRowModal<typeof localInvoices[0]>();
+  const accExpenseModal = useRowModal<typeof localExpenses[0]>();
+  const accOpeningBalModal = useRowModal<typeof localOpeningBalances[0]>();
+  const accFiscalModal = useRowModal<typeof localFiscalPeriods[0]>();
+  const accBillModal = useRowModal<typeof localBills[0]>();
+  const accBankTxModal = useRowModal<typeof localBankTransactions[0]>();
+  const accReconModal = useRowModal<typeof localBankReconciliations[0]>();
+  const accAssetModal = useRowModal<typeof localFixedAssets[0]>();
+  const accDeprModal = useRowModal<typeof localDepreciationEntries[0]>();
+  const accBudgetModal = useRowModal<any>();
   const localCostCenters = costCenters.filter(c => c.companyId === selectedCompany.id);
   const localCurrencyRates = currencyRates.filter(r => r.companyId === selectedCompany.id);
   const localTaxCodes = taxCodes.filter(t => t.companyId === selectedCompany.id);
@@ -49,6 +62,69 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const resolveUserName = (userId: string): string => {
     const emp = getEmployeeByUserId(employees, userId);
     return emp ? `${emp.firstName} ${emp.lastName}` : getUserNameById([], userId);
+  };
+
+  const generateReport = (type: string, fmt: 'csv' | 'pdf') => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    if (type === 'trial') {
+      const headers = ['Code', 'Account', 'Type', 'Debit', 'Credit'];
+      const rows = localGL.map(a => [a.code, a.name, a.type, (a.type === 'Asset' || a.type === 'Expense') ? (a.balance ?? 0) : 0, (a.type === 'Liability' || a.type === 'Revenue' || a.type === 'Equity') ? (a.balance ?? 0) : 0]);
+      const body = rowsToHtmlTable(headers, rows, [3, 4]);
+      if (fmt === 'csv') downloadCSV(`trial-balance-${selectedCompany.id}-${stamp}`, headers, rows);
+      else downloadPDF(`trial-balance-${selectedCompany.id}-${stamp}`, `Trial Balance — ${selectedCompany.name}`, body);
+    } else if (type === 'aging') {
+      const headers = ['Customer', 'Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Total'];
+      const today = new Date();
+      const rows: (string | number)[][] = [];
+      localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').forEach(inv => {
+        const due = new Date(inv.dueDate);
+        const ageDays = Math.max(0, Math.floor((today.getTime() - due.getTime()) / 86400000));
+        const total = inv.total ?? 0;
+        const bucket = ageDays <= 0 ? [total, 0, 0, 0, 0] : ageDays <= 30 ? [0, total, 0, 0, 0] : ageDays <= 60 ? [0, 0, total, 0, 0] : ageDays <= 90 ? [0, 0, 0, total, 0] : [0, 0, 0, 0, total];
+        rows.push([inv.customerName, ...bucket, total]);
+      });
+      const body = rowsToHtmlTable(headers, rows, [1, 2, 3, 4, 5, 6]);
+      if (fmt === 'csv') downloadCSV(`ar-aging-${selectedCompany.id}-${stamp}`, headers, rows);
+      else downloadPDF(`ar-aging-${selectedCompany.id}-${stamp}`, `AR Aging — ${selectedCompany.name}`, body);
+    } else if (type === 'expenses') {
+      const byCat = new Map<string, number>();
+      localExpenses.forEach(e => byCat.set(e.category, (byCat.get(e.category) || 0) + (e.amount ?? 0)));
+      const headers = ['Category', 'Amount'];
+      const rows = Array.from(byCat.entries()).map(([c, a]) => [c, a]);
+      const body = rowsToHtmlTable(headers, rows, [1]);
+      if (fmt === 'csv') downloadCSV(`expense-analysis-${selectedCompany.id}-${stamp}`, headers, rows);
+      else downloadPDF(`expense-analysis-${selectedCompany.id}-${stamp}`, `Expense Analysis — ${selectedCompany.name}`, body);
+    } else if (type === 'bs' || type === 'pl' || type === 'cf') {
+      const rev = localGL.filter(a => a.type === 'Revenue').reduce((s, a) => s + (a.balance ?? 0), 0);
+      const exp = localGL.filter(a => a.type === 'Expense').reduce((s, a) => s + (a.balance ?? 0), 0);
+      const assets = localGL.filter(a => a.type === 'Asset').reduce((s, a) => s + (a.balance ?? 0), 0);
+      const liab = localGL.filter(a => a.type === 'Liability').reduce((s, a) => s + (a.balance ?? 0), 0);
+      const eq = localGL.filter(a => a.type === 'Equity').reduce((s, a) => s + (a.balance ?? 0), 0);
+      if (type === 'bs') {
+        const headers = ['Section', 'Account', 'Amount'];
+        const rows = [
+          ['Assets', 'Total Assets', assets],
+          ['Liabilities', 'Total Liabilities', liab],
+          ['Equity', 'Total Equity', eq],
+          ['', 'Total Liabilities + Equity', liab + eq],
+        ];
+        const body = rowsToHtmlTable(headers, rows, [2]);
+        if (fmt === 'csv') downloadCSV(`balance-sheet-${selectedCompany.id}-${stamp}`, headers, rows);
+        else downloadPDF(`balance-sheet-${selectedCompany.id}-${stamp}`, `Balance Sheet — ${selectedCompany.name}`, body);
+      } else if (type === 'pl') {
+        const headers = ['Line', 'Amount'];
+        const rows = [['Revenue', rev], ['Expenses', exp], ['Net Income', rev - exp]];
+        const body = rowsToHtmlTable(headers, rows, [1]);
+        if (fmt === 'csv') downloadCSV(`income-statement-${selectedCompany.id}-${stamp}`, headers, rows);
+        else downloadPDF(`income-statement-${selectedCompany.id}-${stamp}`, `Income Statement — ${selectedCompany.name}`, body);
+      } else {
+        const headers = ['Line', 'Amount'];
+        const rows = [['Net Income', rev - exp], ['Cash from Operations', rev - exp], ['Net Change in Cash', rev - exp]];
+        const body = rowsToHtmlTable(headers, rows, [1]);
+        if (fmt === 'csv') downloadCSV(`cash-flow-${selectedCompany.id}-${stamp}`, headers, rows);
+        else downloadPDF(`cash-flow-${selectedCompany.id}-${stamp}`, `Cash Flow Statement — ${selectedCompany.name}`, body);
+      }
+    }
   };
 
   const [accTab, setAccTab] = useState<'ledger' | 'invoices' | 'create' | 'expenses' | 'create-expense' | 'reports' | 'journal' | 'trial' | 'opening-balances' | 'fiscal-periods' | 'ap' | 'ar' | 'bank' | 'fixed-assets' | 'budgets' | 'cost-centers' | 'multi-currency' | 'tax' | 'tax-returns' | 'intercompany' | 'consolidation' | 'compliance' | 'audit-trail' | 'policies' | 'filing-deadlines' | 'reports-pl' | 'reports-bs' | 'reports-cf' | 'reports-aging'>('ledger');
@@ -91,6 +167,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const [billDueDate, setBillDueDate] = useState('');
   const [billAssignee, setBillAssignee] = useState('');
 
+  // Opening Balance form state
+  const [obAccountId, setObAccountId] = useState('');
+  const [obPeriodId, setObPeriodId] = useState('');
+  const [obDebit, setObDebit] = useState('');
+  const [obCredit, setObCredit] = useState('');
+
   // Compliance Check form state
   const [showComplianceModal, setShowComplianceModal] = useState(false);
   const [compCheckName, setCompCheckName] = useState('');
@@ -106,6 +188,53 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const [filingType, setFilingType] = useState('Tax Return');
   const [filingDueDate, setFilingDueDate] = useState('');
   const [filingAssignee, setFilingAssignee] = useState('');
+  const [editingCompliance, setEditingCompliance] = useState<ComplianceCheck | null>(null);
+  const [editingFiling, setEditingFiling] = useState<FilingDeadline | null>(null);
+  const [showTaxCodeModal, setShowTaxCodeModal] = useState(false);
+  const [tcCode, setTcCode] = useState('');
+  const [tcName, setTcName] = useState('');
+  const [tcRate, setTcRate] = useState('');
+  const [tcType, setTcType] = useState('VAT');
+  const [tcJurisdiction, setTcJurisdiction] = useState('');
+  const [editingTaxCode, setEditingTaxCode] = useState<TaxCode | null>(null);
+  const [showTaxReturnModal, setShowTaxReturnModal] = useState(false);
+  const [trPeriod, setTrPeriod] = useState('');
+  const [trTaxCodeId, setTrTaxCodeId] = useState('');
+  const [trTaxableAmount, setTrTaxableAmount] = useState('');
+  const [trTaxAmount, setTrTaxAmount] = useState('');
+  const [trDueDate, setTrDueDate] = useState('');
+  const [trStatus, setTrStatus] = useState('Draft');
+  const [editingTaxReturn, setEditingTaxReturn] = useState<TaxReturn | null>(null);
+
+
+  // Customer Payment modal state
+  const [showCustomerPaymentModal, setShowCustomerPaymentModal] = useState(false);
+  const [cpInvoiceId, setCpInvoiceId] = useState('');
+  const [cpAmount, setCpAmount] = useState('');
+  const [cpMethod, setCpMethod] = useState('Bank Transfer');
+  const [cpRef, setCpRef] = useState('');
+  // Fixed Asset modal state
+  const [showAssetModal, setShowAssetModal] = useState(false);
+  const [assetCode, setAssetCode] = useState('');
+  const [assetName, setAssetName] = useState('');
+  const [assetCategory, setAssetCategory] = useState('Equipment');
+  const [assetCost, setAssetCost] = useState('');
+  const [assetSalvage, setAssetSalvage] = useState('0');
+  const [assetLife, setAssetLife] = useState('5');
+  const [assetMethod, setAssetMethod] = useState('Straight Line');
+  const [assetLocation, setAssetLocation] = useState('HQ');
+  // Budget modal state
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [budName, setBudName] = useState('');
+  const [budFiscalYear, setBudFiscalYear] = useState('2026');
+  const [budAmount, setBudAmount] = useState('');
+  const [budPeriod, setBudPeriod] = useState('Q3 2026');
+  // Cost Center modal state
+  const [showCostCenterModal, setShowCostCenterModal] = useState(false);
+  const [ccCode, setCcCode] = useState('');
+  const [ccName, setCcName] = useState('');
+  const [ccManager, setCcManager] = useState('');
+  const [ccBudget, setCcBudget] = useState('');
     useEffect(() => {
       if (activeView === 'acc-bank') { setAccGroup('bank'); setAccTab('bank'); }
       else if (activeView === 'acc-assets') { setAccGroup('assets'); setAccTab('fixed-assets'); }
@@ -120,10 +249,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
     const cashAcc = localGL.find(a => a.code === '1010');
     const revAcc = localGL.find(a => a.code === '4010');
-    const totalExpenses = localGL.filter(a => a.type === 'Expense').reduce((s, a) => s + a.balance, 0);
+    const totalExpenses = localGL.filter(a => a.type === 'Expense').reduce((s, a) => s + (a.balance ?? 0), 0);
     const openInv = localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void');
-    const totalDebits = localGL.filter(a => a.type === 'Asset' || a.type === 'Expense').reduce((s, a) => s + a.balance, 0);
-    const totalCredits = localGL.filter(a => a.type === 'Liability' || a.type === 'Revenue' || a.type === 'Equity').reduce((s, a) => s + a.balance, 0);
+    const totalDebits = localGL.filter(a => a.type === 'Asset' || a.type === 'Expense').reduce((s, a) => s + (a.balance ?? 0), 0);
+    const totalCredits = localGL.filter(a => a.type === 'Liability' || a.type === 'Revenue' || a.type === 'Equity').reduce((s, a) => s + (a.balance ?? 0), 0);
 
     return (
       <div>
@@ -167,7 +296,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {accGroup === 'gl' && accTab === 'ledger' && (
           <>
             <PageHeader title="General Ledger" subtitle="Chart of accounts, journal entries and financial reporting."
-              action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingGLAccount(null); setGlFormCode(''); setGlFormName(''); setGlFormType('Asset'); setShowGLModal(true); }}>Add Account</PrimaryBtn>} />
+              action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`chart-of-accounts-${selectedCompany.id}`, ['Code', 'Name', 'Type', 'Balance'], localGL.map(a => [a.code, a.name, a.type, a.balance ?? 0]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingGLAccount(null); setGlFormCode(''); setGlFormName(''); setGlFormType('Asset'); setShowGLModal(true); }}>Add Account</PrimaryBtn></>} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
               <StatCard label="Cash & Bank" value={`$${(cashAcc?.balance ?? 0).toLocaleString()}`} icon="bi bi-bank" sub="GL Account 1010" />
               <StatCard label="Revenue YTD" value={`$${(revAcc?.balance ?? 0).toLocaleString()}`} icon="bi bi-graph-up" sub="GL Account 4010" color="text-emerald-600" />
@@ -192,14 +321,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <TableHead cols={[{ label: 'Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Balance', right: true }, { label: 'Actions', right: true }]} />
                   <tbody className="divide-y divide-slate-100">
                     {localGL.filter(acc => accFilter === 'All' || acc.type === accFilter).filter(acc => acc.name.toLowerCase().includes(accSearch.toLowerCase()) || acc.code.toLowerCase().includes(accSearch.toLowerCase())).map(acc => (
-                      <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors">
+                      <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accGLModal.open(acc)}>
                         <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{acc.code}</td>
                         <td className="px-4 py-3 text-xs font-semibold text-slate-900">{acc.name}</td>
                         <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
-                        <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-right text-slate-900">${acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td className="px-4 py-3 text-right">
-                          <button onClick={() => { setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer mr-2">Edit</button>
-                          <button onClick={() => { if (confirm('Delete this account?')) onDeleteGLAccount(acc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
+                        <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-right text-slate-900">${(acc.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td className="px-4 py-3 text-right" onClick={() => accGLModal.open(acc)}>
+                          <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer mr-2">Edit</button>
+                          <button onClick={async e => { e.stopPropagation(); if (await modalConfirm('Delete this account?', { variant: 'danger' })) onDeleteGLAccount(acc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
                         </td>
                       </tr>
                     ))}
@@ -212,7 +341,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="space-y-3">
                   {['Asset', 'Liability', 'Revenue', 'Expense', 'Equity'].map(type => {
                     const typeAccounts = localGL.filter(a => a.type === type);
-                    const typeTotal = typeAccounts.reduce((sum, a) => sum + a.balance, 0);
+                    const typeTotal = typeAccounts.reduce((sum, a) => sum + (a.balance ?? 0), 0);
                     return (
                       <div key={type} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
                         <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-slate-400"></span><span className="data-value text-slate-800">{type}</span></div>
@@ -229,20 +358,20 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {activeView === 'acc-invoices' && (
           <>
             <PageHeader title="Invoices" subtitle="Manage customer invoices, track payments and send reminders."
-              action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => setAccTab('create')}>New Invoice</PrimaryBtn>} />
+              action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`invoices-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Issue Date', 'Due Date', 'Total', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.issueDate, i.dueDate, i.total ?? 0, i.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setAccTab('create')}>New Invoice</PrimaryBtn></>} />
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Invoice #' }, { label: 'Client' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localInvoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accInvoiceModal.open(inv)}>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-700">{inv.invoiceNumber}</td>
                       <td className="px-4 py-3 text-xs text-slate-700">{inv.customerName}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">{inv.issueDate}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">{inv.dueDate}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${inv.total.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${(inv.total ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right">{inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={() => onPayInvoice(inv.id)} className="data-value-small font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Pay</button>}</td>
+                      <td className="px-4 py-3 text-right" onClick={() => accInvoiceModal.open(inv)}>{inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={e => { e.stopPropagation(); onPayInvoice(inv.id); }} className="data-value-small font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Pay</button>}</td>
                     </tr>
                   ))}
                   {localInvoices.length === 0 && <EmptyRow cols={7} message="No invoices found." />}
@@ -266,14 +395,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Date' }, { label: 'Description' }, { label: 'Category' }, { label: 'Department' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localExpenses.map(exp => (
-                    <tr key={exp.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={exp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accExpenseModal.open(exp)}>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">{exp.date}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{exp.description}</td>
                       <td className="px-4 py-3"><Badge label={exp.category} variant="default" /></td>
                       <td className="px-4 py-3 text-xs text-slate-600">{exp.department}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${exp.amount.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${(exp.amount ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={exp.status} variant={exp.status === 'Approved' ? 'success' : exp.status === 'Rejected' ? 'danger' : 'warning'} /></td>
-                      <td className="px-4 py-3 text-right">{exp.status === 'Pending' && <button onClick={() => onApproveExpense(exp.id)} className="data-value-small font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Approve</button>}</td>
+                      <td className="px-4 py-3 text-right" onClick={() => accExpenseModal.open(exp)}>{exp.status === 'Pending' && <button onClick={e => { e.stopPropagation(); onApproveExpense(exp.id); }} className="data-value-small font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Approve</button>}</td>
                     </tr>
                   ))}
                   {localExpenses.length === 0 && <EmptyRow cols={7} message="No expenses recorded." />}
@@ -339,8 +468,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="flex gap-2 pt-2">
                     <PrimaryBtn icon="bi bi-check-circle" onClick={() => {
-                      if (!jeDescription) return alert('Description required');
-                      if (Math.abs(jeLines.reduce((s, l) => s + (l.debit || 0), 0) - jeLines.reduce((s, l) => s + (l.credit || 0), 0)) > 0.01) return alert('Debit and credit must be equal');
+                      if (!jeDescription) return void modalAlert('Description required', { variant: 'warning' });
+                      if (Math.abs(jeLines.reduce((s, l) => s + (l.debit || 0), 0) - jeLines.reduce((s, l) => s + (l.credit || 0), 0)) > 0.01) return void modalAlert('Debit and credit must be equal', { variant: 'warning' });
                       const assigneeEmp = localEmployees.find(e => e.userId === jeAssignee || e.id === jeAssignee);
                       onCreateJournalEntry({ date: jeDate, description: jeDescription, reference: jeReference, lines: jeLines, createdBy: jeAssignee || selectedUser.id, createdByName: assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : selectedUser.name });
                       setJeDescription(''); setJeReference(''); setJeAssignee(''); setJeLines([{ accountId: '', accountCode: '', accountName: '', debit: 0, credit: 0, description: '' }, { accountId: '', accountCode: '', accountName: '', debit: 0, credit: 0, description: '' }]);
@@ -388,12 +517,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localGL.map(acc => (
-                    <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accGLModal.open(acc)}>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{acc.code}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{acc.name}</td>
                       <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Asset' || acc.type === 'Expense') ? `$${acc.balance.toLocaleString()}` : '-'}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Liability' || acc.type === 'Revenue' || acc.type === 'Equity') ? `$${acc.balance.toLocaleString()}` : '-'}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Asset' || acc.type === 'Expense') ? `$${(acc.balance ?? 0).toLocaleString()}` : '-'}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Liability' || acc.type === 'Revenue' || acc.type === 'Equity') ? `$${(acc.balance ?? 0).toLocaleString()}` : '-'}</td>
                     </tr>
                   ))}
                   <tr className="bg-slate-50 font-bold">
@@ -412,11 +541,11 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <PageHeader title="Financial Reports" subtitle="Generate balance sheets, income statements and cash flow reports." />
             <div className="grid gap-6 lg:grid-cols-2 mb-6">
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Balance Sheet</h3>
+                <h3 className="section-title text-slate-500 mb-4">Balance Sheet</h3>
                 <div className="space-y-2 text-xs">
                   {['Asset', 'Liability', 'Equity'].map(type => {
                     const typeAccounts = localGL.filter(a => a.type === type);
-                    const typeTotal = typeAccounts.reduce((sum, a) => sum + a.balance, 0);
+                    const typeTotal = typeAccounts.reduce((sum, a) => sum + (a.balance ?? 0), 0);
                     return (
                       <div key={type} className="flex justify-between py-2 border-b border-slate-100">
                         <span className="text-slate-600">{type}s</span>
@@ -427,7 +556,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Income Statement</h3>
+                <h3 className="section-title text-slate-500 mb-4">Income Statement</h3>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between py-2 border-b border-slate-100"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums font-semibold text-emerald-600">+${(revAcc?.balance ?? 0).toLocaleString()}</span></div>
                   <div className="flex justify-between py-2 border-b border-slate-100"><span className="text-slate-600">Expenses</span><span className="font-sans tabular-nums font-semibold text-rose-600">-${totalExpenses.toLocaleString()}</span></div>
@@ -437,19 +566,22 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                { title: 'Balance Sheet', desc: 'Assets, liabilities and equity snapshot', icon: 'bi bi-bank' },
-                { title: 'Income Statement', desc: 'Revenue, expenses and profitability', icon: 'bi bi-graph-up' },
-                { title: 'Cash Flow Statement', desc: 'Operating, investing and financing activities', icon: 'bi bi-cash-coin' },
-                { title: 'Trial Balance', desc: 'Debit and credit account balances', icon: 'bi bi-file-earmark-spreadsheet' },
-                { title: 'Aged Receivables', desc: 'Outstanding invoices by aging period', icon: 'bi bi-clock-history' },
-                { title: 'Expense Analysis', desc: 'Expense breakdown by category', icon: 'bi bi-pie-chart' },
-              ].map((report, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-xl shadow-xs p-5 hover:border-slate-300 transition-all cursor-pointer">
+                { title: 'Balance Sheet', desc: 'Assets, liabilities and equity snapshot', icon: 'bi bi-bank', type: 'bs' },
+                { title: 'Income Statement', desc: 'Revenue, expenses and profitability', icon: 'bi bi-graph-up', type: 'pl' },
+                { title: 'Cash Flow Statement', desc: 'Operating, investing and financing activities', icon: 'bi bi-cash-coin', type: 'cf' },
+                { title: 'Trial Balance', desc: 'Debit and credit account balances', icon: 'bi bi-file-earmark-spreadsheet', type: 'trial' },
+                { title: 'Aged Receivables', desc: 'Outstanding invoices by aging period', icon: 'bi bi-clock-history', type: 'aging' },
+                { title: 'Expense Analysis', desc: 'Expense breakdown by category', icon: 'bi bi-pie-chart', type: 'expenses' },
+              ].map((report) => (
+                <div key={report.type} className="bg-white border border-slate-200 rounded-xl shadow-xs p-5 hover:border-slate-300 transition-all">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center"><i className={`bi ${report.icon} text-slate-600`}></i></div>
                     <div><div className="data-value font-semibold text-slate-900">{report.title}</div><div className="data-value-small text-slate-500">{report.desc}</div></div>
                   </div>
-                  <button className="w-full data-value-small font-semibold bg-slate-900 text-white px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Generate Report</button>
+                  <div className="flex gap-2">
+                    <button onClick={() => generateReport(report.type, 'csv')} className="flex-1 data-value-small font-semibold bg-slate-900 text-white px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Download CSV</button>
+                    <button onClick={() => generateReport(report.type, 'pdf')} className="data-value-small font-semibold border border-slate-200 bg-white text-slate-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-50 transition-all"><i className="bi bi-download"></i></button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -462,13 +594,24 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5 mb-6">
               <h3 className="section-title text-slate-500 mb-4">Set Opening Balance</h3>
               <div className="grid gap-4 sm:grid-cols-4 items-end">
-                <div><Label>Account</Label><Select onChange={e => {
+                <div><Label>Account</Label><Select value={obAccountId} onChange={e => {
                   const acc = localGL.find(a => a.id === e.target.value);
+                  setObAccountId(e.target.value);
                   if (acc) { setGlFormCode(acc.code); setGlFormName(acc.name); }
                 }}><option value="">Select...</option>{localGL.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}</Select></div>
-                <div><Label>Period</Label><Select onChange={e => setJeReference(e.target.value)}><option value="">Select...</option>{localFiscalPeriods.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</Select></div>
-                <div><Label>Debit</Label><Input type="number" placeholder="0.00" /></div>
-                <div><Label>Credit</Label><Input type="number" placeholder="0.00" /></div>
+                <div><Label>Period</Label><Select value={obPeriodId} onChange={e => setObPeriodId(e.target.value)}><option value="">Select...</option>{localFiscalPeriods.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}</Select></div>
+                <div><Label>Debit</Label><Input type="number" value={obDebit} onChange={e => setObDebit(e.target.value)} placeholder="0.00" /></div>
+                <div><Label>Credit</Label><Input type="number" value={obCredit} onChange={e => setObCredit(e.target.value)} placeholder="0.00" /></div>
+              </div>
+              <div className="flex justify-end mt-4">
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  const acc = localGL.find(a => a.id === obAccountId);
+                  if (!obAccountId || !obPeriodId) return void modalAlert('Account and period required', { variant: 'warning' });
+                  const debit = Number(obDebit) || 0; const credit = Number(obCredit) || 0;
+                  if (debit === 0 && credit === 0) return void modalAlert('Enter a debit or credit amount', { variant: 'warning' });
+                  onSetOpeningBalance({ accountId: acc!.id, accountCode: acc!.code, accountName: acc!.name, periodId: obPeriodId, debit, credit });
+                  setObAccountId(''); setObPeriodId(''); setObDebit(''); setObCredit('');
+                }}>Save Opening Balance</PrimaryBtn>
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
@@ -476,7 +619,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Period' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localOpeningBalances.map(ob => (
-                    <tr key={ob.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={ob.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accOpeningBalModal.open(ob)}>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{ob.accountCode}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{ob.accountName}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{localFiscalPeriods.find(f => f.id === ob.periodId)?.name || ob.periodId}</td>
@@ -499,13 +642,13 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Period' }, { label: 'Start Date' }, { label: 'End Date' }, { label: 'Status' }, { label: 'Closed By' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localFiscalPeriods.map(fp => (
-                    <tr key={fp.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={fp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accFiscalModal.open(fp)}>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{fp.name}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">{fp.startDate}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">{fp.endDate}</td>
                       <td className="px-4 py-3"><Badge label={fp.status} variant={fp.status === 'Closed' ? 'default' : fp.status === 'Locked' ? 'danger' : 'success'} /></td>
                       <td className="px-4 py-3 text-xs text-slate-500">{fp.closedBy ? 'David Vance' : '-'}</td>
-                      <td className="px-4 py-3 text-right">{fp.status === 'Open' && <button onClick={() => { if (confirm(`Close ${fp.name}?`)) onCloseFiscalPeriod(fp.id); }} className="data-value-small font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Close Period</button>}</td>
+                      <td className="px-4 py-3 text-right" onClick={() => accFiscalModal.open(fp)}>{fp.status === 'Open' && <button onClick={async e => { e.stopPropagation(); if (await modalConfirm(`Close ${fp.name}?`, { variant: 'warning' })) onCloseFiscalPeriod(fp.id); }} className="data-value-small font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Close Period</button>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -517,29 +660,29 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Accounts Payable ─────────────────────────────────────── */}
         {activeView === 'acc-ap' && (
           <>
-            <PageHeader title="Accounts Payable" subtitle="Manage vendor bills, approve payments and track aging." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowBillModal(true)}>New Bill</PrimaryBtn>} />
+            <PageHeader title="Accounts Payable" subtitle="Manage vendor bills, approve payments and track aging." action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`bills-${selectedCompany.id}`, ['Bill #', 'Vendor', 'Description', 'Total', 'Paid', 'Due Date', 'Status'], localBills.map(b => [b.billNumber, b.vendorName, b.description, b.total ?? 0, b.amountPaid ?? 0, b.dueDate, b.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowBillModal(true)}>New Bill</PrimaryBtn></>} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
               <StatCard label="Total Bills" value={localBills.length} icon="bi bi-receipt" />
               <StatCard label="Pending Approval" value={localBills.filter(b => b.status === 'Pending').length} icon="bi bi-hourglass" color="text-amber-600" />
-              <StatCard label="Total Outstanding" value={`$${localBills.filter(b => b.status !== 'Paid' && b.status !== 'Void').reduce((s, b) => s + (b.total - b.amountPaid), 0).toLocaleString()}`} icon="bi bi-cash-stack" color="text-rose-600" />
-              <StatCard label="Paid This Month" value={`$${localBillPayments.filter(p => p.paymentDate >= '2026-07-01').reduce((s, p) => s + p.amount, 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
+              <StatCard label="Total Outstanding" value={`$${localBills.filter(b => b.status !== 'Paid' && b.status !== 'Void').reduce((s, b) => s + ((b.total ?? 0) - (b.amountPaid ?? 0)), 0).toLocaleString()}`} icon="bi bi-cash-stack" color="text-rose-600" />
+              <StatCard label="Paid This Month" value={`$${localBillPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Bill #' }, { label: 'Vendor' }, { label: 'Description' }, { label: 'Total' }, { label: 'Paid' }, { label: 'Due Date' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localBills.map(bill => (
-                    <tr key={bill.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={bill.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accBillModal.open(bill)}>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{bill.billNumber}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{bill.vendorName}</td>
                       <td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate">{bill.description}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${bill.total.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${(bill.total ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">${bill.amountPaid.toLocaleString()}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{bill.dueDate}</td>
                       <td className="px-4 py-3"><Badge label={bill.status} variant={bill.status === 'Paid' ? 'success' : bill.status === 'Overdue' ? 'danger' : bill.status === 'Approved' ? 'info' : bill.status === 'Partially Paid' ? 'warning' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right space-x-1">
-                        {bill.status === 'Pending' && <button onClick={() => onApproveBill(bill.id)} className="text-[10px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
-                        {(bill.status === 'Approved' || bill.status === 'Partially Paid') && <button onClick={() => { const amt = prompt(`Pay bill ${bill.billNumber}. Amount:`); if (amt) onPayBill(bill.id, Number(amt), 'Bank Transfer', 'ba-1'); }} className="text-[10px] font-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Pay</button>}
+                      <td className="px-4 py-3 text-right space-x-1" onClick={() => accBillModal.open(bill)}>
+                        {bill.status === 'Pending' && <button onClick={e => { e.stopPropagation(); onApproveBill(bill.id); }} className="text-[10px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
+                        {(bill.status === 'Approved' || bill.status === 'Partially Paid') && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Pay bill ${bill.billNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onPayBill(bill.id, Number(amt), 'Bank Transfer', 'ba-1'); }} className="text-[10px] font-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Pay</button>}
                       </td>
                     </tr>
                   ))}
@@ -553,11 +696,11 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Accounts Receivable ───────────────────────────────────── */}
         {activeView === 'acc-ar' && (
           <>
-            <PageHeader title="Accounts Receivable" subtitle="Track customer invoice payments and collections." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { }}>Record Payment</PrimaryBtn>} />
+            <PageHeader title="Accounts Receivable" subtitle="Track customer invoice payments and collections." action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`ar-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Total', 'Issue Date', 'Due Date', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.total ?? 0, i.issueDate, i.dueDate, i.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setCpInvoiceId(localInvoices.find(i => i.status !== 'Paid' && i.status !== 'Void')?.id || ''); setCpAmount(''); setCpRef(''); setShowCustomerPaymentModal(true); }}>Record Payment</PrimaryBtn></>} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
-              <StatCard label="Outstanding AR" value={`$${localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').reduce((s, i) => s + i.total, 0).toLocaleString()}`} icon="bi bi-hourglass-split" color="text-amber-600" />
-              <StatCard label="Overdue" value={`$${localInvoices.filter(i => i.status === 'Overdue').reduce((s, i) => s + i.total, 0).toLocaleString()}`} icon="bi bi-exclamation-triangle" color="text-rose-600" />
-              <StatCard label="Collected This Month" value={`$${localCustomerPayments.filter(p => p.paymentDate >= '2026-07-01').reduce((s, p) => s + p.amount, 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
+              <StatCard label="Outstanding AR" value={`$${localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').reduce((s, i) => s + (i.total ?? 0), 0).toLocaleString()}`} icon="bi bi-hourglass-split" color="text-amber-600" />
+              <StatCard label="Overdue" value={`$${localInvoices.filter(i => i.status === 'Overdue').reduce((s, i) => s + (i.total ?? 0), 0).toLocaleString()}`} icon="bi bi-exclamation-triangle" color="text-rose-600" />
+              <StatCard label="Collected This Month" value={`$${localCustomerPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
               <StatCard label="Total Invoices" value={localInvoices.length} icon="bi bi-file-earmark-text" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
@@ -565,15 +708,15 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Invoice #' }, { label: 'Customer' }, { label: 'Total' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localInvoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accInvoiceModal.open(inv)}>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{inv.invoiceNumber}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{inv.customerName}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${inv.total.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${(inv.total ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{inv.issueDate}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{inv.dueDate}</td>
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right">
-                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={() => { const amt = prompt(`Record payment for ${inv.invoiceNumber}. Amount:`); if (amt) onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(amt), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Bank Transfer', bankAccountId: 'ba-1' }); }} className="text-[10px] font-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Receive Payment</button>}
+                      <td className="px-4 py-3 text-right" onClick={() => accInvoiceModal.open(inv)}>
+                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Record payment for ${inv.invoiceNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(amt), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Bank Transfer', bankAccountId: 'ba-1' }); }} className="text-[10px] font-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Receive Payment</button>}
                       </td>
                     </tr>
                   ))}
@@ -592,7 +735,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               {localBankAccounts.map(ba => (
                 <div key={ba.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">{ba.accountType}</span>
+                    <span className="section-title text-slate-400">{ba.accountType}</span>
                     <Badge label={ba.isActive ? 'Active' : 'Inactive'} variant={ba.isActive ? 'success' : 'default'} />
                   </div>
                   <p className="text-lg font-bold text-slate-900 font-sans tabular-nums">${(ba.balance ?? 0).toLocaleString()}</p>
@@ -603,13 +746,13 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden mb-6">
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase text-slate-500 tracking-wider">Recent Transactions</span>
+                <span className="section-title text-slate-500">Recent Transactions</span>
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Date' }, { label: 'Description' }, { label: 'Type' }, { label: 'Amount' }, { label: 'Reconciled' }, { label: 'Reference' }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localBankTransactions.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).map(tx => (
-                    <tr key={tx.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={tx.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accBankTxModal.open(tx)}>
                       <td className="px-4 py-3 text-xs text-slate-500">{tx.date}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{tx.description}</td>
                       <td className="px-4 py-3"><Badge label={tx.type} variant={tx.type === 'Credit' ? 'success' : 'danger'} /></td>
@@ -624,13 +767,13 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             {localBankReconciliations.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
                 <div className="px-4 py-3 border-b border-slate-100">
-                  <span className="text-xs font-bold uppercase text-slate-500 tracking-wider">Reconciliation History</span>
+                  <span className="section-title text-slate-500">Reconciliation History</span>
                 </div>
                 <table className="w-full text-left">
                   <TableHead cols={[{ label: 'Period' }, { label: 'Statement Balance' }, { label: 'Book Balance' }, { label: 'Difference' }, { label: 'Status' }, { label: 'Completed By' }]} />
                   <tbody className="divide-y divide-slate-100">
                     {localBankReconciliations.map(rec => (
-                      <tr key={rec.id} className="hover:bg-slate-50/40 transition-colors">
+                      <tr key={rec.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accReconModal.open(rec)}>
                         <td className="px-4 py-3 text-xs text-slate-500">{rec.periodStartDate} to {rec.periodEndDate}</td>
                         <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${(rec.statementBalance ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${(rec.bookBalance ?? 0).toLocaleString()}</td>
@@ -649,7 +792,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Fixed Assets ──────────────────────────────────────────── */}
         {accTab === 'fixed-assets' && (
           <>
-            <PageHeader title="Fixed Assets Register" subtitle="Track capital assets, run depreciation schedules and manage disposals." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { }}>Register Asset</PrimaryBtn>} />
+            <PageHeader title="Fixed Assets Register" subtitle="Track capital assets, run depreciation schedules and manage disposals." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setAssetCode(`FA-${Date.now().toString().slice(-6)}`); setAssetName(''); setAssetCost(''); setShowAssetModal(true); }}>Register Asset</PrimaryBtn>} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
               <StatCard label="Total Assets" value={localFixedAssets.length} icon="bi bi-collection" />
               <StatCard label="Total Book Value" value={`$${localFixedAssets.reduce((s, a) => s + (a.currentBookValue ?? 0), 0).toLocaleString()}`} icon="bi bi-cash-stack" />
@@ -661,7 +804,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Code' }, { label: 'Name' }, { label: 'Category' }, { label: 'Purchase Price' }, { label: 'Book Value' }, { label: 'Location' }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localFixedAssets.map(asset => (
-                    <tr key={asset.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={asset.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accAssetModal.open(asset)}>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900 font-mono">{asset.assetCode}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{asset.name}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{asset.category}</td>
@@ -669,8 +812,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${(asset.currentBookValue ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{asset.location}</td>
                       <td className="px-4 py-3"><Badge label={asset.status} variant={asset.status === 'Active' ? 'success' : asset.status === 'Disposed' ? 'danger' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right">
-                        {asset.status === 'Active' && <button onClick={() => { const price = prompt(`Dispose ${asset.name}. Disposal price:`); if (price !== null) onDisposeAsset(asset.id, Number(price)); }} className="text-[10px] font-semibold bg-rose-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-rose-700">Dispose</button>}
+                      <td className="px-4 py-3 text-right" onClick={() => accAssetModal.open(asset)}>
+                        {asset.status === 'Active' && <button onClick={async e => { e.stopPropagation(); const price = await modalPrompt(`Dispose ${asset.name}. Disposal price:`, { variant: 'danger', inputType: 'number', placeholder: '0.00' }); if (price) onDisposeAsset(asset.id, Number(price)); }} className="text-[10px] font-semibold bg-rose-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-rose-700">Dispose</button>}
                       </td>
                     </tr>
                   ))}
@@ -680,14 +823,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             {localDepreciationEntries.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
                 <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase text-slate-500 tracking-wider">Depreciation Schedule</span>
+                  <span className="section-title text-slate-500">Depreciation Schedule</span>
                   <PrimaryBtn icon="bi bi-play-circle" onClick={() => onRunDepreciation('August 2026')}>Run Depreciation</PrimaryBtn>
                 </div>
                 <table className="w-full text-left">
                   <TableHead cols={[{ label: 'Asset' }, { label: 'Period' }, { label: 'Depreciation' }, { label: 'Accumulated' }, { label: 'Book Value' }, { label: 'Status' }]} />
                   <tbody className="divide-y divide-slate-100">
                     {localDepreciationEntries.slice(0, 10).map(de => (
-                      <tr key={de.id} className="hover:bg-slate-50/40 transition-colors">
+                      <tr key={de.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accDeprModal.open(de)}>
                         <td className="px-4 py-3 text-xs font-semibold text-slate-900">{de.assetCode} - {de.assetName}</td>
                         <td className="px-4 py-3 text-xs text-slate-500">{de.period}</td>
                         <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-600">${(de.depreciationAmount ?? 0).toLocaleString()}</td>
@@ -706,7 +849,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Budgets ───────────────────────────────────────────────── */}
         {accTab === 'budgets' && (
           <>
-            <PageHeader title="Budget Management" subtitle="Create budgets, track variances and approve allocations." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { }}>New Budget</PrimaryBtn>} />
+            <PageHeader title="Budget Management" subtitle="Create budgets, track variances and approve allocations." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBudName(''); setBudAmount(''); setShowBudgetModal(true); }}>New Budget</PrimaryBtn>} />
             <div className="grid gap-4 sm:grid-cols-3 mb-6">
               <StatCard label="Total Budget" value={`$${localBudgets.reduce((s, b) => s + (b.budgetAmount ?? 0), 0).toLocaleString()}`} icon="bi bi-piggy-bank" />
               <StatCard label="Total Actual" value={`$${localBudgets.reduce((s, b) => s + (b.actualAmount ?? 0), 0).toLocaleString()}`} icon="bi bi-cash-stack" />
@@ -722,7 +865,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     const varianceAmt = bud.variance ?? (budgetAmt - actualAmt);
                     const pctUsed = budgetAmt > 0 ? Math.round(actualAmt / budgetAmt * 100) : 0;
                     return (
-                      <tr key={bud.id} className="hover:bg-slate-50/40 transition-colors">
+                      <tr key={bud.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed })}>
                         <td className="px-4 py-3 text-xs font-semibold text-slate-900">{bud.name}</td>
                         <td className="px-4 py-3 text-xs text-slate-500">{bud.accountCode} - {bud.accountName}</td>
                         <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900">${budgetAmt.toLocaleString()}</td>
@@ -735,8 +878,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                           </div>
                         </td>
                         <td className="px-4 py-3"><Badge label={bud.status} variant={bud.status === 'Active' ? 'success' : bud.status === 'Approved' ? 'info' : 'default'} /></td>
-                        <td className="px-4 py-3 text-right">
-                          {bud.status === 'Draft' && <button onClick={() => onApproveBudget(bud.id)} className="text-[10px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
+                        <td className="px-4 py-3 text-right" onClick={() => accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed })}>
+                          {bud.status === 'Draft' && <button onClick={e => { e.stopPropagation(); onApproveBudget(bud.id); }} className="text-[10px] font-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
                         </td>
                       </tr>
                     );
@@ -750,7 +893,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Cost Centers ──────────────────────────────────────────── */}
         {accTab === 'cost-centers' && (
           <>
-            <PageHeader title="Cost Centers" subtitle="Departmental cost allocation and spending analysis." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { }}>New Cost Center</PrimaryBtn>} />
+            <PageHeader title="Cost Centers" subtitle="Departmental cost allocation and spending analysis." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setCcCode(`CC-${Date.now().toString().slice(-4)}`); setCcName(''); setCcManager(''); setCcBudget(''); setShowCostCenterModal(true); }}>New Cost Center</PrimaryBtn>} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {localCostCenters.map(cc => {
                 const ccBudget = cc.budget ?? 0;
@@ -794,7 +937,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               ))}
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6 max-w-lg">
-              <h3 className="text-xs font-bold uppercase text-slate-500 tracking-wider mb-4">Quick Conversion</h3>
+              <h3 className="section-title text-slate-500 mb-4">Quick Conversion</h3>
               <div className="grid gap-4 sm:grid-cols-3 items-end">
                 <div><Label>Amount</Label><Input type="number" defaultValue="10000" id="conv-amount" /></div>
                 <div><Label>From</Label><Select id="conv-from"><option>USD</option><option>EUR</option><option>GBP</option></Select></div>
@@ -811,10 +954,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 3: Tax Management ────────────────────────────────────────── */}
         {accTab === 'tax' && (
           <>
-            <PageHeader title="Tax Management" subtitle="Tax codes, rates, and jurisdiction configuration." />
+            <PageHeader title="Tax Management" subtitle="Tax codes, rates, and jurisdiction configuration." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingTaxCode(null); setTcCode(''); setTcName(''); setTcRate(''); setTcType('VAT'); setTcJurisdiction(''); setShowTaxCodeModal(true); }}>New Tax Code</PrimaryBtn>} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
               {localTaxCodes.map(tc => (
-                <div key={tc.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+                <div key={tc.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-sm transition-all">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-slate-900 tracking-wide">{tc.code}</span>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${tc.isActive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}>{tc.isActive ? 'Active' : 'Inactive'}</span>
@@ -823,6 +966,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <p className="text-2xl font-bold text-slate-900 font-sans tabular-nums">{tc.rate}%</p>
                   <p className="text-[10px] text-slate-400 mt-1">{tc.jurisdiction} · {tc.type}</p>
                   <p className="text-[10px] text-slate-400">Account: {tc.accountName}</p>
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={() => { setEditingTaxCode(tc); setTcCode(tc.code); setTcName(tc.name); setTcRate(String(tc.rate)); setTcType(tc.type); setTcJurisdiction(tc.jurisdiction || ''); setShowTaxCodeModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>
+                    <button onClick={async () => { if (await modalConfirm('Delete this tax code?', { variant: 'danger' })) onDeleteTaxCode(tc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -831,7 +978,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {accTab === 'tax-returns' && (
           <>
-            <PageHeader title="Tax Returns" subtitle="File, track, and manage tax returns across jurisdictions." />
+            <PageHeader title="Tax Returns" subtitle="File, track, and manage tax returns across jurisdictions." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingTaxReturn(null); setTrPeriod(''); setTrTaxCodeId(localTaxCodes[0]?.id || ''); setTrTaxableAmount(''); setTrTaxAmount(''); setTrDueDate(''); setTrStatus('Draft'); setShowTaxReturnModal(true); }}>New Return</PrimaryBtn>} />
             <div className="space-y-3 mb-6">
               {localTaxReturns.map(tr => (
                 <div key={tr.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
@@ -855,6 +1002,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <div><span className="text-slate-500 block">Net Payable</span><span className="font-sans tabular-nums font-bold text-slate-900">${(tr.netPayable ?? 0).toLocaleString()}</span></div>
                   </div>
                   {tr.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {tr.filedDate} by {tr.filedBy}</p>}
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={() => { setEditingTaxReturn(tr); setTrPeriod(tr.period); setTrTaxCodeId(tr.taxCodeId); setTrTaxableAmount(String(tr.taxableAmount ?? 0)); setTrTaxAmount(String(tr.taxAmount ?? 0)); setTrDueDate(tr.dueDate); setTrStatus(tr.status); setShowTaxReturnModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>
+                    <button onClick={async () => { if (await modalConfirm('Delete this tax return?', { variant: 'danger' })) onDeleteTaxReturn(tr.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -935,7 +1086,11 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <h3 className="text-sm font-bold text-slate-900 mb-1">{cc.title}</h3>
                   <p className="text-[10px] text-slate-400 mb-3">{cc.description}</p>
                   <p className="text-[10px] text-slate-400">Assigned: {resolveUserName(cc.assignee)} · Due: {cc.dueDate}</p>
-                  {cc.status !== 'Compliant' && <div className="mt-3"><PrimaryBtn onClick={() => onResolveComplianceCheck(cc.id, 'Pass')} icon="bi bi-check-lg">Mark Resolved</PrimaryBtn></div>}
+                  <div className="flex gap-2 mt-3">
+                    {cc.status !== 'Compliant' && <PrimaryBtn onClick={() => onResolveComplianceCheck(cc.id, 'Pass')} icon="bi bi-check-lg">Mark Resolved</PrimaryBtn>}
+                    <button onClick={() => { setEditingCompliance(cc); setCompCheckName(cc.title); setCompCheckDesc(cc.description); setCompCheckCategory(cc.category); setCompCheckDueDate(cc.dueDate); setCompCheckAssignee(cc.assignee); setShowComplianceModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>
+                    <button onClick={async () => { if (await modalConfirm('Delete this compliance check?', { variant: 'danger' })) onDeleteComplianceCheck(cc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -945,28 +1100,30 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 3: Audit Trail ────────────────────────────────────────── */}
         {accTab === 'audit-trail' && (
           <>
-            <PageHeader title="Audit Trail" subtitle="Immutable snapshot log of all financial data changes." />
+            <PageHeader title="Audit Trail" subtitle="Immutable log of all changes to the accounting ledger and who made them."
+              action={<PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`audit-trail-${selectedCompany.id}`, ['Timestamp', 'Actor', 'Action', 'Module', 'Detail'], localLogs.slice().reverse().map(l => [l.timestamp, l.userName, l.action, l.module, l.details]))}>Export</PrimaryBtn>} />
             <div className="space-y-2 mb-6">
-              {localAuditSnapshots.map(as_ => (
-                <div key={as_.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+              {localLogs.slice().reverse().map(log => (
+                <div key={log.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${as_.action === 'Create' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
-                        as_.action === 'Update' ? 'bg-blue-50 text-blue-600 border border-blue-200' :
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${/CREATE|POST|APPROVE|RECEIVE|PAY|FILE|RUN|RESOLVE|SET/.test(log.action) ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                        /UPDATE|VOID|ELIMINATE|CLOSE/.test(log.action) ? 'bg-blue-50 text-blue-600 border border-blue-200' :
                           'bg-rose-50 text-rose-600 border border-rose-200'
-                        }`}>{as_.action}</span>
+                        }`}>{log.action}</span>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900">{as_.entityName}</h4>
-                        <p className="text-[10px] text-slate-400">{as_.entityType} · {as_.performedByName} · {as_.timestamp}</p>
+                        <h4 className="text-xs font-bold text-slate-900">{log.details}</h4>
+                        <p className="text-[10px] text-slate-400">{log.module}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      {as_.oldValue !== undefined && as_.oldValue !== null && <p className="text-[10px] text-rose-500 line-through font-sans tabular-nums">{typeof as_.oldValue === 'number' ? `$${as_.oldValue.toLocaleString()}` : String(as_.oldValue)}</p>}
-                      {as_.newValue !== undefined && as_.newValue !== null && <p className="text-[10px] text-emerald-600 font-bold font-sans tabular-nums">{typeof as_.newValue === 'number' ? `$${as_.newValue.toLocaleString()}` : String(as_.newValue)}</p>}
+                      <p className="text-xs font-semibold text-slate-900">{log.userName}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(log.timestamp).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
               ))}
+              {localLogs.length === 0 && <div className="bg-white border border-slate-200 rounded-xl p-6 text-center text-xs text-slate-400">No audit entries recorded yet.</div>}
             </div>
           </>
         )}
@@ -1025,6 +1182,11 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <div><span className="text-slate-500 block">Related Return</span><span className="font-semibold text-slate-900">{fd.relatedTaxReturnId || '—'}</span></div>
                     <div><span className="text-slate-500 block">Description</span><span className="font-semibold text-slate-900">{fd.description}</span></div>
                   </div>
+                  <div className="flex gap-2 mt-3">
+                    {fd.status === 'Upcoming' && <PrimaryBtn onClick={() => onFileDeadline(fd.id)} icon="bi bi-send">File</PrimaryBtn>}
+                    <button onClick={() => { setEditingFiling(fd); setFilingName(fd.title); setFilingDesc(fd.description || ''); setFilingType(fd.type); setFilingDueDate(fd.dueDate); setFilingAssignee(fd.assignee); setShowFilingModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>
+                    <button onClick={async () => { if (await modalConfirm('Delete this filing deadline?', { variant: 'danger' })) onDeleteFilingDeadline(fd.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
+                  </div>
                   {fd.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {fd.filedDate} by {resolveUserName(fd.filedBy || '')}</p>}
                 </div>
               ))}
@@ -1035,18 +1197,27 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 3: Advanced Reports ────────────────────────────────────── */}
         {accTab === 'reports-pl' && (
           <>
-            <PageHeader title="Profit & Loss Statement" subtitle="Income statement for the current period." />
+            <PageHeader title="Profit & Loss Statement" subtitle="Income statement for the current period." action={<PrimaryBtn icon="bi bi-download" onClick={() => generateReport('pl', 'csv')}>Export</PrimaryBtn>} />
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
               <p className="text-xs text-slate-400 mb-4">Period: Current Fiscal Year · {selectedCompany.name}</p>
               <div className="space-y-3">
-                <div className="flex justify-between text-sm"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums font-bold text-emerald-600">$1,250,000</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-600">Cost of Goods Sold</span><span className="font-sans tabular-nums font-bold text-slate-900">($480,000)</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-semibold text-slate-900">Gross Profit</span><span className="font-sans tabular-nums font-bold text-slate-900">$770,000</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-600">Operating Expenses</span><span className="font-sans tabular-nums font-bold text-slate-900">($420,000)</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-semibold text-slate-900">Operating Income</span><span className="font-sans tabular-nums font-bold text-slate-900">$350,000</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-600">Other Income/Expense</span><span className="font-sans tabular-nums font-bold text-slate-900">($12,000)</span></div>
-                <div className="flex justify-between text-sm"><span className="text-slate-600">Income Tax</span><span className="font-sans tabular-nums font-bold text-slate-900">($84,500)</span></div>
-                <div className="flex justify-between text-base border-t-2 border-slate-900 pt-3"><span className="font-bold text-slate-900">Net Income</span><span className="font-sans tabular-nums font-bold text-slate-900">$253,500</span></div>
+                {(() => {
+                  const revenue = localGL.filter(a => a.type === 'Revenue').reduce((s, a) => s + (a.balance ?? 0), 0);
+                  const cogs = localGL.filter(a => a.type === 'Expense' && /cost of|goods/i.test(a.name)).reduce((s, a) => s + (a.balance ?? 0), 0);
+                  const grossProfit = revenue - cogs;
+                  const opex = localGL.filter(a => a.type === 'Expense' && !/cost of|goods/i.test(a.name)).reduce((s, a) => s + (a.balance ?? 0), 0);
+                  const net = revenue - (cogs + opex);
+                  return (
+                    <>
+                      <div className="flex justify-between text-sm"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums font-bold text-emerald-600">${revenue.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-600">Cost of Goods Sold</span><span className="font-sans tabular-nums font-bold text-slate-900">(${cogs.toLocaleString()})</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-semibold text-slate-900">Gross Profit</span><span className="font-sans tabular-nums font-bold text-slate-900">${grossProfit.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-600">Operating Expenses</span><span className="font-sans tabular-nums font-bold text-slate-900">(${opex.toLocaleString()})</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-semibold text-slate-900">Operating Income</span><span className="font-sans tabular-nums font-bold text-slate-900">${(grossProfit - opex).toLocaleString()}</span></div>
+                      <div className="flex justify-between text-base border-t-2 border-slate-200 pt-3"><span className="font-bold text-slate-900">Net Income</span><span className="font-sans tabular-nums font-bold text-slate-900">${net.toLocaleString()}</span></div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </>
@@ -1054,26 +1225,28 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {accTab === 'reports-bs' && (
           <>
-            <PageHeader title="Balance Sheet" subtitle="Assets, liabilities, and equity as of today." />
+            <PageHeader title="Balance Sheet" subtitle="Assets, liabilities, and equity as of today." action={<PrimaryBtn icon="bi bi-download" onClick={() => generateReport('bs', 'csv')}>Export</PrimaryBtn>} />
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
               <p className="text-xs text-slate-400 mb-4">As of {new Date().toLocaleDateString()} · {selectedCompany.name}</p>
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase text-slate-500 tracking-wider">Assets</h4>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Cash & Equivalents</span><span className="font-sans tabular-nums font-semibold text-slate-900">$425,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Accounts Receivable</span><span className="font-sans tabular-nums font-semibold text-slate-900">$185,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Inventory</span><span className="font-sans tabular-nums font-semibold text-slate-900">$320,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Fixed Assets (net)</span><span className="font-sans tabular-nums font-semibold text-slate-900">$580,000</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Total Assets</span><span className="font-sans tabular-nums font-bold text-slate-900">$1,510,000</span></div>
-                <h4 className="text-xs font-bold uppercase text-slate-500 tracking-wider pt-4">Liabilities</h4>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Accounts Payable</span><span className="font-sans tabular-nums font-semibold text-slate-900">$95,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Deferred Revenue</span><span className="font-sans tabular-nums font-semibold text-slate-900">$45,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Long-term Debt</span><span className="font-sans tabular-nums font-semibold text-slate-900">$300,000</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Total Liabilities</span><span className="font-sans tabular-nums font-bold text-slate-900">$440,000</span></div>
-                <h4 className="text-xs font-bold uppercase text-slate-500 tracking-wider pt-4">Equity</h4>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Share Capital</span><span className="font-sans tabular-nums font-semibold text-slate-900">$500,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Retained Earnings</span><span className="font-sans tabular-nums font-semibold text-slate-900">$570,000</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Total Equity</span><span className="font-sans tabular-nums font-bold text-slate-900">$1,070,000</span></div>
-                <div className="flex justify-between text-base border-t-2 border-slate-900 pt-3"><span className="font-bold text-slate-900">Total Liabilities + Equity</span><span className="font-sans tabular-nums font-bold text-slate-900">$1,510,000</span></div>
+                {(() => {
+                  const byType = (t: string) => localGL.filter(a => a.type === t).reduce((s, a) => s + (a.balance ?? 0), 0);
+                  const assets = byType('Asset'); const liab = byType('Liability'); const eq = byType('Equity');
+                  return (
+                    <>
+                      <h4 className="section-title text-slate-500">Assets</h4>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Total Assets</span><span className="font-sans tabular-nums font-semibold text-slate-900">${assets.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Total Assets</span><span className="font-sans tabular-nums font-bold text-slate-900">${assets.toLocaleString()}</span></div>
+                      <h4 className="section-title text-slate-500 pt-4">Liabilities</h4>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Total Liabilities</span><span className="font-sans tabular-nums font-semibold text-slate-900">${liab.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Total Liabilities</span><span className="font-sans tabular-nums font-bold text-slate-900">${liab.toLocaleString()}</span></div>
+                      <h4 className="section-title text-slate-500 pt-4">Equity</h4>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Total Equity</span><span className="font-sans tabular-nums font-semibold text-slate-900">${eq.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Total Equity</span><span className="font-sans tabular-nums font-bold text-slate-900">${eq.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-base border-t-2 border-slate-900 pt-3"><span className="font-bold text-slate-900">Total Liabilities + Equity</span><span className="font-sans tabular-nums font-bold text-slate-900">${(liab + eq).toLocaleString()}</span></div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </>
@@ -1081,22 +1254,29 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {accTab === 'reports-cf' && (
           <>
-            <PageHeader title="Cash Flow Statement" subtitle="Operating, investing, and financing cash flows." />
+            <PageHeader title="Cash Flow Statement" subtitle="Operating, investing, and financing cash flows." action={<PrimaryBtn icon="bi bi-download" onClick={() => generateReport('cf', 'csv')}>Export</PrimaryBtn>} />
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
               <p className="text-xs text-slate-400 mb-4">Period: Current Fiscal Year · {selectedCompany.name}</p>
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase text-slate-500 tracking-wider">Operating Activities</h4>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Net Income</span><span className="font-sans tabular-nums font-semibold text-slate-900">$253,500</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Depreciation</span><span className="font-sans tabular-nums font-semibold text-slate-900">$48,000</span></div>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Change in Working Capital</span><span className="font-sans tabular-nums font-semibold text-slate-900">($32,000)</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Cash from Operations</span><span className="font-sans tabular-nums font-bold text-slate-900">$269,500</span></div>
-                <h4 className="text-xs font-bold uppercase text-slate-500 tracking-wider pt-4">Investing Activities</h4>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Capital Expenditures</span><span className="font-sans tabular-nums font-semibold text-slate-900">($120,000)</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Cash from Investing</span><span className="font-sans tabular-nums font-bold text-slate-900">($120,000)</span></div>
-                <h4 className="text-xs font-bold uppercase text-slate-500 tracking-wider pt-4">Financing Activities</h4>
-                <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Debt Repayment</span><span className="font-sans tabular-nums font-semibold text-slate-900">($50,000)</span></div>
-                <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Cash from Financing</span><span className="font-sans tabular-nums font-bold text-slate-900">($50,000)</span></div>
-                <div className="flex justify-between text-base border-t-2 border-slate-900 pt-3"><span className="font-bold text-slate-900">Net Change in Cash</span><span className="font-sans tabular-nums font-bold text-slate-900">$99,500</span></div>
+                {(() => {
+                  const netIncome = localGL.filter(a => a.type === 'Revenue').reduce((s, a) => s + (a.balance ?? 0), 0) - localGL.filter(a => a.type === 'Expense').reduce((s, a) => s + (a.balance ?? 0), 0);
+                  const depreciation = localDepreciationEntries.filter(d => d.status === 'Posted').reduce((s, d) => s + (d.depreciationAmount ?? 0), 0);
+                  return (
+                    <>
+                      <h4 className="section-title text-slate-500">Operating Activities</h4>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Net Income</span><span className="font-sans tabular-nums font-semibold text-slate-900">${netIncome.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Depreciation</span><span className="font-sans tabular-nums font-semibold text-slate-900">${depreciation.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Cash from Operations</span><span className="font-sans tabular-nums font-bold text-slate-900">${(netIncome + depreciation).toLocaleString()}</span></div>
+                      <h4 className="section-title text-slate-500 pt-4">Investing Activities</h4>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Capital Expenditures (Fixed Assets)</span><span className="font-sans tabular-nums font-semibold text-slate-900">(${localFixedAssets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0).toLocaleString()})</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Cash from Investing</span><span className="font-sans tabular-nums font-bold text-slate-900">(${localFixedAssets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0).toLocaleString()})</span></div>
+                      <h4 className="section-title text-slate-500 pt-4">Financing Activities</h4>
+                      <div className="flex justify-between text-sm ml-4"><span className="text-slate-600">Net Income (Retained)</span><span className="font-sans tabular-nums font-semibold text-slate-900">${netIncome.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm border-t border-slate-200 pt-2"><span className="font-bold text-slate-900">Cash from Financing</span><span className="font-sans tabular-nums font-bold text-slate-900">${netIncome.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-base border-t-2 border-slate-900 pt-3"><span className="font-bold text-slate-900">Net Change in Cash</span><span className="font-sans tabular-nums font-bold text-slate-900">${(netIncome + depreciation).toLocaleString()}</span></div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </>
@@ -1104,7 +1284,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {accTab === 'reports-aging' && (
           <>
-            <PageHeader title="Accounts Receivable Aging" subtitle="Outstanding receivables broken down by age." />
+            <PageHeader title="Accounts Receivable Aging" subtitle="Outstanding receivables broken down by age." action={<PrimaryBtn icon="bi bi-download" onClick={() => generateReport('aging', 'csv')}>Export</PrimaryBtn>} />
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
               <table className="w-full text-xs">
                 <thead>
@@ -1119,10 +1299,32 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-slate-100"><td className="py-2 font-semibold text-slate-900">Acme Corp</td><td className="text-right font-sans tabular-nums">$24,500</td><td className="text-right font-sans tabular-nums">$12,000</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums font-bold">$36,500</td></tr>
-                  <tr className="border-b border-slate-100"><td className="py-2 font-semibold text-slate-900">Globex Inc</td><td className="text-right font-sans tabular-nums">$18,200</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$8,500</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums font-bold">$26,700</td></tr>
-                  <tr className="border-b border-slate-100"><td className="py-2 font-semibold text-slate-900">Wayne Enterprises</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$0</td><td className="text-right font-sans tabular-nums">$42,000</td><td className="text-right font-sans tabular-nums">$15,000</td><td className="text-right font-sans tabular-nums font-bold">$57,000</td></tr>
-                  <tr className="border-t-2 border-slate-900 font-bold"><td className="py-2 text-slate-900">Total</td><td className="text-right font-sans tabular-nums">$42,700</td><td className="text-right font-sans tabular-nums">$12,000</td><td className="text-right font-sans tabular-nums">$8,500</td><td className="text-right font-sans tabular-nums">$42,000</td><td className="text-right font-sans tabular-nums">$15,000</td><td className="text-right font-sans tabular-nums">$120,200</td></tr>
+                  {(() => {
+                    const today = new Date();
+                    const open = localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void');
+                    const totals = [0, 0, 0, 0, 0, 0];
+                    const rows = open.map(inv => {
+                      const ageDays = Math.max(0, Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / 86400000));
+                      const total = inv.total ?? 0;
+                      const b = ageDays <= 0 ? [total, 0, 0, 0, 0] : ageDays <= 30 ? [0, total, 0, 0, 0] : ageDays <= 60 ? [0, 0, total, 0, 0] : ageDays <= 90 ? [0, 0, 0, total, 0] : [0, 0, 0, 0, total];
+                      totals[0] += b[0]; totals[1] += b[1]; totals[2] += b[2]; totals[3] += b[3]; totals[4] += b[4]; totals[5] += total;
+                      return (
+                        <tr key={inv.id} className="border-b border-slate-100">
+                          <td className="py-2 font-semibold text-slate-900">{inv.customerName}</td>
+                          <td className="text-right font-sans tabular-nums">${b[0].toLocaleString()}</td>
+                          <td className="text-right font-sans tabular-nums">${b[1].toLocaleString()}</td>
+                          <td className="text-right font-sans tabular-nums">${b[2].toLocaleString()}</td>
+                          <td className="text-right font-sans tabular-nums">${b[3].toLocaleString()}</td>
+                          <td className="text-right font-sans tabular-nums">${b[4].toLocaleString()}</td>
+                          <td className="text-right font-sans tabular-nums font-bold">${total.toLocaleString()}</td>
+                        </tr>
+                      );
+                    });
+                    if (rows.length === 0) rows.push(<tr key="none"><td colSpan={7} className="py-6 text-center text-slate-400">No outstanding receivables.</td></tr>);
+                    return rows.concat(
+                      <tr key="tot" className="border-t-2 border-slate-900 font-bold"><td className="py-2 text-slate-900">Total</td><td className="text-right font-sans tabular-nums">${totals[0].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[1].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[2].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[3].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[4].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[5].toLocaleString()}</td></tr>
+                    );
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -1141,7 +1343,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div><Label>Tax Amount</Label><Input type="number" value={invTax} onChange={e => setInvTax(e.target.value)} /></div>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs flex justify-between font-semibold"><span className="text-slate-600">Total Amount</span><span className="font-sans tabular-nums text-slate-900">${(Number(invSubtotal) + Number(invTax)).toLocaleString()}</span></div>
-                <PrimaryBtn icon="bi bi-file-earmark-plus">Create Invoice</PrimaryBtn>
+                <PrimaryBtn type="submit" icon="bi bi-file-earmark-plus">Create Invoice</PrimaryBtn>
               </form>
             </div>
           </div>
@@ -1160,7 +1362,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
                 <SecBtn onClick={() => setShowGLModal(false)}>Cancel</SecBtn>
                 <PrimaryBtn onClick={() => {
-                  if (!glFormCode || !glFormName) return alert('Code and name required');
+                  if (!glFormCode || !glFormName) return void modalAlert('Code and name required', { variant: 'warning' });
                   if (editingGLAccount) { onUpdateGLAccount(editingGLAccount.id, { name: glFormName, type: glFormType }); }
                   else { onAddGLAccount({ code: glFormCode, name: glFormName, type: glFormType }); }
                   setShowGLModal(false);
@@ -1187,7 +1389,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
                 <SecBtn onClick={() => setShowExpenseModal(false)}>Cancel</SecBtn>
                 <PrimaryBtn onClick={() => {
-                  if (!expFormDesc || !expFormAmount) return alert('Description and amount required');
+                  if (!expFormDesc || !expFormAmount) return void modalAlert('Description and amount required', { variant: 'warning' });
                   const assigneeEmp = localEmployees.find(e => e.userId === expFormAssignee || e.id === expFormAssignee);
                   onAddExpense!({ description: expFormDesc, category: expFormCategory, department: expFormDept, amount: Number(expFormAmount), createdBy: expFormAssignee || selectedUser.id });
                   setShowExpenseModal(false); setExpFormDesc(''); setExpFormAmount(''); setExpFormAssignee('');
@@ -1214,7 +1416,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
                 <SecBtn onClick={() => setShowBillModal(false)}>Cancel</SecBtn>
                 <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
-                  if (!billVendor || !billAmount || !billDueDate) return alert('Vendor, amount, and due date required');
+                  if (!billVendor || !billAmount || !billDueDate) return void modalAlert('Vendor, amount, and due date required', { variant: 'warning' });
                   const assigneeEmp = localEmployees.find(e => e.userId === billAssignee || e.id === billAssignee);
                   onCreateBill({ companyId: selectedCompany.id, vendorName: billVendor, description: billDesc, total: Number(billAmount), amountPaid: 0, dueDate: billDueDate, status: 'Pending', createdBy: billAssignee || selectedUser.id, createdByName: assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : selectedUser.name });
                   setShowBillModal(false); setBillVendor(''); setBillDesc(''); setBillAmount(''); setBillDueDate(''); setBillAssignee('');
@@ -1228,7 +1430,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {showComplianceModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
             <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Compliance Check</h2>
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">{editingCompliance ? 'Edit Compliance Check' : 'New Compliance Check'}</h2>
               <div className="space-y-4">
                 <div><Label>Check Name *</Label><Input value={compCheckName} onChange={e => setCompCheckName(e.target.value)} placeholder="SOX 404 Internal Controls" required /></div>
                 <div><Label>Description</Label><Input value={compCheckDesc} onChange={e => setCompCheckDesc(e.target.value)} placeholder="Annual compliance verification" /></div>
@@ -1239,13 +1441,18 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div><Label>Assigned To *</Label><Select value={compCheckAssignee} onChange={e => setCompCheckAssignee(e.target.value)}><option value="">Select employee...</option>{localEmployees.filter(e => e.status === 'Active').map(emp => <option key={emp.id} value={emp.userId || emp.id}>{emp.firstName} {emp.lastName} ({emp.department})</option>)}</Select></div>
               </div>
               <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => setShowComplianceModal(false)}>Cancel</SecBtn>
+                <SecBtn onClick={() => { setShowComplianceModal(false); setEditingCompliance(null); }}>Cancel</SecBtn>
                 <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
-                  if (!compCheckName || !compCheckDueDate || !compCheckAssignee) return alert('Name, due date, and assignee required');
+                  if (!compCheckName || !compCheckDueDate || !compCheckAssignee) return void modalAlert('Name, due date, and assignee required', { variant: 'warning' });
                   const assigneeEmp = localEmployees.find(e => e.userId === compCheckAssignee || e.id === compCheckAssignee);
-                  // Add to local state (in real app would POST to API)
-                  setShowComplianceModal(false); setCompCheckName(''); setCompCheckDesc(''); setCompCheckDueDate(''); setCompCheckAssignee('');
-                }}>Create Check</PrimaryBtn>
+                  const assigneeName = assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : '';
+                  if (editingCompliance) {
+                    onUpdateComplianceCheck(editingCompliance.id, { category: compCheckCategory, title: compCheckName, description: compCheckDesc, dueDate: compCheckDueDate, assignee: compCheckAssignee, assigneeName });
+                  } else {
+                    onCreateComplianceCheck({ companyId: selectedCompany.id, category: compCheckCategory, title: compCheckName, description: compCheckDesc, dueDate: compCheckDueDate, assignee: compCheckAssignee, assigneeName, createdBy: selectedUser.id });
+                  }
+                  setShowComplianceModal(false); setEditingCompliance(null); setCompCheckName(''); setCompCheckDesc(''); setCompCheckDueDate(''); setCompCheckAssignee('');
+                }}>{editingCompliance ? 'Save Changes' : 'Create Check'}</PrimaryBtn>
               </div>
             </div>
           </div>
@@ -1255,7 +1462,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {showFilingModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
             <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Filing Deadline</h2>
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">{editingFiling ? 'Edit Filing Deadline' : 'New Filing Deadline'}</h2>
               <div className="space-y-4">
                 <div><Label>Title *</Label><Input value={filingName} onChange={e => setFilingName(e.target.value)} placeholder="Q2 Corporate Tax Return" required /></div>
                 <div><Label>Description</Label><Input value={filingDesc} onChange={e => setFilingDesc(e.target.value)} placeholder="Quarterly tax filing" /></div>
@@ -1266,18 +1473,441 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div><Label>Assigned To *</Label><Select value={filingAssignee} onChange={e => setFilingAssignee(e.target.value)}><option value="">Select employee...</option>{localEmployees.filter(e => e.status === 'Active').map(emp => <option key={emp.id} value={emp.userId || emp.id}>{emp.firstName} {emp.lastName} ({emp.department})</option>)}</Select></div>
               </div>
               <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => setShowFilingModal(false)}>Cancel</SecBtn>
+                <SecBtn onClick={() => { setShowFilingModal(false); setEditingFiling(null); }}>Cancel</SecBtn>
                 <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
-                  if (!filingName || !filingDueDate || !filingAssignee) return alert('Title, due date, and assignee required');
+                  if (!filingName || !filingDueDate || !filingAssignee) return void modalAlert('Title, due date, and assignee required', { variant: 'warning' });
                   const assigneeEmp = localEmployees.find(e => e.userId === filingAssignee || e.id === filingAssignee);
-                  // Add to local state (in real app would POST to API)
-                  setShowFilingModal(false); setFilingName(''); setFilingDesc(''); setFilingDueDate(''); setFilingAssignee('');
-                }}>Create Deadline</PrimaryBtn>
+                  const assigneeName = assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : '';
+                  if (editingFiling) {
+                    onUpdateFilingDeadline(editingFiling.id, { filingType, jurisdiction: filingName, dueDate: filingDueDate, assignee: filingAssignee, assigneeName, notes: filingDesc });
+                  } else {
+                    onCreateFilingDeadline({ companyId: selectedCompany.id, filingType: filingType, jurisdiction: filingName, dueDate: filingDueDate, assignee: filingAssignee, assigneeName, notes: filingDesc, createdBy: selectedUser.id });
+                  }
+                  setShowFilingModal(false); setEditingFiling(null); setFilingName(''); setFilingDesc(''); setFilingDueDate(''); setFilingAssignee('');
+                }}>{editingFiling ? 'Save Changes' : 'Create Deadline'}</PrimaryBtn>
               </div>
             </div>
           </div>
         )}
+
+        {/* Tax Code Modal */}
+        {showTaxCodeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">{editingTaxCode ? 'Edit Tax Code' : 'New Tax Code'}</h2>
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Code *</Label><Input value={tcCode} onChange={e => setTcCode(e.target.value)} placeholder="VAT-20" required /></div>
+                  <div><Label>Rate (%) *</Label><Input type="number" value={tcRate} onChange={e => setTcRate(e.target.value)} placeholder="20" required /></div>
+                </div>
+                <div><Label>Name *</Label><Input value={tcName} onChange={e => setTcName(e.target.value)} placeholder="Standard VAT" required /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Type</Label><Select value={tcType} onChange={e => setTcType(e.target.value)}><option>VAT</option><option>GST</option><option>WHT</option><option>Sales Tax</option><option>Exempt</option></Select></div>
+                  <div><Label>Jurisdiction</Label><Input value={tcJurisdiction} onChange={e => setTcJurisdiction(e.target.value)} placeholder="Federal (IRS)" /></div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                <SecBtn onClick={() => { setShowTaxCodeModal(false); setEditingTaxCode(null); }}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  if (!tcCode || tcRate === '' || !tcName) return void modalAlert('Code, name, and rate required', { variant: 'warning' });
+                  if (editingTaxCode) {
+                    onUpdateTaxCode(editingTaxCode.id, { name: tcName, rate: Number(tcRate), type: tcType, jurisdiction: tcJurisdiction });
+                  } else {
+                    onCreateTaxCode({ code: tcCode, name: tcName, rate: Number(tcRate), type: tcType, jurisdiction: tcJurisdiction, glAccountId: '' });
+                  }
+                  setShowTaxCodeModal(false); setEditingTaxCode(null); setTcCode(''); setTcName(''); setTcRate(''); setTcType('VAT'); setTcJurisdiction('');
+                }}>{editingTaxCode ? 'Save Changes' : 'Create Tax Code'}</PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tax Return Modal */}
+        {showTaxReturnModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">{editingTaxReturn ? 'Edit Tax Return' : 'New Tax Return'}</h2>
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Period *</Label><Input value={trPeriod} onChange={e => setTrPeriod(e.target.value)} placeholder="Q3 2026" required /></div>
+                  <div><Label>Due Date *</Label><Input type="date" value={trDueDate} onChange={e => setTrDueDate(e.target.value)} required /></div>
+                </div>
+                <div><Label>Tax Code</Label><Select value={trTaxCodeId} onChange={e => setTrTaxCodeId(e.target.value)}><option value="">Select tax code...</option>{localTaxCodes.map(tc => <option key={tc.id} value={tc.id}>{tc.code} — {tc.name}</option>)}</Select></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Taxable Amount *</Label><Input type="number" value={trTaxableAmount} onChange={e => setTrTaxableAmount(e.target.value)} placeholder="0" required /></div>
+                  <div><Label>Tax Amount *</Label><Input type="number" value={trTaxAmount} onChange={e => setTrTaxAmount(e.target.value)} placeholder="0" required /></div>
+                </div>
+                <div><Label>Status</Label><Select value={trStatus} onChange={e => setTrStatus(e.target.value)}><option>Draft</option><option>In Review</option><option>Filed</option></Select></div>
+              </div>
+              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                <SecBtn onClick={() => { setShowTaxReturnModal(false); setEditingTaxReturn(null); }}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  if (!trPeriod || !trDueDate || trTaxableAmount === '' || trTaxAmount === '') return void modalAlert('Period, due date, taxable amount and tax amount required', { variant: 'warning' });
+                  const tc = localTaxCodes.find(t => t.id === trTaxCodeId);
+                  const taxable = Number(trTaxableAmount), tax = Number(trTaxAmount);
+                  if (editingTaxReturn) {
+                    onUpdateTaxReturn(editingTaxReturn.id, { period: trPeriod, taxCodeId: trTaxCodeId, taxCodeName: tc?.name || editingTaxReturn.taxCodeName, taxableAmount: taxable, taxAmount: tax, taxableIncome: taxable, taxDue: tax, netPayable: taxable - tax, dueDate: trDueDate, status: trStatus });
+                  } else {
+                    onCreateTaxReturn({ period: trPeriod, taxCodeId: trTaxCodeId, taxCodeName: tc?.name || '', taxableAmount: taxable, taxAmount: tax, taxableIncome: taxable, taxDue: tax, netPayable: taxable - tax, dueDate: trDueDate, status: trStatus });
+                  }
+                  setShowTaxReturnModal(false); setEditingTaxReturn(null); setTrPeriod(''); setTrTaxCodeId(''); setTrTaxableAmount(''); setTrTaxAmount(''); setTrDueDate(''); setTrStatus('Draft');
+                }}>{editingTaxReturn ? 'Save Changes' : 'Create Return'}</PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Customer Payment Modal */}
+        {showCustomerPaymentModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Record Customer Payment</h2>
+              <div className="space-y-4">
+                <div><Label>Invoice *</Label><Select value={cpInvoiceId} onChange={e => { const inv = localInvoices.find(i => i.id === e.target.value); setCpInvoiceId(e.target.value); if (inv) setCpAmount(String(inv.total ?? 0)); }}>
+                  <option value="">Select invoice...</option>
+                  {localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').map(inv => <option key={inv.id} value={inv.id}>{inv.invoiceNumber} — {inv.customerName} (${inv.total ?? 0})</option>)}
+                </Select></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Amount (USD) *</Label><Input type="number" value={cpAmount} onChange={e => setCpAmount(e.target.value)} /></div>
+                  <div><Label>Method</Label><Select value={cpMethod} onChange={e => setCpMethod(e.target.value)}><option>Bank Transfer</option><option>Cash</option><option>Card</option><option>Mobile Money</option></Select></div>
+                </div>
+                <div><Label>Reference</Label><Input value={cpRef} onChange={e => setCpRef(e.target.value)} placeholder="Txn reference" /></div>
+              </div>
+              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                <SecBtn onClick={() => setShowCustomerPaymentModal(false)}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  const inv = localInvoices.find(i => i.id === cpInvoiceId);
+                  if (!inv || !cpAmount) return void modalAlert('Invoice and amount required', { variant: 'warning' });
+                  onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(cpAmount), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: cpMethod, reference: cpRef, bankAccountId: 'ba-1', createdBy: selectedUser.id });
+                  setShowCustomerPaymentModal(false); setCpInvoiceId(''); setCpAmount(''); setCpRef('');
+                }}>Record Payment</PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fixed Asset Modal */}
+        {showAssetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Register Fixed Asset</h2>
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Asset Code *</Label><Input value={assetCode} onChange={e => setAssetCode(e.target.value)} /></div>
+                  <div><Label>Name *</Label><Input value={assetName} onChange={e => setAssetName(e.target.value)} /></div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Category</Label><Select value={assetCategory} onChange={e => setAssetCategory(e.target.value)}><option>Equipment</option><option>Vehicle</option><option>Building</option><option>IT Hardware</option><option>Furniture</option></Select></div>
+                  <div><Label>Location</Label><Select value={assetLocation} onChange={e => setAssetLocation(e.target.value)}><option>HQ</option><option>Accra Office</option><option>Kumasi Branch</option></Select></div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div><Label>Cost (USD) *</Label><Input type="number" value={assetCost} onChange={e => setAssetCost(e.target.value)} /></div>
+                  <div><Label>Salvage</Label><Input type="number" value={assetSalvage} onChange={e => setAssetSalvage(e.target.value)} /></div>
+                  <div><Label>Useful Life (yrs)</Label><Input type="number" value={assetLife} onChange={e => setAssetLife(e.target.value)} /></div>
+                </div>
+                <div><Label>Depreciation Method</Label><Select value={assetMethod} onChange={e => setAssetMethod(e.target.value)}><option>Straight Line</option><option>Double Declining</option><option>Units of Production</option></Select></div>
+              </div>
+              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                <SecBtn onClick={() => setShowAssetModal(false)}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  if (!assetCode || !assetName || !assetCost) return void modalAlert('Code, name and cost required', { variant: 'warning' });
+                  onCreateFixedAsset({ companyId: selectedCompany.id, assetCode, name: assetName, description: '', category: assetCategory, purchaseDate: new Date().toISOString().split('T')[0], purchasePrice: Number(assetCost), salvageValue: Number(assetSalvage), usefulLifeYears: Number(assetLife), depreciationMethod: assetMethod, location: assetLocation, createdBy: selectedUser.id });
+                  setShowAssetModal(false); setAssetName(''); setAssetCost('');
+                }}>Register Asset</PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Budget Modal */}
+        {showBudgetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Budget</h2>
+              <div className="space-y-4">
+                <div><Label>Budget Name *</Label><Input value={budName} onChange={e => setBudName(e.target.value)} placeholder="Q3 Marketing Budget" /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Fiscal Year</Label><Input value={budFiscalYear} onChange={e => setBudFiscalYear(e.target.value)} /></div>
+                  <div><Label>Period</Label><Input value={budPeriod} onChange={e => setBudPeriod(e.target.value)} placeholder="Q3 2026" /></div>
+                </div>
+                <div><Label>Budget Amount (USD) *</Label><Input type="number" value={budAmount} onChange={e => setBudAmount(e.target.value)} /></div>
+              </div>
+              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                <SecBtn onClick={() => setShowBudgetModal(false)}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  if (!budName || !budAmount) return void modalAlert('Name and amount required', { variant: 'warning' });
+                  onCreateBudget({ companyId: selectedCompany.id, name: budName, fiscalYear: budFiscalYear, glAccountId: '', accountCode: '', accountName: '', budgetAmount: Number(budAmount), period: budPeriod, createdBy: selectedUser.id });
+                  setShowBudgetModal(false); setBudName(''); setBudAmount('');
+                }}>Create Budget</PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cost Center Modal */}
+        {showCostCenterModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Cost Center</h2>
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Code *</Label><Input value={ccCode} onChange={e => setCcCode(e.target.value)} /></div>
+                  <div><Label>Name *</Label><Input value={ccName} onChange={e => setCcName(e.target.value)} /></div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Manager</Label><Input value={ccManager} onChange={e => setCcManager(e.target.value)} /></div>
+                  <div><Label>Budget (USD)</Label><Input type="number" value={ccBudget} onChange={e => setCcBudget(e.target.value)} /></div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                <SecBtn onClick={() => setShowCostCenterModal(false)}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                  if (!ccCode || !ccName) return void modalAlert('Code and name required', { variant: 'warning' });
+                  onCreateCostCenter({ companyId: selectedCompany.id, code: ccCode, name: ccName, departmentId: '', departmentName: '', managerName: ccManager, budget: Number(ccBudget), createdBy: selectedUser.id });
+                  setShowCostCenterModal(false); setCcName(''); setCcBudget('');
+                }}>Create Cost Center</PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <RowModal
+          row={accGLModal.selected}
+          onClose={accGLModal.close}
+          icon="bi bi-journal-bookmark"
+          accentColor="#2563eb"
+          title={(r) => `${r.code} — ${r.name}`}
+          subtitle={(r) => r.type}
+          fields={[
+            { label: 'Account Code', key: 'code', mono: true, icon: 'bi bi-hash' },
+            { label: 'Name', key: 'name', icon: 'bi bi-tag' },
+            { label: 'Type', key: 'type', icon: 'bi bi-diagram-3', section: 'Account' },
+            { label: 'Balance', key: 'balance', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Account' },
+            { label: 'Company ID', key: 'companyId', mono: true, section: 'System' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accInvoiceModal.selected}
+          onClose={accInvoiceModal.close}
+          icon="bi bi-receipt"
+          accentColor="#0891b2"
+          title={(r) => r.invoiceNumber}
+          subtitle={(r) => r.customerName}
+          size="lg"
+          fields={[
+            { label: 'Invoice #', key: 'invoiceNumber', mono: true, icon: 'bi bi-hash' },
+            { label: 'Customer', key: 'customerName', icon: 'bi bi-person' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Issue Date', key: 'issueDate', mono: true, icon: 'bi bi-calendar-event', section: 'Details' },
+            { label: 'Due Date', key: 'dueDate', mono: true, icon: 'bi bi-calendar-check', section: 'Details' },
+            { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-percent', section: 'Amounts' },
+            { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
+            { label: 'Customer ID', key: 'customerId', mono: true, section: 'System' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accExpenseModal.selected}
+          onClose={accExpenseModal.close}
+          icon="bi bi-credit-card-2-front"
+          accentColor="#d97706"
+          title={(r) => r.description}
+          subtitle={(r) => r.category}
+          fields={[
+            { label: 'Description', key: 'description', icon: 'bi bi-card-text' },
+            { label: 'Category', key: 'category', icon: 'bi bi-bookmark' },
+            { label: 'Department', key: 'department', icon: 'bi bi-building', section: 'Details' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Date', key: 'date', mono: true, icon: 'bi bi-calendar-event', section: 'Details' },
+            { label: 'Amount', key: 'amount', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Created By', key: 'createdBy', mono: true, icon: 'bi bi-person', section: 'Audit' },
+            { label: 'Created At', key: 'createdAt', mono: true, icon: 'bi bi-clock', section: 'Audit' },
+            { label: 'GL Account', key: 'glAccountId', mono: true, section: 'Audit' },
+            { label: 'ID', key: 'id', mono: true, section: 'Audit' },
+          ]}
+        />
+
+        <RowModal
+          row={accOpeningBalModal.selected}
+          onClose={accOpeningBalModal.close}
+          icon="bi bi-clipboard-data"
+          accentColor="#7c3aed"
+          title={(r) => r.accountName}
+          subtitle={(r) => r.accountCode}
+          fields={[
+            { label: 'Account Code', key: 'accountCode', mono: true, icon: 'bi bi-hash' },
+            { label: 'Account Name', key: 'accountName', icon: 'bi bi-tag' },
+            { label: 'Period ID', key: 'periodId', mono: true, icon: 'bi bi-calendar', section: 'Period' },
+            { label: 'Debit', key: 'debit', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrow-down-left', section: 'Balances' },
+            { label: 'Credit', key: 'credit', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrow-up-right', section: 'Balances' },
+            { label: 'Created At', key: 'createdAt', mono: true, icon: 'bi bi-clock', section: 'System' },
+            { label: 'Account ID', key: 'accountId', mono: true, section: 'System' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accFiscalModal.selected}
+          onClose={accFiscalModal.close}
+          icon="bi bi-calendar-range"
+          accentColor="#059669"
+          title={(r) => r.name}
+          subtitle={(r) => `${r.startDate} → ${r.endDate}`}
+          fields={[
+            { label: 'Name', key: 'name', icon: 'bi bi-tag' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Period' },
+            { label: 'Start Date', key: 'startDate', mono: true, icon: 'bi bi-calendar-event', section: 'Period' },
+            { label: 'End Date', key: 'endDate', mono: true, icon: 'bi bi-calendar-check', section: 'Period' },
+            { label: 'Closed By', key: 'closedBy', mono: true, icon: 'bi bi-person', section: 'Closure' },
+            { label: 'Closed At', key: 'closedAt', mono: true, icon: 'bi bi-clock', section: 'Closure' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accBillModal.selected}
+          onClose={accBillModal.close}
+          icon="bi bi-file-earmark-text"
+          accentColor="#dc2626"
+          title={(r) => r.billNumber}
+          subtitle={(r) => r.vendorName}
+          size="lg"
+          fields={[
+            { label: 'Bill #', key: 'billNumber', mono: true, icon: 'bi bi-hash' },
+            { label: 'Vendor', key: 'vendorName', icon: 'bi bi-building' },
+            { label: 'Vendor ID', key: 'vendorId', mono: true, section: 'Vendor' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Vendor' },
+            { label: 'Invoice Date', key: 'invoiceDate', mono: true, icon: 'bi bi-calendar-event', section: 'Dates' },
+            { label: 'Due Date', key: 'dueDate', mono: true, icon: 'bi bi-calendar-check', section: 'Dates' },
+            { label: 'Description', key: 'description', icon: 'bi bi-card-text', section: 'Dates' },
+            { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-percent', section: 'Amounts' },
+            { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
+            { label: 'Amount Paid', key: 'amountPaid', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-check2-circle', section: 'Amounts' },
+            { label: 'Created By', key: 'createdByName', icon: 'bi bi-person', section: 'Audit' },
+            { label: 'Created At', key: 'createdAt', mono: true, icon: 'bi bi-clock', section: 'Audit' },
+            { label: 'ID', key: 'id', mono: true, section: 'Audit' },
+          ]}
+        />
+
+        <RowModal
+          row={accBankTxModal.selected}
+          onClose={accBankTxModal.close}
+          icon="bi bi-bank"
+          accentColor="#0284c7"
+          title={(r) => r.description}
+          subtitle={(r) => r.bankAccountId}
+          fields={[
+            { label: 'Bank Account', key: 'bankAccountId', mono: true, icon: 'bi bi-bank2' },
+            { label: 'Description', key: 'description', icon: 'bi bi-card-text' },
+            { label: 'Type', key: 'type', icon: 'bi bi-arrow-left-right', section: 'Transaction' },
+            { label: 'Date', key: 'date', mono: true, icon: 'bi bi-calendar-event', section: 'Transaction' },
+            { label: 'Amount', key: 'amount', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Transaction' },
+            { label: 'Reconciled', key: 'reconciled', icon: 'bi bi-check2-circle', section: 'Reconciliation' },
+            { label: 'Reconciled Date', key: 'reconciledDate', mono: true, icon: 'bi bi-clock', section: 'Reconciliation' },
+            { label: 'Reference', key: 'reference', mono: true, icon: 'bi bi-hash', section: 'Reconciliation' },
+            { label: 'Journal Entry', key: 'journalEntryId', mono: true, section: 'System' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accReconModal.selected}
+          onClose={accReconModal.close}
+          icon="bi bi-shield-check"
+          accentColor="#0d9488"
+          title={(r) => `Reconciliation ${r.id}`}
+          subtitle={(r) => r.bankAccountId}
+          fields={[
+            { label: 'Bank Account', key: 'bankAccountId', mono: true, icon: 'bi bi-bank2' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Overview' },
+            { label: 'Period Start', key: 'periodStartDate', mono: true, icon: 'bi bi-calendar-event', section: 'Overview' },
+            { label: 'Period End', key: 'periodEndDate', mono: true, icon: 'bi bi-calendar-check', section: 'Overview' },
+            { label: 'Statement Balance', key: 'statementBalance', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Balances' },
+            { label: 'Book Balance', key: 'bookBalance', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Balances' },
+            { label: 'Difference', key: 'reconciledDifference', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrows-expand', section: 'Balances' },
+            { label: 'Transactions', key: 'reconciledTransactionIds', format: (v) => Array.isArray(v) ? `${v.length} items` : '—', icon: 'bi bi-list-check', section: 'Balances' },
+            { label: 'Completed By', key: 'completedByName', icon: 'bi bi-person', section: 'Audit' },
+            { label: 'Completed At', key: 'completedAt', mono: true, icon: 'bi bi-clock', section: 'Audit' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accAssetModal.selected}
+          onClose={accAssetModal.close}
+          icon="bi bi-building-gear"
+          accentColor="#4f46e5"
+          title={(r) => r.name}
+          subtitle={(r) => r.assetCode}
+          size="lg"
+          fields={[
+            { label: 'Asset Code', key: 'assetCode', mono: true, icon: 'bi bi-hash' },
+            { label: 'Name', key: 'name', icon: 'bi bi-tag' },
+            { label: 'Category', key: 'category', icon: 'bi bi-collection', section: 'Details' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Location', key: 'location', icon: 'bi bi-geo-alt', section: 'Details' },
+            { label: 'Description', key: 'description', icon: 'bi bi-card-text', full: true, section: 'Details' },
+            { label: 'Purchase Date', key: 'purchaseDate', mono: true, icon: 'bi bi-calendar-event', section: 'Cost' },
+            { label: 'Purchase Price', key: 'purchasePrice', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Cost' },
+            { label: 'Salvage Value', key: 'salvageValue', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-piggy-bank', section: 'Cost' },
+            { label: 'Useful Life (yrs)', key: 'usefulLifeYears', mono: true, icon: 'bi bi-hourglass-split', section: 'Depreciation' },
+            { label: 'Method', key: 'depreciationMethod', icon: 'bi bi-graph-down', section: 'Depreciation' },
+            { label: 'Accum. Depreciation', key: 'accumulatedDepreciation', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Depreciation' },
+            { label: 'Book Value', key: 'currentBookValue', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Depreciation' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accDeprModal.selected}
+          onClose={accDeprModal.close}
+          icon="bi bi-graph-down-arrow"
+          accentColor="#9333ea"
+          title={(r) => r.assetName}
+          subtitle={(r) => r.assetCode}
+          fields={[
+            { label: 'Asset Code', key: 'assetCode', mono: true, icon: 'bi bi-hash' },
+            { label: 'Asset Name', key: 'assetName', icon: 'bi bi-tag' },
+            { label: 'Period', key: 'period', mono: true, icon: 'bi bi-calendar', section: 'Period' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Period' },
+            { label: 'Depreciation', key: 'depreciationAmount', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Values' },
+            { label: 'Accum. Depreciation', key: 'accumulatedDepreciation', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-graph-down', section: 'Values' },
+            { label: 'Book Value', key: 'bookValue', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Values' },
+            { label: 'Journal Entry', key: 'journalEntryId', mono: true, icon: 'bi bi-journal-text', section: 'System' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
+
+        <RowModal
+          row={accBudgetModal.selected}
+          onClose={accBudgetModal.close}
+          icon="bi bi-pie-chart"
+          accentColor="#ea580c"
+          title={(r) => r.name}
+          subtitle={(r) => r.accountName}
+          fields={[
+            { label: 'Name', key: 'name', icon: 'bi bi-tag' },
+            { label: 'Fiscal Year', key: 'fiscalYear', mono: true, icon: 'bi bi-calendar', section: 'Period' },
+            { label: 'Period', key: 'period', mono: true, icon: 'bi bi-calendar2', section: 'Period' },
+            { label: 'Account', key: 'accountName', icon: 'bi bi-book', section: 'Account' },
+            { label: 'Account Code', key: 'accountCode', mono: true, icon: 'bi bi-hash', section: 'Account' },
+            { label: 'Budget Amount', key: 'budgetAmt', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Actual Amount', key: 'actualAmt', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
+            { label: 'Variance', key: 'varianceAmt', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrows-expand', section: 'Amounts' },
+            { label: 'Variance %', key: 'variancePercent', mono: true, format: (v) => `${Number(v || 0).toLocaleString()}%`, icon: 'bi bi-percent', section: 'Performance' },
+            { label: '% Used', key: 'pctUsed', mono: true, format: (v) => `${Number(v || 0)}%`, icon: 'bi bi-speedometer2', section: 'Performance' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Performance' },
+            { label: 'ID', key: 'id', mono: true, section: 'System' },
+          ]}
+        />
       </div>
     );
-};
+  };
+
 

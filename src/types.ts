@@ -95,6 +95,20 @@ export interface LeaveRequest {
   days?: number;
 }
 
+export interface OnboardingRecord {
+  id: string;
+  companyId: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  role: string;
+  phase: string;
+  tasks: string[];
+  completedTasks: string[];
+  status: 'In Progress' | 'Completed' | 'Pending';
+  startDate: string;
+}
+
 export interface OKRRecord {
   id: string;
   companyId: string;
@@ -128,6 +142,26 @@ export interface PayslipRecord {
   healthIns: number;
 }
 
+export interface PayrollGroup {
+  id: string;
+  companyId: string;
+  name: string;
+  description: string;
+  employeeIds: string[];
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface SalaryBand {
+  id: string;
+  companyId: string;
+  name: string;
+  minSalary: number;
+  maxSalary: number;
+  employeeCount: number;
+  createdBy: string;
+  createdAt: string;
+}
 
 export interface CRMLead {
   id: string;
@@ -585,6 +619,7 @@ export interface Expense {
   glAccountId?: string;
   journalEntryId?: string;
   createdBy: string;
+  createdByName?: string;
   createdAt: string;
 }
 
@@ -662,6 +697,80 @@ export interface CustomerPayment {
   bankAccountId?: string;
   journalEntryId?: string;
   createdBy: string;
+  createdAt: string;
+}
+
+export interface SalesOrderItem {
+  name: string;
+  sku?: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface SalesOrder {
+  id: string;
+  companyId: string;
+  orderNumber: string;
+  customerName: string;
+  customerId: string;
+  items: SalesOrderItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  status: 'Draft' | 'Pending' | 'Confirmed' | 'Processing' | 'Shipped' | 'Completed' | 'Cancelled';
+  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+  assignedTo?: string;
+  assignedToName?: string;
+  orderDate: string;
+  expectedDelivery?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SalesCustomer {
+  id: string;
+  companyId: string;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  address: string;
+  totalOrders: number;
+  totalSpend: number;
+  lastOrderDate: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface SalesQuotation {
+  id: string;
+  companyId: string;
+  quoteNumber: string;
+  customerName: string;
+  customerId: string;
+  items: SalesOrderItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  validUntil: string;
+  status: 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Expired';
+  assignedTo?: string;
+  assignedToName?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SalesTarget {
+  id: string;
+  companyId: string;
+  repId: string;
+  repName: string;
+  month: string;
+  year: string;
+  targetAmount: number;
+  actualAmount: number;
   createdAt: string;
 }
 

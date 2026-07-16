@@ -14,6 +14,7 @@ import {
   INITIAL_DEPRECIATION_ENTRIES, INITIAL_BUDGETS, INITIAL_COST_CENTERS, INITIAL_CURRENCY_RATES,
   INITIAL_TAX_CODES, INITIAL_TAX_RETURNS, INITIAL_INTERCOMPANY_TXNS, INITIAL_CONSOLIDATION_RULES,
   INITIAL_COMPLIANCE_CHECKS, INITIAL_AUDIT_SNAPSHOTS, INITIAL_POLICY_DOCUMENTS, INITIAL_FILING_DEADLINES,
+  INITIAL_SALES_ORDERS,
 } from '../src/data/mockData';
 
 // HR / API seed data currently defined inline in server.ts (mirrored here for the seed).
@@ -44,6 +45,22 @@ const INITIAL_API_KEYS = [
   { id: 'key-1', companyId: 'c-acme', name: 'Production Webhook CRM Sync', key: 'erp_live_sec_7df98a90c8aef98e', permissions: 'Full Access', createdAt: '2025-06-01T12:00:00Z', expiresAt: '2026-12-31T23:59:59Z' },
 ];
 
+const INITIAL_PAYROLL_GROUPS = [
+  { id: 'pg-1', companyId: 'c-acme', name: 'Engineering Team', description: 'All engineering staff', employeeIds: ['emp-1', 'emp-5'], createdBy: 'u-admin', createdAt: '2026-07-01T00:00:00Z' },
+  { id: 'pg-2', companyId: 'c-acme', name: 'Management', description: 'Senior management and executives', employeeIds: ['emp-1', 'emp-2'], createdBy: 'u-admin', createdAt: '2026-07-01T00:00:00Z' },
+];
+
+const INITIAL_SALARY_BANDS = [
+  { id: 'sb-1', companyId: 'c-acme', name: 'Executive', minSalary: 12000, maxSalary: 25000, employeeCount: 2, createdBy: 'u-admin', createdAt: '2026-07-01T00:00:00Z' },
+  { id: 'sb-2', companyId: 'c-acme', name: 'Senior', minSalary: 8000, maxSalary: 12000, employeeCount: 3, createdBy: 'u-admin', createdAt: '2026-07-01T00:00:00Z' },
+  { id: 'sb-3', companyId: 'c-acme', name: 'Mid-level', minSalary: 5000, maxSalary: 8000, employeeCount: 8, createdBy: 'u-admin', createdAt: '2026-07-01T00:00:00Z' },
+  { id: 'sb-4', companyId: 'c-acme', name: 'Junior', minSalary: 3000, maxSalary: 5000, employeeCount: 6, createdBy: 'u-admin', createdAt: '2026-07-01T00:00:00Z' },
+];
+
+const INITIAL_ONBOARDINGS = [
+  { id: 'ob-1', companyId: 'c-acme', employeeId: 'emp-5', employeeName: 'Michael Chang', department: 'Logistics & Stock', role: 'Warehouse Supervisor', phase: 'Orientation', tasks: ['Welcome email', 'IT setup', 'Policy acknowledgment'], completedTasks: ['Welcome email', 'IT setup'], status: 'In Progress', startDate: '2026-07-01' },
+];
+
 const TABLES = [
   schema.filingDeadlines, schema.policyDocuments, schema.auditSnapshots, schema.complianceChecks,
   schema.consolidationRules, schema.intercompanyTxns, schema.taxReturns, schema.taxCodes,
@@ -55,8 +72,8 @@ const TABLES = [
   schema.posShifts, schema.posTerminals, schema.posProducts, schema.posCategories,
   schema.apiKeys, schema.workflows, schema.auditLogs, schema.tickets, schema.inventory,
   schema.invoices, schema.glAccounts, schema.crmEmails, schema.crmTasks, schema.crmActivities,
-  schema.crmLeads, schema.payslips, schema.okrs, schema.leaves, schema.attendance,
-  schema.employees, schema.branches, schema.departments, schema.users, schema.companies,
+  schema.crmLeads, schema.payslips, schema.payrollGroups, schema.salaryBands, schema.okrs, schema.leaves, schema.attendance,
+  schema.onboardings, schema.employees, schema.branches, schema.departments, schema.users, schema.companies,
 ];
 
 async function seed() {
@@ -75,6 +92,9 @@ async function seed() {
   await db.insert(schema.attendance).values(INITIAL_ATTENDANCE);
   await db.insert(schema.okrs).values(INITIAL_OKRS);
   await db.insert(schema.payslips).values(INITIAL_PAYSLIPS);
+  await db.insert(schema.payrollGroups).values(INITIAL_PAYROLL_GROUPS);
+  await db.insert(schema.salaryBands).values(INITIAL_SALARY_BANDS);
+  await db.insert(schema.onboardings).values(INITIAL_ONBOARDINGS);
   await db.insert(schema.crmLeads).values(INITIAL_LEADS);
   await db.insert(schema.crmActivities).values(INITIAL_CRM_ACTIVITIES);
   await db.insert(schema.crmTasks).values(INITIAL_CRM_TASKS);
@@ -118,6 +138,7 @@ async function seed() {
   await db.insert(schema.auditSnapshots).values(INITIAL_AUDIT_SNAPSHOTS);
   await db.insert(schema.policyDocuments).values(INITIAL_POLICY_DOCUMENTS);
   await db.insert(schema.filingDeadlines).values(INITIAL_FILING_DEADLINES);
+  await db.insert(schema.salesOrders).values(INITIAL_SALES_ORDERS);
 
   console.log('Seed complete ✅');
   process.exit(0);

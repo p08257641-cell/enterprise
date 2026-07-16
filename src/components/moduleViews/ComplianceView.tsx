@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
+import { modalAlert } from '../../utils/modal';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole } from '../../permissions';
 
@@ -79,7 +80,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
           ].map(p => (
             <div key={p.title} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all flex items-start justify-between">
               <div><div className="text-xs font-semibold text-slate-900">{p.title}</div><div className="text-[10px] text-slate-400 mt-1">{p.version} · Updated {p.updated} · Owner: {p.owner}</div></div>
-              <button className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg ml-3 shrink-0">View</button>
+               <button onClick={() => void modalAlert(`Viewing policy: ${p.title} (${p.version})`, { variant: 'info' })} className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg ml-3 shrink-0">View</button>
             </div>
           ))}
         </div>

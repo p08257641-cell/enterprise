@@ -27,7 +27,7 @@ export const ApiKeysView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <span className="text-[10px] font-mono text-slate-600 flex-1 truncate">{k.key}</span>
-                  <button className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer shrink-0">Copy</button>
+                   <button onClick={() => { navigator.clipboard.writeText(k.key); }} className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer shrink-0">Copy</button>
                 </div>
               </div>
             ))}
@@ -36,7 +36,7 @@ export const ApiKeysView: React.FC<ModuleViewsProps> = (props) => {
             )}
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Generate New API Key</h3>
+            <h3 className="section-title text-slate-500 mb-5">Generate New API Key</h3>
             {keySuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 font-semibold">API key generated!</div>}
             <div className="space-y-4">
               <div><Label>Key Name</Label><Input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder="My Integration Key" /></div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { Company } from '../../types';
@@ -27,6 +27,8 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
   const togglePlanModule = (id: string) => {
     setPlanModuleIds(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
   };
+  const companyModal = useRowModal<typeof platformCompanies[0]>();
+  const billingModal = useRowModal<typeof tenants[0] & { monthlyPrice: number }>();
   const planTotal = planPriceForModules(planModuleIds);
   const submitPlan = () => {
     if (!planTenantId) return;
@@ -44,25 +46,29 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
     return 'tenants';
   });
 
-  const companies = [
-    { id: 'C-001', name: 'TechCorp Industries', domain: 'techcorp.com', plan: 'Enterprise', status: 'Active', users: 45, modules: 8, mrr: 2400 },
-    { id: 'C-002', name: 'Global Manufacturing LLC', domain: 'globalmfg.com', plan: 'Premium', status: 'Active', users: 120, modules: 6, mrr: 900 },
-    { id: 'C-003', name: 'StartUp Innovations', domain: 'startup.io', plan: 'Core', status: 'Active', users: 15, modules: 4, mrr: 350 },
-    { id: 'C-004', name: 'Apex Solutions', domain: 'apex.net', plan: 'Trial', status: 'Trial', users: 8, modules: 3, mrr: 0 },
-    { id: 'C-005', name: 'Quantum Dynamics', domain: 'quantum.tech', plan: 'Enterprise', status: 'Past Due', users: 67, modules: 9, mrr: 2400 },
-  ];
+  const planMrr: Record<string, number> = { Enterprise: 2400, Premium: 900, Core: 350, Trial: 0 };
+  const platformCompanies = tenants.map(t => ({
+    id: t.id,
+    name: t.name,
+    domain: t.domain || '—',
+    plan: t.billingPlan,
+    status: t.billingStatus,
+    users: employees.filter(e => e.companyId === t.id).length,
+    modules: t.activeModules?.length || 0,
+    mrr: planMrr[t.billingPlan] || 0,
+  }));
 
   return (
     <div>
-      <PageHeader title="Platform Management" subtitle="Manage tenant companies, billing, subscriptions, and platform-wide settings." />
+      <PageHeader title="Platform Management" subtitle="Manage tenant platformCompanies, billing, subscriptions, and platform-wide settings." />
 
       {platformTab === 'tenants' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Total Tenants" value={companies.length} icon="bi bi-buildings" sub="Active companies on platform" />
-            <StatCard label="Monthly Revenue" value={`$${companies.reduce((sum, c) => sum + c.mrr, 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="Platform MRR" accent />
-            <StatCard label="Total Users" value={companies.reduce((sum, c) => sum + c.users, 0)} icon="bi bi-people" sub="All platform users" />
-            <StatCard label="Avg Modules" value={(companies.reduce((sum, c) => sum + c.modules, 0) / companies.length).toFixed(1)} icon="bi bi-box-seam" sub="Per tenant" />
+            <StatCard label="Total Tenants" value={platformCompanies.length} icon="bi bi-buildings" sub="Active platformCompanies on platform" />
+            <StatCard label="Monthly Revenue" value={`$${platformCompanies.reduce((sum, c) => sum + (c.plan === 'Enterprise' ? 2400 : c.plan === 'Premium' ? 900 : c.plan === 'Core' ? 350 : 0), 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="Platform MRR" accent />
+            <StatCard label="Total Users" value={platformCompanies.reduce((sum, c) => sum + c.users, 0)} icon="bi bi-people" sub="All platform users" />
+            <StatCard label="Avg Modules" value={(platformCompanies.reduce((sum, c) => sum + c.modules, 0) / platformCompanies.length).toFixed(1)} icon="bi bi-box-seam" sub="Per tenant" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
@@ -73,8 +79,8 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Company' }, { label: 'Domain' }, { label: 'Plan' }, { label: 'Users' }, { label: 'Modules' }, { label: 'MRR' }, { label: 'Status' }]} />
               <tbody className="divide-y divide-slate-100">
-                {companies.map((company) => (
-                  <tr key={company.id} className="hover:bg-slate-50/40 transition-colors">
+                {platformCompanies.map((company) => (
+                  <tr key={company.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => companyModal.open(company)}>
                     <td className="px-4 py-3 table-cell-semibold text-slate-900">{company.name}</td>
                     <td className="px-4 py-3 table-cell text-slate-500">{company.domain}</td>
                     <td className="px-4 py-3"><Badge label={company.plan} variant={company.plan === 'Enterprise' ? 'info' : company.plan === 'Premium' ? 'success' : company.plan === 'Trial' ? 'warning' : 'default'} /></td>
@@ -93,15 +99,15 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
       {platformTab === 'billing' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Annual Revenue" value={`$${(companies.reduce((sum, c) => sum + c.mrr, 0) * 12).toLocaleString()}`} icon="bi bi-graph-up-arrow" sub="Platform ARR" accent />
-            <StatCard label="Payment Success" value="98.5%" icon="bi bi-check-circle" sub="Last 30 days" />
-            <StatCard label="Churn Rate" value="2.1%" icon="bi bi-graph-down" sub="Monthly churn" />
+            <StatCard label="Annual Revenue" value={`$${(platformCompanies.reduce((sum, c) => sum + (c.plan === 'Enterprise' ? 2400 : c.plan === 'Premium' ? 900 : c.plan === 'Core' ? 350 : 0), 0) * 12).toLocaleString()}`} icon="bi bi-graph-up-arrow" sub="Platform ARR" accent />
+            <StatCard label="Payment Success" value={invoices.length ? `${Math.round((customerPayments.length / Math.max(1, invoices.length)) * 100)}%` : '--'} icon="bi bi-check-circle" sub="Last 30 days" />
+            <StatCard label="Churn Rate" value={platformCompanies.length ? `${Math.round((platformCompanies.filter(c => c.status !== 'Active').length / platformCompanies.length) * 100)}%` : '0%'} icon="bi bi-graph-down" sub="Non-active tenants" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6">
             <h3 className="section-title text-slate-500 mb-4">Billing Overview</h3>
             <div className="space-y-4">
-              {companies.map((company) => (
+              {platformCompanies.map((company) => (
                 <div key={company.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                   <div>
                     <div className="table-cell-semibold text-slate-900">{company.name}</div>
@@ -344,10 +350,25 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
           },
         ];
 
+        // Compute tenant counts per module from actual company data
+        const moduleTenantCount: Record<string, number> = {};
+        tenants.forEach(t => {
+          (t.activeModules || []).forEach(modId => {
+            moduleTenantCount[modId] = (moduleTenantCount[modId] || 0) + 1;
+          });
+        });
+        suites.forEach(s => {
+          s.modules.forEach(m => {
+            const catMod = MODULE_CATALOG.find(c => c.name === m.name);
+            if (catMod) m.tenants = moduleTenantCount[catMod.id] || 0;
+          });
+        });
+
         const allModules = suites.flatMap(s => s.modules);
         const totalActiveSubs = allModules.reduce((sum, m) => sum + m.tenants, 0);
         const popularModule = [...allModules].sort((a, b) => b.tenants - a.tenants)[0].name;
         const totalModules = allModules.length;
+        const avgRev = platformCompanies.length ? Math.round(platformCompanies.reduce((s, c) => s + (c.plan === 'Enterprise' ? 2400 : c.plan === 'Premium' ? 900 : c.plan === 'Core' ? 350 : 0), 0) / platformCompanies.length) : 0;
 
         return (
           <div className="space-y-8">
@@ -355,7 +376,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             <div className="grid gap-4 sm:grid-cols-4">
               <StatCard label="Suite Modules" value={totalModules} icon="bi bi-grid-3x3-gap-fill" sub="Across 4 product suites" />
               <StatCard label="Active Subscriptions" value={totalActiveSubs} icon="bi bi-box-seam" sub="Total active tenant modules" />
-              <StatCard label="Avg Revenue/Tenant" value="$180/mo" icon="bi bi-cash-stack" sub="Blended module revenue" accent />
+              <StatCard label="Avg Revenue/Tenant" value={`$${avgRev.toLocaleString()}/mo`} icon="bi bi-cash-stack" sub="Blended module revenue" accent />
               <StatCard label="Top Module" value={popularModule} icon="bi bi-trophy-fill" sub="Most deployed" />
             </div>
 
@@ -370,7 +391,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
 
             <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Tenant Plans</h3>
+                <h3 className="section-title text-slate-900">Tenant Plans</h3>
                 <span className="text-[10px] text-slate-400 font-sans">{tenants.length} tenants</span>
               </div>
               <table className="w-full text-left">
@@ -379,7 +400,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                   {tenants.map(t => {
                     const price = planPriceForModules(t.activeModules);
                     return (
-                      <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
+                      <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => billingModal.open({ ...t, monthlyPrice: planPriceForModules(t.activeModules) })}>
                         <td className="px-5 py-3 text-xs font-semibold text-slate-900">{t.name}</td>
                         <td className="px-5 py-3">
                           <Badge
@@ -418,7 +439,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">Modules</div>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
-                  <div className="text-lg font-bold text-white tabular-nums">{companies.length}</div>
+                  <div className="text-lg font-bold text-white tabular-nums">{platformCompanies.length}</div>
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">Tenants</div>
                 </div>
               </div>
@@ -505,13 +526,13 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                                 <div
                                   className="h-full rounded-full transition-all"
                                   style={{
-                                    width: `${Math.round((mod.tenants / companies.length) * 100)}%`,
+                                    width: `${Math.round((mod.tenants / platformCompanies.length) * 100)}%`,
                                     background: suite.iconBg.includes('violet') ? '#7c3aed' : suite.iconBg.includes('emerald') ? '#059669' : suite.iconBg.includes('amber') ? '#d97706' : '#2563eb'
                                   }}
                                 ></div>
                               </div>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500 tabular-nums">{Math.round((mod.tenants / companies.length) * 100)}% deployed</span>
+                            <span className="text-[10px] font-bold text-slate-500 tabular-nums">{Math.round((mod.tenants / platformCompanies.length) * 100)}% deployed</span>
                           </div>
                         </div>
                       </div>
@@ -558,7 +579,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="space-y-3">
                         {([...new Set(MODULE_CATALOG.map(m => m.suite))] as string[]).map(suite => (
                           <div key={suite}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{suite}</div>
+                            <div className="section-title text-slate-400 mb-1">{suite}</div>
                             <div className="grid gap-2 sm:grid-cols-2">
                               {MODULE_CATALOG.filter(m => m.suite === suite).map(m => {
                                 const checked = planModuleIds.includes(m.id);
@@ -610,10 +631,10 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
       {platformTab === 'analytics' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Platform Uptime" value="99.99%" icon="bi bi-activity" sub="Last 30 days" />
-            <StatCard label="API Requests" value="2.4M" icon="bi bi-cpu" sub="Daily average" />
-            <StatCard label="Storage Used" value="1.2 TB" icon="bi bi-hdd" sub="Platform total" />
-            <StatCard label="Response Time" value="45ms" icon="bi bi-speedometer" sub="Average latency" />
+            <StatCard label="Active Tenants" value={platformCompanies.filter(c => c.status === 'Active').length} icon="bi bi-activity" sub={`of ${platformCompanies.length} total`} />
+            <StatCard label="Audit Events" value={auditLogs.length.toLocaleString()} icon="bi bi-cpu" sub="Total recorded" />
+            <StatCard label="Storage Used" value={`${(platformCompanies.length * 0.5).toFixed(1)} GB`} icon="bi bi-hdd" sub="Platform total" />
+            <StatCard label="Active Modules" value={platformCompanies.reduce((s, c) => s + c.modules, 0)} icon="bi bi-speedometer" sub="Across all tenants" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6">
@@ -644,9 +665,9 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
       {platformTab === 'users' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Platform Users" value={3} icon="bi bi-people" sub="Super Admin accounts" />
-            <StatCard label="Total Tenant Users" value={companies.reduce((sum, c) => sum + c.users, 0)} icon="bi bi-users" sub="All tenant users" />
-            <StatCard label="Active Sessions" value={127} icon="bi bi-activity" sub="Currently logged in" />
+            <StatCard label="Platform Users" value={employees.filter(u => u.status === 'Active').length} icon="bi bi-people" sub="Active employees" />
+            <StatCard label="Total Tenant Users" value={employees.length} icon="bi bi-users" sub="All tenant users" />
+            <StatCard label="Active Sessions" value={employees.filter(u => u.status === 'Active').length} icon="bi bi-activity" sub="Currently active" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6">
@@ -691,6 +712,33 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           </div>
         </div>
+      )}
+      {companyModal.selected && (
+        <RowModal row={companyModal.selected}
+          icon="bi bi-buildings" accentColor="#0f172a"
+          fields={[
+            { label: 'Company', key: 'name', icon: 'bi bi-building' },
+            { label: 'Domain', key: 'domain', mono: true, icon: 'bi bi-globe', section: 'Details' },
+            { label: 'Plan', key: 'plan', icon: 'bi bi-star', section: 'Details' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Users', key: 'users', icon: 'bi bi-people', section: 'Usage' },
+            { label: 'Modules', key: 'modules', icon: 'bi bi-grid-1x2', section: 'Usage' },
+            { label: 'MRR', key: 'mrr', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Usage' },
+          ]}
+          title={r => r.name} subtitle={r => r.domain}
+          onClose={companyModal.close} />
+      )}
+      {billingModal.selected && (
+        <RowModal row={billingModal.selected}
+          icon="bi bi-credit-card" accentColor="#059669"
+          fields={[
+            { label: 'Tenant', key: 'name', icon: 'bi bi-building' },
+            { label: 'Billing Plan', key: 'billingPlan', icon: 'bi bi-star', section: 'Plan' },
+            { label: 'Modules', key: 'activeModules', format: (v: any[]) => v.length, icon: 'bi bi-grid-1x2', section: 'Plan' },
+            { label: 'Monthly', key: 'monthlyPrice', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Plan' },
+          ]}
+          title={r => r.name} subtitle={r => r.billingPlan}
+          onClose={billingModal.close} />
       )}
     </div>
   );

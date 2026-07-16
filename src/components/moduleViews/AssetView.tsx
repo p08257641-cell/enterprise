@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { parseActiveView } from '../../parseActiveView';
@@ -31,6 +31,9 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
   ]);
   const [maintTask, setMaintTask] = useState(''); const [maintDue, setMaintDue] = useState('2026-08-01');
   const [maintOwner, setMaintOwner] = useState('');
+  const assetModal = useRowModal<typeof assets[0]>();
+  const maintModal = useRowModal<typeof maintenance[0]>();
+  const depModal = useRowModal<typeof depreciationRows[0]>();
 
   const assetTabs = [
     { id: 'register', label: 'Asset Register' },
@@ -68,12 +71,12 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Asset Register</h3></div>
+              <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Asset Register</h3></div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Asset ID' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Value', right: true }, { label: 'Status' }]} />
                 <tbody className="divide-y divide-slate-100">
                   {assets.map(a => (
-                    <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={a.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => assetModal.open(a)}>
                       <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{a.id}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{a.name}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{a.category}</td>
@@ -86,7 +89,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
               </table>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Register New Asset</h3>
+              <h3 className="section-title text-slate-500 mb-5">Register New Asset</h3>
               <div className="space-y-3">
                 <div><Label>Asset Name</Label><Input value={newAssetName} onChange={e => setNewAssetName(e.target.value)} placeholder="Dell Workstation" /></div>
                 <div><Label>Category</Label><Select value={newAssetCat} onChange={e => setNewAssetCat(e.target.value)}><option>IT Hardware</option><option>Heavy Machinery</option><option>Logistics</option><option>Furniture</option><option>Vehicles</option></Select></div>
@@ -103,7 +106,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                 }}>Register Asset</PrimaryBtn>
               </div>
               <div className="mt-5 pt-4 border-t border-slate-100">
-                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">QR Codes</h4>
+                <h4 className="section-title text-slate-400 mb-3">QR Codes</h4>
                 {assets.slice(0, 2).map(a => (
                   <div key={a.id} className="p-2.5 mb-2 border border-slate-100 rounded-lg flex items-center gap-3 bg-slate-50">
                     <div className="h-10 w-10 bg-white border border-slate-200 rounded flex items-center justify-center shrink-0">
@@ -127,12 +130,12 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Maintenance Schedule</h3></div>
+              <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Maintenance Schedule</h3></div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Task ID' }, { label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }]} />
                 <tbody className="divide-y divide-slate-100">
                   {maintenance.map(m => (
-                    <tr key={m.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={m.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => maintModal.open(m)}>
                       <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{m.id}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{m.asset}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{m.task}</td>
@@ -146,7 +149,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
               </table>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Schedule Maintenance</h3>
+              <h3 className="section-title text-slate-500 mb-5">Schedule Maintenance</h3>
               <div className="space-y-3">
                 <div><Label>Asset</Label><Select value={maintTask} onChange={e => setMaintTask(e.target.value)}><option value="">Select asset…</option>{assets.map(a => <option key={a.id} value={a.id}>{a.id} — {a.name}</option>)}</Select></div>
                 <div><Label>Task</Label><Input value={maintTask && !assets.find(a => a.id === maintTask) ? maintTask : ''} onChange={e => setMaintTask(e.target.value)} placeholder="e.g. Annual inspection" /></div>
@@ -175,12 +178,12 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Net Book Value" value={`$${depreciationRows.reduce((s, r) => s + r.netBook, 0).toLocaleString()}`} icon="bi bi-collection" sub="Current carrying value" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Depreciation Schedule (Straight-Line, 10% Salvage)</h3></div>
+            <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Depreciation Schedule (Straight-Line, 10% Salvage)</h3></div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Asset' }, { label: 'Cost', right: true }, { label: 'Life (yrs)' }, { label: 'Annual', right: true }, { label: 'Accumulated', right: true }, { label: 'Net Book', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {depreciationRows.map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
+                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => depModal.open(r)}>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{r.name}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${r.value.toLocaleString()}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{r.lifeYears}</td>
@@ -193,6 +196,50 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             </table>
           </div>
         </>
+      )}
+      {assetModal.selected && (
+        <RowModal row={assetModal.selected}
+          icon="bi bi-building-gear" accentColor="#4f46e5"
+          fields={[
+            { label: 'Asset ID', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Name', key: 'name', icon: 'bi bi-tag' },
+            { label: 'Category', key: 'category', icon: 'bi bi-collection', section: 'Details' },
+            { label: 'Location', key: 'location', icon: 'bi bi-geo-alt', section: 'Details' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Value', key: 'value', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Valuation' },
+            { label: 'Next Service', key: 'nextService', icon: 'bi bi-tools', section: 'Valuation' },
+            { label: 'QR Code', key: 'qr', icon: 'bi bi-qr-code', section: 'Valuation' },
+          ]}
+          title={r => r.name} subtitle={r => r.id}
+          onClose={assetModal.close} />
+      )}
+      {maintModal.selected && (
+        <RowModal row={maintModal.selected}
+          icon="bi bi-tools" accentColor="#0891b2"
+          fields={[
+            { label: 'Task ID', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Asset', key: 'asset', icon: 'bi bi-building-gear' },
+            { label: 'Task', key: 'task', icon: 'bi bi-card-text', section: 'Task' },
+            { label: 'Owner', key: 'owner', icon: 'bi bi-person', section: 'Task' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Task' },
+            { label: 'Due', key: 'due', mono: true, icon: 'bi bi-calendar-check', section: 'Schedule' },
+          ]}
+          title={r => `Task ${r.id}`} subtitle={r => r.task}
+          onClose={maintModal.close} />
+      )}
+      {depModal.selected && (
+        <RowModal row={depModal.selected}
+          icon="bi bi-graph-down-arrow" accentColor="#9333ea"
+          fields={[
+            { label: 'Asset', key: 'name', icon: 'bi bi-building-gear' },
+            { label: 'Cost', key: 'value', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Values' },
+            { label: 'Life (yrs)', key: 'lifeYears', icon: 'bi bi-hourglass-split', section: 'Values' },
+            { label: 'Annual', key: 'annual', format: (v: number) => `$${v.toFixed(0)}`, icon: 'bi bi-calendar-check', section: 'Values' },
+            { label: 'Net Book', key: 'netBook', format: (v: number) => `$${v.toFixed(0)}`, icon: 'bi bi-wallet2', section: 'Values' },
+            { label: 'QR', key: 'qr', icon: 'bi bi-qr-code', section: 'System' },
+          ]}
+          title={r => r.name} subtitle={r => 'Depreciation Detail'}
+          onClose={depModal.close} />
       )}
     </div>
   );

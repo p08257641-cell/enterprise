@@ -1,11 +1,12 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
+import { modalAlert } from '../../utils/modal';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole } from '../../permissions';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment } = props;
 
   const isAdmin = isAdminRole(selectedUser.activeRole);
 
@@ -31,6 +32,9 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [inviteDept, setInviteDept] = useState('Engineering');
   const [inviteBranch, setInviteBranch] = useState('HQ');
   const [inviteSuccess, setInviteSuccess] = useState(false);
+  const branchModal = useRowModal<typeof localBranches[0]>();
+  const deptModal = useRowModal<typeof departments[0] & { managerName: string; parentName: string }>();
+  const userModal = useRowModal<typeof localEmployees[0]>();
 
   const [approvalPolicies, setApprovalPolicies] = useState<Record<string, string[]>>({
     'Leave Requests': ['Department Head', 'Company Admin'],
@@ -41,6 +45,11 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
     'Asset Requests': ['Company Admin'],
   });
   const [approvalSaveSuccess, setApprovalSaveSuccess] = useState(false);
+
+  const [editDeptModal, setEditDeptModal] = useState<{ id: string; name: string; managerId: string; budget: number; parentId?: string } | null>(null);
+  const [editDeptName, setEditDeptName] = useState('');
+  const [editDeptManager, setEditDeptManager] = useState('');
+  const [editDeptBudget, setEditDeptBudget] = useState('');
 
   const [customRoles, setCustomRoles] = useState([
     { id: 'role-1', name: 'Company Admin', permissions: 'Full system access within tenant', rawPermissions: ['admin_all'], users: 1 },
@@ -62,6 +71,14 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [roleFormName, setRoleFormName] = useState('');
   const [roleFormDesc, setRoleFormDesc] = useState('');
   const [roleFormPermissions, setRoleFormPermissions] = useState<string[]>([]);
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [branchName, setBranchName] = useState('');
+  const [branchLocation, setBranchLocation] = useState('');
+  const [branchType, setBranchType] = useState('Regional');
+  const [showDeptModal, setShowDeptModal] = useState(false);
+const [deptName, setDeptName] = useState('');
+const [deptManager, setDeptManager] = useState('');
+const [deptParent, setDeptParent] = useState('');
 
   const handleOpenRoleModal = (roleToEdit: typeof customRoles[0] | null) => {
     if (roleToEdit) {
@@ -112,22 +129,21 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">Branch Locations</h3>
-              {isAdmin && <PrimaryBtn icon="bi bi-plus-lg">Add Branch</PrimaryBtn>}
+              {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBranchName(''); setBranchLocation(''); setShowBranchModal(true); }}>Add Branch</PrimaryBtn>}
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Branch Name' }, { label: 'Location' }, { label: 'Type' }, { label: 'Employees' }, { label: 'Status' }]} />
               <tbody className="divide-y divide-slate-100">
-                {[
-                  { name: 'New York Headquarters', location: 'New York, USA', type: 'Main HQ', emp: localEmployees.filter(e => e.branch.includes('New York') || e.branch.includes('HQ')).length, status: 'Active' },
-                  { name: 'Chicago Production Plant', location: 'Chicago, USA', type: 'Plant', emp: localEmployees.filter(e => e.branch.includes('Chicago')).length, status: 'Active' },
-                  { name: 'London Regional Office', location: 'London, UK', type: 'Regional', emp: 0, status: 'Opening Soon' },
-                ].map(b => (
-                  <tr key={b.name} className="hover:bg-slate-50/40 transition-colors">
+                {localBranches.length === 0 && (
+                  <tr><td colSpan={5} className="px-4 py-6 text-center text-xs text-slate-400">No branches yet. Click “Add Branch” to create one.</td></tr>
+                )}
+                {localBranches.map(b => (
+                  <tr key={b.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => branchModal.open(b)}>
                     <td className="px-4 py-3.5"><div className="data-value font-semibold text-slate-900">{b.name}</div></td>
                     <td className="px-4 py-3.5 data-value text-slate-500">{b.location}</td>
-                    <td className="px-4 py-3.5"><Badge label={b.type} /></td>
-                    <td className="px-4 py-3.5 data-value font-sans tabular-nums text-slate-700">{b.emp}</td>
-                    <td className="px-4 py-3.5"><Badge label={b.status} variant={b.status === 'Active' ? 'success' : 'warning'} /></td>
+                    <td className="px-4 py-3.5"><Badge label={b.isMain ? 'Main HQ' : 'Regional'} /></td>
+                    <td className="px-4 py-3.5 data-value font-sans tabular-nums text-slate-700">{localEmployees.filter(e => e.branch === b.name).length}</td>
+                    <td className="px-4 py-3.5"><Badge label="Active" variant="success" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -139,55 +155,6 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
           const companyDepts = departments.filter(d => d.companyId === selectedCompany.id);
           const getDeptName = (id?: string) => companyDepts.find(d => d.id === id)?.name;
 
-          // Build tree for organogram
-          const roots = companyDepts.filter(d => !d.parentId);
-          const getChildren = (parentId: string) => companyDepts.filter(d => d.parentId === parentId);
-
-          const renderOrgNode = (dept: typeof companyDepts[0], depth: number): React.ReactNode => {
-            const children = getChildren(dept.id);
-            const manager = localEmployees.find(e => e.userId === dept.managerId);
-            return (
-              <div key={dept.id} className="flex flex-col items-center">
-                {/* Node card */}
-                <div className={`px-4 py-3 rounded-xl border text-center min-w-[140px] max-w-[180px] transition-all hover:shadow-md ${depth === 0
-                  ? 'bg-slate-900 border-slate-900 text-white shadow-lg'
-                  : depth === 1
-                    ? 'bg-white border-slate-300 text-slate-900 shadow-xs'
-                    : 'bg-slate-50 border-slate-200 text-slate-700'
-                  }`}>
-                  <div className={`text-xs font-bold ${depth === 0 ? 'text-white' : 'text-slate-900'}`}>{dept.name}</div>
-                  <div className={`text-[9px] mt-0.5 ${depth === 0 ? 'text-slate-300' : 'text-slate-400'}`}>
-                    {manager ? `${manager.firstName} ${manager.lastName}` : 'No manager'}
-                  </div>
-                  <div className={`text-[9px] font-mono mt-0.5 ${depth === 0 ? 'text-slate-400' : 'text-slate-400'}`}>
-                    {dept.employeeCount} staff
-                  </div>
-                </div>
-                {/* Children */}
-                {children.length > 0 && (
-                  <>
-                    <div className="w-px h-5 bg-slate-300"></div>
-                    <div className="flex items-start gap-0 relative">
-                      {children.length > 1 && (
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-slate-300" style={{
-                          width: `${Math.max(0, (children.length - 1) * 180)}px`
-                        }}></div>
-                      )}
-                      <div className="flex gap-6">
-                        {children.map(child => (
-                          <div key={child.id} className="flex flex-col items-center">
-                            <div className="w-px h-5 bg-slate-300"></div>
-                            {renderOrgNode(child, depth + 1)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          };
-
           return (
             <div className="space-y-6">
               {/* Department Table */}
@@ -197,7 +164,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
                     <h3 className="text-sm font-bold text-slate-900">Department Structure</h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">Configure reporting hierarchy and department assignments.</p>
                   </div>
-                  {isAdmin && <PrimaryBtn icon="bi bi-plus-lg">Add Department</PrimaryBtn>}
+                  {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setDeptName(''); setDeptManager(''); setDeptParent(''); setShowDeptModal(true); }}>Add Department</PrimaryBtn>}
                 </div>
                 <table className="w-full text-left">
                   <TableHead cols={[{ label: 'Department' }, { label: 'Reports To' }, { label: 'Head Count' }, { label: 'Budget' }, { label: 'Manager' }, { label: '' }]} />
@@ -206,7 +173,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
                       const manager = localEmployees.find(e => e.userId === dept.managerId);
                       const parentName = getDeptName(dept.parentId);
                       return (
-                        <tr key={dept.id} className="hover:bg-slate-50/40 transition-colors">
+                        <tr key={dept.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full shrink-0 ${!dept.parentId ? 'bg-slate-900' : 'bg-slate-300'}`}></div>
@@ -217,25 +184,25 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
                             {isAdmin ? (
                               <select
                                 value={dept.parentId || ''}
-                                onChange={() => { }}
+                                onChange={(e) => onUpdateDepartment(dept.id, { parentId: e.target.value || undefined })}
                                 className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 min-w-[130px]"
                               >
-                                <option value="">ΓÇö Root (Top Level)</option>
+                                <option value="">— Root (Top Level)</option>
                                 {companyDepts.filter(d => d.id !== dept.id).map(d => (
                                   <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
                               </select>
                             ) : (
-                              <span className="text-xs text-slate-500">{parentName || 'ΓÇö Root'}</span>
+                              <span className="text-xs text-slate-500">{parentName || '— Root'}</span>
                             )}
                           </td>
                           <td className="px-4 py-3.5 text-xs font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
                           <td className="px-4 py-3.5 text-xs font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
                           <td className="px-4 py-3.5 text-xs text-slate-600">
-                            {manager ? `${manager.firstName} ${manager.lastName}` : 'ΓÇö'}
+                            {manager ? `${manager.firstName} ${manager.lastName}` : '—'}
                           </td>
-                          <td className="px-4 py-3.5 text-right">
-                            {isAdmin && <button className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
+                          <td className="px-4 py-3.5 text-right" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
+                            {isAdmin && <button onClick={e => { e.stopPropagation(); setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); }} className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
                           </td>
                         </tr>
                       );
@@ -244,23 +211,73 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
                 </table>
               </div>
 
-              {/* Visual Organogram */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-                <div className="px-5 py-4 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <i className="bi bi-diagram-3 text-slate-500 text-sm"></i>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900">Department Organogram</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">Visual reporting hierarchy showing which department reports to which.</p>
+              {/* Branch Modal */}
+              {showBranchModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+                  <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Add Branch</h2>
+                    <div className="space-y-4">
+                      <div><Label>Branch Name *</Label><Input value={branchName} onChange={e => setBranchName(e.target.value)} placeholder="Accra Branch" /></div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div><Label>Location</Label><Input value={branchLocation} onChange={e => setBranchLocation(e.target.value)} placeholder="Accra, Ghana" /></div>
+                        <div><Label>Type</Label><Select value={branchType} onChange={e => setBranchType(e.target.value)}><option>Main HQ</option><option>Regional</option><option>Plant</option><option>Warehouse</option></Select></div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                      <SecBtn onClick={() => setShowBranchModal(false)}>Cancel</SecBtn>
+                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                        if (!branchName) return void modalAlert('Branch name required', { variant: 'warning' });
+                        onAddBranch({ companyId: selectedCompany.id, name: branchName, location: branchLocation, isMain: branchType === 'Main HQ' });
+                        setShowBranchModal(false); setBranchName('');
+                      }}>Create Branch</PrimaryBtn>
                     </div>
                   </div>
                 </div>
-                <div className="p-8 overflow-x-auto">
-                  <div className="flex justify-center gap-12">
-                    {roots.map(root => renderOrgNode(root, 0))}
+              )}
+
+              {/* Department Modal */}
+              {showDeptModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+                  <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Add Department</h2>
+                    <div className="space-y-4">
+                      <div><Label>Department Name *</Label><Input value={deptName} onChange={e => setDeptName(e.target.value)} placeholder="Operations" /></div>
+                      <div><Label>Manager</Label><Input value={deptManager} onChange={e => setDeptManager(e.target.value)} placeholder="Manager name" /></div>
+                      <div><Label>Reports To</Label><Select value={deptParent} onChange={e => setDeptParent(e.target.value)}><option value="">Top Level (no parent)</option>{companyDepts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                      <SecBtn onClick={() => setShowDeptModal(false)}>Cancel</SecBtn>
+                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                        if (!deptName) return void modalAlert('Department name required', { variant: 'warning' });
+                        onAddDepartment({ companyId: selectedCompany.id, name: deptName, managerId: '', budget: 0, parentId: deptParent || undefined });
+                        setShowDeptModal(false); setDeptName('');
+                      }}>Create Department</PrimaryBtn>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Edit Department Modal */}
+              {editDeptModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+                  <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Edit Department</h2>
+                    <div className="space-y-4">
+                      <div><Label>Department Name *</Label><Input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} /></div>
+                      <div><Label>Manager</Label><Select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)}><option value="">Unassigned</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
+                      <div><Label>Budget</Label><Input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} /></div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+                      <SecBtn onClick={() => setEditDeptModal(null)}>Cancel</SecBtn>
+                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                        if (!editDeptName) return void modalAlert('Department name required', { variant: 'warning' });
+                        onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget) });
+                        setEditDeptModal(null);
+                      }}>Save</PrimaryBtn>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -397,7 +414,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'User' }, { label: 'Active Role' }, { label: 'All Roles' }, { label: 'Department' }, { label: 'Status' }, { label: 'Joined' }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localEmployees.slice(0, 8).map(emp => (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => userModal.open(emp)}>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2.5">
                           <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center avatar-text text-slate-700">{emp.firstName[0]}{emp.lastName[0]}</div>
@@ -576,7 +593,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
           <div className="space-y-6">
             {/* ΓöÇΓöÇ System Settings ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
             <div>
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">System Settings</h3>
+              <h3 className="section-title text-slate-900 mb-4">System Settings</h3>
               <div className="grid gap-4 lg:grid-cols-2">
                 {[
                   { title: 'Email Notifications', desc: 'Configure automated email triggers for key ERP events.', icon: 'bi bi-envelope', active: true },
@@ -692,7 +709,68 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           </div>
         )}
-      </div>
+      {branchModal.selected && (
+        <RowModal row={branchModal.selected}
+          icon="bi bi-geo-alt" accentColor="#0f766e"
+          fields={[
+            { label: 'Branch', key: 'name', icon: 'bi bi-building' },
+            { label: 'Location', key: 'location', icon: 'bi bi-geo-alt' },
+            { label: 'Type', key: 'isMain', format: (v: boolean) => v ? 'Main HQ' : 'Regional', icon: 'bi bi-diagram-3', section: 'Details' },
+            { label: 'Employees', key: 'id', format: (v: any) => `${localEmployees.filter(e => e.branch === branchModal.selected.name).length}`, icon: 'bi bi-people', section: 'Details' },
+            { label: 'Status', key: 'id', format: () => 'Active', icon: 'bi bi-flag', section: 'Details' },
+          ]}
+          title={r => r.name} subtitle={r => r.location}
+          onClose={branchModal.close} />
+      )}
+      {deptModal.selected && (
+        <RowModal row={deptModal.selected}
+          icon="bi bi-diagram-3" accentColor="#7c3aed"
+          fields={[
+            { label: 'Department', key: 'name', icon: 'bi bi-collection' },
+            { label: 'Manager', key: 'managerName', icon: 'bi bi-person-vcard', section: 'Details' },
+            { label: 'Reports To', key: 'parentName', icon: 'bi bi-arrow-up-right', section: 'Details' },
+            { label: 'Head Count', key: 'employeeCount', format: (v: number) => `${v} staff`, icon: 'bi bi-people', section: 'Details' },
+            { label: 'Budget', key: 'budget', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Details' },
+          ]}
+          title={r => r.name} subtitle={r => 'Department Details'}
+          onClose={deptModal.close} />
+      )}
+      {userModal.selected && (
+        <ViewModal title={`${userModal.selected.firstName} ${userModal.selected.lastName}`} subtitle={userModal.selected.email} onClose={userModal.close}>
+          <div
+            className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1"
+            style={{ background: '#2563eb0d', border: '1px solid #2563eb1f' }}
+          >
+            <div
+              className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm"
+              style={{ background: '#2563eb' }}
+            >
+              <i className="bi bi-person-badge text-lg" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-slate-900 truncate">{userModal.selected.firstName} {userModal.selected.lastName}</div>
+              <div className="text-xs text-slate-500 truncate">{userModal.selected.designation}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {[
+              { label: 'Email', value: userModal.selected.email, icon: 'bi bi-envelope' },
+              { label: 'Active Role', value: userModal.selected.designation, icon: 'bi bi-stars' },
+              { label: 'Department', value: userModal.selected.department, icon: 'bi bi-collection' },
+              { label: 'Branch', value: userModal.selected.branch, icon: 'bi bi-geo-alt' },
+              { label: 'Status', value: userModal.selected.status, icon: 'bi bi-flag' },
+              { label: 'Joined', value: userModal.selected.joiningDate, icon: 'bi bi-calendar-event' },
+              { label: 'Employee #', value: userModal.selected.employeeNumber, icon: 'bi bi-hash' },
+            ].map(f => (
+              <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                <div className="data-value font-semibold text-slate-900">{f.value}</div>
+              </div>
+            ))}
+          </div>
+        </ViewModal>
+      )}
+    </div>
   );
 };
 

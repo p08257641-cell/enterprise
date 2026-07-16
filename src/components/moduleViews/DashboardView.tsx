@@ -33,7 +33,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
       {/* Company Overview */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Company Overview</h3>
+          <h3 className="section-title text-slate-900 mb-4">Company Overview</h3>
           <div className="flex items-center gap-4 mb-6">
             <div className="h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-4xl">{selectedCompany.logo}</div>
             <div>
@@ -59,7 +59,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
         </div>
 
         <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Workforce Distribution</h3>
+          <h3 className="section-title text-slate-900 mb-4">Workforce Distribution</h3>
           <div className="flex items-center justify-center gap-6">
             <div className="relative w-32 h-32">
               <svg viewBox="0 0 36 36" className="w-full h-full">

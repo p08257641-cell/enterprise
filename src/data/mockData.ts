@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Company, User, Department, Branch, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, ERPWorkflow, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline } from '../types';
+import { Company, User, Department, Branch, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, ERPWorkflow, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, SalesOrder } from '../types';
 
 export const INITIAL_COMPANIES: Company[] = [
   {
@@ -1592,4 +1592,95 @@ export const INITIAL_FILING_DEADLINES: FilingDeadline[] = [
   { id: 'fd-2', companyId: 'c-acme', filingType: 'VAT Return', jurisdiction: 'State - New York', dueDate: '2026-07-31', status: 'Upcoming', assignee: 'u-acme-finance', assigneeName: 'David Vance', createdAt: '2026-07-01T08:00:00Z' },
   { id: 'fd-3', companyId: 'c-acme', filingType: 'Payroll Tax (941)', jurisdiction: 'Federal (IRS)', dueDate: '2026-07-31', status: 'Upcoming', assignee: 'u-acme-hr', assigneeName: 'Elena Rostova', createdAt: '2026-07-01T08:00:00Z' },
   { id: 'fd-4', companyId: 'c-acme', filingType: 'Annual Financial Statements', jurisdiction: 'SEC', dueDate: '2027-03-31', status: 'Upcoming', assignee: 'u-acme-finance', assigneeName: 'David Vance', createdAt: '2026-07-14T08:00:00Z' },
+];
+
+export const INITIAL_SALES_ORDERS: SalesOrder[] = [
+  {
+    id: 'so-1',
+    companyId: 'c-acme',
+    orderNumber: 'SO-2026-0001',
+    customerName: 'Pied Piper Corp',
+    customerId: 'lead-1',
+    items: [
+      { name: 'CNC Brass Fittings (12mm)', sku: 'SKU-CNC-BR-01', quantity: 200, unitPrice: 3.50, total: 700 },
+      { name: 'Heavy Duty AC Servo Motor 200W', sku: 'SKU-SERVO-AC-200', quantity: 8, unitPrice: 180.00, total: 1440 },
+    ],
+    subtotal: 2140,
+    tax: 171.20,
+    discount: 0,
+    total: 2311.20,
+    status: 'Completed',
+    priority: 'High',
+    assignedTo: 'u-acme-sales',
+    assignedToName: 'Samantha Brady',
+    orderDate: '2026-06-15',
+    expectedDelivery: '2026-07-15',
+    notes: 'Priority client - expedite shipping',
+    createdAt: '2026-06-15T10:00:00Z',
+  },
+  {
+    id: 'so-2',
+    companyId: 'c-acme',
+    orderNumber: 'SO-2026-0002',
+    customerName: 'Hooli Tech',
+    customerId: 'lead-3',
+    items: [
+      { name: 'Siemens S7 Industrial PLC Unit', sku: 'SKU-PLC-SI-S7', quantity: 5, unitPrice: 850.00, total: 4250 },
+      { name: 'Heavy Duty AC Servo Motor 200W', sku: 'SKU-SERVO-AC-200', quantity: 12, unitPrice: 180.00, total: 2160 },
+    ],
+    subtotal: 6410,
+    tax: 512.80,
+    discount: 320.50,
+    total: 6602.30,
+    status: 'Processing',
+    priority: 'Medium',
+    assignedTo: 'u-acme-sales3',
+    assignedToName: 'John Smith',
+    orderDate: '2026-07-01',
+    expectedDelivery: '2026-08-01',
+    createdAt: '2026-07-01T09:30:00Z',
+  },
+  {
+    id: 'so-3',
+    companyId: 'c-acme',
+    orderNumber: 'SO-2026-0003',
+    customerName: 'Raviga Capital',
+    customerId: 'lead-2',
+    items: [
+      { name: 'CNC Brass Fittings (12mm)', sku: 'SKU-CNC-BR-01', quantity: 500, unitPrice: 3.50, total: 1750 },
+    ],
+    subtotal: 1750,
+    tax: 140.00,
+    discount: 0,
+    total: 1890.00,
+    status: 'Pending',
+    priority: 'Low',
+    assignedTo: 'u-acme-sales2',
+    assignedToName: 'Sarah Johnson',
+    orderDate: '2026-07-10',
+    expectedDelivery: '2026-08-10',
+    createdAt: '2026-07-10T11:00:00Z',
+  },
+  {
+    id: 'so-4',
+    companyId: 'c-acme',
+    orderNumber: 'SO-2026-0004',
+    customerName: 'Pied Piper Corp',
+    customerId: 'lead-1',
+    items: [
+      { name: 'Siemens S7 Industrial PLC Unit', sku: 'SKU-PLC-SI-S7', quantity: 2, unitPrice: 850.00, total: 1700 },
+      { name: 'CNC Brass Fittings (12mm)', sku: 'SKU-CNC-BR-01', quantity: 100, unitPrice: 3.50, total: 350 },
+    ],
+    subtotal: 2050,
+    tax: 164.00,
+    discount: 100.00,
+    total: 2114.00,
+    status: 'Shipped',
+    priority: 'High',
+    assignedTo: 'u-acme-sales',
+    assignedToName: 'Samantha Brady',
+    orderDate: '2026-07-12',
+    expectedDelivery: '2026-07-20',
+    createdAt: '2026-07-12T14:00:00Z',
+  },
 ];

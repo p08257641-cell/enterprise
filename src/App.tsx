@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -15,6 +15,7 @@ import { TenantSetup } from './components/TenantSetup';
 import { FadeIn, Skeleton } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
 // No lucide-react imports needed
+import { modalAlert } from './utils/modal';
 
 export default function App() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -26,6 +27,7 @@ export default function App() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [leads, setLeads] = useState<CRMLead[]>([]);
   const [crmActivities, setCrmActivities] = useState<CRMActivityLog[]>([]);
   const [crmTasks, setCrmTasks] = useState<CRMTask[]>([]);
@@ -43,11 +45,19 @@ export default function App() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [okrs, setOkrs] = useState<OKRRecord[]>([]);
   const [payslips, setPayslips] = useState<PayslipRecord[]>([]);
+  const [payrollGroups, setPayrollGroups] = useState<PayrollGroup[]>([]);
+  const [salaryBands, setSalaryBands] = useState<SalaryBand[]>([]);
 
   // POS Module State
   const [posProducts, setPosProducts] = useState<POSProduct[]>([]);
   const [posCustomers, setPosCustomers] = useState<POSCustomer[]>([]);
   const [posSales, setPosSales] = useState<POSSale[]>([]);
+  const [posCategories, setPosCategories] = useState<POSCategory[]>([]);
+  const [posTerminals, setPosTerminals] = useState<POSTerminal[]>([]);
+  const [posShifts, setPosShifts] = useState<POSShift[]>([]);
+  const [posDiscounts, setPosDiscounts] = useState<POSDiscount[]>([]);
+  const [posReturns, setPosReturns] = useState<POSReturn[]>([]);
+  const [posDailyReports, setPosDailyReports] = useState<POSDailyReport[]>([]);
 
   // Core Ledger State
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
@@ -58,6 +68,10 @@ export default function App() {
   // Tier 2 State
   const [bills, setBills] = useState<Bill[]>([]);
   const [billPayments, setBillPayments] = useState<BillPayment[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [salesCustomers, setSalesCustomers] = useState<SalesCustomer[]>([]);
+  const [salesQuotations, setSalesQuotations] = useState<SalesQuotation[]>([]);
+  const [salesTargets, setSalesTargets] = useState<SalesTarget[]>([]);
   const [customerPayments, setCustomerPayments] = useState<CustomerPayment[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>([]);
@@ -92,7 +106,7 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes] = await Promise.all([
+        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -108,6 +122,12 @@ export default function App() {
           fetch('/api/pos/products'),
           fetch('/api/pos/customers'),
           fetch('/api/pos/sales'),
+          fetch('/api/pos/categories'),
+          fetch('/api/pos/terminals'),
+          fetch('/api/pos/shifts'),
+          fetch('/api/pos/discounts'),
+          fetch('/api/pos/returns'),
+          fetch('/api/pos/reports/daily'),
           fetch('/api/leaves'),
           fetch('/api/attendance'),
           fetch('/api/okrs'),
@@ -117,15 +137,22 @@ export default function App() {
           fetch('/api/fiscal-periods'),
           fetch('/api/opening-balances'),
           fetch('/api/bills'),
-          fetch('/api/bank-transactions'),
+          fetch('/api/bill-payments'),
           fetch('/api/customer-payments'),
           fetch('/api/bank-accounts'),
+          fetch('/api/bank-transactions'),
           fetch('/api/bank-reconciliations'),
           fetch('/api/fixed-assets'),
           fetch('/api/depreciation-entries'),
           fetch('/api/budgets'),
           fetch('/api/cost-centers'),
-          fetch('/api/currency-rates')
+          fetch('/api/onboardings'),
+          fetch('/api/payroll-groups'),
+          fetch('/api/salary-bands'),
+          fetch('/api/sales-orders'),
+          fetch('/api/sales-customers'),
+          fetch('/api/sales-quotations'),
+          fetch('/api/sales-targets')
         ]);
 
         const cData = await cRes.json();
@@ -143,6 +170,12 @@ export default function App() {
         const posProdData = await posProdRes.json();
         const posCustData = await posCustRes.json();
         const posSalesData = await posSalesRes.json();
+        const posCatData = await posCatRes.json();
+        const posTermData = await posTermRes.json();
+        const posShiftData = await posShiftRes.json();
+        const posDiscData = await posDiscRes.json();
+        const posRetData = await posRetRes.json();
+        const posReportData = await posReportRes.json();
         const leavesData = await leavesRes.json();
         const attData = await attRes.json();
         const okrsData = await okrsRes.json();
@@ -152,7 +185,7 @@ export default function App() {
         const fpData = await fpRes.json();
         const obData = await obRes.json();
         const billData = await billRes.json();
-        const bpData = await bpRes.json();
+        const bpPayData = await bpPayRes.json();
         const cpData = await cpRes.json();
         const baData = await baRes.json();
         const btxData = await btxRes.json();
@@ -161,6 +194,10 @@ export default function App() {
         const deData = await deRes.json();
         const budData = await budRes.json();
         const ccData = await ccRes.json();
+        const onbData = await onbRes.json();
+        const pgData = await pgRes.json();
+        const sbData = await sbRes.json();
+        const soData = await soRes.json();
 
         setCompanies(cData);
         setUsers(uData);
@@ -178,9 +215,26 @@ export default function App() {
         setPosProducts(posProdData);
         setPosCustomers(posCustData);
         setPosSales(posSalesData);
+        setPosCategories(posCatData);
+        setPosTerminals(posTermData);
+        setPosShifts(posShiftData);
+        setPosDiscounts(posDiscData);
+        setPosReturns(posRetData);
+        setPosDailyReports(posReportData);
         setLeaves(leavesData);
         setAttendance(attData);
         setOkrs(okrsData);
+        setOnboardings(onbData);
+        setPayrollGroups(pgData);
+        setSalaryBands(sbData);
+        setSalesOrders(soData);
+
+        const scData = await scRes.json();
+        const sqData = await sqRes.json();
+        const stData = await stRes.json();
+        setSalesCustomers(scData);
+        setSalesQuotations(sqData);
+        setSalesTargets(stData);
 
         // Fetch CRM activities
         const actRes = await fetch('/api/crm-activities');
@@ -199,7 +253,7 @@ export default function App() {
         setFiscalPeriods(fpData);
         setOpeningBalances(obData);
         setBills(billData);
-        setBillPayments(bpData);
+        setBillPayments(bpPayData);
         setCustomerPayments(cpData);
         setBankAccounts(baData);
         setBankTransactions(btxData);
@@ -209,7 +263,7 @@ export default function App() {
         setBudgets(budData);
         setCostCenters(ccData);
 
-        // Fetch currency rates separately (removed from Promise.all to fix tuple length)
+        // Fetch currency rates separately
         try {
           const crRes = await fetch('/api/currency-rates');
           const crData = await crRes.json();
@@ -355,6 +409,20 @@ export default function App() {
     }
   };
 
+  const handleUpdateEmployee = async (id: string, updates: Partial<Employee>) => {
+    try {
+      const res = await fetch(`/api/employees/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const data = await res.json();
+      setEmployees(employees.map(e => e.id === id ? { ...e, ...data } : e));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleAddDepartment = async (deptInput: Omit<Department, 'id' | 'employeeCount'>) => {
     try {
       const res = await fetch('/api/departments', {
@@ -363,7 +431,7 @@ export default function App() {
         body: JSON.stringify(deptInput)
       });
       const data = await res.json();
-      setDepartments([...departments, data.department]);
+      setDepartments([...departments, data]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
@@ -389,6 +457,64 @@ export default function App() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleUpdateDepartment = async (id: string, updates: Partial<Department>) => {
+    try {
+      const res = await fetch(`/api/departments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const data = await res.json();
+      setDepartments(departments.map(d => d.id === id ? { ...d, ...data } : d));
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteDepartment = async (id: string) => {
+    try {
+      await fetch(`/api/departments/${id}`, { method: 'DELETE' });
+      setDepartments(departments.filter(d => d.id !== id));
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleAddOnboarding = async (record: Omit<OnboardingRecord, 'id'>) => {
+    try {
+      const res = await fetch('/api/onboardings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record)
+      });
+      const data = await res.json();
+      setOnboardings([...onboardings, data]);
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateOnboarding = async (id: string, updates: Partial<OnboardingRecord>) => {
+    try {
+      const res = await fetch(`/api/onboardings/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const data = await res.json();
+      setOnboardings(onboardings.map(o => o.id === id ? { ...o, ...data } : o));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteOnboarding = async (id: string) => {
+    try {
+      await fetch(`/api/onboardings/${id}`, { method: 'DELETE' });
+      setOnboardings(onboardings.filter(o => o.id !== id));
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
   };
 
   const handleAddLead = async (leadInput: Omit<CRMLead, 'id' | 'status' | 'aiLeadScore' | 'aiFollowUpSuggested' | 'createdAt'>) => {
@@ -649,7 +775,7 @@ export default function App() {
     }
   };
 
-  const handleRunPayroll = async (period: string, structure: string) => {
+  const handleRunPayroll = async (period: string, structure: string, employeeIds?: string[]) => {
     if (!selectedCompany || !selectedUser) return;
     try {
       await fetch('/api/payroll/run', {
@@ -660,7 +786,8 @@ export default function App() {
           period,
           structure,
           userId: selectedUser.id,
-          userName: selectedUser.name
+          userName: selectedUser.name,
+          employeeIds: employeeIds || []
         })
       });
       
@@ -674,6 +801,84 @@ export default function App() {
       const accData = await aRes.json();
       setGlAccounts(accData.accounts);
       setAuditLogs(await logRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreatePayrollGroup = async (name: string, description: string, employeeIds: string[]) => {
+    if (!selectedCompany || !selectedUser) return;
+    try {
+      const res = await fetch('/api/payroll-groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyId: selectedCompany.id,
+          name,
+          description,
+          employeeIds,
+          userId: selectedUser.id,
+          userName: selectedUser.name
+        })
+      });
+      const group = await res.json();
+      setPayrollGroups([...payrollGroups, group]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeletePayrollGroup = async (groupId: string) => {
+    if (!selectedCompany) return;
+    try {
+      await fetch(`/api/payroll-groups/${groupId}`, { method: 'DELETE' });
+      setPayrollGroups(payrollGroups.filter(g => g.id !== groupId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateSalaryBand = async (name: string, minSalary: number, maxSalary: number) => {
+    if (!selectedCompany || !selectedUser) return;
+    try {
+      const res = await fetch('/api/salary-bands', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyId: selectedCompany.id,
+          name,
+          minSalary,
+          maxSalary,
+          userId: selectedUser.id,
+          userName: selectedUser.name
+        })
+      });
+      const band = await res.json();
+      setSalaryBands([...salaryBands, band]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateSalaryBand = async (bandId: string, updates: { name?: string; minSalary?: number; maxSalary?: number; employeeCount?: number }) => {
+    try {
+      const res = await fetch(`/api/salary-bands/${bandId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await res.json();
+      setSalaryBands(salaryBands.map(b => b.id === bandId ? updated : b));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteSalaryBand = async (bandId: string) => {
+    if (!selectedCompany) return;
+    try {
+      await fetch(`/api/salary-bands/${bandId}`, { method: 'DELETE' });
+      setSalaryBands(salaryBands.filter(b => b.id !== bandId));
     } catch (err) {
       console.error(err);
     }
@@ -842,6 +1047,112 @@ export default function App() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleAddPOSCategory = async (catInput: Omit<POSCategory, 'id' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/pos/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(catInput),
+      });
+      const newCat = await res.json();
+      setPosCategories([...posCategories, newCat]);
+    } catch (e) { console.error('Failed to create POS category:', e); }
+  };
+
+  const handleAddPOSTerminal = async (termInput: Omit<POSTerminal, 'id' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/pos/terminals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(termInput),
+      });
+      const newTerm = await res.json();
+      setPosTerminals([...posTerminals, newTerm]);
+    } catch (e) { console.error('Failed to create POS terminal:', e); }
+  };
+
+  const handleCreatePOSShift = async (shiftInput: Omit<POSShift, 'id' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/pos/shifts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(shiftInput),
+      });
+      const newShift = await res.json();
+      setPosShifts([...posShifts, newShift]);
+    } catch (e) { console.error('Failed to create POS shift:', e); }
+  };
+
+  const handleClosePOSShift = async (shiftId: string) => {
+    try {
+      const res = await fetch(`/api/pos/shifts/${shiftId}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const updated = await res.json();
+      setPosShifts(posShifts.map(s => s.id === shiftId ? updated : s));
+    } catch (e) { console.error('Failed to close POS shift:', e); }
+  };
+
+  const handleAddPOSDiscount = async (discInput: Omit<POSDiscount, 'id' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/pos/discounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discInput),
+      });
+      const newDisc = await res.json();
+      setPosDiscounts([...posDiscounts, newDisc]);
+    } catch (e) { console.error('Failed to create POS discount:', e); }
+  };
+
+  const handleUpdatePOSDiscount = async (id: string, updates: Partial<POSDiscount>) => {
+    try {
+      const res = await fetch(`/api/pos/discounts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const updated = await res.json();
+      setPosDiscounts(posDiscounts.map(d => d.id === id ? updated : d));
+    } catch (e) { console.error('Failed to update POS discount:', e); }
+  };
+
+  const handleCreatePOSReturn = async (retInput: Omit<POSReturn, 'id' | 'returnNumber' | 'status' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/pos/returns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(retInput),
+      });
+      const newRet = await res.json();
+      setPosReturns([...posReturns, newRet]);
+    } catch (e) { console.error('Failed to create POS return:', e); }
+  };
+
+  const handleApprovePOSReturn = async (returnId: string) => {
+    try {
+      const res = await fetch(`/api/pos/returns/${returnId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const updated = await res.json();
+      setPosReturns(posReturns.map(r => r.id === returnId ? updated : r));
+    } catch (e) { console.error('Failed to approve POS return:', e); }
+  };
+
+  const handleGeneratePOSReport = async (reportInput: any) => {
+    try {
+      const res = await fetch('/api/pos/reports/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportInput),
+      });
+      const newReport = await res.json();
+      setPosDailyReports([...posDailyReports, newReport]);
+    } catch (e) { console.error('Failed to generate POS report:', e); }
   };
 
   const handleUpdateLead = async (leadId: string, updates: Partial<CRMLead>) => {
@@ -1033,7 +1344,7 @@ export default function App() {
       });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error);
+        await modalAlert(err.error, { variant: 'danger' });
         return;
       }
       const newAccount = await res.json();
@@ -1064,7 +1375,7 @@ export default function App() {
       const res = await fetch(`/api/gl-accounts/${accountId}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error);
+        await modalAlert(err.error, { variant: 'danger' });
         return;
       }
       setGlAccounts(glAccounts.filter(a => a.id !== accountId));
@@ -1088,7 +1399,7 @@ export default function App() {
       });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error);
+        await modalAlert(err.error, { variant: 'danger' });
         return;
       }
       const newEntry = await res.json();
@@ -1250,7 +1561,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...billInput, companyId: selectedCompany.id, createdBy: selectedUser.id, createdByName: selectedUser.name })
       });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
       const newBill = await res.json();
       setBills([...bills, newBill]);
       const logRes = await fetch('/api/audit-logs');
@@ -1300,7 +1611,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...paymentInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      if (!res.ok) { const err = await res.json(); alert(err.error); return; }
+      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
       const newPayment = await res.json();
       setCustomerPayments([...customerPayments, newPayment]);
       // Reload invoices and bank
@@ -1310,6 +1621,142 @@ export default function App() {
       setBankAccounts(await baRes.json());
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateSalesOrder = async (orderInput: Omit<SalesOrder, 'id' | 'orderNumber' | 'status' | 'createdAt'>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/sales-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...orderInput, companyId: selectedCompany.id })
+      });
+      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newOrder = await res.json();
+      setSalesOrders([newOrder, ...salesOrders]);
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateSalesOrder = async (orderId: string, updates: Partial<SalesOrder>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch(`/api/sales-orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await res.json();
+      setSalesOrders(salesOrders.map(o => o.id === orderId ? updated : o));
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateSalesCustomer = async (custInput: Omit<SalesCustomer, 'id' | 'totalOrders' | 'totalSpend' | 'lastOrderDate' | 'createdAt'>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/sales-customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...custInput, companyId: selectedCompany.id })
+      });
+      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newCust = await res.json();
+      setSalesCustomers([newCust, ...salesCustomers]);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateSalesCustomer = async (custId: string, updates: Partial<SalesCustomer>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch(`/api/sales-customers/${custId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await res.json();
+      setSalesCustomers(salesCustomers.map(c => c.id === custId ? updated : c));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteSalesCustomer = async (custId: string) => {
+    if (!selectedCompany) return;
+    try {
+      await fetch(`/api/sales-customers/${custId}`, { method: 'DELETE' });
+      setSalesCustomers(salesCustomers.filter(c => c.id !== custId));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateSalesQuotation = async (quoteInput: Omit<SalesQuotation, 'id' | 'quoteNumber' | 'status' | 'createdAt'>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/sales-quotations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...quoteInput, companyId: selectedCompany.id })
+      });
+      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newQuote = await res.json();
+      setSalesQuotations([newQuote, ...salesQuotations]);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateSalesQuotation = async (quoteId: string, updates: Partial<SalesQuotation>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch(`/api/sales-quotations/${quoteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await res.json();
+      setSalesQuotations(salesQuotations.map(q => q.id === quoteId ? updated : q));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteSalesQuotation = async (quoteId: string) => {
+    if (!selectedCompany) return;
+    try {
+      await fetch(`/api/sales-quotations/${quoteId}`, { method: 'DELETE' });
+      setSalesQuotations(salesQuotations.filter(q => q.id !== quoteId));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateSalesTarget = async (targetInput: Omit<SalesTarget, 'id' | 'actualAmount' | 'createdAt'>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/sales-targets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...targetInput, companyId: selectedCompany.id })
+      });
+      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newTarget = await res.json();
+      setSalesTargets([newTarget, ...salesTargets]);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateSalesTarget = async (targetId: string, updates: Partial<SalesTarget>) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch(`/api/sales-targets/${targetId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await res.json();
+      setSalesTargets(salesTargets.map(t => t.id === targetId ? updated : t));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteSalesTarget = async (targetId: string) => {
+    if (!selectedCompany) return;
+    try {
+      await fetch(`/api/sales-targets/${targetId}`, { method: 'DELETE' });
+      setSalesTargets(salesTargets.filter(t => t.id !== targetId));
     } catch (err) { console.error(err); }
   };
 
@@ -1461,12 +1908,11 @@ export default function App() {
       const res = await fetch('/api/tax-returns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...trInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
+        body: JSON.stringify({ ...trInput, companyId: selectedCompany.id, createdBy: selectedUser.id, createdByName: selectedUser.name })
       });
       const newTR = await res.json();
       setTaxReturns([...taxReturns, newTR]);
-      const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      await refreshAuditLogs();
     } catch (err) { console.error(err); }
   };
 
@@ -1582,6 +2028,122 @@ export default function App() {
       setFilingDeadlines(filingDeadlines.map(f => f.id === filingId ? updated : f));
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await logRes.json());
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateComplianceCheck = async (checkInput: { companyId: string; category: string; title: string; description: string; dueDate: string; assignee: string; assigneeName: string; createdBy: string }) => {
+    try {
+      const res = await fetch('/api/compliance-checks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkInput)
+      });
+      const newCheck = await res.json();
+      setComplianceChecks([...complianceChecks, newCheck]);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateFilingDeadline = async (filingInput: { companyId: string; filingType: string; jurisdiction: string; dueDate: string; assignee: string; assigneeName: string; notes: string; createdBy: string }) => {
+    try {
+      const res = await fetch('/api/filing-deadlines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(filingInput)
+      });
+      const newFiling = await res.json();
+      setFilingDeadlines([...filingDeadlines, newFiling]);
+    } catch (err) { console.error(err); }
+  };
+
+  const refreshAuditLogs = async () => {
+    try { const res = await fetch('/api/audit-logs'); setAuditLogs(await res.json()); } catch (err) { console.error(err); }
+  };
+  const actorBody = () => ({ userId: selectedUser?.id, userName: selectedUser?.name });
+
+  const handleCreateTaxCode = async (tcInput: any) => {
+    if (!selectedCompany || !selectedUser) return;
+    try {
+      const res = await fetch('/api/tax-codes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...tcInput, companyId: selectedCompany.id, createdBy: selectedUser.id, createdByName: selectedUser.name })
+      });
+      setTaxCodes([...taxCodes, await res.json()]);
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateTaxCode = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/tax-codes/${id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...values, ...actorBody() })
+      });
+      const updated = await res.json();
+      setTaxCodes(taxCodes.map(t => t.id === id ? updated : t));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteTaxCode = async (id: string) => {
+    try {
+      await fetch(`/api/tax-codes/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setTaxCodes(taxCodes.filter(t => t.id !== id));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateTaxReturn = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/tax-returns/${id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...values, ...actorBody() })
+      });
+      const updated = await res.json();
+      setTaxReturns(taxReturns.map(t => t.id === id ? updated : t));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteTaxReturn = async (id: string) => {
+    try {
+      await fetch(`/api/tax-returns/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setTaxReturns(taxReturns.filter(t => t.id !== id));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateComplianceCheck = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/compliance-checks/${id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...values, ...actorBody() })
+      });
+      const updated = await res.json();
+      setComplianceChecks(complianceChecks.map(c => c.id === id ? updated : c));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteComplianceCheck = async (id: string) => {
+    try {
+      await fetch(`/api/compliance-checks/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setComplianceChecks(complianceChecks.filter(c => c.id !== id));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateFilingDeadline = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/filing-deadlines/${id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...values, ...actorBody() })
+      });
+      const updated = await res.json();
+      setFilingDeadlines(filingDeadlines.map(f => f.id === id ? updated : f));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteFilingDeadline = async (id: string) => {
+    try {
+      await fetch(`/api/filing-deadlines/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setFilingDeadlines(filingDeadlines.filter(f => f.id !== id));
+      await refreshAuditLogs();
     } catch (err) { console.error(err); }
   };
 
@@ -1719,6 +2281,7 @@ export default function App() {
           ) : (
             <ModuleViews
               activeView={activeView}
+              onNavigateView={setActiveView}
               selectedCompany={selectedCompany}
               selectedUser={selectedUser}
               employees={employees}
@@ -1738,6 +2301,8 @@ export default function App() {
               attendance={attendance}
               okrs={okrs}
               payslips={payslips}
+              payrollGroups={payrollGroups}
+              salaryBands={salaryBands}
               journalEntries={journalEntries}
               expenses={expenses}
               fiscalPeriods={fiscalPeriods}
@@ -1764,8 +2329,22 @@ export default function App() {
               onClockIn={(mode) => handleClockAttendance('in', mode)}
               onClockOut={() => handleClockAttendance('out')}
               onAddOKR={handleCreateOKR}
+              onUpdateEmployee={handleUpdateEmployee}
+              onAddDepartment={handleAddDepartment}
+              onAddBranch={handleAddBranch}
+              onUpdateDepartment={handleUpdateDepartment}
+              onDeleteDepartment={handleDeleteDepartment}
+              onboardings={onboardings}
+              onAddOnboarding={handleAddOnboarding}
+              onUpdateOnboarding={handleUpdateOnboarding}
+              onDeleteOnboarding={handleDeleteOnboarding}
               onUpdateOKRProgress={handleUpdateOKRProgress}
               onRunPayroll={handleRunPayroll}
+              onCreatePayrollGroup={handleCreatePayrollGroup}
+              onDeletePayrollGroup={handleDeletePayrollGroup}
+              onCreateSalaryBand={handleCreateSalaryBand}
+              onUpdateSalaryBand={handleUpdateSalaryBand}
+              onDeleteSalaryBand={handleDeleteSalaryBand}
               onAddGLAccount={handleAddGLAccount}
               onUpdateGLAccount={handleUpdateGLAccount}
               onDeleteGLAccount={handleDeleteGLAccount}
@@ -1810,15 +2389,62 @@ export default function App() {
               filingDeadlines={filingDeadlines}
               onCreateTaxReturn={handleCreateTaxReturn}
               onFileTaxReturn={handleFileTaxReturn}
+              onUpdateTaxReturn={handleUpdateTaxReturn}
+              onDeleteTaxReturn={handleDeleteTaxReturn}
               onCreateIntercompanyTxn={handleCreateIntercompanyTxn}
               onApproveIntercompanyTxn={handleApproveIntercompanyTxn}
               onEliminateIntercompanyTxn={handleEliminateIntercompanyTxn}
               onCreateConsolidationRule={handleCreateConsolidationRule}
               onResolveComplianceCheck={handleResolveComplianceCheck}
+              onCreateComplianceCheck={handleCreateComplianceCheck}
+              onUpdateComplianceCheck={handleUpdateComplianceCheck}
+              onDeleteComplianceCheck={handleDeleteComplianceCheck}
               onAcknowledgePolicy={handleAcknowledgePolicy}
               onFileDeadline={handleFileDeadline}
+              onCreateFilingDeadline={handleCreateFilingDeadline}
+              onUpdateFilingDeadline={handleUpdateFilingDeadline}
+              onDeleteFilingDeadline={handleDeleteFilingDeadline}
+              onCreateTaxCode={handleCreateTaxCode}
+              onUpdateTaxCode={handleUpdateTaxCode}
+              onDeleteTaxCode={handleDeleteTaxCode}
               tenants={companies}
               onAssignPlan={handleAssignPlan}
+              posProducts={posProducts}
+              posCustomers={posCustomers}
+              posSales={posSales}
+              posCategories={posCategories}
+              posTerminals={posTerminals}
+              posShifts={posShifts}
+              posDiscounts={posDiscounts}
+              posReturns={posReturns}
+              posDailyReports={posDailyReports}
+              onAddPOSProduct={handleAddPOSProduct}
+              onAddPOSCustomer={handleAddPOSCustomer}
+              onCreatePOSSale={handleCreatePOSSale}
+              onAddPOSCategory={handleAddPOSCategory}
+              onAddPOSTerminal={handleAddPOSTerminal}
+              onCreatePOSShift={handleCreatePOSShift}
+              onClosePOSShift={handleClosePOSShift}
+              onAddPOSDiscount={handleAddPOSDiscount}
+              onUpdatePOSDiscount={handleUpdatePOSDiscount}
+              onCreatePOSReturn={handleCreatePOSReturn}
+              onApprovePOSReturn={handleApprovePOSReturn}
+              onGeneratePOSReport={handleGeneratePOSReport}
+              salesOrders={salesOrders}
+              onCreateSalesOrder={handleCreateSalesOrder}
+              onUpdateSalesOrder={handleUpdateSalesOrder}
+              salesCustomers={salesCustomers}
+              onCreateSalesCustomer={handleCreateSalesCustomer}
+              onUpdateSalesCustomer={handleUpdateSalesCustomer}
+              onDeleteSalesCustomer={handleDeleteSalesCustomer}
+              salesQuotations={salesQuotations}
+              onCreateSalesQuotation={handleCreateSalesQuotation}
+              onUpdateSalesQuotation={handleUpdateSalesQuotation}
+              onDeleteSalesQuotation={handleDeleteSalesQuotation}
+              salesTargets={salesTargets}
+              onCreateSalesTarget={handleCreateSalesTarget}
+              onUpdateSalesTarget={handleUpdateSalesTarget}
+              onDeleteSalesTarget={handleDeleteSalesTarget}
             />
           )}
           </FadeIn>

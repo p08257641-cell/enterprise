@@ -119,7 +119,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               <div><Label>Email</Label><Input type="email" value={crmEmail} onChange={e => setCrmEmail(e.target.value)} placeholder="jane@acme.com" /></div>
               <div><Label>Deal Value (USD)</Label><Input type="number" value={crmValue} onChange={e => setCrmValue(e.target.value)} /></div>
               <div><Label>Source</Label><Select value={crmSource} onChange={e => setCrmSource(e.target.value as typeof crmSource)}>{['Website', 'Referral', 'LinkedIn', 'Ad Campaign', 'Partner'].map(s => <option key={s}>{s}</option>)}</Select></div>
-              <div className="sm:col-span-3 pt-1"><PrimaryBtn icon="bi bi-person-plus">Register Lead</PrimaryBtn></div>
+              <div className="sm:col-span-3 pt-1"><PrimaryBtn type="submit" icon="bi bi-person-plus">Register Lead</PrimaryBtn></div>
             </form>
           </div>
         )}
@@ -147,7 +147,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   }}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="data-value-small font-bold uppercase tracking-wider text-slate-600">{stage}</span>
+                    <span className="section-title text-slate-600">{stage}</span>
                     <div className="flex items-center gap-2">
                       <span className="data-value-small font-sans tabular-nums text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded">{stageLeads.length}</span>
                       {hasMore && (
@@ -403,8 +403,8 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
           const activities = crmActivities.filter(a => a.leadId === lead.id);
           const typeIcons: Record<string, string> = { Call: 'telephone', Email: 'envelope', Meeting: 'camera-video', Note: 'journal-text', Task: 'check2-square' };
           return (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center avatar-text font-bold text-white">{lead.firstName[0]}{lead.lastName[0]}</div>

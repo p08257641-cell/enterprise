@@ -42,7 +42,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
       </div>
       {visTab === 'checkin' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6 max-w-md">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Check-In Visitor</h3>
+          <h3 className="section-title text-slate-500 mb-5">Check-In Visitor</h3>
           {visBadge && (
             <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
               <i className="bi bi-person-badge text-emerald-600 text-2xl block mb-1"></i>
@@ -70,7 +70,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
       )}
       {visTab === 'log' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Visitor Log</h3></div>
+          <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Visitor Log</h3></div>
           <div className="divide-y divide-slate-100">
             {visitors.map(v => (
               <div key={v.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/40">
@@ -86,7 +86,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
       )}
       {visTab === 'badges' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Printed Badges</h3></div>
+          <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Printed Badges</h3></div>
           <div className="grid gap-3 p-4 sm:grid-cols-2">
             {visitors.map(v => (
               <div key={v.id} className="border border-slate-200 rounded-xl p-4 flex items-center gap-3">

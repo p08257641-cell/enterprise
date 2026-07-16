@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
@@ -29,6 +29,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
   ];
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizScore, setQuizScore] = useState<number | null>(null);
+  const progressModal = useRowModal<{ emp: typeof localEmployees[0]; course: typeof courses[0]; prog: number }>();
   const quizQuestions = [
     { id: 'q1', q: 'What does ISO stand for?', options: ['International Standards Org', 'Internal Safety Operations', 'International Organization for Standardization', 'Industrial Safety Order'], correct: 'International Organization for Standardization' },
     { id: 'q2', q: 'OSHA stands for:', options: ['Occupational Safety & Health Administration', 'Office Safety Hazard Assessment', 'Operational Standards & Health Act', 'None of the above'], correct: 'Occupational Safety & Health Administration' },
@@ -69,7 +70,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">ISO 9001 Quality Management — Quiz</h3>
+              <h3 className="section-title text-slate-500 mb-5">ISO 9001 Quality Management — Quiz</h3>
               <div className="space-y-6">
                 {quizQuestions.map((q, qi) => (
                   <div key={q.id}>
@@ -102,7 +103,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
                 const course = courses[i % courses.length];
                 const prog = [100, 65, 30, 80, 45, 100][i] || 50;
                 return (
-                  <tr key={emp.id} className="hover:bg-slate-50/40">
+                  <tr key={emp.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => progressModal.open({ emp, course, prog })}>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                     <td className="px-4 py-3 text-xs text-slate-600">{course.title}</td>
                     <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${prog}%` }} /></div><span className="text-[10px] font-sans tabular-nums text-slate-500 w-8">{prog}%</span></div></td>
@@ -113,6 +114,28 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
             </tbody>
           </table>
         </div>
+      )}
+      {progressModal.selected && (
+        <ViewModal title={`${progressModal.selected.emp.firstName} ${progressModal.selected.emp.lastName}`} subtitle={progressModal.selected.course.title} onClose={progressModal.close}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Employee', value: `${progressModal.selected.emp.firstName} ${progressModal.selected.emp.lastName}` },
+              { label: 'Department', value: progressModal.selected.emp.department },
+              { label: 'Course', value: progressModal.selected.course.title },
+              { label: 'Category', value: progressModal.selected.course.cat },
+              { label: 'Level', value: progressModal.selected.course.level },
+              { label: 'Duration', value: progressModal.selected.course.duration },
+              { label: 'Progress', value: `${progressModal.selected.prog}%` },
+              { label: 'Status', value: progressModal.selected.prog === 100 ? 'Completed' : 'In Progress' },
+            ].map(f => (
+              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
+            ))}
+          </div>
+          <div>
+            <div className="flex justify-between text-xs mb-1.5"><span className="text-slate-500">Completion</span><span className="font-bold text-slate-900">{progressModal.selected.prog}%</span></div>
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${progressModal.selected.prog}%` }} /></div>
+          </div>
+        </ViewModal>
       )}
     </div>
   );

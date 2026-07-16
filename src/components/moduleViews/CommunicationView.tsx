@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
+import { modalAlert } from '../../utils/modal';
 
 export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
   const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
@@ -26,6 +27,12 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
   ]);
   const [commTitle, setCommTitle] = useState(''); const [commBody, setCommBody] = useState('');
   const [commChannel, setCommChannel] = useState('Company'); const [commSent, setCommSent] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ who: string; msg: string; me: boolean }[]>([
+    { who: 'Elena Rostova', msg: 'Morning team — Q3 targets are locked. Let us sync at 11.', me: false },
+    { who: 'Kaito Matsuda', msg: 'On it. Pulling the manufacturing variance now.', me: false },
+    { who: 'You', msg: 'Sent the revised forecast to Finance.', me: true },
+  ]);
+  const [chatInput, setChatInput] = useState('');
 
   return (
     <div>
@@ -58,7 +65,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
         <div className="max-w-xl">
           {commSent && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 font-semibold">Announcement published successfully!</div>}
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Compose Announcement</h3>
+            <h3 className="section-title text-slate-500 mb-5">Compose Announcement</h3>
             <div className="space-y-4">
               <div><Label>Title</Label><Input value={commTitle} onChange={e => setCommTitle(e.target.value)} placeholder="Announcement title…" /></div>
               <div><Label>Channel</Label><Select value={commChannel} onChange={e => setCommChannel(e.target.value)}><option>Company</option><option>Operations</option><option>Finance</option><option>IT</option><option>HR</option></Select></div>
@@ -76,13 +83,9 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
       {commTab === 'chat' && (
         <div className="max-w-2xl">
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Team Chat</h3></div>
+            <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Team Chat</h3></div>
             <div className="p-5 space-y-3">
-              {[
-                { who: 'Elena Rostova', msg: 'Morning team — Q3 targets are locked. Let us sync at 11.', me: false },
-                { who: 'Kaito Matsuda', msg: 'On it. Pulling the manufacturing variance now.', me: false },
-                { who: 'You', msg: 'Sent the revised forecast to Finance.', me: true },
-              ].map((m, i) => (
+              {chatMessages.map((m, i) => (
                 <div key={i} className={`flex ${m.me ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-xs ${m.me ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'}`}>
                     {!m.me && <div className="font-semibold mb-0.5">{m.who}</div>}
@@ -92,8 +95,12 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
               ))}
             </div>
             <div className="px-5 py-4 border-t border-slate-100 flex gap-2">
-              <Input placeholder="Type a message…" />
-              <PrimaryBtn icon="bi bi-send">Send</PrimaryBtn>
+              <Input placeholder="Type a message…" value={chatInput} onChange={e => setChatInput(e.target.value)} />
+              <PrimaryBtn icon="bi bi-send" onClick={() => {
+                if (!chatInput.trim()) return;
+                setChatMessages(prev => [...prev, { who: 'You', msg: chatInput.trim(), me: true }]);
+                setChatInput('');
+              }}>Send</PrimaryBtn>
             </div>
           </div>
         </div>
@@ -110,7 +117,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
               <div className="text-xs font-bold text-slate-900">{t.name}</div>
               <div className="data-value text-slate-500 mt-1">{t.subject}</div>
               <div className="text-[10px] text-slate-400 mt-2">Updated {t.updated}</div>
-              <button className="mt-3 text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
+               <button onClick={() => void modalAlert(`Template "${t.name}" loaded into compose form.`, { variant: 'info' })} className="mt-3 text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
             </div>
           ))}
         </div>

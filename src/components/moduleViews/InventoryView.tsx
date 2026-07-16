@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
+import { modalAlert } from '../../utils/modal';
 
 export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
   const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
@@ -24,6 +25,19 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
   ];
   const [invSearch, setInvSearch] = useState('');
   const [adjItem, setAdjItem] = useState(''); const [adjQty, setAdjQty] = useState('100');
+  const [transfers, setTransfers] = useState<{ id: string; item: string; from: string; to: string; qty: number; status: string }[]>([
+    { id: 'TRF-1001', item: localStock[0]?.name ?? 'Steel Bracket', from: 'Warehouse A', to: 'Main Store', qty: 50, status: 'Completed' },
+    { id: 'TRF-1002', item: localStock[1]?.name ?? 'Copper Wire', from: 'Warehouse B', to: 'Warehouse A', qty: 200, status: 'In Transit' },
+    { id: 'TRF-1003', item: localStock[2]?.name ?? 'Aluminum Sheet', from: 'Warehouse A', to: 'Warehouse C', qty: 75, status: 'Completed' },
+    { id: 'TRF-1004', item: localStock[3]?.name ?? 'Plastic Casing', from: 'Main Store', to: 'Warehouse B', qty: 120, status: 'In Transit' },
+  ]);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [trfItem, setTrfItem] = useState('');
+  const [trfFrom, setTrfFrom] = useState('Warehouse A');
+  const [trfTo, setTrfTo] = useState('Main Store');
+  const [trfQty, setTrfQty] = useState('10');
+  const stockModal = useRowModal<typeof localStock[0]>();
+  const transferModal = useRowModal<typeof transfers[0]>();
 
   const lowStock = localStock.filter(i => i.stockLevel <= i.minStockLevel);
   const totalVal = localStock.reduce((s, i) => s + i.stockLevel * i.unitPrice, 0);
@@ -56,7 +70,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               {filteredStock.map(item => {
                 const isLow = item.stockLevel <= item.minStockLevel;
                 return (
-                  <tr key={item.id} className={`hover:bg-slate-50/40 transition-colors ${isLow ? 'bg-rose-50/20' : ''}`}>
+                  <tr key={item.id} className={`hover:bg-slate-50/40 transition-colors cursor-pointer ${isLow ? 'bg-rose-50/20' : ''}`} onClick={() => stockModal.open(item)}>
                     <td className="px-4 py-3 data-value-small font-sans tabular-nums font-bold text-slate-500">{item.sku}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{item.name}</td>
                     <td className="px-4 py-3 text-xs text-slate-500">{item.category}</td>
@@ -110,35 +124,54 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
       {invTab === 'transfers' && (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3 mb-2">
-            <StatCard label="Transfers This Month" value={6} icon="bi bi-arrow-left-right" sub="Inter-warehouse moves" />
-            <StatCard label="In Transit" value={2} icon="bi bi-truck" sub="Currently moving" accent />
-            <StatCard label="Completed" value={4} icon="bi bi-check-circle" sub="Delivered" color="text-emerald-600" />
+            <StatCard label="Total Transfers" value={transfers.length} icon="bi bi-arrow-left-right" sub="Inter-warehouse moves" />
+            <StatCard label="In Transit" value={transfers.filter(t => t.status === 'In Transit').length} icon="bi bi-truck" sub="Currently moving" accent />
+            <StatCard label="Completed" value={transfers.filter(t => t.status === 'Completed').length} icon="bi bi-check-circle" sub="Delivered" color="text-emerald-600" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Stock Transfer Log</h3>
-              <PrimaryBtn icon="bi bi-plus-lg">New Transfer</PrimaryBtn>
+              <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setTrfItem(localStock[0]?.id ?? ''); setTrfFrom('Warehouse A'); setTrfTo('Main Store'); setTrfQty('10'); setShowTransferModal(true); }}>New Transfer</PrimaryBtn>
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Transfer ID' }, { label: 'Item' }, { label: 'From' }, { label: 'To' }, { label: 'Qty', right: true }, { label: 'Status' }]} />
               <tbody className="divide-y divide-slate-100">
-                {localStock.slice(0, 4).map((item, i) => {
-                  const froms = ['Warehouse A', 'Warehouse B', 'Warehouse A', 'Main Store'];
-                  const tos = ['Main Store', 'Warehouse A', 'Warehouse C', 'Warehouse B'];
-                  const statuses = ['Completed', 'In Transit', 'Completed', 'In Transit'];
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">TRF-{1001 + i}</td>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{item.name}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{froms[i]}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{tos[i]}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">{[50, 200, 75, 120][i]}</td>
-                      <td className="px-4 py-3"><Badge label={statuses[i]} variant={statuses[i] === 'Completed' ? 'success' : 'info'} /></td>
-                    </tr>
-                  );
-                })}
+                {transfers.map((t) => (
+                  <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => transferModal.open(t)}>
+                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{t.id}</td>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{t.item}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{t.from}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{t.to}</td>
+                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">{t.qty}</td>
+                    <td className="px-4 py-3"><Badge label={t.status} variant={t.status === 'Completed' ? 'success' : 'info'} /></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {showTransferModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Stock Transfer</h2>
+            <div className="space-y-4">
+              <div><Label>Item *</Label><Select value={trfItem} onChange={e => setTrfItem(e.target.value)}>{localStock.map(i => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}</Select></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><Label>From</Label><Select value={trfFrom} onChange={e => setTrfFrom(e.target.value)}><option>Warehouse A</option><option>Warehouse B</option><option>Warehouse C</option><option>Main Store</option></Select></div>
+                <div><Label>To</Label><Select value={trfTo} onChange={e => setTrfTo(e.target.value)}><option>Warehouse A</option><option>Warehouse B</option><option>Warehouse C</option><option>Main Store</option></Select></div>
+              </div>
+              <div><Label>Quantity</Label><Input type="number" value={trfQty} onChange={e => setTrfQty(e.target.value)} /></div>
+            </div>
+            <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+              <SecBtn onClick={() => setShowTransferModal(false)}>Cancel</SecBtn>
+              <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                if (!trfItem) return void modalAlert('Select an item', { variant: 'warning' });
+                const item = localStock.find(i => i.id === trfItem);
+                setTransfers(prev => [{ id: `TRF-${1005 + prev.length}`, item: item?.name ?? trfItem, from: trfFrom, to: trfTo, qty: Number(trfQty) || 0, status: 'In Transit' }, ...prev]);
+                setShowTransferModal(false);
+              }}>Create Transfer</PrimaryBtn>
+            </div>
           </div>
         </div>
       )}
@@ -155,7 +188,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Qty on Hand', right: true }, { label: 'Unit Cost', right: true }, { label: 'Total Value', right: true }, { label: 'Warehouse' }]} />
               <tbody className="divide-y divide-slate-100">
                 {localStock.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50/40 transition-colors">
+                  <tr key={item.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => stockModal.open(item)}>
                     <td className="px-4 py-3 data-value-small font-sans tabular-nums text-slate-500">{item.sku}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{item.name}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700 text-right">{item.stockLevel.toLocaleString()}</td>
@@ -168,6 +201,36 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             </table>
           </div>
         </div>
+      )}
+      {stockModal.selected && (
+        <RowModal row={stockModal.selected}
+          icon="bi bi-box-seam" accentColor="#16a34a"
+          fields={[
+            { label: 'SKU', key: 'sku', mono: true, icon: 'bi bi-hash' },
+            { label: 'Product', key: 'name', icon: 'bi bi-tag' },
+            { label: 'Category', key: 'category', icon: 'bi bi-collection', section: 'Details' },
+            { label: 'Warehouse', key: 'warehouse', icon: 'bi bi-building', section: 'Details' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Stock Level', key: 'stockLevel', icon: 'bi bi-stack', section: 'Levels' },
+            { label: 'Min Level', key: 'minStockLevel', icon: 'bi bi-exclamation-triangle', section: 'Levels' },
+            { label: 'Unit Price', key: 'unitPrice', format: (v: number) => `$${v.toFixed(2)}`, icon: 'bi bi-cash', section: 'Levels' },
+          ]}
+          title={r => r.name} subtitle={r => r.sku}
+          onClose={stockModal.close} />
+      )}
+      {transferModal.selected && (
+        <RowModal row={transferModal.selected}
+          icon="bi bi-arrow-left-right" accentColor="#0284c7"
+          fields={[
+            { label: 'Transfer ID', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Item', key: 'item', icon: 'bi bi-box-seam' },
+            { label: 'From', key: 'from', icon: 'bi bi-building', section: 'Route' },
+            { label: 'To', key: 'to', icon: 'bi bi-building', section: 'Route' },
+            { label: 'Qty', key: 'qty', icon: 'bi bi-stack', section: 'Route' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Route' },
+          ]}
+          title={r => `Transfer ${r.id}`} subtitle={r => `${r.from} → ${r.to}`}
+          onClose={transferModal.close} />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
+import { modalAlert } from '../../utils/modal';
 
 export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
   const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
@@ -24,6 +25,16 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
   ]);
   const [procItem, setProcItem] = useState(''); const [procVendor, setProcVendor] = useState('');
   const [procQty, setProcQty] = useState('10'); const [procPrice, setProcPrice] = useState('500');
+  const [rfqs, setRfqs] = useState<{ id: string; item: string; vendors: number; sent: string; received: number; status: string }[]>([
+    { id: 'RFQ-001', item: 'Industrial Bearings x500', vendors: 3, sent: '2026-07-01', received: 2, status: 'In Review' },
+    { id: 'RFQ-002', item: 'Hydraulic Seals Kit', vendors: 2, sent: '2026-07-05', received: 2, status: 'Awarded' },
+    { id: 'RFQ-003', item: 'Safety Helmets x100', vendors: 4, sent: '2026-07-08', received: 1, status: 'Open' },
+  ]);
+  const [showRfqModal, setShowRfqModal] = useState(false);
+  const [rfqItem, setRfqItem] = useState('');
+  const [rfqVendorCount, setRfqVendorCount] = useState('3');
+  const poModal = useRowModal<typeof procOrders[0]>();
+  const rfqModal = useRowModal<typeof rfqs[0]>();
 
   return (
     <div>
@@ -46,7 +57,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             <TableHead cols={[{ label: 'PO Number' }, { label: 'Vendor' }, { label: 'Item Description' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Status' }]} />
             <tbody className="divide-y divide-slate-100">
               {procOrders.map(o => (
-                <tr key={o.id} className="hover:bg-slate-50/40 transition-colors">
+                <tr key={o.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => poModal.open(o)}>
                   <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-700">{o.id}</td>
                   <td className="px-4 py-3 text-xs font-semibold text-slate-900">{o.vendor}</td>
                   <td className="px-4 py-3 text-xs text-slate-500">{o.item}</td>
@@ -79,24 +90,20 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
       {procTab === 'rfq' && (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3 mb-2">
-            <StatCard label="Open RFQs" value={3} icon="bi bi-file-earmark-text" sub="Awaiting vendor quotes" />
-            <StatCard label="Avg Response Time" value="2.4 days" icon="bi bi-clock" sub="Vendor response SLA" accent />
-            <StatCard label="Best Savings" value="12%" icon="bi bi-piggy-bank" sub="vs. last quoted price" color="text-emerald-600" />
+            <StatCard label="Open RFQs" value={rfqs.filter(r => r.status === 'Open').length} icon="bi bi-file-earmark-text" sub="Awaiting vendor quotes" />
+            <StatCard label="Total Bids Received" value={rfqs.reduce((s, r) => s + r.received, 0)} icon="bi bi-clock" sub="Across all RFQs" accent />
+            <StatCard label="Awarded" value={rfqs.filter(r => r.status === 'Awarded').length} icon="bi bi-piggy-bank" sub="RFQs closed" color="text-emerald-600" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Request for Quotation</h3>
-              <PrimaryBtn icon="bi bi-send">Send New RFQ</PrimaryBtn>
+              <PrimaryBtn icon="bi bi-send" onClick={() => { setRfqItem(''); setRfqVendorCount('3'); setShowRfqModal(true); }}>Send New RFQ</PrimaryBtn>
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'RFQ #' }, { label: 'Item' }, { label: 'Vendors Invited' }, { label: 'Sent On' }, { label: 'Quotes Received' }, { label: 'Status' }]} />
               <tbody className="divide-y divide-slate-100">
-                {[
-                  { id: 'RFQ-001', item: 'Industrial Bearings x500', vendors: 3, sent: '2026-07-01', received: 2, status: 'In Review' },
-                  { id: 'RFQ-002', item: 'Hydraulic Seals Kit', vendors: 2, sent: '2026-07-05', received: 2, status: 'Awarded' },
-                  { id: 'RFQ-003', item: 'Safety Helmets x100', vendors: 4, sent: '2026-07-08', received: 1, status: 'Open' },
-                ].map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
+                {rfqs.map(r => (
+                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => rfqModal.open(r)}>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{r.id}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{r.item}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600">{r.vendors}</td>
@@ -109,6 +116,54 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             </table>
           </div>
         </div>
+      )}
+      {showRfqModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Send New RFQ</h2>
+            <div className="space-y-4">
+              <div><Label>Item Description *</Label><Input value={rfqItem} onChange={e => setRfqItem(e.target.value)} placeholder="Industrial Bearings x500" /></div>
+              <div><Label>Number of Vendors</Label><Input type="number" value={rfqVendorCount} onChange={e => setRfqVendorCount(e.target.value)} /></div>
+            </div>
+            <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+              <SecBtn onClick={() => setShowRfqModal(false)}>Cancel</SecBtn>
+              <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                if (!rfqItem) return void modalAlert('Item description required', { variant: 'warning' });
+                const newId = `RFQ-${String(rfqs.length + 1).padStart(3, '0')}`;
+                setRfqs(prev => [{ id: newId, item: rfqItem, vendors: Number(rfqVendorCount) || 1, sent: new Date().toISOString().split('T')[0], received: 0, status: 'Open' }, ...prev]);
+                setShowRfqModal(false); setRfqItem('');
+              }}>Send RFQ</PrimaryBtn>
+            </div>
+          </div>
+        </div>
+      )}
+      {poModal.selected && (
+        <RowModal row={poModal.selected}
+          icon="bi bi-bag-check" accentColor="#ca8a04"
+          fields={[
+            { label: 'PO Number', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Vendor', key: 'vendor', icon: 'bi bi-building' },
+            { label: 'Item', key: 'item', icon: 'bi bi-box-seam', section: 'Order' },
+            { label: 'Date', key: 'date', mono: true, icon: 'bi bi-calendar-event', section: 'Order' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Order' },
+            { label: 'Total', key: 'total', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Amount' },
+          ]}
+          title={r => `Purchase Order ${r.id}`} subtitle={r => r.vendor}
+          onClose={poModal.close} />
+      )}
+      {rfqModal.selected && (
+        <RowModal row={rfqModal.selected}
+          icon="bi bi-envelope-open" accentColor="#7c3aed"
+          fields={[
+            { label: 'RFQ #', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Item', key: 'item', icon: 'bi bi-box-seam' },
+            { label: 'Vendors Invited', key: 'vendors', icon: 'bi bi-people', section: 'Sourcing' },
+            { label: 'Sent On', key: 'sent', icon: 'bi bi-calendar-event', section: 'Sourcing' },
+            { label: 'Quotes Received', key: 'received', icon: 'bi bi-inboxes', section: 'Sourcing' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Sourcing' },
+          ]}
+          title={r => `RFQ ${r.id}`} subtitle={r => r.item}
+          onClose={rfqModal.close} />
       )}
     </div>
   );
