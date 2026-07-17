@@ -141,7 +141,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             </div>
           )}
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-stretch">
             {cols.map(col => {
               const isCollapsed = collapsedCols.has(col);
               const colTasks = localTasks.filter(t => t.status === col);
@@ -211,20 +211,6 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           {isAdmin && (
             <div className="flex justify-end mb-2">
               <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowAddMs(true)}>New Milestone</PrimaryBtn>
-            </div>
-          )}
-          {showAddMs && isAdmin && (
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3 mb-4">
-              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">New Milestone</h3>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div><Label>Name</Label><Input value={newMsName} onChange={e => setNewMsName(e.target.value)} placeholder="e.g. Beta Release" /></div>
-                <div><Label>Due Date</Label><Input type="date" value={newMsDue} onChange={e => setNewMsDue(e.target.value)} /></div>
-                <div><Label>Status</Label><Select value={newMsStatus} onChange={e => setNewMsStatus(e.target.value)}><option>Upcoming</option><option>In Progress</option><option>Completed</option><option>Overdue</option></Select></div>
-              </div>
-              <div className="flex gap-2">
-                <PrimaryBtn onClick={submitNewMs} disabled={!newMsName.trim()}>Create Milestone</PrimaryBtn>
-                <SecBtn onClick={() => setShowAddMs(false)}>Cancel</SecBtn>
-              </div>
             </div>
           )}
           {localMilestones.map(m => (
@@ -387,6 +373,22 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="mt-4">
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${msModal.selected.completion === 100 ? 'bg-emerald-500' : 'bg-slate-800'}`} style={{ width: `${msModal.selected.completion}%` }} /></div>
+          </div>
+        </ViewModal>
+      )}
+
+      {showAddMs && (
+        <ViewModal title="New Milestone" subtitle="Create a project milestone" onClose={() => setShowAddMs(false)} size="md">
+          <div className="space-y-4">
+            <div><Label>Milestone Name</Label><Input value={newMsName} onChange={e => setNewMsName(e.target.value)} placeholder="e.g. Beta Release" /></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Due Date</Label><Input type="date" value={newMsDue} onChange={e => setNewMsDue(e.target.value)} /></div>
+              <div><Label>Status</Label><Select value={newMsStatus} onChange={e => setNewMsStatus(e.target.value)}><option>Upcoming</option><option>In Progress</option><option>Completed</option><option>Overdue</option></Select></div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <PrimaryBtn onClick={submitNewMs} disabled={!newMsName.trim()}>Create Milestone</PrimaryBtn>
+              <SecBtn onClick={() => setShowAddMs(false)}>Cancel</SecBtn>
+            </div>
           </div>
         </ViewModal>
       )}
