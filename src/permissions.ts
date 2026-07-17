@@ -14,8 +14,8 @@ export type Role = string;
 /** Top-level module ids each role may see. */
 export const ROLE_MODULES: Record<string, string[]> = {
   'Super Admin': ['Platform Management'],
-  'Company Admin': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence'],
-  'CEO': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence'],
+  'Company Admin': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication'],
+  'CEO': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication'],
   'HR Manager': ['HR', 'Payroll', 'Intelligence'],
   'HR Officer': ['HR', 'Payroll', 'Intelligence'],
   'Accountant': ['Accounting', 'Intelligence'],
@@ -25,9 +25,9 @@ export const ROLE_MODULES: Record<string, string[]> = {
   'Sales Executive': ['CRM', 'Sales', 'Intelligence'],
   'Inventory Manager': ['Operations', 'POS', 'Intelligence'],
   'Store Keeper': ['Operations', 'Intelligence'],
-  'Support Agent': ['Help Desk', 'Intelligence'],
+  'Support Agent': ['Help Desk', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication'],
   'Department Head': ['HR', 'Administration', 'Intelligence'],
-  'Employee': ['HR', 'Payroll', 'Help Desk'],
+  'Employee': ['HR', 'Payroll', 'Help Desk', 'Compliance', 'Communication'],
 };
 
 /**

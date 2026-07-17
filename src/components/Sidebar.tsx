@@ -196,9 +196,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'sales-quotes', label: 'Quotations', viewId: 'sales-quotes', iconClass: 'bi bi-file-earmark-check' },
             { id: 'sales-customers', label: 'Customers', viewId: 'sales-customers', iconClass: 'bi bi-people' },
             { id: 'sales-targets', label: 'Sales Targets', viewId: 'sales-targets', iconClass: 'bi bi-bullseye' },
-            { id: 'pos-register', label: 'POS Cash Register', viewId: 'pos-register', iconClass: 'bi bi-cash-coin', moduleId: 'POS' },
-            { id: 'pos-sessions', label: 'POS Sessions', viewId: 'pos-sessions', iconClass: 'bi bi-clock', moduleId: 'POS' },
-            { id: 'pos-reports', label: 'POS Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'POS' },
           ]
         },
         {
@@ -246,17 +243,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           id: 'Help Desk', label: 'Help Desk', iconClass: 'bi bi-heart-pulse', viewId: 'helpdesk',
-          subMenus: [
-            { id: 'vis-checkin', label: 'Visitor Check-In', viewId: 'visitor', iconClass: 'bi bi-door-open', moduleId: 'Visitor Management' },
-            { id: 'vis-log', label: 'Visitor Log', viewId: 'vis-log', iconClass: 'bi bi-list-ul', moduleId: 'Visitor Management' },
-            { id: 'vis-badges', label: 'Badge Printing', viewId: 'vis-badges', iconClass: 'bi bi-card-heading', moduleId: 'Visitor Management' },
-            { id: 'comp-checklists', label: 'Risk Checklists', viewId: 'compliance', iconClass: 'bi bi-clipboard2-check', moduleId: 'Compliance' },
-            { id: 'comp-policies', label: 'Policy Library', viewId: 'comp-policies', iconClass: 'bi bi-file-text', moduleId: 'Compliance' },
-            { id: 'comp-incidents', label: 'Compliance Incidents', viewId: 'comp-incidents', iconClass: 'bi bi-exclamation-triangle', moduleId: 'Compliance' },
-            { id: 'comm-announcements', label: 'Announcements', viewId: 'communication', iconClass: 'bi bi-megaphone', moduleId: 'Communication' },
-            { id: 'comm-chat', label: 'Team Chat', viewId: 'comm-chat', iconClass: 'bi bi-chat-dots', moduleId: 'Communication' },
-            { id: 'comm-email', label: 'Email Templates', viewId: 'comm-email', iconClass: 'bi bi-envelope', moduleId: 'Communication' },
-          ]
+        },
+        {
+          id: 'Visitor Management', label: 'Visitor Management', iconClass: 'bi bi-door-open', viewId: 'visitor',
+        },
+        {
+          id: 'Compliance', label: 'Compliance', iconClass: 'bi bi-shield-check', viewId: 'compliance',
+        },
+        {
+          id: 'Communication', label: 'Communication', iconClass: 'bi bi-megaphone', viewId: 'communication',
         },
         {
           id: 'Intelligence', label: 'Intelligence & Analytics', iconClass: 'bi bi-cpu', viewId: 'reports',
