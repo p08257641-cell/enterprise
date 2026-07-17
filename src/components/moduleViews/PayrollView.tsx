@@ -7,7 +7,13 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isSuperAdminRole, isHRRole } from '../../permissions';
 
 export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, payrollGroups, salaryBands, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onCreatePayrollGroup, onDeletePayrollGroup, onCreateSalaryBand, onUpdateSalaryBand, onDeleteSalaryBand, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onNavigateView } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, payrollGroups, salaryBands, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onCreatePayrollGroup, onDeletePayrollGroup, onCreateSalaryBand, onUpdateSalaryBand, onDeleteSalaryBand, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onNavigateView, payrollTaxConfig, onUpdatePayrollTaxConfig } = props;
+
+  const taxCfg = payrollTaxConfig || {
+    incomeTaxRate: 0.12, socialSecurityRate: 0.062, medicareRate: 0.0145, allowances: 350, healthInsurance: 180, overtimeRate: 0.05,
+  };
+  const [draftCfg, setDraftCfg] = useState(taxCfg);
+  useEffect(() => { setDraftCfg(taxCfg); }, [JSON.stringify(taxCfg)]);
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
 
@@ -21,6 +27,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const [paySalaryStructure, setPaySalaryStructure] = useState('Standard');
   const [payMonth, setPayMonth] = useState('July 2026');
   const [selectedSlipId, setSelectedSlipId] = useState<string | null>(null);
+
+  // Payslips tab: pick period, defaulting to the latest available for the company
+  const companySlipPeriods = Array.from(
+    new Set(payslips.filter(p => p.companyId === selectedCompany.id).map(p => p.period))
+  ).sort((a, b) => b.localeCompare(a));
+  const [slipsPeriod, setSlipsPeriod] = useState<string>('');
+  const activeSlipsPeriod = slipsPeriod || companySlipPeriods[0] || payMonth;
   
   // Employee selection state
   const [payrollTarget, setPayrollTarget] = useState<'all' | 'selected' | 'group'>('all');
@@ -382,13 +395,19 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
           isHRorAdmin ? (
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="section-title text-slate-900">Payslips — {payMonth}</h3>
-                <PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`payslips-${selectedCompany.id}-${payMonth}`, ['Employee', 'Employee ID', 'Department', 'Period', 'Gross', 'Deductions', 'Net', 'Status'], payslips.filter(p => p.companyId === selectedCompany.id && p.period === payMonth).map(s => [getEmployeeNameById(employees, s.employeeId) || s.employeeName, s.employeeId, s.department, s.period, s.gross, s.deductions, s.net, s.status]))}>Export All</PrimaryBtn>
+                <h3 className="section-title text-slate-900">Payslips — {activeSlipsPeriod}</h3>
+                <div className="flex items-center gap-2">
+                  <Select value={activeSlipsPeriod} onChange={e => setSlipsPeriod(e.target.value)}>
+                    {companySlipPeriods.length === 0 && <option>{payMonth}</option>}
+                    {companySlipPeriods.map(per => <option key={per} value={per}>{per}</option>)}
+                  </Select>
+                  <PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`payslips-${selectedCompany.id}-${activeSlipsPeriod}`, ['Employee', 'Employee ID', 'Department', 'Period', 'Gross', 'Deductions', 'Net', 'Status'], payslips.filter(p => p.companyId === selectedCompany.id && p.period === activeSlipsPeriod).map(s => [getEmployeeNameById(employees, s.employeeId) || s.employeeName, s.employeeId, s.department, s.period, s.gross, s.deductions, s.net, s.status]))}>Export All</PrimaryBtn>
+                </div>
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Period' }, { label: 'Gross', right: true }, { label: 'Deductions', right: true }, { label: 'Net', right: true }, { label: 'Status' }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {payslips.filter(p => p.companyId === selectedCompany.id && p.period === payMonth).map(slip => (
+                  {payslips.filter(p => p.companyId === selectedCompany.id && p.period === activeSlipsPeriod).map(slip => (
                     <tr key={slip.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => payslipModal.open(slip)}>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{getEmployeeNameById(employees, slip.employeeId) || slip.employeeName}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{slip.department}</td>
@@ -399,8 +418,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
                     </tr>
                   ))}
-                  {payslips.filter(p => p.companyId === selectedCompany.id && p.period === payMonth).length === 0 && (
-                    <EmptyRow cols={7} message={`No payroll run found for ${payMonth}. Go to "Run Payroll" to generate.`} />
+                  {payslips.filter(p => p.companyId === selectedCompany.id && p.period === activeSlipsPeriod).length === 0 && (
+                    <EmptyRow cols={7} message={`No payroll run found for ${activeSlipsPeriod}. Go to "Run Payroll" to generate.`} />
                   )}
                 </tbody>
               </table>
@@ -546,26 +565,49 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         {derivedPayrollTab === 'tax' && (
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-3">
-              <StatCard label="Total Tax Withheld" value={`$${(totalPayroll * 0.2).toLocaleString()}`} icon="bi bi-building-check" sub="This month's PAYE/FICA" color="text-rose-600" />
-              <StatCard label="Employer NI/SS" value={`$${(totalPayroll * 0.065).toLocaleString()}`} icon="bi bi-shield-check" sub="Employer contributions" />
-              <StatCard label="Pension / 401k" value={`$${(totalPayroll * 0.04).toLocaleString()}`} icon="bi bi-piggy-bank" sub="Retirement deductions" accent />
+              <StatCard label="Total Tax Withheld" value={`$${(totalPayroll * taxCfg.incomeTaxRate).toLocaleString()}`} icon="bi bi-building-check" sub={`Income tax @ ${(taxCfg.incomeTaxRate * 100).toFixed(1)}%`} color="text-rose-600" />
+              <StatCard label="Social Security" value={`$${(totalPayroll * taxCfg.socialSecurityRate).toLocaleString()}`} icon="bi bi-shield-check" sub={`SS @ ${(taxCfg.socialSecurityRate * 100).toFixed(2)}%`} />
+              <StatCard label="Medicare" value={`$${(totalPayroll * taxCfg.medicareRate).toLocaleString()}`} icon="bi bi-piggy-bank" sub={`Medicare @ ${(taxCfg.medicareRate * 100).toFixed(2)}%`} accent />
             </div>
+            {isHRorAdmin && onUpdatePayrollTaxConfig && (
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
+                <h3 className="section-title text-slate-900 mb-4">Tax & Deduction Rates (saved to database)</h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div><Label>Income Tax %</Label><Input type="number" step="0.1" value={+(taxCfg.incomeTaxRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, incomeTaxRate: Number(e.target.value) / 100 })} /></div>
+                  <div><Label>Social Security %</Label><Input type="number" step="0.1" value={+(taxCfg.socialSecurityRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, socialSecurityRate: Number(e.target.value) / 100 })} /></div>
+                  <div><Label>Medicare %</Label><Input type="number" step="0.1" value={+(taxCfg.medicareRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, medicareRate: Number(e.target.value) / 100 })} /></div>
+                  <div><Label>Fixed Allowance</Label><Input type="number" value={taxCfg.allowances} onChange={e => setDraftCfg({ ...draftCfg, allowances: Number(e.target.value) })} /></div>
+                  <div><Label>Health Insurance</Label><Input type="number" value={taxCfg.healthInsurance} onChange={e => setDraftCfg({ ...draftCfg, healthInsurance: Number(e.target.value) })} /></div>
+                  <div><Label>Overtime %</Label><Input type="number" step="0.1" value={+(taxCfg.overtimeRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, overtimeRate: Number(e.target.value) / 100 })} /></div>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <PrimaryBtn icon="bi bi-check-lg" onClick={async () => { await onUpdatePayrollTaxConfig!(selectedCompany.id, draftCfg); }}>Save Rates</PrimaryBtn>
+                </div>
+              </div>
+            )}
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Tax & Deductions Register</h3></div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Employee' }, { label: 'Gross', right: true }, { label: 'Federal Tax', right: true }, { label: 'State Tax', right: true }, { label: 'Social Sec.', right: true }, { label: 'Medicare', right: true }, { label: 'Net', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localEmployees.slice(0, 8).map(emp => (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => taxModal.open({ ...emp, fedTax: Math.round(emp.salary * 0.12), stateTax: Math.round(emp.salary * 0.05), ss: Math.round(emp.salary * 0.062), medicare: Math.round(emp.salary * 0.0145), net: Math.round(emp.salary * 0.75) })}>
+                  {localEmployees.slice(0, 8).map(emp => {
+                    const fedTax = Math.round(emp.salary * taxCfg.incomeTaxRate);
+                    const stateTax = Math.round(emp.salary * 0.05);
+                    const ss = Math.round(emp.salary * taxCfg.socialSecurityRate);
+                    const medicare = Math.round(emp.salary * taxCfg.medicareRate);
+                    const net = Math.round(emp.salary - fedTax - stateTax - ss - medicare);
+                    return (
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => taxModal.open({ ...emp, fedTax, stateTax, ss, medicare, net })}>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${emp.salary.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-600 text-right">-${Math.round(emp.salary * 0.12).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-500 text-right">-${Math.round(emp.salary * 0.05).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-500 text-right">-${Math.round(emp.salary * 0.062).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-400 text-right">-${Math.round(emp.salary * 0.0145).toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-emerald-700 text-right">${Math.round(emp.salary * 0.75).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-600 text-right">-${fedTax.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-500 text-right">-${stateTax.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-500 text-right">-${ss.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-400 text-right">-${medicare.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-emerald-700 text-right">${net.toLocaleString()}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

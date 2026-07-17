@@ -545,18 +545,24 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
   }
 
   const allPayslips = await dbAll<any>(schema.payslips);
+  const cfgRows = companyId ? await dbByCompany<any>(schema.payrollTaxConfigs, companyId) : [];
+  const cfg = cfgRows[0] || DEFAULT_TAX_CONFIG;
+  const incomeTaxRate = Number(cfg.incomeTaxRate ?? DEFAULT_TAX_CONFIG.incomeTaxRate);
+  const socialSecurityRate = Number(cfg.socialSecurityRate ?? DEFAULT_TAX_CONFIG.socialSecurityRate);
+  const medicareRate = Number(cfg.medicareRate ?? DEFAULT_TAX_CONFIG.medicareRate);
+  const allowances = Number(cfg.allowances ?? DEFAULT_TAX_CONFIG.allowances);
+  const healthIns = Number(cfg.healthInsurance ?? DEFAULT_TAX_CONFIG.healthInsurance);
+  const overtimeRate = Number(cfg.overtimeRate ?? DEFAULT_TAX_CONFIG.overtimeRate);
   const generatedSlips: any[] = [];
 
   for (const emp of compEmployees) {
     const baseSalary = emp.salary;
-    const overtimePay = Math.round(baseSalary * 0.05); // Simulated overtime
-    const allowances = 350;
+    const overtimePay = Math.round(baseSalary * overtimeRate); // Simulated overtime
     const gross = baseSalary + overtimePay + allowances;
 
-    const tax = Math.round(baseSalary * 0.12);
-    const socialSec = Math.round(baseSalary * 0.062);
-    const medicare = Math.round(baseSalary * 0.0145);
-    const healthIns = 180;
+    const tax = Math.round(baseSalary * incomeTaxRate);
+    const socialSec = Math.round(baseSalary * socialSecurityRate);
+    const medicare = Math.round(baseSalary * medicareRate);
     const deductions = tax + socialSec + medicare + healthIns;
     const net = gross - deductions;
 
@@ -592,6 +598,46 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
 
   logAudit(companyId, userId, userName, 'PAYROLL_RUN', 'Payroll', `Processed monthly payroll for ${period}. Net disbursed: $${generatedSlips.reduce((sum: number, s: any) => sum + s.net, 0).toLocaleString()}`);
   res.json(generatedSlips);
+    }));
+
+// 3.4.1 Payroll tax / deduction configuration (DB-backed, company-specific)
+const DEFAULT_TAX_CONFIG = {
+  incomeTaxRate: 0.12,
+  socialSecurityRate: 0.062,
+  medicareRate: 0.0145,
+  allowances: 350,
+  healthInsurance: 180,
+  overtimeRate: 0.05,
+};
+
+app.get('/api/payroll-tax-config', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const rows = await dbByCompany<any>(schema.payrollTaxConfigs, companyId as string);
+  res.json(rows[0] || null);
+    }));
+
+app.put('/api/payroll-tax-config', asyncHandler(async (req, res) => {
+  const { companyId, incomeTaxRate, socialSecurityRate, medicareRate, allowances, healthInsurance, overtimeRate } = req.body;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const existing = await dbByCompany<any>(schema.payrollTaxConfigs, companyId);
+  const values: any = {
+    incomeTaxRate: Number(incomeTaxRate ?? DEFAULT_TAX_CONFIG.incomeTaxRate),
+    socialSecurityRate: Number(socialSecurityRate ?? DEFAULT_TAX_CONFIG.socialSecurityRate),
+    medicareRate: Number(medicareRate ?? DEFAULT_TAX_CONFIG.medicareRate),
+    allowances: Number(allowances ?? DEFAULT_TAX_CONFIG.allowances),
+    healthInsurance: Number(healthInsurance ?? DEFAULT_TAX_CONFIG.healthInsurance),
+    overtimeRate: Number(overtimeRate ?? DEFAULT_TAX_CONFIG.overtimeRate),
+    updatedAt: new Date().toISOString(),
+  };
+  let result;
+  if (existing.length > 0) {
+    result = await dbUpdate(schema.payrollTaxConfigs, existing[0].id, values);
+  } else {
+    result = await dbInsert(schema.payrollTaxConfigs, { id: `ptc-${Date.now()}`, companyId, ...values });
+  }
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'PAYROLL_TAX_CONFIG', 'Payroll', `Updated payroll tax/deduction rates for ${companyId}.`);
+  res.json(result);
     }));
 
 // 3.5 Payroll Groups
@@ -2346,7 +2392,7 @@ app.get('/api/tickets', asyncHandler(async (req, res) => {
     }));
 
 app.post('/api/tickets', asyncHandler(async (req, res) => {
-  const { companyId, customerName, customerEmail, subject, description, category, priority } = req.body;
+  const { companyId, customerName, customerEmail, subject, description, category, priority, department } = req.body;
   const ticketId = `tick-${Date.now()}`;
   const tktNumber = `TKT-10${Math.floor(10 + Math.random() * 89)}`;
 
@@ -2359,16 +2405,43 @@ app.post('/api/tickets', asyncHandler(async (req, res) => {
     subject,
     description,
     category,
+    department: department || undefined,
     priority,
     status: 'Open',
     assignedTo: 'u-acme-admin',
+    replies: [],
     createdAt: new Date().toISOString()
   };
 
   await dbInsert(schema.tickets, newTicket);
-  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'TICKET_CREATE', 'Help Desk', `Received support ticket ${tktNumber} from ${customerName}. Category: ${category}`);
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'TICKET_CREATE', 'Help Desk', `Received support ticket ${tktNumber} from ${customerName}. Category: ${category}${department ? ` · Directed to: ${department}` : ''}`);
 
   res.status(201).json(newTicket);
+    }));
+
+app.put('/api/tickets/:id', asyncHandler(async (req, res) => {
+  const { status, department, reply, repliedBy, repliedByRole } = req.body;
+  const ticket = await dbById<any>(schema.tickets, req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+  const updates: any = {};
+  if (status) updates.status = status;
+  if (department !== undefined) updates.department = department || null;
+
+  if (reply && reply.message) {
+    const replies = Array.isArray(ticket.replies) ? ticket.replies : [];
+    replies.push({
+      from: repliedBy || 'System',
+      fromRole: repliedByRole || 'Agent',
+      message: reply.message,
+      at: new Date().toISOString()
+    });
+    updates.replies = replies;
+  }
+
+  const updated = await dbUpdate(schema.tickets, req.params.id, updates);
+  logAudit(ticket.companyId, 'u-acme-admin', 'Alex Mercer', 'TICKET_UPDATE', 'Help Desk', `Updated ticket ${ticket.ticketNumber}.${status ? ` Status → ${status}.` : ''}${reply && reply.message ? ' Added reply.' : ''}`);
+  res.json(updated);
     }));
 
 // 8. Workflows (Automation Builder)

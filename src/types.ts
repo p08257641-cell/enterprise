@@ -295,6 +295,25 @@ export interface InventoryItem {
   batchNumber?: string;
 }
 
+export interface TicketReply {
+  from: string;
+  fromRole: 'Customer' | 'Agent' | 'Admin';
+  message: string;
+  at: string;
+}
+
+export interface PayrollTaxConfig {
+  id: string;
+  companyId: string;
+  incomeTaxRate: number;
+  socialSecurityRate: number;
+  medicareRate: number;
+  allowances: number;
+  healthInsurance: number;
+  overtimeRate: number;
+  updatedAt: string;
+}
+
 export interface SupportTicket {
   id: string;
   companyId: string;
@@ -304,9 +323,11 @@ export interface SupportTicket {
   subject: string;
   description: string;
   category: 'Technical' | 'Billing' | 'Sales' | 'General';
+  department?: string; // department the ticket is directed to
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+  status: 'Open' | 'In Progress' | 'Resolved' | 'Noted' | 'Closed';
   assignedTo?: string; // User ID
+  replies?: TicketReply[];
   createdAt: string;
 }
 

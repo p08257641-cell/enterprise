@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -45,6 +45,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [okrs, setOkrs] = useState<OKRRecord[]>([]);
   const [payslips, setPayslips] = useState<PayslipRecord[]>([]);
+  const [payrollTaxConfig, setPayrollTaxConfig] = useState<PayrollTaxConfig | null>(null);
   const [payrollGroups, setPayrollGroups] = useState<PayrollGroup[]>([]);
   const [salaryBands, setSalaryBands] = useState<SalaryBand[]>([]);
 
@@ -303,6 +304,20 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       }
       loadData();
     }, []);
+
+  // Load payroll tax/deduction config for the active company
+  useEffect(() => {
+    if (!selectedCompany) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/payroll-tax-config?companyId=${selectedCompany.id}`);
+        const cfg = await res.json();
+        if (!cancelled) setPayrollTaxConfig(cfg || null);
+      } catch (e) { console.error('Failed to load payroll tax config:', e); }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedCompany]);
 
   // Update states whenever selected company is switched to maintain full tenant isolation
   const handleSelectCompany = (company: Company) => {
@@ -918,6 +933,40 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setTickets([newTkt, ...tickets]);
 
       // Reload audits
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateTicket = async (id: string, updates: { status?: string; department?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => {
+    try {
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await res.json();
+      setTickets(tickets.map(t => t.id === id ? { ...t, ...updated } : t));
+
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdatePayrollTaxConfig = async (companyId: string, cfg: Partial<PayrollTaxConfig>) => {
+    try {
+      const res = await fetch('/api/payroll-tax-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, ...cfg })
+      });
+      const updated = await res.json();
+      setPayrollTaxConfig(updated);
+
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await logRes.json());
     } catch (err) {
@@ -2320,6 +2369,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onPayInvoice={handlePayInvoice}
               onAdjustStock={handleAdjustStock}
               onAddTicket={handleAddTicket}
+              onUpdateTicket={handleUpdateTicket}
               onInviteUser={handleInviteUser}
               onGenerateAPIKey={handleGenerateAPIKey}
               onAddExpense={handleCreateExpense}
@@ -2340,6 +2390,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onDeleteOnboarding={handleDeleteOnboarding}
               onUpdateOKRProgress={handleUpdateOKRProgress}
               onRunPayroll={handleRunPayroll}
+              payrollTaxConfig={payrollTaxConfig}
+              onUpdatePayrollTaxConfig={handleUpdatePayrollTaxConfig}
               onCreatePayrollGroup={handleCreatePayrollGroup}
               onDeletePayrollGroup={handleDeletePayrollGroup}
               onCreateSalaryBand={handleCreateSalaryBand}

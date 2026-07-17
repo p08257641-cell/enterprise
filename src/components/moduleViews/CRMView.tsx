@@ -103,24 +103,31 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
         )}
 
         {showLeadForm && (
-          <div className="mb-6 bg-white border border-slate-200 rounded-xl shadow-xs p-6">
-            <div className="flex items-center justify-between mb-5"><h3 className="section-title text-slate-500">New Lead Registration</h3><button onClick={() => setShowLeadForm(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer"><i className="bi bi-x-lg text-sm"></i></button></div>
-            {leadSuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg table-cell text-emerald-700 font-semibold">Lead added successfully!</div>}
-            <form onSubmit={e => {
-              e.preventDefault();
-              if (!crmFirst || !crmLast || !crmCompany) return;
-              onAddLead({ companyId: selectedCompany.id, firstName: crmFirst, lastName: crmLast, email: crmEmail, phone: crmPhone, companyName: crmCompany, source: crmSource, value: Number(crmValue), assignedTo: selectedUser.id });
-              setLeadSuccess(true); setCrmFirst(''); setCrmLast(''); setCrmCompany(''); setCrmEmail(''); setCrmPhone('');
-              setTimeout(() => setLeadSuccess(false), 3000);
-            }} className="grid gap-4 sm:grid-cols-3">
-              <div><Label>First Name *</Label><Input value={crmFirst} onChange={e => setCrmFirst(e.target.value)} placeholder="Jane" required /></div>
-              <div><Label>Last Name *</Label><Input value={crmLast} onChange={e => setCrmLast(e.target.value)} placeholder="Smith" required /></div>
-              <div><Label>Company *</Label><Input value={crmCompany} onChange={e => setCrmCompany(e.target.value)} placeholder="Acme Corp" required /></div>
-              <div><Label>Email</Label><Input type="email" value={crmEmail} onChange={e => setCrmEmail(e.target.value)} placeholder="jane@acme.com" /></div>
-              <div><Label>Deal Value (USD)</Label><Input type="number" value={crmValue} onChange={e => setCrmValue(e.target.value)} /></div>
-              <div><Label>Source</Label><Select value={crmSource} onChange={e => setCrmSource(e.target.value as typeof crmSource)}>{['Website', 'Referral', 'LinkedIn', 'Ad Campaign', 'Partner'].map(s => <option key={s}>{s}</option>)}</Select></div>
-              <div className="sm:col-span-3 pt-1"><PrimaryBtn type="submit" icon="bi bi-person-plus">Register Lead</PrimaryBtn></div>
-            </form>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowLeadForm(false)}>
+            <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">New Lead Registration</h3>
+                <button onClick={() => setShowLeadForm(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer"><i className="bi bi-x-lg text-sm"></i></button>
+              </div>
+              <div className="p-6">
+                {leadSuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg table-cell text-emerald-700 font-semibold">Lead added successfully!</div>}
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  if (!crmFirst || !crmLast || !crmCompany) return;
+                  onAddLead({ companyId: selectedCompany.id, firstName: crmFirst, lastName: crmLast, email: crmEmail, phone: crmPhone, companyName: crmCompany, source: crmSource, value: Number(crmValue), assignedTo: selectedUser.id });
+                  setLeadSuccess(true); setCrmFirst(''); setCrmLast(''); setCrmCompany(''); setCrmEmail(''); setCrmPhone('');
+                  setTimeout(() => setLeadSuccess(false), 3000);
+                }} className="grid gap-4 sm:grid-cols-3">
+                  <div><Label>First Name *</Label><Input value={crmFirst} onChange={e => setCrmFirst(e.target.value)} placeholder="Jane" required /></div>
+                  <div><Label>Last Name *</Label><Input value={crmLast} onChange={e => setCrmLast(e.target.value)} placeholder="Smith" required /></div>
+                  <div><Label>Company *</Label><Input value={crmCompany} onChange={e => setCrmCompany(e.target.value)} placeholder="Acme Corp" required /></div>
+                  <div><Label>Email</Label><Input type="email" value={crmEmail} onChange={e => setCrmEmail(e.target.value)} placeholder="jane@acme.com" /></div>
+                  <div><Label>Deal Value (USD)</Label><Input type="number" value={crmValue} onChange={e => setCrmValue(e.target.value)} /></div>
+                  <div><Label>Source</Label><Select value={crmSource} onChange={e => setCrmSource(e.target.value as typeof crmSource)}>{['Website', 'Referral', 'LinkedIn', 'Ad Campaign', 'Partner'].map(s => <option key={s}>{s}</option>)}</Select></div>
+                  <div className="sm:col-span-3 pt-1 flex justify-end"><PrimaryBtn type="submit" icon="bi bi-person-plus">Register Lead</PrimaryBtn></div>
+                </form>
+              </div>
+            </div>
           </div>
         )}
 

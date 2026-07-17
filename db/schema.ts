@@ -1,5 +1,12 @@
 import { pgTable, text, integer, real, boolean, jsonb } from 'drizzle-orm/pg-core';
 
+interface TicketReply {
+  from: string;
+  fromRole: 'Customer' | 'Agent' | 'Admin';
+  message: string;
+  at: string;
+}
+
 /* ── Core ──────────────────────────────────────────────────────────────── */
 export const companies = pgTable('companies', {
   id: text('id').primaryKey(),
@@ -264,6 +271,18 @@ export const inventory = pgTable('inventory', {
   batchNumber: text('batchNumber'),
 });
 
+export const payrollTaxConfigs = pgTable('payroll_tax_configs', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  incomeTaxRate: real('income_tax_rate'),
+  socialSecurityRate: real('social_security_rate'),
+  medicareRate: real('medicare_rate'),
+  allowances: real('allowances'),
+  healthInsurance: real('health_insurance'),
+  overtimeRate: real('overtime_rate'),
+  updatedAt: text('updated_at'),
+});
+
 export const tickets = pgTable('tickets', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),
@@ -273,9 +292,11 @@ export const tickets = pgTable('tickets', {
   subject: text('subject'),
   description: text('description'),
   category: text('category'),
+  department: text('department'),
   priority: text('priority'),
   status: text('status'),
   assignedTo: text('assignedTo'),
+  replies: jsonb('replies').$type<TicketReply[]>().default([]),
   createdAt: text('createdAt'),
 });
 

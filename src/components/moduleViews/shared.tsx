@@ -10,7 +10,7 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -59,6 +59,7 @@ export interface ModuleViewsProps {
   onPayInvoice: (invId: string) => void;
   onAdjustStock: (itemId: string, qty: number) => void;
   onAddTicket: (ticket: Omit<SupportTicket, 'id' | 'ticketNumber' | 'status' | 'assignedTo' | 'createdAt'>) => void;
+  onUpdateTicket: (id: string, updates: { status?: string; department?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => void;
   onInviteUser: (usr: { name: string; email: string; role: string; roles?: string[]; department: string; branch: string }) => void;
   onGenerateAPIKey: (name: string, permissions: 'Read Only' | 'Full Access') => void;
   onAddExpense?: (exp: { description: string; category: string; department: string; amount: number; createdBy?: string }) => void;
@@ -144,6 +145,9 @@ export interface ModuleViewsProps {
   onCreateTaxCode: (tc: any) => void;
   onUpdateTaxCode: (id: string, values: any) => void;
   onDeleteTaxCode: (id: string) => void;
+  // Payroll tax / deduction configuration (DB-backed)
+  payrollTaxConfig?: PayrollTaxConfig | null;
+  onUpdatePayrollTaxConfig?: (companyId: string, cfg: Partial<PayrollTaxConfig>) => void;
   // Super Admin plan assignment
   tenants: Company[];
   onAssignPlan: (companyId: string, moduleIds: string[], billingPlan: Company['billingPlan']) => void;
@@ -343,8 +347,8 @@ export const EmptyRow = ({ cols, message }: { cols: number; message: string }) =
   <tr><td colSpan={cols} className="text-center py-10 data-value-small text-slate-400">{message}</td></tr>
 );
 
-export const PrimaryBtn = ({ onClick, icon, children, type = 'button' }: { onClick?: () => void; icon?: string; children: React.ReactNode; type?: 'button' | 'submit' | 'reset' }) => (
-  <button type={type} onClick={onClick} className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold btn px-4 py-2 rounded-lg transition-all cursor-pointer shadow-xs">
+export const PrimaryBtn = ({ onClick, icon, children, type = 'button', disabled }: { onClick?: () => void; icon?: string; children: React.ReactNode; type?: 'button' | 'submit' | 'reset'; disabled?: boolean }) => (
+  <button type={type} onClick={onClick} disabled={disabled} className={`flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold btn px-4 py-2 rounded-lg transition-all shadow-xs ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
     {icon && <i className={`${icon} text-xs`}></i>}{children}
   </button>
 );

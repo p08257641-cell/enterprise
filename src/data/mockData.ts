@@ -586,6 +586,7 @@ export const INITIAL_TICKETS: SupportTicket[] = [
     priority: 'High',
     status: 'In Progress',
     assignedTo: 'u-acme-admin',
+    replies: [],
     createdAt: '2026-07-05T09:12:00Z'
   },
   {
@@ -600,6 +601,7 @@ export const INITIAL_TICKETS: SupportTicket[] = [
     priority: 'Medium',
     status: 'Open',
     assignedTo: 'u-acme-sales',
+    replies: [],
     createdAt: '2026-07-08T15:20:00Z'
   }
 ];
