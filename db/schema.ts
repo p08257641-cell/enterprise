@@ -283,6 +283,30 @@ export const payrollTaxConfigs = pgTable('payroll_tax_configs', {
   updatedAt: text('updated_at'),
 });
 
+export const kbArticles = pgTable('kb_articles', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  category: text('category'),
+  body: text('body'),
+  views: integer('views'),
+  createdBy: text('created_by'),
+  createdAt: text('created_at'),
+});
+
+export const lmsCourses = pgTable('lms_courses', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  category: text('category'),
+  level: text('level'),
+  duration: text('duration'),
+  enrolled: integer('enrolled'),
+  completion: integer('completion'),
+  createdBy: text('created_by'),
+  createdAt: text('created_at'),
+});
+
 export const tickets = pgTable('tickets', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),

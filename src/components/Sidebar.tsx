@@ -247,15 +247,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           id: 'Help Desk', label: 'Help Desk', iconClass: 'bi bi-heart-pulse', viewId: 'helpdesk',
           subMenus: [
-            { id: 'hd-tickets', label: 'Support Tickets', viewId: 'helpdesk', iconClass: 'bi bi-ticket-detailed', moduleId: 'Help Desk' },
-            { id: 'hd-sla', label: 'SLA Monitor', viewId: 'hd-sla', iconClass: 'bi bi-speedometer', moduleId: 'Help Desk' },
-            { id: 'hd-kb', label: 'Knowledge Base', viewId: 'hd-kb', iconClass: 'bi bi-book-half', moduleId: 'Help Desk' },
             { id: 'vis-checkin', label: 'Visitor Check-In', viewId: 'visitor', iconClass: 'bi bi-door-open', moduleId: 'Visitor Management' },
             { id: 'vis-log', label: 'Visitor Log', viewId: 'vis-log', iconClass: 'bi bi-list-ul', moduleId: 'Visitor Management' },
             { id: 'vis-badges', label: 'Badge Printing', viewId: 'vis-badges', iconClass: 'bi bi-card-heading', moduleId: 'Visitor Management' },
-            { id: 'lms-courses', label: 'LMS Courses', viewId: 'lms', iconClass: 'bi bi-play-btn', moduleId: 'Learning Management (LMS)' },
-            { id: 'lms-quizzes', label: 'LMS Quizzes', viewId: 'lms-quizzes', iconClass: 'bi bi-patch-question', moduleId: 'Learning Management (LMS)' },
-            { id: 'lms-progress', label: 'LMS Progress', viewId: 'lms-progress', iconClass: 'bi bi-graph-up', moduleId: 'Learning Management (LMS)' },
             { id: 'comp-checklists', label: 'Risk Checklists', viewId: 'compliance', iconClass: 'bi bi-clipboard2-check', moduleId: 'Compliance' },
             { id: 'comp-policies', label: 'Policy Library', viewId: 'comp-policies', iconClass: 'bi bi-file-text', moduleId: 'Compliance' },
             { id: 'comp-incidents', label: 'Compliance Incidents', viewId: 'comp-incidents', iconClass: 'bi bi-exclamation-triangle', moduleId: 'Compliance' },

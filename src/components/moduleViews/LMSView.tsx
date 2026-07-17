@@ -3,11 +3,14 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
+import { isAdminRole, isHRRole } from '../../permissions';
+import { LMSCourse } from '../../types';
 
 export const LMSView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, lmsCourses, onAddLmsCourse } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
+  const canManage = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole);
 
   type LmsTab = 'courses' | 'quiz' | 'progress';
   const lmsTabFromView = (): LmsTab =>
@@ -21,15 +24,9 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
     { id: 'quiz', label: 'Quizzes' },
     { id: 'progress', label: 'Progress' },
   ];
-  const courses = [
-    { id: 'C01', title: 'ISO 9001 Quality Management', level: 'Intermediate', duration: '4h 30m', enrolled: 12, completion: 78, cat: 'Compliance' },
-    { id: 'C02', title: 'Workplace Safety & OSHA', level: 'Beginner', duration: '2h 15m', enrolled: 28, completion: 91, cat: 'Safety' },
-    { id: 'C03', title: 'Advanced Excel for Finance', level: 'Advanced', duration: '6h 00m', enrolled: 7, completion: 45, cat: 'Finance' },
-    { id: 'C04', title: 'ERP System Administrator', level: 'Advanced', duration: '8h 00m', enrolled: 4, completion: 30, cat: 'IT' },
-  ];
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizScore, setQuizScore] = useState<number | null>(null);
-  const progressModal = useRowModal<{ emp: typeof localEmployees[0]; course: typeof courses[0]; prog: number }>();
+  const progressModal = useRowModal<{ emp: typeof localEmployees[0]; course: { title: string; category: string; level: string; duration: string }; prog: number }>();
   const quizQuestions = [
     { id: 'q1', q: 'What does ISO stand for?', options: ['International Standards Org', 'Internal Safety Operations', 'International Organization for Standardization', 'Industrial Safety Order'], correct: 'International Organization for Standardization' },
     { id: 'q2', q: 'OSHA stands for:', options: ['Occupational Safety & Health Administration', 'Office Safety Hazard Assessment', 'Operational Standards & Health Act', 'None of the above'], correct: 'Occupational Safety & Health Administration' },
@@ -45,18 +42,22 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
         ))}
       </div>
       {lmsTab === 'courses' && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {courses.map(c => (
-            <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all">
-              <div className="flex items-start justify-between mb-3">
-                <div><div className="text-sm font-bold text-slate-900">{c.title}</div><div className="data-value text-slate-500 mt-0.5">{c.cat} · {c.level} · {c.duration}</div></div>
-                <Badge label={c.cat} variant="info" />
+        <div className="space-y-4">
+          {canManage && <AddCourseForm selectedCompany={selectedCompany} onAddLmsCourse={onAddLmsCourse} />}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {lmsCourses.map(c => (
+              <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all">
+                <div className="flex items-start justify-between mb-3">
+                  <div><div className="text-sm font-bold text-slate-900">{c.title}</div><div className="data-value text-slate-500 mt-0.5">{c.category} · {c.level} · {c.duration}</div></div>
+                  <Badge label={c.category} variant="info" />
+                </div>
+                <div className="mb-2 flex justify-between data-value text-slate-500"><span>{c.enrolled} enrolled</span><span>{c.completion}% avg completion</span></div>
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${c.completion}%` }} /></div>
+                <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full text-xs font-semibold border border-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-all">Start Course</button>
               </div>
-              <div className="mb-2 flex justify-between data-value text-slate-500"><span>{c.enrolled} enrolled</span><span>{c.completion}% avg completion</span></div>
-              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${c.completion}%` }} /></div>
-              <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full text-xs font-semibold border border-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-all">Start Course</button>
-            </div>
-          ))}
+            ))}
+            {lmsCourses.length === 0 && <div className="sm:col-span-2 text-center text-xs text-slate-400 py-8">No courses available yet.</div>}
+          </div>
         </div>
       )}
       {lmsTab === 'quiz' && (
@@ -100,7 +101,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
             <TableHead cols={[{ label: 'Employee' }, { label: 'Course' }, { label: 'Progress', right: true }, { label: 'Status' }]} />
             <tbody className="divide-y divide-slate-100">
               {localEmployees.slice(0, 6).map((emp, i) => {
-                const course = courses[i % courses.length];
+                const course = lmsCourses[i % (lmsCourses.length || 1)] || { title: 'No course', category: 'General', level: 'Beginner', duration: '--' };
                 const prog = [100, 65, 30, 80, 45, 100][i] || 50;
                 return (
                   <tr key={emp.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => progressModal.open({ emp, course, prog })}>
@@ -122,7 +123,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Employee', value: `${progressModal.selected.emp.firstName} ${progressModal.selected.emp.lastName}` },
               { label: 'Department', value: progressModal.selected.emp.department },
               { label: 'Course', value: progressModal.selected.course.title },
-              { label: 'Category', value: progressModal.selected.course.cat },
+              { label: 'Category', value: progressModal.selected.course.category },
               { label: 'Level', value: progressModal.selected.course.level },
               { label: 'Duration', value: progressModal.selected.course.duration },
               { label: 'Progress', value: `${progressModal.selected.prog}%` },
@@ -137,6 +138,63 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
         </ViewModal>
       )}
+    </div>
+  );
+};
+
+const AddCourseForm: React.FC<{ selectedCompany: { id: string }, onAddLmsCourse: (c: Omit<LMSCourse, 'id' | 'enrolled' | 'completion' | 'createdAt'>) => void }> = ({ selectedCompany, onAddLmsCourse }) => {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('General');
+  const [level, setLevel] = useState('Beginner');
+  const [duration, setDuration] = useState('1h 00m');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    if (!title.trim()) return;
+    setBusy(true);
+    try {
+      await onAddLmsCourse({ companyId: selectedCompany.id, title: title.trim(), category, level, duration, createdBy: 'Admin' });
+      setTitle(''); setCategory('General'); setLevel('Beginner'); setDuration('1h 00m'); setOpen(false);
+    } finally { setBusy(false); }
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="w-full sm:w-auto text-[11px] font-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
+        <i className="bi bi-plus-lg text-xs"></i> Add Course
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in" onClick={() => setOpen(false)}>
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+          <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Add LMS Course</h3>
+          <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600"><i className="bi bi-x-lg text-sm"></i></button>
+        </div>
+        <div className="space-y-3 p-5">
+          <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Course title" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Category</Label>
+              <Select value={category} onChange={e => setCategory(e.target.value)}>
+                {['General', 'Compliance', 'Safety', 'Finance', 'IT', 'HR'].map(c => <option key={c} value={c}>{c}</option>)}
+              </Select>
+            </div>
+            <div><Label>Level</Label>
+              <Select value={level} onChange={e => setLevel(e.target.value)}>
+                {['Beginner', 'Intermediate', 'Advanced'].map(c => <option key={c} value={c}>{c}</option>)}
+              </Select>
+            </div>
+          </div>
+          <div><Label>Duration</Label><Input value={duration} onChange={e => setDuration(e.target.value)} placeholder="e.g. 2h 30m" /></div>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
+          <SecBtn onClick={() => setOpen(false)}>Cancel</SecBtn>
+          <PrimaryBtn onClick={submit} disabled={busy || !title.trim()}>{busy ? 'Creating…' : 'Create Course'}</PrimaryBtn>
+        </div>
+      </div>
     </div>
   );
 };

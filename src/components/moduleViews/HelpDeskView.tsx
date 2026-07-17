@@ -3,11 +3,11 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isHRRole } from '../../permissions';
-import { SupportTicket } from '../../types';
+import { SupportTicket, KBArticle } from '../../types';
 import { parseActiveView } from '../../parseActiveView';
 
 export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onUpdateTicket } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onUpdateTicket, kbArticles, onAddKbArticle } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localTickets = tickets.filter(t => t.companyId === selectedCompany.id);
@@ -120,20 +120,17 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {hdTab === 'kb' && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            { title: 'How to reset your password', cat: 'Account', views: 234 },
-            { title: 'Setting up Two-Factor Authentication', cat: 'Security', views: 187 },
-            { title: 'Understanding your invoice', cat: 'Billing', views: 312 },
-            { title: 'How to export data from ERP', cat: 'Technical', views: 98 },
-            { title: 'Configuring email notifications', cat: 'Settings', views: 145 },
-            { title: 'Adding new team members', cat: 'HR', views: 203 },
-          ].map(a => (
-            <div key={a.title} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all cursor-pointer flex items-start justify-between">
-              <div><div className="text-xs font-semibold text-slate-900">{a.title}</div><div className="text-[10px] text-slate-400 mt-1">{a.cat} · {a.views} views</div></div>
-              <i className="bi bi-arrow-right text-slate-300 text-sm shrink-0 ml-3"></i>
-            </div>
-          ))}
+        <div className="space-y-4">
+          {canManage && <AddKBArticleForm selectedCompany={selectedCompany} onAddKbArticle={onAddKbArticle} />}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {kbArticles.map(a => (
+              <div key={a.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all cursor-pointer flex items-start justify-between">
+                <div><div className="text-xs font-semibold text-slate-900">{a.title}</div><div className="text-[10px] text-slate-400 mt-1">{a.category} · {a.views} views</div></div>
+                <i className="bi bi-arrow-right text-slate-300 text-sm shrink-0 ml-3"></i>
+              </div>
+            ))}
+            {kbArticles.length === 0 && <div className="sm:col-span-2 text-center text-xs text-slate-400 py-8">No knowledge base articles yet.</div>}
+          </div>
         </div>
       )}
       {hdTab === 'sla' && (
@@ -191,12 +188,12 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
               </div>
               <div className="p-5 space-y-4">
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div><span className="text-slate-400">Customer</span><div className="font-semibold text-slate-800">{t.customerName}</div></div>
-                  <div><span className="text-slate-400">Email</span><div className="font-semibold text-slate-800 truncate">{t.customerEmail}</div></div>
-                  <div><span className="text-slate-400">Category</span><div className="font-semibold text-slate-800">{t.category}</div></div>
-                  <div><span className="text-slate-400">Directed To</span><div className="font-semibold text-slate-800">{t.department || '— Unassigned —'}</div></div>
-                  <div><span className="text-slate-400">Priority</span><div className="font-semibold text-slate-800">{t.priority}</div></div>
-                  <div><span className="text-slate-400">Created</span><div className="font-semibold text-slate-800">{new Date(t.createdAt).toLocaleString()}</div></div>
+                  <div className="data-value-small">Customer<div className="data-value">{t.customerName}</div></div>
+                  <div className="data-value-small">Email<div className="data-value truncate">{t.customerEmail}</div></div>
+                  <div className="data-value-small">Category<div className="data-value">{t.category}</div></div>
+                  <div className="data-value-small">Directed To<div className="data-value">{t.department || '— Unassigned —'}</div></div>
+                  <div className="data-value-small">Priority<div className="data-value">{t.priority}</div></div>
+                  <div className="data-value-small">Created<div className="data-value">{new Date(t.createdAt).toLocaleString()}</div></div>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-700">{t.description}</div>
 
@@ -258,7 +255,56 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           </div>
         );
-      })()}
+      }      )()}
+    </div>
+  );
+};
+
+const AddKBArticleForm: React.FC<{ selectedCompany: { id: string }, onAddKbArticle: (a: Omit<KBArticle, 'id' | 'views' | 'createdAt'>) => void }> = ({ selectedCompany, onAddKbArticle }) => {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('General');
+  const [body, setBody] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    if (!title.trim()) return;
+    setBusy(true);
+    try {
+      await onAddKbArticle({ companyId: selectedCompany.id, title: title.trim(), category, body: body.trim(), createdBy: 'Admin' });
+      setTitle(''); setCategory('General'); setBody(''); setOpen(false);
+    } finally { setBusy(false); }
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="w-full sm:w-auto text-[11px] font-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
+        <i className="bi bi-plus-lg text-xs"></i> Add Article
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in" onClick={() => setOpen(false)}>
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+          <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Add Knowledge Base Article</h3>
+          <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600"><i className="bi bi-x-lg text-sm"></i></button>
+        </div>
+        <div className="space-y-3 p-5">
+          <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Article title" /></div>
+          <div><Label>Category</Label>
+            <Select value={category} onChange={e => setCategory(e.target.value)}>
+              {['General', 'Account', 'Security', 'Billing', 'Technical', 'Settings', 'HR'].map(c => <option key={c} value={c}>{c}</option>)}
+            </Select>
+          </div>
+          <div><Label>Body</Label><textarea value={body} onChange={e => setBody(e.target.value)} rows={4} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 focus:border-slate-400 outline-none" placeholder="Article content" /></div>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
+          <SecBtn onClick={() => setOpen(false)}>Cancel</SecBtn>
+          <PrimaryBtn onClick={submit} disabled={busy || !title.trim()}>{busy ? 'Publishing…' : 'Publish Article'}</PrimaryBtn>
+        </div>
+      </div>
     </div>
   );
 };

@@ -314,6 +314,30 @@ export interface PayrollTaxConfig {
   updatedAt: string;
 }
 
+export interface KBArticle {
+  id: string;
+  companyId: string;
+  title: string;
+  category: string;
+  body: string;
+  views: number;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface LMSCourse {
+  id: string;
+  companyId: string;
+  title: string;
+  category: string;
+  level: string;
+  duration: string;
+  enrolled: number;
+  completion: number;
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface SupportTicket {
   id: string;
   companyId: string;

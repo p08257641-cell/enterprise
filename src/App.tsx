@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -36,6 +36,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [kbArticles, setKbArticles] = useState<KBArticle[]>([]);
+  const [lmsCourses, setLmsCourses] = useState<LMSCourse[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
   const [workflows, setWorkflows] = useState<ERPWorkflow[]>([]);
@@ -107,7 +109,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   useEffect(() => {
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes] = await Promise.all([
+        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -153,7 +155,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           fetch('/api/sales-orders'),
           fetch('/api/sales-customers'),
           fetch('/api/sales-quotations'),
-          fetch('/api/sales-targets')
+          fetch('/api/sales-targets'),
+          fetch('/api/kb-articles'),
+          fetch('/api/lms-courses')
         ]);
 
         const cData = await cRes.json();
@@ -199,6 +203,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         const pgData = await pgRes.json();
         const sbData = await sbRes.json();
         const soData = await soRes.json();
+        const kbData = await kbRes.json();
+        const lmsData = await lmsRes.json();
 
         setCompanies(cData);
         setUsers(uData);
@@ -236,6 +242,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setSalesCustomers(scData);
         setSalesQuotations(sqData);
         setSalesTargets(stData);
+        setKbArticles(kbData);
+        setLmsCourses(lmsData);
 
         // Fetch CRM activities
         const actRes = await fetch('/api/crm-activities');
@@ -967,6 +975,38 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const updated = await res.json();
       setPayrollTaxConfig(updated);
 
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddKbArticle = async (article: Omit<KBArticle, 'id' | 'views' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/kb-articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(article)
+      });
+      const created = await res.json();
+      setKbArticles([created, ...kbArticles]);
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddLmsCourse = async (course: Omit<LMSCourse, 'id' | 'enrolled' | 'completion' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/lms-courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(course)
+      });
+      const created = await res.json();
+      setLmsCourses([created, ...lmsCourses]);
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await logRes.json());
     } catch (err) {
@@ -2497,6 +2537,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onCreateSalesTarget={handleCreateSalesTarget}
               onUpdateSalesTarget={handleUpdateSalesTarget}
               onDeleteSalesTarget={handleDeleteSalesTarget}
+              kbArticles={kbArticles}
+              onAddKbArticle={handleAddKbArticle}
+              lmsCourses={lmsCourses}
+              onAddLmsCourse={handleAddLmsCourse}
             />
           )}
           </FadeIn>

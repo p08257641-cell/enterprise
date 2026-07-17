@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder } from './src/types';
+import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse } from './src/types';
 import * as schema from './db/schema';
 import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb } from './db/repo';
 
@@ -638,6 +638,78 @@ app.put('/api/payroll-tax-config', asyncHandler(async (req, res) => {
   }
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'PAYROLL_TAX_CONFIG', 'Payroll', `Updated payroll tax/deduction rates for ${companyId}.`);
   res.json(result);
+    }));
+
+// 3.4.2 Knowledge Base articles (DB-backed, company-specific)
+const DEFAULT_KB_ARTICLES = [
+  { title: 'How to reset your password', category: 'Account', body: 'Navigate to Settings > Security and click "Reset Password". A reset link will be emailed to you.', views: 234 },
+  { title: 'Setting up Two-Factor Authentication', category: 'Security', body: 'Enable 2FA under Settings > Security to require a time-based code at login.', views: 187 },
+  { title: 'Understanding your invoice', category: 'Billing', body: 'Invoices list line items, tax, and due date. Export to PDF from the Accounting module.', views: 312 },
+  { title: 'How to export data from ERP', category: 'Technical', body: 'Use the Export button on any report to download CSV or PDF.', views: 98 },
+  { title: 'Configuring email notifications', category: 'Settings', body: 'Manage notification preferences in Communication > Announcements.', views: 145 },
+  { title: 'Adding new team members', category: 'HR', body: 'Admins can invite users from Administration > User Directory.', views: 203 },
+];
+
+app.get('/api/kb-articles', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  let rows = companyId ? await dbByCompany<any>(schema.kbArticles, companyId as string) : await dbAll<any>(schema.kbArticles);
+  if (rows.length === 0 && companyId) {
+    rows = DEFAULT_KB_ARTICLES.map((a, i) => ({ id: `kb-seed-${i}`, companyId, ...a, createdBy: 'System', createdAt: new Date().toISOString() }));
+  }
+  res.json(rows);
+    }));
+
+app.post('/api/kb-articles', asyncHandler(async (req, res) => {
+  const { companyId, title, category, body, createdBy } = req.body;
+  const article: KBArticle = {
+    id: `kb-${Date.now()}`,
+    companyId,
+    title,
+    category: category || 'General',
+    body: body || '',
+    views: 0,
+    createdBy: createdBy || 'Admin',
+    createdAt: new Date().toISOString(),
+  };
+  const created = await dbInsert(schema.kbArticles, article);
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'KB_ARTICLE_CREATE', 'Help Desk', `Published KB article "${title}".`);
+  res.status(201).json(created);
+    }));
+
+// 3.4.3 LMS courses (DB-backed, company-specific)
+const DEFAULT_LMS_COURSES = [
+  { title: 'ISO 9001 Quality Management', category: 'Compliance', level: 'Intermediate', duration: '4h 30m', enrolled: 12, completion: 78 },
+  { title: 'Workplace Safety & OSHA', category: 'Safety', level: 'Beginner', duration: '2h 15m', enrolled: 28, completion: 91 },
+  { title: 'Advanced Excel for Finance', category: 'Finance', level: 'Advanced', duration: '6h 00m', enrolled: 7, completion: 45 },
+  { title: 'ERP System Administrator', category: 'IT', level: 'Advanced', duration: '8h 00m', enrolled: 4, completion: 30 },
+];
+
+app.get('/api/lms-courses', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  let rows = companyId ? await dbByCompany<any>(schema.lmsCourses, companyId as string) : await dbAll<any>(schema.lmsCourses);
+  if (rows.length === 0 && companyId) {
+    rows = DEFAULT_LMS_COURSES.map((c, i) => ({ id: `lms-seed-${i}`, companyId, ...c, createdBy: 'System', createdAt: new Date().toISOString() }));
+  }
+  res.json(rows);
+    }));
+
+app.post('/api/lms-courses', asyncHandler(async (req, res) => {
+  const { companyId, title, category, level, duration, createdBy } = req.body;
+  const course: LMSCourse = {
+    id: `lms-${Date.now()}`,
+    companyId,
+    title,
+    category: category || 'General',
+    level: level || 'Beginner',
+    duration: duration || '1h 00m',
+    enrolled: 0,
+    completion: 0,
+    createdBy: createdBy || 'Admin',
+    createdAt: new Date().toISOString(),
+  };
+  const created = await dbInsert(schema.lmsCourses, course);
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'LMS_COURSE_CREATE', 'Learning Management (LMS)', `Created LMS course "${title}".`);
+  res.status(201).json(created);
     }));
 
 // 3.5 Payroll Groups

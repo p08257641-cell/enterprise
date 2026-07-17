@@ -10,7 +10,7 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -193,6 +193,12 @@ export interface ModuleViewsProps {
   onCreateSalesTarget: (target: Omit<SalesTarget, 'id' | 'actualAmount' | 'createdAt'>) => void;
   onUpdateSalesTarget: (targetId: string, updates: Partial<SalesTarget>) => void;
   onDeleteSalesTarget: (targetId: string) => void;
+  // Knowledge Base
+  kbArticles: KBArticle[];
+  onAddKbArticle: (article: Omit<KBArticle, 'id' | 'views' | 'createdAt'>) => void;
+  // LMS Courses
+  lmsCourses: LMSCourse[];
+  onAddLmsCourse: (course: Omit<LMSCourse, 'id' | 'enrolled' | 'completion' | 'createdAt'>) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {
