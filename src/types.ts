@@ -1116,3 +1116,26 @@ export interface FilingDeadline {
   filedDate?: string;
   filedBy?: string;
 }
+
+export interface ProjectTask {
+  id: string;
+  companyId: string;
+  title: string;
+  description?: string;
+  status: 'To Do' | 'In Progress' | 'Review' | 'Done';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  assignee: string;
+  assigneeName: string;
+  due: string;
+  createdAt: string;
+}
+
+export interface ProjectMilestone {
+  id: string;
+  companyId: string;
+  name: string;
+  due: string;
+  status: 'Upcoming' | 'In Progress' | 'Completed' | 'Overdue';
+  completion: number;
+  createdAt: string;
+}

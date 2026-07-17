@@ -10,7 +10,7 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -205,6 +205,15 @@ export interface ModuleViewsProps {
   // Email templates
   emailTemplates: EmailTemplate[];
   onAddEmailTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt'>) => void;
+  // Project tasks & milestones
+  projectTasks: ProjectTask[];
+  projectMilestones: ProjectMilestone[];
+  onCreateProjectTask: (task: { companyId: string; title: string; description?: string; status?: string; priority?: string; assignee?: string; assigneeName?: string; due?: string }) => void;
+  onUpdateProjectTask: (id: string, values: any) => void;
+  onDeleteProjectTask: (id: string) => void;
+  onCreateProjectMilestone: (ms: { companyId: string; name: string; due?: string; status?: string; completion?: number }) => void;
+  onUpdateProjectMilestone: (id: string, values: any) => void;
+  onDeleteProjectMilestone: (id: string) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {

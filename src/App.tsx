@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -97,6 +97,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [auditSnapshots, setAuditSnapshots] = useState<AuditSnapshot[]>([]);
   const [policyDocuments, setPolicyDocuments] = useState<PolicyDocument[]>([]);
   const [filingDeadlines, setFilingDeadlines] = useState<FilingDeadline[]>([]);
+  const [projectTasks, setProjectTasks] = useState<ProjectTask[]>([]);
+  const [projectMilestones, setProjectMilestones] = useState<ProjectMilestone[]>([]);
 
   // Navigation states
   const [activeView, setActiveView] = useState('dashboard');
@@ -312,6 +314,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           setPolicyDocuments(await pdRes.json());
           setFilingDeadlines(await fdRes.json());
         } catch (e) { console.error('Failed to load Tier 3 data:', e); }
+
+        // Fetch project data
+        try {
+          const [ptRes, pmRes] = await Promise.all([
+            fetch('/api/project-tasks'),
+            fetch('/api/project-milestones')
+          ]);
+          setProjectTasks(await ptRes.json());
+          setProjectMilestones(await pmRes.json());
+        } catch (e) { console.error('Failed to load project data:', e); }
 
         // Select default tenant and user role
         if (cData.length > 0) setSelectedCompany(cData[0]);
@@ -2294,6 +2306,58 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     } catch (err) { console.error(err); }
   };
 
+  const handleCreateProjectTask = async (task: { companyId: string; title: string; description?: string; status?: string; priority?: string; assignee?: string; assigneeName?: string; due?: string }) => {
+    try {
+      const res = await fetch('/api/project-tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...task, ...actorBody() }) });
+      const newTask = await res.json();
+      setProjectTasks([...projectTasks, newTask]);
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateProjectTask = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/project-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await res.json();
+      setProjectTasks(projectTasks.map(t => t.id === id ? updated : t));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteProjectTask = async (id: string) => {
+    try {
+      await fetch(`/api/project-tasks/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setProjectTasks(projectTasks.filter(t => t.id !== id));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateProjectMilestone = async (ms: { companyId: string; name: string; due?: string; status?: string; completion?: number }) => {
+    try {
+      const res = await fetch('/api/project-milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...ms, ...actorBody() }) });
+      const newMs = await res.json();
+      setProjectMilestones([...projectMilestones, newMs]);
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateProjectMilestone = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/project-milestones/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await res.json();
+      setProjectMilestones(projectMilestones.map(m => m.id === id ? updated : m));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteProjectMilestone = async (id: string) => {
+    try {
+      await fetch(`/api/project-milestones/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setProjectMilestones(projectMilestones.filter(m => m.id !== id));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+
   const handleClearNotifications = () => {
     setNotificationCount(0);
   };
@@ -2607,6 +2671,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onAddAnnouncement={handleAddAnnouncement}
               emailTemplates={emailTemplates}
               onAddEmailTemplate={handleAddEmailTemplate}
+              projectTasks={projectTasks}
+              projectMilestones={projectMilestones}
+              onCreateProjectTask={handleCreateProjectTask}
+              onUpdateProjectTask={handleUpdateProjectTask}
+              onDeleteProjectTask={handleDeleteProjectTask}
+              onCreateProjectMilestone={handleCreateProjectMilestone}
+              onUpdateProjectMilestone={handleUpdateProjectMilestone}
+              onDeleteProjectMilestone={handleDeleteProjectMilestone}
             />
           )}
           </FadeIn>

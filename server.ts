@@ -3307,6 +3307,88 @@ app.post('/api/pos/reports/generate', asyncHandler(async (req, res) => {
   res.status(201).json(newReport);
     }));
 
+// --- PROJECT TASKS & MILESTONES ---
+app.get('/api/project-tasks', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.projectTasks, companyId as string) : await dbAll<any>(schema.projectTasks);
+  res.json(all);
+    }));
+
+app.post('/api/project-tasks', asyncHandler(async (req, res) => {
+  const { companyId, title, description, status, priority, assignee, assigneeName, due, userId, userName } = req.body;
+  const newTask = { id: `pt-${Date.now()}`, companyId, title, description: description || '', status: status || 'To Do', priority: priority || 'Medium', assignee: assignee || '', assigneeName: assigneeName || 'Unassigned', due: due || '', createdAt: new Date().toISOString() };
+  await dbInsert(schema.projectTasks, newTask);
+  logAudit(companyId, userId, userName, 'CREATE_PROJECT_TASK', 'Projects', `Created task: ${title}`);
+  res.status(201).json(newTask);
+    }));
+
+app.put('/api/project-tasks/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, description, status, priority, assignee, assigneeName, due, userId, userName } = req.body;
+  const task = await dbById<any>(schema.projectTasks, id);
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  const values: any = {};
+  if (title !== undefined) values.title = title;
+  if (description !== undefined) values.description = description;
+  if (status !== undefined) values.status = status;
+  if (priority !== undefined) values.priority = priority;
+  if (assignee !== undefined) values.assignee = assignee;
+  if (assigneeName !== undefined) values.assigneeName = assigneeName;
+  if (due !== undefined) values.due = due;
+  const updated = await dbUpdate(schema.projectTasks, id, values);
+  logAudit(task.companyId, userId, userName, 'UPDATE_PROJECT_TASK', 'Projects', `Updated task: ${title ?? task.title}`);
+  res.json(updated);
+    }));
+
+app.delete('/api/project-tasks/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const task = await dbById<any>(schema.projectTasks, id);
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  await dbDelete(schema.projectTasks, id);
+  logAudit(task.companyId, userId, userName, 'DELETE_PROJECT_TASK', 'Projects', `Deleted task: ${task.title}`);
+  res.json({ success: true });
+    }));
+
+app.get('/api/project-milestones', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.projectMilestones, companyId as string) : await dbAll<any>(schema.projectMilestones);
+  res.json(all);
+    }));
+
+app.post('/api/project-milestones', asyncHandler(async (req, res) => {
+  const { companyId, name, due, status, completion, userId, userName } = req.body;
+  const newMs = { id: `pm-${Date.now()}`, companyId, name, due: due || '', status: status || 'Upcoming', completion: completion || 0, createdAt: new Date().toISOString() };
+  await dbInsert(schema.projectMilestones, newMs);
+  logAudit(companyId, userId, userName, 'CREATE_PROJECT_MILESTONE', 'Projects', `Created milestone: ${name}`);
+  res.status(201).json(newMs);
+    }));
+
+app.put('/api/project-milestones/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, due, status, completion, userId, userName } = req.body;
+  const ms = await dbById<any>(schema.projectMilestones, id);
+  if (!ms) return res.status(404).json({ error: 'Milestone not found' });
+  const values: any = {};
+  if (name !== undefined) values.name = name;
+  if (due !== undefined) values.due = due;
+  if (status !== undefined) values.status = status;
+  if (completion !== undefined) values.completion = completion;
+  const updated = await dbUpdate(schema.projectMilestones, id, values);
+  logAudit(ms.companyId, userId, userName, 'UPDATE_PROJECT_MILESTONE', 'Projects', `Updated milestone: ${name ?? ms.name}`);
+  res.json(updated);
+    }));
+
+app.delete('/api/project-milestones/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const ms = await dbById<any>(schema.projectMilestones, id);
+  if (!ms) return res.status(404).json({ error: 'Milestone not found' });
+  await dbDelete(schema.projectMilestones, id);
+  logAudit(ms.companyId, userId, userName, 'DELETE_PROJECT_MILESTONE', 'Projects', `Deleted milestone: ${ms.name}`);
+  res.json({ success: true });
+    }));
+
 // 10. Audit Logs
 app.get('/api/audit-logs', asyncHandler(async (req, res) => {
   const { companyId } = req.query;

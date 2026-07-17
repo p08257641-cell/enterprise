@@ -1001,3 +1001,26 @@ export const filingDeadlines = pgTable('filing_deadlines', {
   filedDate: text('filedDate'),
   filedBy: text('filedBy'),
 });
+
+export const projectTasks = pgTable('project_tasks', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  description: text('description'),
+  status: text('status'),
+  priority: text('priority'),
+  assignee: text('assignee'),
+  assigneeName: text('assigneeName'),
+  due: text('due'),
+  createdAt: text('createdAt'),
+});
+
+export const projectMilestones = pgTable('project_milestones', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  due: text('due'),
+  status: text('status'),
+  completion: integer('completion'),
+  createdAt: text('createdAt'),
+});
