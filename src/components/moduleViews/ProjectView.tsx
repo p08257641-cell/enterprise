@@ -35,6 +35,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
 
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+  const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set());
 
   const timeModal = useRowModal<typeof localTasks[0] & { hours: number; billable: boolean }>();
   const resourceModal = useRowModal<typeof localEmployees[0] & { util: number; taskCount: number }>();
@@ -140,41 +141,62 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-4 gap-4">
-            {cols.map(col => (
-              <div key={col}
-                onDragOver={(e) => onDragOver(e, col)}
-                onDragLeave={onDragLeave}
-                onDrop={(e) => onDrop(e, col)}
-                className={`bg-slate-50/60 border rounded-xl p-3 min-h-[400px] transition-all ${dragOverCol === col ? 'border-slate-400 bg-slate-100/60 ring-2 ring-slate-200' : 'border-slate-200'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="section-title text-slate-600">{col}</span>
-                  <span className="text-[10px] font-sans tabular-nums bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-400">{localTasks.filter(t => t.status === col).length}</span>
-                </div>
-                <div className="space-y-2">
-                  {localTasks.filter(t => t.status === col).map(task => (
-                    <div key={task.id}
-                      draggable={isAdmin}
-                      onDragStart={(e) => onDragStart(e, task.id)}
-                      onDragEnd={onDragEnd}
-                      onClick={() => taskModal.open(task)}
-                      className={`bg-white border rounded-lg p-3 shadow-xs transition-all ${draggedTaskId === task.id ? 'opacity-40 scale-95 border-dashed' : 'cursor-grab hover:border-slate-300 hover:shadow-sm active:cursor-grabbing'} border-slate-200`}>
-                      <div className="text-xs font-semibold text-slate-900 mb-2 leading-tight">{task.title}</div>
-                      <div className="flex items-center justify-between">
-                        <span className={`data-value-small font-bold border px-1.5 py-0.5 rounded ${priorityColor(task.priority)}`}>{task.priority}</span>
-                        <span className="text-[10px] text-slate-400 font-sans tabular-nums">{task.due || '—'}</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 mt-1.5">{task.assigneeName || 'Unassigned'}</div>
-                      {isAdmin && (
-                        <div className="flex justify-end mt-2 pt-2 border-t border-slate-100">
-                          <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Delete</button>
-                        </div>
-                      )}
+          <div className="flex gap-4">
+            {cols.map(col => {
+              const isCollapsed = collapsedCols.has(col);
+              const colTasks = localTasks.filter(t => t.status === col);
+              return (
+                <div key={col}
+                  onDragOver={(e) => { if (!isCollapsed) onDragOver(e, col); }}
+                  onDragLeave={onDragLeave}
+                  onDrop={(e) => { if (!isCollapsed) onDrop(e, col); }}
+                  className={`bg-slate-50/60 border rounded-xl transition-all ${isCollapsed ? 'w-12 p-2 min-h-[200px]' : 'flex-1 p-3 min-h-[400px]'} ${dragOverCol === col && !isCollapsed ? 'border-slate-400 bg-slate-100/60 ring-2 ring-slate-200' : 'border-slate-200'}`}>
+                  {isCollapsed ? (
+                    <div className="flex flex-col items-center gap-2 h-full">
+                      <button onClick={() => setCollapsedCols(prev => { const next = new Set(prev); next.delete(col); return next; })} className="text-slate-400 hover:text-slate-600 cursor-pointer transition-colors" title={`Expand ${col}`}>
+                        <i className="bi bi-chevron-right text-xs"></i>
+                      </button>
+                      <span className="text-[10px] font-bold text-slate-600 [writing-mode:vertical-lr] tracking-wider uppercase">{col}</span>
+                      <span className="text-[10px] font-sans tabular-nums bg-white border border-slate-200 px-1 py-0.5 rounded text-slate-400">{colTasks.length}</span>
                     </div>
-                  ))}
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="section-title text-slate-600">{col}</span>
+                          <button onClick={() => setCollapsedCols(prev => { const next = new Set(prev); next.add(col); return next; })} className="text-slate-400 hover:text-slate-600 cursor-pointer transition-colors" title={`Collapse ${col}`}>
+                            <i className="bi bi-chevron-down text-[10px]"></i>
+                          </button>
+                        </div>
+                        <span className="text-[10px] font-sans tabular-nums bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-400">{colTasks.length}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {colTasks.map(task => (
+                          <div key={task.id}
+                            draggable={isAdmin}
+                            onDragStart={(e) => onDragStart(e, task.id)}
+                            onDragEnd={onDragEnd}
+                            onClick={() => taskModal.open(task)}
+                            className={`bg-white border rounded-lg p-3 shadow-xs transition-all ${draggedTaskId === task.id ? 'opacity-40 scale-95 border-dashed' : 'cursor-grab hover:border-slate-300 hover:shadow-sm active:cursor-grabbing'} border-slate-200`}>
+                            <div className="text-xs font-semibold text-slate-900 mb-2 leading-tight">{task.title}</div>
+                            <div className="flex items-center justify-between">
+                              <span className={`data-value-small font-bold border px-1.5 py-0.5 rounded ${priorityColor(task.priority)}`}>{task.priority}</span>
+                              <span className="text-[10px] text-slate-400 font-sans tabular-nums">{task.due || '—'}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-1.5">{task.assigneeName || 'Unassigned'}</div>
+                            {isAdmin && (
+                              <div className="flex justify-end mt-2 pt-2 border-t border-slate-100">
+                                <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Delete</button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
