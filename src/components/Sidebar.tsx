@@ -131,85 +131,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       modules: [
         {
           id: 'Administration', label: 'Administration', iconClass: 'bi bi-folder-symlink', viewId: 'admin',
-          subMenus: [
-            { id: 'admin-branches', label: 'Branches', viewId: 'admin-branches', iconClass: 'bi bi-geo-alt' },
-            { id: 'admin-departments', label: 'Departments', viewId: 'admin-departments', iconClass: 'bi bi-diagram-3' },
-            { id: 'admin-users', label: 'Users', viewId: 'admin-users', iconClass: 'bi bi-people' },
-            { id: 'admin-roles', label: 'Roles', viewId: 'admin-roles', iconClass: 'bi bi-shield-lock' },
-            { id: 'admin-approvals', label: 'Approval Workflows', viewId: 'admin-approvals', iconClass: 'bi bi-check2-square' },
-            { id: 'admin-settings', label: 'Settings', viewId: 'admin-settings', iconClass: 'bi bi-toggles' },
-          ]
         },
         {
           id: 'HR', label: isEmployee ? 'My Workspace' : 'HR & Directory', iconClass: isEmployee ? 'bi bi-person-workspace' : 'bi bi-people', viewId: 'hr',
-          subMenus: [
-            { id: 'hr-employees', label: 'Employees', viewId: 'hr', iconClass: 'bi bi-person-badge' },
-            { id: 'hr-attendance', label: 'Attendance', viewId: 'hr-attendance', iconClass: 'bi bi-clock-history' },
-            { id: 'hr-leave', label: 'Leave Management', viewId: 'hr-leave', iconClass: 'bi bi-calendar-check' },
-            { id: 'hr-recruitment', label: 'Recruitment (ATS)', viewId: 'hr-recruitment', iconClass: 'bi bi-person-plus' },
-            { id: 'hr-onboarding', label: 'Onboarding', viewId: 'hr-onboarding', iconClass: 'bi bi-door-open' },
-            { id: 'hr-performance', label: 'Performance / OKRs', viewId: 'hr-performance', iconClass: 'bi bi-graph-up' },
-            { id: 'hr-orgchart', label: 'Org Chart', viewId: 'hr-orgchart', iconClass: 'bi bi-diagram-2' },
-            { id: 'hr-exit', label: 'Exit Management', viewId: 'hr-exit', iconClass: 'bi bi-door-closed' },
-            { id: 'hr-departments', label: 'Departments', viewId: 'hr-departments', iconClass: 'bi bi-diagram-3' },
-          ]
         },
         {
           id: 'Payroll', label: isEmployee ? 'My Compensation' : 'Payroll & Salary', iconClass: isEmployee ? 'bi bi-wallet2' : 'bi bi-cash-stack', viewId: isEmployee ? 'payroll-slips' : 'payroll',
-          subMenus: [
-            { id: 'payroll-run', label: 'Run Payroll', viewId: 'payroll', iconClass: 'bi bi-play-circle' },
-            { id: 'payroll-slips', label: 'Payslips', viewId: 'payroll-slips', iconClass: 'bi bi-receipt-cutoff' },
-            { id: 'payroll-groups', label: 'Payroll Groups', viewId: 'payroll-groups', iconClass: 'bi bi-folder' },
-            { id: 'payroll-tax', label: 'Tax & Deductions', viewId: 'payroll-tax', iconClass: 'bi bi-percent' },
-            { id: 'payroll-overtime', label: 'Overtime', viewId: 'payroll-overtime', iconClass: 'bi bi-hourglass-split' },
-          ]
         },
         {
           id: 'CRM', label: 'CRM Leads', iconClass: 'bi bi-graph-up-arrow', viewId: 'crm',
-          subMenus: [
-            { id: 'crm-pipeline', label: 'Lead Pipeline', viewId: 'crm', iconClass: 'bi bi-funnel' },
-            { id: 'crm-contacts', label: 'Contacts', viewId: 'crm-contacts', iconClass: 'bi bi-person-lines-fill' },
-            { id: 'crm-activities', label: 'Activities', viewId: 'crm-activities', iconClass: 'bi bi-calendar2-event' },
-            { id: 'crm-tasks', label: 'Tasks', viewId: 'crm-tasks', iconClass: 'bi bi-list-check' },
-            { id: 'crm-emails', label: 'Emails', viewId: 'crm-emails', iconClass: 'bi bi-envelope' },
-            { id: 'crm-reports', label: 'CRM Reports', viewId: 'crm-reports', iconClass: 'bi bi-bar-chart' },
-          ]
         },
         {
           id: 'Accounting', label: 'Accounting Ledger', iconClass: 'bi bi-book', viewId: 'accounting',
-          subMenus: [
-            { id: 'accounting', label: 'General Ledger', viewId: 'accounting', iconClass: 'bi bi-journal-bookmark' },
-            { id: 'acc-invoices', label: 'Invoices', viewId: 'acc-invoices', iconClass: 'bi bi-file-earmark-text' },
-            { id: 'acc-expenses', label: 'Expenses', viewId: 'acc-expenses', iconClass: 'bi bi-credit-card' },
-            { id: 'acc-ap', label: 'Accounts Payable', viewId: 'acc-ap', iconClass: 'bi bi-file-earmark-arrow-up' },
-            { id: 'acc-ar', label: 'Accounts Receivable', viewId: 'acc-ar', iconClass: 'bi bi-file-earmark-arrow-down' },
-            { id: 'acc-bank', label: 'Bank & Reconciliation', viewId: 'acc-bank', iconClass: 'bi bi-bank' },
-            { id: 'acc-assets', label: 'Fixed Assets & Budgets', viewId: 'acc-assets', iconClass: 'bi bi-collection' },
-            { id: 'acc-tax', label: 'Tax & Compliance', viewId: 'acc-tax', iconClass: 'bi bi-shield-check' },
-            { id: 'acc-reports', label: 'Reports', viewId: 'acc-reports', iconClass: 'bi bi-pie-chart' },
-          ]
         },
         {
           id: 'Sales', label: 'Sales & Orders', iconClass: 'bi bi-tag', viewId: 'sales',
-          subMenus: [
-            { id: 'sales-orders', label: 'Sales Orders', viewId: 'sales', iconClass: 'bi bi-cart' },
-            { id: 'sales-quotes', label: 'Quotations', viewId: 'sales-quotes', iconClass: 'bi bi-file-earmark-check' },
-            { id: 'sales-customers', label: 'Customers', viewId: 'sales-customers', iconClass: 'bi bi-people' },
-            { id: 'sales-targets', label: 'Sales Targets', viewId: 'sales-targets', iconClass: 'bi bi-bullseye' },
-          ]
         },
         {
           id: 'POS', label: 'Point of Sale', iconClass: 'bi bi-cash-coin', viewId: 'pos',
-          subMenus: [
-            { id: 'pos-terminal', label: 'POS Terminal', viewId: 'pos', iconClass: 'bi bi-cash-stack', moduleId: 'POS' },
-            { id: 'pos-products', label: 'Products', viewId: 'pos-products', iconClass: 'bi bi-box-seam', moduleId: 'POS' },
-            { id: 'pos-customers', label: 'Customers', viewId: 'pos-customers', iconClass: 'bi bi-people', moduleId: 'POS' },
-            { id: 'pos-shifts', label: 'Shifts', viewId: 'pos-shifts', iconClass: 'bi bi-clock-history', moduleId: 'POS' },
-            { id: 'pos-sales', label: 'Sales History', viewId: 'pos-sales', iconClass: 'bi bi-receipt', moduleId: 'POS' },
-            { id: 'pos-discounts', label: 'Discounts', viewId: 'pos-discounts', iconClass: 'bi bi-tags', moduleId: 'POS' },
-            { id: 'pos-returns', label: 'Returns', viewId: 'pos-returns', iconClass: 'bi bi-arrow-return-left', moduleId: 'POS' },
-            { id: 'pos-reports', label: 'Reports', viewId: 'pos-reports', iconClass: 'bi bi-bar-chart-line', moduleId: 'POS' },
-          ]
         },
       ]
     },
