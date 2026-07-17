@@ -247,6 +247,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: 'Compliance', label: 'Compliance', iconClass: 'bi bi-shield-check', viewId: 'compliance',
         },
         {
+          id: 'Learning Management (LMS)', label: 'LMS / Learning', iconClass: 'bi bi-journal-bookmark-fill', viewId: 'lms',
+          subMenus: [
+            { id: 'lms-courses', label: 'Courses', viewId: 'lms', iconClass: 'bi bi-book-half' },
+            { id: 'lms-quizzes', label: 'Quizzes', viewId: 'lms-quizzes', iconClass: 'bi bi-question-circle' },
+            { id: 'lms-progress', label: 'My Progress', viewId: 'lms-progress', iconClass: 'bi bi-award' },
+          ]
+        },
+        {
           id: 'Communication', label: 'Communication', iconClass: 'bi bi-megaphone', viewId: 'communication',
         },
         {
@@ -342,7 +350,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   mod.id === 'Dashboard' ||
                   selectedCompany.activeModules.includes(mod.id) ||
                   moduleSubIds.some(mid => selectedCompany.activeModules.includes(mid));
-                const hasModuleAccessPermission = hasModuleAccess(mod.id);
+                const hasModuleAccessPermission = hasModuleAccess(mod.id) || (mod.subMenus && mod.subMenus.some(sub => hasSubmenuAccess(sub.id)));
                 const hasSubMenus = mod.subMenus && mod.subMenus.length > 0;
                 const expanded = isModuleExpanded(mod);
                 const isTopActive = activeView === mod.viewId && !isSubViewActive(mod);
@@ -351,8 +359,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 let accessibleSubMenus = hasSubMenus 
                   ? mod.subMenus!.filter(sub => hasSubmenuAccess(sub.id))
                   : [];
-
-
 
                 // Hide module completely if user doesn't have access (for Super Admin and all roles)
                 if (!hasModuleAccessPermission) {
@@ -435,22 +441,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
 
         {/* System Admin Panel */}
-        <div className="pt-2 border-t border-slate-100">
-          <div className="px-2 pb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
-            System
+        {(userRole === 'Company Admin' || userRole === 'CEO' || userRole === 'Super Admin') && (
+          <div className="pt-2 border-t border-slate-100">
+            <div className="px-2 pb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+              System
+            </div>
+            <nav className="space-y-1">
+              <button
+                onClick={() => onSelectView('apikeys')}
+                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
+                  activeView === 'apikeys' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <i className="bi bi-gear text-sm"></i>
+                API Settings & Keys
+              </button>
+            </nav>
           </div>
-          <nav className="space-y-1">
-            <button
-              onClick={() => onSelectView('apikeys')}
-              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
-                activeView === 'apikeys' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <i className="bi bi-gear text-sm"></i>
-              API Settings & Keys
-            </button>
-          </nav>
-        </div>
+        )}
       </div>
     </aside>
   </>
