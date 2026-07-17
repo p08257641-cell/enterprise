@@ -220,10 +220,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: 'Operations', label: 'Operations & Projects', iconClass: 'bi bi-gear-wide-connected', viewId: 'project',
           subMenus: [
             { id: 'proj-kanban', label: 'Kanban Board', viewId: 'project', iconClass: 'bi bi-columns-gap', moduleId: 'Project Management' },
-            { id: 'inv-stock', label: 'Stock Levels', viewId: 'inventory', iconClass: 'bi bi-boxes', moduleId: 'Inventory' },
-            { id: 'inv-warehouses', label: 'Warehouses', viewId: 'inv-warehouses', iconClass: 'bi bi-building', moduleId: 'Inventory' },
-            { id: 'inv-transfers', label: 'Stock Transfers', viewId: 'inv-transfers', iconClass: 'bi bi-arrow-left-right', moduleId: 'Inventory' },
-            { id: 'inv-valuation', label: 'Valuation', viewId: 'inv-valuation', iconClass: 'bi bi-currency-dollar', moduleId: 'Inventory' },
             { id: 'proc-pos', label: 'Purchase Orders', viewId: 'procurement', iconClass: 'bi bi-file-earmark-plus', moduleId: 'Procurement' },
             { id: 'proc-vendors', label: 'Vendors', viewId: 'proc-vendors', iconClass: 'bi bi-shop', moduleId: 'Procurement' },
             { id: 'proc-rfq', label: 'RFQ / Bids', viewId: 'proc-rfq', iconClass: 'bi bi-clipboard-check', moduleId: 'Procurement' },
