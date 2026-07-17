@@ -125,22 +125,6 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
 
       {projTab === 'kanban' && (
         <>
-          {showAddTask && isAdmin && (
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3 mb-4">
-              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">New Task</h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div><Label>Title</Label><Input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="e.g. Design API Endpoints" /></div>
-                <div><Label>Priority</Label><Select value={newTaskPriority} onChange={e => setNewTaskPriority(e.target.value)}><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></Select></div>
-                <div><Label>Assignee</Label><Select value={newTaskAssignee} onChange={e => setNewTaskAssignee(e.target.value)}><option value="">Unassigned</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
-                <div><Label>Due Date</Label><Input type="date" value={newTaskDue} onChange={e => setNewTaskDue(e.target.value)} /></div>
-              </div>
-              <div><Label>Description</Label><textarea value={newTaskDesc} onChange={e => setNewTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Optional description" /></div>
-              <div className="flex gap-2">
-                <PrimaryBtn onClick={submitNewTask} disabled={!newTaskTitle.trim()}>Create Task</PrimaryBtn>
-                <SecBtn onClick={() => setShowAddTask(false)}>Cancel</SecBtn>
-              </div>
-            </div>
-          )}
           <div className="flex gap-4 items-stretch">
             {cols.map(col => {
               const isCollapsed = collapsedCols.has(col);
@@ -430,6 +414,24 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Progress</span><span className="font-bold text-slate-900">{msModal.selected.completion}%</span></div>
               <div className="h-3 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${msModal.selected.completion === 100 ? 'bg-emerald-500' : msModal.selected.status === 'Overdue' ? 'bg-rose-400' : 'bg-slate-800'}`} style={{ width: `${msModal.selected.completion}%` }} /></div>
               <div className="flex justify-between text-[9px] text-slate-400 mt-1"><span>0%</span><span>100%</span></div>
+            </div>
+          </div>
+        </ViewModal>
+      )}
+
+      {showAddTask && (
+        <ViewModal title="New Task" subtitle="Create a project task" onClose={() => setShowAddTask(false)} size="md">
+          <div className="space-y-4">
+            <div><Label>Title</Label><Input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="e.g. Design API Endpoints" /></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Priority</Label><Select value={newTaskPriority} onChange={e => setNewTaskPriority(e.target.value)}><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></Select></div>
+              <div><Label>Assignee</Label><Select value={newTaskAssignee} onChange={e => setNewTaskAssignee(e.target.value)}><option value="">Unassigned</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
+            </div>
+            <div><Label>Due Date</Label><Input type="date" value={newTaskDue} onChange={e => setNewTaskDue(e.target.value)} /></div>
+            <div><Label>Description</Label><textarea value={newTaskDesc} onChange={e => setNewTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Optional description" /></div>
+            <div className="flex gap-2 pt-2">
+              <PrimaryBtn onClick={submitNewTask} disabled={!newTaskTitle.trim()}>Create Task</PrimaryBtn>
+              <SecBtn onClick={() => setShowAddTask(false)}>Cancel</SecBtn>
             </div>
           </div>
         </ViewModal>
