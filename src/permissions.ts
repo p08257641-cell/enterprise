@@ -88,7 +88,7 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
   ],
   'Inventory Manager': [
     'hr-employees', 'hr-orgchart',
-    'proj-kanban', 'proj-milestones', 'proj-time', 'proj-resources',
+    'proj-kanban',
     'inv-stock', 'inv-warehouses', 'inv-transfers', 'inv-valuation',
     'proc-pos', 'proc-vendors', 'proc-rfq',
     'mfg-bom', 'mfg-orders', 'mfg-quality',
@@ -99,7 +99,7 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
   ],
   'Store Keeper': [
     'hr-employees', 'hr-orgchart',
-    'proj-kanban', 'proj-milestones', 'proj-time', 'proj-resources',
+    'proj-kanban',
     'inv-stock', 'inv-warehouses', 'inv-transfers', 'inv-valuation',
     'proc-pos', 'proc-vendors', 'proc-rfq',
     'mfg-bom', 'mfg-orders', 'mfg-quality',

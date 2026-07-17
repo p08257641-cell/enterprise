@@ -219,10 +219,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           id: 'Operations', label: 'Operations & Projects', iconClass: 'bi bi-gear-wide-connected', viewId: 'project',
           subMenus: [
-            { id: 'proj-kanban', label: 'Kanban Board', viewId: 'project', iconClass: 'bi bi-columns-gap', moduleId: 'Project Management' },
-            { id: 'proj-milestones', label: 'Milestones', viewId: 'proj-milestones', iconClass: 'bi bi-flag', moduleId: 'Project Management' },
-            { id: 'proj-time', label: 'Time Tracking', viewId: 'proj-time', iconClass: 'bi bi-stopwatch', moduleId: 'Project Management' },
-            { id: 'proj-resources', label: 'Resources', viewId: 'proj-resources', iconClass: 'bi bi-person-workspace', moduleId: 'Project Management' },
             { id: 'inv-stock', label: 'Stock Levels', viewId: 'inventory', iconClass: 'bi bi-boxes', moduleId: 'Inventory' },
             { id: 'inv-warehouses', label: 'Warehouses', viewId: 'inv-warehouses', iconClass: 'bi bi-building', moduleId: 'Inventory' },
             { id: 'inv-transfers', label: 'Stock Transfers', viewId: 'inv-transfers', iconClass: 'bi bi-arrow-left-right', moduleId: 'Inventory' },
