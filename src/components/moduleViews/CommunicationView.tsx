@@ -3,6 +3,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { modalAlert } from '../../utils/modal';
+import { isAdminRole, isHRRole } from '../../permissions';
 import { CommunicationAnnouncement, EmailTemplate } from '../../types';
 
 export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
@@ -31,6 +32,11 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
     { who: 'You', msg: 'Sent the revised forecast to Finance.', me: true },
   ]);
   const [chatInput, setChatInput] = useState('');
+  const canManage = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole);
+  const [showAddTemplate, setShowAddTemplate] = useState(false);
+  const [tplName, setTplName] = useState('');
+  const [tplSubject, setTplSubject] = useState('');
+  const [tplBody, setTplBody] = useState('');
 
   return (
     <div>
@@ -112,6 +118,26 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
       )}
       {commTab === 'email' && (
         <div className="space-y-4">
+          {canManage && (
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-slate-500">{emailTemplates.filter(t => t.companyId === selectedCompany.id).length} templates</span>
+              <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowAddTemplate(!showAddTemplate)}>Create Template</PrimaryBtn>
+            </div>
+          )}
+          {showAddTemplate && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+              <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">New Email Template</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div><Label>Template Name</Label><Input value={tplName} onChange={e => setTplName(e.target.value)} placeholder="e.g. Welcome New Employee" /></div>
+                <div><Label>Subject Line</Label><Input value={tplSubject} onChange={e => setTplSubject(e.target.value)} placeholder="e.g. Welcome to {Company}!" /></div>
+              </div>
+              <div><Label>Body</Label><textarea value={tplBody} onChange={e => setTplBody(e.target.value)} rows={4} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Email body content. Use {Name}, {Company}, {ID} etc. as placeholders." /></div>
+              <div className="flex gap-2">
+                <PrimaryBtn onClick={() => { if (!tplName.trim() || !tplSubject.trim()) return; onAddEmailTemplate({ companyId: selectedCompany.id, name: tplName.trim(), subject: tplSubject.trim(), body: tplBody.trim(), updated: new Date().toISOString().split('T')[0] }); setTplName(''); setTplSubject(''); setTplBody(''); setShowAddTemplate(false); }} disabled={!tplName.trim() || !tplSubject.trim()}>Save Template</PrimaryBtn>
+                <SecBtn onClick={() => setShowAddTemplate(false)}>Cancel</SecBtn>
+              </div>
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             {emailTemplates.filter(t => t.companyId === selectedCompany.id).map(t => (
               <div key={t.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all">
@@ -122,8 +148,8 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                 <button onClick={() => { setCommTitle(t.subject); setCommBody(t.body); setCommTab('compose'); }} className="mt-3 text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
               </div>
             ))}
-            {emailTemplates.filter(t => t.companyId === selectedCompany.id).length === 0 && (
-              <div className="sm:col-span-2 text-center text-xs text-slate-400 py-8">No email templates yet.</div>
+            {emailTemplates.filter(t => t.companyId === selectedCompany.id).length === 0 && !showAddTemplate && (
+              <div className="sm:col-span-2 text-center text-xs text-slate-400 py-8">No email templates yet. Create one to get started.</div>
             )}
           </div>
         </div>
