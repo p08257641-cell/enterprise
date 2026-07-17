@@ -33,6 +33,9 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
   const [newMsDue, setNewMsDue] = useState('');
   const [newMsStatus, setNewMsStatus] = useState('Upcoming');
 
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
   const timeModal = useRowModal<typeof localTasks[0] & { hours: number; billable: boolean }>();
   const resourceModal = useRowModal<typeof localEmployees[0] & { util: number; taskCount: number }>();
   const taskModal = useRowModal<typeof localTasks[0]>();
@@ -71,13 +74,36 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
     setNewMsName(''); setNewMsDue(''); setNewMsStatus('Upcoming'); setShowAddMs(false);
   };
 
-  const moveTask = (task: typeof localTasks[0], direction: 'forward' | 'backward') => {
-    const idx = cols.indexOf(task.status);
-    if (direction === 'forward' && idx < cols.length - 1) {
-      onUpdateProjectTask(task.id, { status: cols[idx + 1] });
-    } else if (direction === 'backward' && idx > 0) {
-      onUpdateProjectTask(task.id, { status: cols[idx - 1] });
+  const onDragStart = (e: React.DragEvent, taskId: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', taskId);
+    setDraggedTaskId(taskId);
+  };
+
+  const onDragEnd = () => {
+    setDraggedTaskId(null);
+    setDragOverCol(null);
+  };
+
+  const onDragOver = (e: React.DragEvent, colName: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverCol(colName);
+  };
+
+  const onDragLeave = () => {
+    setDragOverCol(null);
+  };
+
+  const onDrop = (e: React.DragEvent, colName: string) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData('text/plain');
+    const task = localTasks.find(t => t.id === taskId);
+    if (task && task.status !== colName) {
+      onUpdateProjectTask(taskId, { status: colName });
     }
+    setDraggedTaskId(null);
+    setDragOverCol(null);
   };
 
   return (
@@ -116,14 +142,23 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           )}
           <div className="grid grid-cols-4 gap-4">
             {cols.map(col => (
-              <div key={col} className="bg-slate-50/60 border border-slate-200 rounded-xl p-3 min-h-[400px]">
+              <div key={col}
+                onDragOver={(e) => onDragOver(e, col)}
+                onDragLeave={onDragLeave}
+                onDrop={(e) => onDrop(e, col)}
+                className={`bg-slate-50/60 border rounded-xl p-3 min-h-[400px] transition-all ${dragOverCol === col ? 'border-slate-400 bg-slate-100/60 ring-2 ring-slate-200' : 'border-slate-200'}`}>
                 <div className="flex items-center justify-between mb-3">
                   <span className="section-title text-slate-600">{col}</span>
                   <span className="text-[10px] font-sans tabular-nums bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-400">{localTasks.filter(t => t.status === col).length}</span>
                 </div>
                 <div className="space-y-2">
                   {localTasks.filter(t => t.status === col).map(task => (
-                    <div key={task.id} onClick={() => taskModal.open(task)} className="bg-white border border-slate-200 rounded-lg p-3 shadow-xs cursor-pointer hover:border-slate-300 transition-all">
+                    <div key={task.id}
+                      draggable={isAdmin}
+                      onDragStart={(e) => onDragStart(e, task.id)}
+                      onDragEnd={onDragEnd}
+                      onClick={() => taskModal.open(task)}
+                      className={`bg-white border rounded-lg p-3 shadow-xs transition-all ${draggedTaskId === task.id ? 'opacity-40 scale-95 border-dashed' : 'cursor-grab hover:border-slate-300 hover:shadow-sm active:cursor-grabbing'} border-slate-200`}>
                       <div className="text-xs font-semibold text-slate-900 mb-2 leading-tight">{task.title}</div>
                       <div className="flex items-center justify-between">
                         <span className={`data-value-small font-bold border px-1.5 py-0.5 rounded ${priorityColor(task.priority)}`}>{task.priority}</span>
@@ -131,10 +166,8 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                       </div>
                       <div className="text-[10px] text-slate-400 mt-1.5">{task.assigneeName || 'Unassigned'}</div>
                       {isAdmin && (
-                        <div className="flex gap-1 mt-2 pt-2 border-t border-slate-100">
-                          {cols.indexOf(task.status) > 0 && <button onClick={(e) => { e.stopPropagation(); moveTask(task, 'backward'); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-slate-200 text-slate-500 hover:bg-slate-50 cursor-pointer">← Back</button>}
-                          {cols.indexOf(task.status) < cols.length - 1 && <button onClick={(e) => { e.stopPropagation(); moveTask(task, 'forward'); }} className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-900 text-white hover:bg-slate-800 cursor-pointer">Next →</button>}
-                          <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
+                        <div className="flex justify-end mt-2 pt-2 border-t border-slate-100">
+                          <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Delete</button>
                         </div>
                       )}
                     </div>
