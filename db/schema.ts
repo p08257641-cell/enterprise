@@ -358,6 +358,26 @@ export const workflows = pgTable('workflows', {
   createdAt: text('createdAt'),
 });
 
+export const workflowTriggers = pgTable('workflow_triggers', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  event: text('event'),
+  description: text('description'),
+  enabled: boolean('enabled'),
+  createdAt: text('created_at'),
+});
+
+export const emailTemplates = pgTable('email_templates', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  subject: text('subject'),
+  body: text('body'),
+  updated: text('updated'),
+  createdAt: text('created_at'),
+});
+
 export const apiKeys = pgTable('api_keys', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -39,6 +39,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [kbArticles, setKbArticles] = useState<KBArticle[]>([]);
   const [lmsCourses, setLmsCourses] = useState<LMSCourse[]>([]);
   const [announcements, setAnnouncements] = useState<CommunicationAnnouncement[]>([]);
+  const [workflowTriggers, setWorkflowTriggers] = useState<WorkflowTrigger[]>([]);
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
   const [workflows, setWorkflows] = useState<ERPWorkflow[]>([]);
@@ -110,7 +112,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   useEffect(() => {
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes] = await Promise.all([
+        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -159,7 +161,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           fetch('/api/sales-targets'),
           fetch('/api/kb-articles'),
           fetch('/api/lms-courses'),
-          fetch('/api/announcements')
+          fetch('/api/announcements'),
+          fetch('/api/workflow-triggers'),
+          fetch('/api/email-templates')
         ]);
 
         const cData = await cRes.json();
@@ -208,6 +212,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         const kbData = await kbRes.json();
         const lmsData = await lmsRes.json();
         const annData = await annRes.json();
+        const wtData = await wtRes.json();
+        const etData = await etRes.json();
 
         setCompanies(cData);
         setUsers(uData);
@@ -248,6 +254,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setKbArticles(kbData);
         setLmsCourses(lmsData);
         setAnnouncements(annData);
+        setWorkflowTriggers(wtData);
+        setEmailTemplates(etData);
 
         // Fetch CRM activities
         const actRes = await fetch('/api/crm-activities');
@@ -1027,6 +1035,36 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const created = await res.json();
       setAnnouncements([created, ...announcements]);
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await logRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleWorkflowTrigger = async (triggerId: string, enabled: boolean) => {
+    try {
+      const res = await fetch(`/api/workflow-triggers/${triggerId}/toggle`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      const updated = await res.json();
+      setWorkflowTriggers(prev => prev.map(t => t.id === triggerId ? { ...t, enabled } : t));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddEmailTemplate = async (template: Omit<EmailTemplate, 'id' | 'createdAt'>) => {
+    try {
+      const res = await fetch('/api/email-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(template)
+      });
+      const created = await res.json();
+      setEmailTemplates([created, ...emailTemplates]);
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await logRes.json());
     } catch (err) {
@@ -2382,6 +2420,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
             <WorkflowBuilder
               selectedCompany={selectedCompany}
               workflows={workflows}
+              activeView={activeView}
+              workflowTriggers={workflowTriggers}
+              onToggleWorkflowTrigger={handleToggleWorkflowTrigger}
+              auditLogs={auditLogs}
               onSaveWorkflow={handleSaveWorkflow}
               onToggleWorkflow={handleToggleWorkflow}
             />
@@ -2563,6 +2605,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onAddLmsCourse={handleAddLmsCourse}
               announcements={announcements}
               onAddAnnouncement={handleAddAnnouncement}
+              emailTemplates={emailTemplates}
+              onAddEmailTemplate={handleAddEmailTemplate}
             />
           )}
           </FadeIn>

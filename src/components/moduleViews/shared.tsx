@@ -10,7 +10,7 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -202,6 +202,9 @@ export interface ModuleViewsProps {
   // Communication announcements
   announcements: CommunicationAnnouncement[];
   onAddAnnouncement: (announcement: Omit<CommunicationAnnouncement, 'id' | 'date' | 'createdAt'>) => void;
+  // Email templates
+  emailTemplates: EmailTemplate[];
+  onAddEmailTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt'>) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {

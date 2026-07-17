@@ -3,10 +3,10 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { modalAlert } from '../../utils/modal';
-import { CommunicationAnnouncement } from '../../types';
+import { CommunicationAnnouncement, EmailTemplate } from '../../types';
 
 export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement, emailTemplates, onAddEmailTemplate } = props;
 
   type CommTab = 'feed' | 'compose' | 'chat' | 'email';
   const commTabFromView = (): CommTab =>
@@ -111,20 +111,21 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {commTab === 'email' && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {[
-            { name: 'Welcome New Employee', subject: 'Welcome to {Company}!', updated: '2026-06-20' },
-            { name: 'Invoice Reminder', subject: 'Your invoice #{ID} is due', updated: '2026-06-18' },
-            { name: 'Password Reset', subject: 'Reset your account password', updated: '2026-05-30' },
-            { name: 'Monthly Payroll Notice', subject: 'Payslip for {Month} available', updated: '2026-07-01' },
-          ].map(t => (
-            <div key={t.name} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all">
-              <div className="text-xs font-bold text-slate-900">{t.name}</div>
-              <div className="data-value text-slate-500 mt-1">{t.subject}</div>
-              <div className="text-[10px] text-slate-400 mt-2">Updated {t.updated}</div>
-               <button onClick={() => void modalAlert(`Template "${t.name}" loaded into compose form.`, { variant: 'info' })} className="mt-3 text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
-            </div>
-          ))}
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {emailTemplates.filter(t => t.companyId === selectedCompany.id).map(t => (
+              <div key={t.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all">
+                <div className="text-xs font-bold text-slate-900">{t.name}</div>
+                <div className="data-value text-slate-500 mt-1">{t.subject}</div>
+                {t.body && <div className="text-[10px] text-slate-400 mt-2 line-clamp-2">{t.body.substring(0, 80)}...</div>}
+                <div className="text-[10px] text-slate-400 mt-2">Updated {t.updated}</div>
+                <button onClick={() => { setCommTitle(t.subject); setCommBody(t.body); setCommTab('compose'); }} className="mt-3 text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
+              </div>
+            ))}
+            {emailTemplates.filter(t => t.companyId === selectedCompany.id).length === 0 && (
+              <div className="sm:col-span-2 text-center text-xs text-slate-400 py-8">No email templates yet.</div>
+            )}
+          </div>
         </div>
       )}
     </div>

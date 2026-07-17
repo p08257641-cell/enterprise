@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse, CommunicationAnnouncement } from './src/types';
+import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate } from './src/types';
 import * as schema from './db/schema';
 import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb } from './db/repo';
 
@@ -2571,6 +2571,80 @@ app.post('/api/workflows', asyncHandler(async (req, res) => {
   await dbInsert(schema.workflows, newWf);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'WORKFLOW_CREATE', 'Administration', `Configured cross-module workflow: ${name}`);
   res.status(201).json(newWf);
+    }));
+
+// 8.1 Workflow Triggers (DB-backed, company-specific)
+const DEFAULT_WORKFLOW_TRIGGERS = [
+  { name: 'CRM Lead Created', event: 'CRM Lead Created', description: 'Fires immediately when a new lead is added to CRM.', enabled: true },
+  { name: 'Invoice Issued', event: 'Invoice Issued', description: 'Fires when an invoice is created/journaled.', enabled: true },
+  { name: 'Invoice Settled/Paid', event: 'Invoice Settled/Paid', description: 'Fires when an outstanding invoice balance changes to Paid.', enabled: true },
+  { name: 'Employee Registered', event: 'Employee Registered', description: 'Fires when HR submits a workforce record.', enabled: false },
+  { name: 'Inventory Low Stock Event', event: 'Inventory Low Stock Event', description: 'Fires when stock level drops below min safety thresholds.', enabled: false },
+  { name: 'Leave Approved', event: 'Leave Approved', description: 'Fires when a leave request is approved by a manager.', enabled: false },
+];
+
+app.get('/api/workflow-triggers', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  let rows = companyId ? await dbByCompany<any>(schema.workflowTriggers, companyId as string) : await dbAll<any>(schema.workflowTriggers);
+  if (rows.length === 0 && companyId) {
+    rows = DEFAULT_WORKFLOW_TRIGGERS.map((t, i) => ({ id: `wt-seed-${i}`, companyId, ...t, createdAt: new Date().toISOString() }));
+  }
+  res.json(rows);
+    }));
+
+app.post('/api/workflow-triggers', asyncHandler(async (req, res) => {
+  const { companyId, name, event, description, enabled } = req.body;
+  const trigger: WorkflowTrigger = {
+    id: `wt-${Date.now()}`,
+    companyId,
+    name,
+    event: event || name,
+    description: description || '',
+    enabled: enabled !== false,
+    createdAt: new Date().toISOString(),
+  };
+  const created = await dbInsert(schema.workflowTriggers, trigger);
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'TRIGGER_CREATE', 'Workflow & Automation', `Created workflow trigger "${name}".`);
+  res.status(201).json(created);
+    }));
+
+app.put('/api/workflow-triggers/:id/toggle', asyncHandler(async (req, res) => {
+  const { enabled } = req.body;
+  const updated = await dbUpdate(schema.workflowTriggers, req.params.id, { enabled });
+  res.json(updated);
+    }));
+
+// 8.2 Email Templates (DB-backed, company-specific)
+const DEFAULT_EMAIL_TEMPLATES = [
+  { name: 'Welcome New Employee', subject: 'Welcome to {Company}!', body: 'Dear {Name},\n\nWelcome to the team! We are excited to have you on board. Please review the onboarding checklist attached.\n\nBest regards,\nHR Team', updated: '2026-06-20' },
+  { name: 'Invoice Reminder', subject: 'Your invoice #{ID} is due', body: 'Dear {Customer},\n\nThis is a friendly reminder that invoice #{ID} for {Amount} is due on {DueDate}. Please process payment at your earliest convenience.\n\nBest regards,\nFinance Team', updated: '2026-06-18' },
+  { name: 'Password Reset', subject: 'Reset your account password', body: 'You requested a password reset. Click the link below to set a new password:\n\n{ResetLink}\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nIT Support', updated: '2026-05-30' },
+  { name: 'Monthly Payroll Notice', subject: 'Payslip for {Month} available', body: 'Dear {Name},\n\nYour payslip for {Month} is now available in the ERP portal. Please review and confirm.\n\nBest regards,\nPayroll Team', updated: '2026-07-01' },
+];
+
+app.get('/api/email-templates', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  let rows = companyId ? await dbByCompany<any>(schema.emailTemplates, companyId as string) : await dbAll<any>(schema.emailTemplates);
+  if (rows.length === 0 && companyId) {
+    rows = DEFAULT_EMAIL_TEMPLATES.map((t, i) => ({ id: `et-seed-${i}`, companyId, ...t, createdAt: new Date().toISOString() }));
+  }
+  res.json(rows);
+    }));
+
+app.post('/api/email-templates', asyncHandler(async (req, res) => {
+  const { companyId, name, subject, body } = req.body;
+  const template: EmailTemplate = {
+    id: `et-${Date.now()}`,
+    companyId,
+    name,
+    subject: subject || '',
+    body: body || '',
+    updated: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString(),
+  };
+  const created = await dbInsert(schema.emailTemplates, template);
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'EMAIL_TEMPLATE_CREATE', 'Communication', `Created email template "${name}".`);
+  res.status(201).json(created);
     }));
 
 // 9. API Keys settings

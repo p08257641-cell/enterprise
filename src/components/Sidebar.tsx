@@ -256,9 +256,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           id: 'Intelligence', label: 'Intelligence & Analytics', iconClass: 'bi bi-cpu', viewId: 'reports',
           subMenus: [
-            { id: 'wf-builder', label: 'Flow Builder', viewId: 'workflow', iconClass: 'bi bi-diagram-3', moduleId: 'Workflow & Automation' },
-            { id: 'wf-triggers', label: 'Triggers', viewId: 'wf-triggers', iconClass: 'bi bi-lightning', moduleId: 'Workflow & Automation' },
-            { id: 'wf-logs', label: 'Workflow Run Logs', viewId: 'wf-logs', iconClass: 'bi bi-list-check', moduleId: 'Workflow & Automation' },
+            { id: 'wf-builder', label: 'Workflow & Automation', viewId: 'workflow', iconClass: 'bi bi-diagram-3', moduleId: 'Workflow & Automation' },
             { id: 'ai-chat', label: 'Gemini AI Chat', viewId: 'ai-copilot', iconClass: 'bi bi-chat-left-text', moduleId: 'AI Assistant' },
             { id: 'ai-insights', label: 'AI Smart Insights', viewId: 'ai-insights', iconClass: 'bi bi-lightbulb', moduleId: 'AI Assistant' },
           ]

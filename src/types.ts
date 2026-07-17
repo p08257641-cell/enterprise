@@ -397,6 +397,26 @@ export interface ERPWorkflow {
   createdAt: string;
 }
 
+export interface WorkflowTrigger {
+  id: string;
+  companyId: string;
+  name: string;
+  event: string;
+  description: string;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface EmailTemplate {
+  id: string;
+  companyId: string;
+  name: string;
+  subject: string;
+  body: string;
+  updated: string;
+  createdAt: string;
+}
+
 export interface APIKey {
   id: string;
   companyId: string;
