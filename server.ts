@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse } from './src/types';
+import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse, CommunicationAnnouncement } from './src/types';
 import * as schema from './db/schema';
 import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb } from './db/repo';
 
@@ -709,6 +709,40 @@ app.post('/api/lms-courses', asyncHandler(async (req, res) => {
   };
   const created = await dbInsert(schema.lmsCourses, course);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'LMS_COURSE_CREATE', 'Learning Management (LMS)', `Created LMS course "${title}".`);
+  res.status(201).json(created);
+    }));
+
+// 3.4.4 Communication announcements (DB-backed, company-specific)
+const DEFAULT_ANNOUNCEMENTS = [
+  { title: 'Q3 All-Hands Meeting — July 15th', body: 'Join us at 10 AM in the main conference hall or via Zoom. Attendance is mandatory.', author: 'Elena Rostova', channel: 'Company', date: '2026-07-08', pinned: true },
+  { title: 'New Safety Protocol for Plant A', body: 'Please review the updated OSHA guidelines uploaded to the Document Locker before Friday.', author: 'James Okoro', channel: 'Operations', date: '2026-07-07', pinned: false },
+  { title: 'IT Maintenance Window — Sunday 2 AM', body: 'ERP system will be unavailable from 2 AM to 4 AM Sunday for scheduled maintenance.', author: 'IT Team', channel: 'IT', date: '2026-07-06', pinned: false },
+];
+
+app.get('/api/announcements', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  let rows = companyId ? await dbByCompany<any>(schema.announcements, companyId as string) : await dbAll<any>(schema.announcements);
+  if (rows.length === 0 && companyId) {
+    rows = DEFAULT_ANNOUNCEMENTS.map((a, i) => ({ id: `ann-seed-${i}`, companyId, ...a, createdAt: new Date().toISOString() }));
+  }
+  res.json(rows);
+    }));
+
+app.post('/api/announcements', asyncHandler(async (req, res) => {
+  const { companyId, title, body, author, channel, pinned } = req.body;
+  const announcement: CommunicationAnnouncement = {
+    id: `ann-${Date.now()}`,
+    companyId,
+    title,
+    body: body || '',
+    author: author || 'Admin',
+    channel: channel || 'Company',
+    date: new Date().toISOString().split('T')[0],
+    pinned: Boolean(pinned),
+    createdAt: new Date().toISOString(),
+  };
+  const created = await dbInsert(schema.announcements, announcement);
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'ANNOUNCEMENT_CREATE', 'Communication', `Published announcement "${title}".`);
   res.status(201).json(created);
     }));
 

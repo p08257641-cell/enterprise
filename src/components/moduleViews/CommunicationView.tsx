@@ -3,9 +3,10 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { modalAlert } from '../../utils/modal';
+import { CommunicationAnnouncement } from '../../types';
 
 export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement } = props;
 
   type CommTab = 'feed' | 'compose' | 'chat' | 'email';
   const commTabFromView = (): CommTab =>
@@ -20,13 +21,10 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
     { id: 'chat', label: 'Team Chat' },
     { id: 'email', label: 'Email Templates' },
   ];
-  const [announcements, setAnnouncements] = useState([
-    { id: 'A1', title: 'Q3 All-Hands Meeting — July 15th', body: 'Join us at 10 AM in the main conference hall or via Zoom. Attendance is mandatory.', author: 'Elena Rostova', channel: 'Company', date: '2026-07-08', pinned: true },
-    { id: 'A2', title: 'New Safety Protocol for Plant A', body: 'Please review the updated OSHA guidelines uploaded to the Document Locker before Friday.', author: 'James Okoro', channel: 'Operations', date: '2026-07-07', pinned: false },
-    { id: 'A3', title: 'IT Maintenance Window — Sunday 2 AM', body: 'ERP system will be unavailable from 2 AM to 4 AM Sunday for scheduled maintenance.', author: 'IT Team', channel: 'IT', date: '2026-07-06', pinned: false },
-  ]);
+  const localAnnouncements = announcements.filter(a => a.companyId === selectedCompany.id);
   const [commTitle, setCommTitle] = useState(''); const [commBody, setCommBody] = useState('');
   const [commChannel, setCommChannel] = useState('Company'); const [commSent, setCommSent] = useState(false);
+  const [commPinned, setCommPinned] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ who: string; msg: string; me: boolean }[]>([
     { who: 'Elena Rostova', msg: 'Morning team — Q3 targets are locked. Let us sync at 11.', me: false },
     { who: 'Kaito Matsuda', msg: 'On it. Pulling the manufacturing variance now.', me: false },
@@ -38,6 +36,12 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
     <div>
       <PageHeader title="Communication Hub" subtitle="Company-wide announcements, team messaging and email/SMS broadcast campaigns."
         action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => setCommTab('compose')}>New Announcement</PrimaryBtn>} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <StatCard label="Announcements" value={localAnnouncements.length} sub={`${localAnnouncements.filter(a => a.pinned).length} pinned`} icon="bi bi-megaphone" accent />
+        <StatCard label="Active Channels" value={new Set(localAnnouncements.map(a => a.channel)).size} sub="Broadcast groups" icon="bi bi-collection" color="text-slate-900" />
+        <StatCard label="Team Chat" value={chatMessages.length} sub="Messages this session" icon="bi bi-chat-dots" color="text-sky-600" />
+        <StatCard label="Email Templates" value={4} sub="Reusable campaigns" icon="bi bi-envelope" color="text-violet-600" />
+      </div>
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {commTabs.map(t => (
           <button key={t.id} onClick={() => setCommTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${commTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
@@ -45,7 +49,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
       </div>
       {commTab === 'feed' && (
         <div className="space-y-4">
-          {announcements.map(a => (
+          {localAnnouncements.map(a => (
             <div key={a.id} className={`bg-white border rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all ${a.pinned ? 'border-slate-900' : 'border-slate-200'}`}>
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -69,11 +73,12 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
             <div className="space-y-4">
               <div><Label>Title</Label><Input value={commTitle} onChange={e => setCommTitle(e.target.value)} placeholder="Announcement title…" /></div>
               <div><Label>Channel</Label><Select value={commChannel} onChange={e => setCommChannel(e.target.value)}><option>Company</option><option>Operations</option><option>Finance</option><option>IT</option><option>HR</option></Select></div>
+              <div className="flex items-center gap-2"><input type="checkbox" id="comm-pinned" checked={commPinned} onChange={e => setCommPinned(e.target.checked)} className="rounded border-slate-300" /><Label>Pin to top</Label></div>
               <div><Label>Message</Label><textarea value={commBody} onChange={e => setCommBody(e.target.value)} rows={5} placeholder="Write your announcement…" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" /></div>
               <PrimaryBtn icon="bi bi-send" onClick={() => {
                 if (!commTitle || !commBody) return;
-                setAnnouncements(prev => [{ id: `A${prev.length + 1}`, title: commTitle, body: commBody, author: selectedUser.name, channel: commChannel, date: new Date().toISOString().split('T')[0], pinned: false }, ...prev]);
-                setCommSent(true); setCommTitle(''); setCommBody('');
+                onAddAnnouncement({ companyId: selectedCompany.id, title: commTitle, body: commBody, author: selectedUser.name, channel: commChannel, pinned: commPinned });
+                setCommSent(true); setCommTitle(''); setCommBody(''); setCommPinned(false);
                 setTimeout(() => setCommSent(false), 3000);
               }}>Publish Announcement</PrimaryBtn>
             </div>

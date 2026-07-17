@@ -10,7 +10,7 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -199,6 +199,9 @@ export interface ModuleViewsProps {
   // LMS Courses
   lmsCourses: LMSCourse[];
   onAddLmsCourse: (course: Omit<LMSCourse, 'id' | 'enrolled' | 'completion' | 'createdAt'>) => void;
+  // Communication announcements
+  announcements: CommunicationAnnouncement[];
+  onAddAnnouncement: (announcement: Omit<CommunicationAnnouncement, 'id' | 'date' | 'createdAt'>) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {
@@ -317,12 +320,15 @@ export const PageHeader = ({ title, subtitle, action }: { title: string; subtitl
 export const StatCard = ({ label, value, sub, icon, accent = false, color = '' }: {
   label: string; value: string | number; sub?: string; icon: string; accent?: boolean; color?: string; key?: React.Key;
 }) => (
-  <div className={`rounded-xl border p-5 flex flex-col gap-3 shadow-xs hover:shadow-sm transition-all duration-200 ${accent ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'}`}>
+  <div className={`group relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-3 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${accent ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'}`}>
+    <div className={`pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent ? 'bg-white/10' : 'bg-slate-200/60'}`} />
     <div className="flex items-center justify-between">
-      <span className="stat-label">{label}</span>
-      <i className={`${icon} text-sm ${accent ? 'text-slate-400' : 'text-slate-300'}`}></i>
+      <span className={`stat-label ${accent ? 'text-slate-300' : 'text-slate-500'}`}>{label}</span>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm ${accent ? 'bg-white/10 text-slate-200' : 'bg-slate-900/5 text-slate-700'}`}>
+        <i className={`${icon} ${color || ''}`}></i>
+      </span>
     </div>
-    <div className={`text-2xl font-bold tracking-tight font-sans tabular-nums ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
+    <div className={`text-3xl font-bold tracking-tight font-sans tabular-nums leading-none ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
     {sub && <p className={`text-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
   </div>
 );

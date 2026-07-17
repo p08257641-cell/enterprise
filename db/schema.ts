@@ -307,6 +307,18 @@ export const lmsCourses = pgTable('lms_courses', {
   createdAt: text('created_at'),
 });
 
+export const announcements = pgTable('announcements', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  body: text('body'),
+  author: text('author'),
+  channel: text('channel'),
+  date: text('date'),
+  pinned: boolean('pinned'),
+  createdAt: text('created_at'),
+});
+
 export const tickets = pgTable('tickets', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),

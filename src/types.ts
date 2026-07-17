@@ -338,6 +338,18 @@ export interface LMSCourse {
   createdAt: string;
 }
 
+export interface CommunicationAnnouncement {
+  id: string;
+  companyId: string;
+  title: string;
+  body: string;
+  author: string;
+  channel: string;
+  date: string;
+  pinned: boolean;
+  createdAt: string;
+}
+
 export interface SupportTicket {
   id: string;
   companyId: string;
