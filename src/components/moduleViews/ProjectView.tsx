@@ -304,75 +304,133 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
 
       {timeModal.selected && (
         <ViewModal title={timeModal.selected.title} subtitle={`${timeModal.selected.assigneeName || 'Unassigned'} — Time Log`} onClose={timeModal.close}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Task', value: timeModal.selected.title },
-              { label: 'Assignee', value: timeModal.selected.assigneeName || 'Unassigned' },
-              { label: 'Due', value: timeModal.selected.due || '—' },
-              { label: 'Hours', value: `${timeModal.selected.hours}h` },
-              { label: 'Billable', value: timeModal.selected.billable ? 'Yes' : 'No' },
-              { label: 'Status', value: timeModal.selected.status },
-              { label: 'Priority', value: timeModal.selected.priority },
-            ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
-            ))}
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center"><i className="bi bi-clock-fill text-white text-sm"></i></div>
+              <div className="flex-1">
+                <div className="text-xs font-bold text-slate-900">{timeModal.selected.title}</div>
+                <div className="text-[10px] text-slate-500">{timeModal.selected.assigneeName || 'Unassigned'}</div>
+              </div>
+              <Badge label={timeModal.selected.status} variant={timeModal.selected.status === 'Done' ? 'success' : 'info'} />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: 'Hours Logged', value: `${timeModal.selected.hours}h`, icon: 'bi bi-stopwatch' },
+                { label: 'Billable', value: timeModal.selected.billable ? 'Yes' : 'No', icon: timeModal.selected.billable ? 'bi bi-check-circle-fill text-emerald-500' : 'bi bi-x-circle-fill text-slate-400' },
+                { label: 'Priority', value: timeModal.selected.priority, icon: timeModal.selected.priority === 'Critical' ? 'bi bi-exclamation-triangle-fill text-rose-500' : timeModal.selected.priority === 'High' ? 'bi bi-arrow-up-circle-fill text-amber-500' : 'bi bi-circle-fill text-blue-400' },
+                { label: 'Due Date', value: timeModal.selected.due || '—', icon: 'bi bi-calendar3' },
+              ].map(f => (
+                <div key={f.label} className="bg-white border border-slate-100 rounded-xl p-3 text-center">
+                  <i className={`${f.icon} text-slate-400 text-xs mb-1 block`}></i>
+                  <div className="text-[10px] text-slate-500 mb-0.5">{f.label}</div>
+                  <div className="text-sm font-bold text-slate-900">{f.value}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </ViewModal>
       )}
 
       {resourceModal.selected && (
         <ViewModal title={`${resourceModal.selected.firstName} ${resourceModal.selected.lastName}`} subtitle={resourceModal.selected.designation} onClose={resourceModal.close}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Employee', value: `${resourceModal.selected.firstName} ${resourceModal.selected.lastName}` },
-              { label: 'Department', value: resourceModal.selected.department },
-              { label: 'Designation', value: resourceModal.selected.designation },
-              { label: 'Utilisation', value: `${resourceModal.selected.util}%` },
-              { label: 'Tasks Assigned', value: resourceModal.selected.taskCount },
-              { label: 'Status', value: resourceModal.selected.status },
-            ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
-            ))}
-          </div>
-          <div>
-            <div className="flex justify-between text-xs mb-1.5"><span className="text-slate-500">Utilisation</span><span className="font-bold text-slate-900">{resourceModal.selected.util}%</span></div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${resourceModal.selected.util >= 90 ? 'bg-rose-400' : resourceModal.selected.util >= 70 ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${resourceModal.selected.util}%` }} /></div>
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-white text-xs font-bold">{resourceModal.selected.firstName?.[0]}{resourceModal.selected.lastName?.[0]}</div>
+              <div className="flex-1">
+                <div className="text-xs font-bold text-slate-900">{resourceModal.selected.firstName} {resourceModal.selected.lastName}</div>
+                <div className="text-[10px] text-slate-500">{resourceModal.selected.department} · {resourceModal.selected.designation}</div>
+              </div>
+              <Badge label={resourceModal.selected.status} variant={resourceModal.selected.status === 'Active' ? 'success' : 'default'} />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {[
+                { label: 'Department', value: resourceModal.selected.department, icon: 'bi bi-building' },
+                { label: 'Tasks Assigned', value: resourceModal.selected.taskCount, icon: 'bi bi-list-task' },
+                { label: 'Utilisation', value: `${resourceModal.selected.util}%`, icon: 'bi bi-speedometer2' },
+              ].map(f => (
+                <div key={f.label} className="bg-white border border-slate-100 rounded-xl p-3 text-center">
+                  <i className={`${f.icon} text-slate-400 text-xs mb-1 block`}></i>
+                  <div className="text-[10px] text-slate-500 mb-0.5">{f.label}</div>
+                  <div className="text-sm font-bold text-slate-900">{f.value}</div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Utilisation</span><span className="font-bold text-slate-900">{resourceModal.selected.util}%</span></div>
+              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${resourceModal.selected.util >= 90 ? 'bg-rose-400' : resourceModal.selected.util >= 70 ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${resourceModal.selected.util}%` }} /></div>
+              <div className="flex justify-between text-[9px] text-slate-400 mt-1"><span>0%</span><span>100%</span></div>
+            </div>
           </div>
         </ViewModal>
       )}
 
       {taskModal.selected && (
         <ViewModal title={taskModal.selected.title} subtitle={`${taskModal.selected.priority} · ${taskModal.selected.status}`} onClose={taskModal.close}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Title', value: taskModal.selected.title },
-              { label: 'Status', value: taskModal.selected.status },
-              { label: 'Priority', value: taskModal.selected.priority },
-              { label: 'Assignee', value: taskModal.selected.assigneeName || 'Unassigned' },
-              { label: 'Due', value: taskModal.selected.due || '—' },
-              { label: 'Description', value: taskModal.selected.description || '—' },
-            ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
-            ))}
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${taskModal.selected.status === 'Done' ? 'bg-emerald-500' : taskModal.selected.status === 'In Progress' ? 'bg-blue-500' : taskModal.selected.status === 'Review' ? 'bg-amber-500' : 'bg-slate-300'}`}>
+                <i className={`${taskModal.selected.status === 'Done' ? 'bi bi-check-lg' : taskModal.selected.status === 'In Progress' ? 'bi bi-arrow-repeat' : taskModal.selected.status === 'Review' ? 'bi bi-eye' : 'bi bi-circle'} text-white text-sm`}></i>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-bold text-slate-900">{taskModal.selected.title}</div>
+                <div className="text-[10px] text-slate-500">{taskModal.selected.assigneeName || 'Unassigned'}</div>
+              </div>
+              <Badge label={taskModal.selected.status} variant={taskModal.selected.status === 'Done' ? 'success' : taskModal.selected.status === 'In Progress' ? 'info' : taskModal.selected.status === 'Review' ? 'warning' : 'default'} />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: 'Priority', value: taskModal.selected.priority, color: taskModal.selected.priority === 'Critical' ? 'bg-rose-50 text-rose-700 border-rose-200' : taskModal.selected.priority === 'High' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200' },
+                { label: 'Assignee', value: taskModal.selected.assigneeName || 'Unassigned', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+                { label: 'Due', value: taskModal.selected.due || '—', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+                { label: 'Created', value: taskModal.selected.createdAt ? new Date(taskModal.selected.createdAt).toLocaleDateString() : '—', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+              ].map(f => (
+                <div key={f.label} className={`border rounded-xl p-3 text-center ${f.color}`}>
+                  <div className="text-[10px] opacity-60 mb-0.5">{f.label}</div>
+                  <div className="text-xs font-bold">{f.value}</div>
+                </div>
+              ))}
+            </div>
+            {taskModal.selected.description && (
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <div className="text-[10px] text-slate-500 mb-1.5">Description</div>
+                <div className="text-xs text-slate-700 leading-relaxed">{taskModal.selected.description}</div>
+              </div>
+            )}
           </div>
         </ViewModal>
       )}
 
       {msModal.selected && (
         <ViewModal title={msModal.selected.name} subtitle={`${msModal.selected.status} · ${msModal.selected.completion}% complete`} onClose={msModal.close}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Name', value: msModal.selected.name },
-              { label: 'Status', value: msModal.selected.status },
-              { label: 'Due', value: msModal.selected.due || '—' },
-              { label: 'Completion', value: `${msModal.selected.completion}%` },
-              { label: 'Created', value: msModal.selected.createdAt ? new Date(msModal.selected.createdAt).toLocaleDateString() : '—' },
-            ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
-            ))}
-          </div>
-          <div className="mt-4">
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${msModal.selected.completion === 100 ? 'bg-emerald-500' : 'bg-slate-800'}`} style={{ width: `${msModal.selected.completion}%` }} /></div>
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${msModal.selected.status === 'Completed' ? 'bg-emerald-500' : msModal.selected.status === 'Overdue' ? 'bg-rose-500' : msModal.selected.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-300'}`}>
+                <i className="bi bi-flag-fill text-white text-sm"></i>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-bold text-slate-900">{msModal.selected.name}</div>
+                <div className="text-[10px] text-slate-500">Due: {msModal.selected.due || '—'}</div>
+              </div>
+              <Badge label={msModal.selected.status} variant={msModal.selected.status === 'Completed' ? 'success' : msModal.selected.status === 'Overdue' ? 'danger' : msModal.selected.status === 'In Progress' ? 'info' : 'default'} />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {[
+                { label: 'Status', value: msModal.selected.status, icon: 'bi bi-tag' },
+                { label: 'Completion', value: `${msModal.selected.completion}%`, icon: 'bi bi-bar-chart-steps' },
+                { label: 'Created', value: msModal.selected.createdAt ? new Date(msModal.selected.createdAt).toLocaleDateString() : '—', icon: 'bi bi-calendar-plus' },
+              ].map(f => (
+                <div key={f.label} className="bg-white border border-slate-100 rounded-xl p-3 text-center">
+                  <i className={`${f.icon} text-slate-400 text-xs mb-1 block`}></i>
+                  <div className="text-[10px] text-slate-500 mb-0.5">{f.label}</div>
+                  <div className="text-sm font-bold text-slate-900">{f.value}</div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Progress</span><span className="font-bold text-slate-900">{msModal.selected.completion}%</span></div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${msModal.selected.completion === 100 ? 'bg-emerald-500' : msModal.selected.status === 'Overdue' ? 'bg-rose-400' : 'bg-slate-800'}`} style={{ width: `${msModal.selected.completion}%` }} /></div>
+              <div className="flex justify-between text-[9px] text-slate-400 mt-1"><span>0%</span><span>100%</span></div>
+            </div>
           </div>
         </ViewModal>
       )}
