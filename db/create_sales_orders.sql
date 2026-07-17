@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS sales_orders (
+  "id" text PRIMARY KEY,
+  "companyId" text,
+  "orderNumber" text,
+  "customerName" text,
+  "customerId" text,
+  "items" jsonb,
+  "subtotal" real,
+  "tax" real,
+  "discount" real,
+  "total" real,
+  "status" text,
+  "priority" text,
+  "assignedTo" text,
+  "assignedToName" text,
+  "orderDate" text,
+  "expectedDelivery" text,
+  "notes" text,
+  "createdAt" text
+);
