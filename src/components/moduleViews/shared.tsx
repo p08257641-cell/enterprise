@@ -10,7 +10,8 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone,
+  Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -214,6 +215,41 @@ export interface ModuleViewsProps {
   onCreateProjectMilestone: (ms: { companyId: string; name: string; due?: string; status?: string; completion?: number }) => void;
   onUpdateProjectMilestone: (id: string, values: any) => void;
   onDeleteProjectMilestone: (id: string) => void;
+  // Procurement
+  vendors: Vendor[];
+  purchaseOrders: PurchaseOrder[];
+  rfqs: RFQ[];
+  onCreateVendor: (data: { name: string; type: string; contact: string; email: string; rating: number }) => void;
+  onUpdateVendor: (id: string, values: any) => void;
+  onDeleteVendor: (id: string) => void;
+  onCreatePurchaseOrder: (data: { vendorId: string; vendorName: string; item: string; qty: number; unitPrice: number }) => void;
+  onUpdatePurchaseOrder: (id: string, values: any) => void;
+  onDeletePurchaseOrder: (id: string) => void;
+  onCreateRFQ: (data: { item: string; vendorsInvited: number }) => void;
+  onUpdateRFQ: (id: string, values: any) => void;
+  onDeleteRFQ: (id: string) => void;
+  // Manufacturing
+  workOrders: WorkOrder[];
+  bomItems: BOMItem[];
+  qualityChecks: QualityCheck[];
+  onCreateWorkOrder: (data: { product: string; qty: number; line: string; dueDate?: string }) => void;
+  onUpdateWorkOrder: (id: string, values: any) => void;
+  onDeleteWorkOrder: (id: string) => void;
+  onCreateBOMItem: (data: { product: string; part: string; qty: number; unit: string; cost: number }) => void;
+  onDeleteBOMItem: (id: string) => void;
+  onCreateQualityCheck: (data: { check: string; result: string; inspector: string; notes?: string }) => void;
+  onUpdateQualityCheck: (id: string, values: any) => void;
+  onDeleteQualityCheck: (id: string) => void;
+  // Asset Maintenance
+  maintenanceTasks: MaintenanceTask[];
+  onCreateMaintenanceTask: (data: { assetId: string; assetName: string; task: string; due: string; owner: string }) => void;
+  onUpdateMaintenanceTask: (id: string, values: any) => void;
+  onDeleteMaintenanceTask: (id: string) => void;
+  // Documents
+  managedDocuments: ManagedDocument[];
+  onCreateDocument: (data: { name: string; type: string; size?: string }) => void;
+  onUpdateDocument: (id: string, values: any) => void;
+  onDeleteDocument: (id: string) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {
@@ -320,12 +356,12 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
 // ── Shared UI primitives ─────────────────────────────────────────────────────
 
 export const PageHeader = ({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) => (
-  <div className="flex items-start justify-between pb-5 border-b border-slate-200 mb-6">
+  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between pb-5 border-b border-slate-200 mb-6 gap-3">
     <div>
       <h1 className="text-xl font-bold tracking-tight text-slate-900 page-title">{title}</h1>
       <p className="text-sm text-slate-500 mt-0.5 page-subtitle">{subtitle}</p>
     </div>
-    {action && <div className="shrink-0 ml-4">{action}</div>}
+    {action && <div className="shrink-0">{action}</div>}
   </div>
 );
 

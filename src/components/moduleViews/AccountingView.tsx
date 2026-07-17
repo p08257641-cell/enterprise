@@ -1524,10 +1524,24 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Tax Return Modal */}
         {showTaxReturnModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">{editingTaxReturn ? 'Edit Tax Return' : 'New Tax Return'}</h2>
-              <div className="space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => { setShowTaxReturnModal(false); setEditingTaxReturn(null); }}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                      <i className="bi bi-file-earmark-plus text-emerald-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">{editingTaxReturn ? 'Edit Tax Return' : 'New Tax Return'}</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Calculate and file corporate tax returns for a specific period.</p>
+                </div>
+                <button type="button" onClick={() => { setShowTaxReturnModal(false); setEditingTaxReturn(null); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div><Label>Period *</Label><Input value={trPeriod} onChange={e => setTrPeriod(e.target.value)} placeholder="Q3 2026" required /></div>
                   <div><Label>Due Date *</Label><Input type="date" value={trDueDate} onChange={e => setTrDueDate(e.target.value)} required /></div>
@@ -1539,9 +1553,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div><Label>Status</Label><Select value={trStatus} onChange={e => setTrStatus(e.target.value)}><option>Draft</option><option>In Review</option><option>Filed</option></Select></div>
               </div>
-              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => { setShowTaxReturnModal(false); setEditingTaxReturn(null); }}>Cancel</SecBtn>
-                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => { setShowTaxReturnModal(false); setEditingTaxReturn(null); }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
                   if (!trPeriod || !trDueDate || trTaxableAmount === '' || trTaxAmount === '') return void modalAlert('Period, due date, taxable amount and tax amount required', { variant: 'warning' });
                   const tc = localTaxCodes.find(t => t.id === trTaxCodeId);
                   const taxable = Number(trTaxableAmount), tax = Number(trTaxAmount);
@@ -1551,7 +1566,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     onCreateTaxReturn({ period: trPeriod, taxCodeId: trTaxCodeId, taxCodeName: tc?.name || '', taxableAmount: taxable, taxAmount: tax, taxableIncome: taxable, taxDue: tax, netPayable: taxable - tax, dueDate: trDueDate, status: trStatus });
                   }
                   setShowTaxReturnModal(false); setEditingTaxReturn(null); setTrPeriod(''); setTrTaxCodeId(''); setTrTaxableAmount(''); setTrTaxAmount(''); setTrDueDate(''); setTrStatus('Draft');
-                }}>{editingTaxReturn ? 'Save Changes' : 'Create Return'}</PrimaryBtn>
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">{editingTaxReturn ? 'Save Changes' : 'Create Return'}</button>
               </div>
             </div>
           </div>
@@ -1560,10 +1575,24 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Customer Payment Modal */}
         {showCustomerPaymentModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Record Customer Payment</h2>
-              <div className="space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowCustomerPaymentModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
+                      <i className="bi bi-receipt text-violet-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">Record Customer Payment</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Manually apply customer payment to an outstanding invoice.</p>
+                </div>
+                <button type="button" onClick={() => setShowCustomerPaymentModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
                 <div><Label>Invoice *</Label><Select value={cpInvoiceId} onChange={e => { const inv = localInvoices.find(i => i.id === e.target.value); setCpInvoiceId(e.target.value); if (inv) setCpAmount(String(inv.total ?? 0)); }}>
                   <option value="">Select invoice...</option>
                   {localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').map(inv => <option key={inv.id} value={inv.id}>{inv.invoiceNumber} — {inv.customerName} (${inv.total ?? 0})</option>)}
@@ -1574,14 +1603,15 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div><Label>Reference</Label><Input value={cpRef} onChange={e => setCpRef(e.target.value)} placeholder="Txn reference" /></div>
               </div>
-              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => setShowCustomerPaymentModal(false)}>Cancel</SecBtn>
-                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowCustomerPaymentModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
                   const inv = localInvoices.find(i => i.id === cpInvoiceId);
                   if (!inv || !cpAmount) return void modalAlert('Invoice and amount required', { variant: 'warning' });
                   onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(cpAmount), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: cpMethod, reference: cpRef, bankAccountId: 'ba-1', createdBy: selectedUser.id });
                   setShowCustomerPaymentModal(false); setCpInvoiceId(''); setCpAmount(''); setCpRef('');
-                }}>Record Payment</PrimaryBtn>
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Record Payment</button>
               </div>
             </div>
           </div>
@@ -1589,10 +1619,24 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Fixed Asset Modal */}
         {showAssetModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Register Fixed Asset</h2>
-              <div className="space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowAssetModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
+                      <i className="bi bi-journal-text text-white text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">Register Fixed Asset</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Add a physical asset to the register to track depreciation.</p>
+                </div>
+                <button type="button" onClick={() => setShowAssetModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div><Label>Asset Code *</Label><Input value={assetCode} onChange={e => setAssetCode(e.target.value)} /></div>
                   <div><Label>Name *</Label><Input value={assetName} onChange={e => setAssetName(e.target.value)} /></div>
@@ -1608,13 +1652,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div><Label>Depreciation Method</Label><Select value={assetMethod} onChange={e => setAssetMethod(e.target.value)}><option>Straight Line</option><option>Double Declining</option><option>Units of Production</option></Select></div>
               </div>
-              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => setShowAssetModal(false)}>Cancel</SecBtn>
-                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowAssetModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
                   if (!assetCode || !assetName || !assetCost) return void modalAlert('Code, name and cost required', { variant: 'warning' });
                   onCreateFixedAsset({ companyId: selectedCompany.id, assetCode, name: assetName, description: '', category: assetCategory, purchaseDate: new Date().toISOString().split('T')[0], purchasePrice: Number(assetCost), salvageValue: Number(assetSalvage), usefulLifeYears: Number(assetLife), depreciationMethod: assetMethod, location: assetLocation, createdBy: selectedUser.id });
                   setShowAssetModal(false); setAssetName(''); setAssetCost('');
-                }}>Register Asset</PrimaryBtn>
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Register Asset</button>
               </div>
             </div>
           </div>
@@ -1622,10 +1667,24 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Budget Modal */}
         {showBudgetModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Budget</h2>
-              <div className="space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowBudgetModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                      <i className="bi bi-cash-stack text-amber-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">New Budget</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Set a spending budget limit for a fiscal period.</p>
+                </div>
+                <button type="button" onClick={() => setShowBudgetModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
                 <div><Label>Budget Name *</Label><Input value={budName} onChange={e => setBudName(e.target.value)} placeholder="Q3 Marketing Budget" /></div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div><Label>Fiscal Year</Label><Input value={budFiscalYear} onChange={e => setBudFiscalYear(e.target.value)} /></div>
@@ -1633,13 +1692,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div><Label>Budget Amount (USD) *</Label><Input type="number" value={budAmount} onChange={e => setBudAmount(e.target.value)} /></div>
               </div>
-              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => setShowBudgetModal(false)}>Cancel</SecBtn>
-                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowBudgetModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
                   if (!budName || !budAmount) return void modalAlert('Name and amount required', { variant: 'warning' });
                   onCreateBudget({ companyId: selectedCompany.id, name: budName, fiscalYear: budFiscalYear, glAccountId: '', accountCode: '', accountName: '', budgetAmount: Number(budAmount), period: budPeriod, createdBy: selectedUser.id });
                   setShowBudgetModal(false); setBudName(''); setBudAmount('');
-                }}>Create Budget</PrimaryBtn>
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Budget</button>
               </div>
             </div>
           </div>
@@ -1647,10 +1707,24 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Cost Center Modal */}
         {showCostCenterModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Cost Center</h2>
-              <div className="space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowCostCenterModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <i className="bi bi-building text-blue-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">New Cost Center</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Establish a department or unit cost tracking node.</p>
+                </div>
+                <button type="button" onClick={() => setShowCostCenterModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div><Label>Code *</Label><Input value={ccCode} onChange={e => setCcCode(e.target.value)} /></div>
                   <div><Label>Name *</Label><Input value={ccName} onChange={e => setCcName(e.target.value)} /></div>
@@ -1660,13 +1734,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div><Label>Budget (USD)</Label><Input type="number" value={ccBudget} onChange={e => setCcBudget(e.target.value)} /></div>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                <SecBtn onClick={() => setShowCostCenterModal(false)}>Cancel</SecBtn>
-                <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowCostCenterModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
                   if (!ccCode || !ccName) return void modalAlert('Code and name required', { variant: 'warning' });
                   onCreateCostCenter({ companyId: selectedCompany.id, code: ccCode, name: ccName, departmentId: '', departmentName: '', managerName: ccManager, budget: Number(ccBudget), createdBy: selectedUser.id });
                   setShowCostCenterModal(false); setCcName(''); setCcBudget('');
-                }}>Create Cost Center</PrimaryBtn>
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Cost Center</button>
               </div>
             </div>
           </div>

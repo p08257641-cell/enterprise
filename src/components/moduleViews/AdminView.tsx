@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { modalAlert } from '../../utils/modal';
@@ -213,23 +213,36 @@ const [deptParent, setDeptParent] = useState('');
 
               {/* Branch Modal */}
               {showBranchModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                  <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Add Branch</h2>
-                    <div className="space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowBranchModal(false)}>
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                            <i className="bi bi-building text-blue-600 text-xs"></i>
+                          </div>
+                          <h3 className="text-sm font-bold text-slate-900">Add Branch</h3>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new company location, office or facility.</p>
+                      </div>
+                      <button type="button" onClick={() => setShowBranchModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                        <i className="bi bi-x text-xl"></i>
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-4">
                       <div><Label>Branch Name *</Label><Input value={branchName} onChange={e => setBranchName(e.target.value)} placeholder="Accra Branch" /></div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div><Label>Location</Label><Input value={branchLocation} onChange={e => setBranchLocation(e.target.value)} placeholder="Accra, Ghana" /></div>
                         <div><Label>Type</Label><Select value={branchType} onChange={e => setBranchType(e.target.value)}><option>Main HQ</option><option>Regional</option><option>Plant</option><option>Warehouse</option></Select></div>
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                      <SecBtn onClick={() => setShowBranchModal(false)}>Cancel</SecBtn>
-                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                      <button type="button" onClick={() => setShowBranchModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                      <button type="button" onClick={() => {
                         if (!branchName) return void modalAlert('Branch name required', { variant: 'warning' });
                         onAddBranch({ companyId: selectedCompany.id, name: branchName, location: branchLocation, isMain: branchType === 'Main HQ' });
                         setShowBranchModal(false); setBranchName('');
-                      }}>Create Branch</PrimaryBtn>
+                      }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Branch</button>
                     </div>
                   </div>
                 </div>
@@ -237,21 +250,34 @@ const [deptParent, setDeptParent] = useState('');
 
               {/* Department Modal */}
               {showDeptModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                  <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Add Department</h2>
-                    <div className="space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowDeptModal(false)}>
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
+                            <i className="bi bi-diagram-3 text-violet-600 text-xs"></i>
+                          </div>
+                          <h3 className="text-sm font-bold text-slate-900">Add Department</h3>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new organisational unit within this company.</p>
+                      </div>
+                      <button type="button" onClick={() => setShowDeptModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                        <i className="bi bi-x text-xl"></i>
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-4">
                       <div><Label>Department Name *</Label><Input value={deptName} onChange={e => setDeptName(e.target.value)} placeholder="Operations" /></div>
                       <div><Label>Manager</Label><Input value={deptManager} onChange={e => setDeptManager(e.target.value)} placeholder="Manager name" /></div>
                       <div><Label>Reports To</Label><Select value={deptParent} onChange={e => setDeptParent(e.target.value)}><option value="">Top Level (no parent)</option>{companyDepts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></div>
                     </div>
-                    <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                      <SecBtn onClick={() => setShowDeptModal(false)}>Cancel</SecBtn>
-                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                      <button type="button" onClick={() => setShowDeptModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                      <button type="button" onClick={() => {
                         if (!deptName) return void modalAlert('Department name required', { variant: 'warning' });
                         onAddDepartment({ companyId: selectedCompany.id, name: deptName, managerId: '', budget: 0, parentId: deptParent || undefined });
                         setShowDeptModal(false); setDeptName('');
-                      }}>Create Department</PrimaryBtn>
+                      }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Department</button>
                     </div>
                   </div>
                 </div>
@@ -259,21 +285,34 @@ const [deptParent, setDeptParent] = useState('');
 
               {/* Edit Department Modal */}
               {editDeptModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                  <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Edit Department</h2>
-                    <div className="space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setEditDeptModal(null)}>
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
+                            <i className="bi bi-pencil text-violet-600 text-xs"></i>
+                          </div>
+                          <h3 className="text-sm font-bold text-slate-900">Edit Department</h3>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Update this department's name, manager, and budget.</p>
+                      </div>
+                      <button type="button" onClick={() => setEditDeptModal(null)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                        <i className="bi bi-x text-xl"></i>
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-4">
                       <div><Label>Department Name *</Label><Input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} /></div>
                       <div><Label>Manager</Label><Select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)}><option value="">Unassigned</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
                       <div><Label>Budget</Label><Input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} /></div>
                     </div>
-                    <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-                      <SecBtn onClick={() => setEditDeptModal(null)}>Cancel</SecBtn>
-                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                      <button type="button" onClick={() => setEditDeptModal(null)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                      <button type="button" onClick={() => {
                         if (!editDeptName) return void modalAlert('Department name required', { variant: 'warning' });
                         onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget) });
                         setEditDeptModal(null);
-                      }}>Save</PrimaryBtn>
+                      }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Changes</button>
                     </div>
                   </div>
                 </div>

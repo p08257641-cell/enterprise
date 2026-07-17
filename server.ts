@@ -48,6 +48,70 @@ function logAudit(companyId: string | undefined, userId: string | undefined, use
   logAuditDb(newLog);
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// WORKFLOW EXECUTION ENGINE
+// Evaluates all active company workflows for a given trigger event.
+// Called asynchronously (non-blocking) from any route that fires an ERP event.
+// ══════════════════════════════════════════════════════════════════════════════
+async function evaluateWorkflows(
+  companyId: string,
+  eventName: string,
+  context: Record<string, any> = {}
+): Promise<void> {
+  try {
+    // 1. Load all active workflows for this company
+    const allWorkflows = await dbByCompany<any>(schema.workflows, companyId);
+    const active = allWorkflows.filter((w: any) => w.isActive);
+
+    for (const wf of active) {
+      const blocks: any[] = Array.isArray(wf.blocks) ? wf.blocks : (typeof wf.blocks === 'string' ? JSON.parse(wf.blocks) : []);
+
+      // 2. Find the Trigger block and check if it matches the fired event
+      const triggerBlock = blocks.find((b: any) => b.type === 'Trigger');
+      if (!triggerBlock) continue;
+      if (triggerBlock.value !== eventName) continue;
+
+      // 3. Workflow matched — execute remaining blocks in sequence
+      const executedActions: string[] = [`⚡ Trigger matched: "${eventName}"`];
+      let conditionPassed = true;
+
+      for (const block of blocks.filter((b: any) => b.type !== 'Trigger')) {
+        if (block.type === 'Condition') {
+          // Evaluate condition against the event context
+          if (block.value.includes('$50,000') && context.value !== undefined) {
+            conditionPassed = Number(context.value) > 50000;
+            executedActions.push(`🔀 Condition "${block.label}": ${conditionPassed ? 'PASS' : 'SKIP'} (value=${context.value})`);
+          } else if (block.value.includes('Operations') && context.department !== undefined) {
+            conditionPassed = context.department === 'Operations';
+            executedActions.push(`🔀 Condition "${block.label}": ${conditionPassed ? 'PASS' : 'SKIP'}`);
+          } else {
+            executedActions.push(`🔀 Condition "${block.label}": evaluated`);
+          }
+        } else if (block.type === 'Action' && conditionPassed) {
+          // Log the action execution
+          executedActions.push(`✅ Action executed: "${block.label}"`);
+        } else if (block.type === 'Delay') {
+          executedActions.push(`⏱ Delay node registered: "${block.label}"`);
+        }
+      }
+
+      // 4. Write execution log to audit trail (visible in Workflow Run Logs tab)
+      logAudit(
+        companyId,
+        'u-system',
+        'Workflow Engine',
+        'WORKFLOW_EXECUTED',
+        'Workflow & Automation',
+        `Workflow "${wf.name}" executed via "${eventName}" event. Steps: ${executedActions.join(' → ')}`
+      );
+
+      console.log(`[WORKFLOW ENGINE] Executed "${wf.name}" (${blocks.length} blocks) for event "${eventName}"`);
+    }
+  } catch (err) {
+    console.error('[WORKFLOW ENGINE] Error during workflow evaluation:', err);
+  }
+}
+
 // Wraps async route handlers so unhandled rejections are forwarded to Express error handler
 const asyncHandler = (fn: (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<any>) =>
   (req: express.Request, res: express.Response, next: express.NextFunction) =>
@@ -268,13 +332,12 @@ app.post('/api/employees', asyncHandler(async (req, res) => {
   await dbInsert(schema.employees, newEmp);
 
   // AUTOMATION TRIGGER 1: Employee Created Automation Flow
-  // 1. Generate local email
   const generatedEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@acme-mfg.com`;
-  // 2. Create Audit log
   logAudit(companyId, 'u-acme-hr', 'Elena Rostova', 'EMPLOYEE_CREATE', 'HR', `Created employee ${firstName} ${lastName}. Auto-generated Employee Number: ${empNumber}, Assigning to Dept: ${department}`);
-
-  // 3. Mock send notification to HR and Welcome email to Employee
   console.log(`[ERP AUTOMATION TRIGGERED] Welcome email sent to ${email} (redirected to ${generatedEmail})`);
+
+  // Fire workflow engine asynchronously (non-blocking)
+  setImmediate(() => evaluateWorkflows(companyId, 'Employee Registered', { employeeId: empId, department, salary: Number(salary) }));
 
   res.status(201).json({
     employee: newEmp,
@@ -654,7 +717,9 @@ app.get('/api/kb-articles', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   let rows = companyId ? await dbByCompany<any>(schema.kbArticles, companyId as string) : await dbAll<any>(schema.kbArticles);
   if (rows.length === 0 && companyId) {
-    rows = DEFAULT_KB_ARTICLES.map((a, i) => ({ id: `kb-seed-${i}`, companyId, ...a, createdBy: 'System', createdAt: new Date().toISOString() }));
+    const seed = DEFAULT_KB_ARTICLES.map((a, i) => ({ id: `kb-seed-${i}-${companyId}`, companyId: companyId as string, ...a, createdBy: 'System', createdAt: new Date().toISOString() }));
+    await dbInsertMany(schema.kbArticles, seed);
+    rows = seed;
   }
   res.json(rows);
     }));
@@ -688,7 +753,9 @@ app.get('/api/lms-courses', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   let rows = companyId ? await dbByCompany<any>(schema.lmsCourses, companyId as string) : await dbAll<any>(schema.lmsCourses);
   if (rows.length === 0 && companyId) {
-    rows = DEFAULT_LMS_COURSES.map((c, i) => ({ id: `lms-seed-${i}`, companyId, ...c, createdBy: 'System', createdAt: new Date().toISOString() }));
+    const seed = DEFAULT_LMS_COURSES.map((c, i) => ({ id: `lms-seed-${i}-${companyId}`, companyId: companyId as string, ...c, createdBy: 'System', createdAt: new Date().toISOString() }));
+    await dbInsertMany(schema.lmsCourses, seed);
+    rows = seed;
   }
   res.json(rows);
     }));
@@ -723,7 +790,9 @@ app.get('/api/announcements', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   let rows = companyId ? await dbByCompany<any>(schema.announcements, companyId as string) : await dbAll<any>(schema.announcements);
   if (rows.length === 0 && companyId) {
-    rows = DEFAULT_ANNOUNCEMENTS.map((a, i) => ({ id: `ann-seed-${i}`, companyId, ...a, createdAt: new Date().toISOString() }));
+    const seed = DEFAULT_ANNOUNCEMENTS.map((a, i) => ({ id: `ann-seed-${i}-${companyId}`, companyId: companyId as string, ...a, createdAt: new Date().toISOString() }));
+    await dbInsertMany(schema.announcements, seed);
+    rows = seed;
   }
   res.json(rows);
     }));
@@ -897,7 +966,6 @@ app.post('/api/leads', asyncHandler(async (req, res) => {
   await dbInsert(schema.crmLeads, newLead);
 
   // AUTOMATION TRIGGER 2: Lead Created CRM automation
-  // If Lead value > 50000, trigger specialized high-value alert action!
   let autoResults = ["Assigned Account Manager: Samantha Brady", "Drafted standard introductory playbook"];
   if (newLead.value > 50000) {
     autoResults.push("HIGH-VALUE DEAL DETECTED: Automatically created critical priority task for Sales Manager");
@@ -905,6 +973,9 @@ app.post('/api/leads', asyncHandler(async (req, res) => {
   }
 
   logAudit(companyId, 'u-acme-sales', 'Samantha Brady', 'LEAD_CREATE', 'CRM', `Added CRM Lead: ${firstName} ${lastName} from ${companyName}. AI lead score calculated: ${newLead.aiLeadScore}`);
+
+  // Fire workflow engine asynchronously (non-blocking)
+  setImmediate(() => evaluateWorkflows(companyId, 'CRM Lead Created', { value: newLead.value, leadId: newLead.id, companyName }));
 
   res.status(201).json({
     lead: newLead,
@@ -928,7 +999,6 @@ app.post('/api/leads/:id/move', asyncHandler(async (req, res) => {
   // Deal Won AUTOMATION TRIGGER
   let triggerInvoice = null;
   if (status === 'Won') {
-    // Generate draft invoice
     const invId = `inv-${Date.now()}`;
     const invNumber = `INV-2026-0${Math.floor(400 + Math.random() * 599)}`;
     triggerInvoice = {
@@ -946,7 +1016,12 @@ app.post('/api/leads/:id/move', asyncHandler(async (req, res) => {
     };
     await dbInsert(schema.invoices, triggerInvoice);
     logAudit(lead.companyId, 'u-acme-finance', 'David Vance', 'INVOICE_AUTO_GENERATE', 'Accounting', `Automated billing trigger: Generated draft invoice ${invNumber} for Won Lead of $${lead.value}`);
+    // Fire 'Invoice Issued' workflow event
+    setImmediate(() => evaluateWorkflows(lead.companyId, 'Invoice Issued', { value: lead.value, invoiceId: invId, customerName: lead.companyName }));
   }
+
+  // Fire workflow engine for lead stage change
+  setImmediate(() => evaluateWorkflows(companyId, 'CRM Lead Created', { value: lead.value, leadId: id }));
 
   const updatedLead = await dbById<any>(schema.crmLeads, id);
   res.json({
@@ -1199,6 +1274,9 @@ app.post('/api/invoices/:id/pay', asyncHandler(async (req, res) => {
   if (ar) await dbUpdate(schema.glAccounts, ar.id, { balance: Number(ar.balance) - Number(amount) });
 
   logAudit(companyId, userId, userName, 'INVOICE_PAY', 'Accounting', `Processed payment for invoice ${inv.invoiceNumber}. DR Cash Operating Account ($${amount}), CR Accounts Receivable`);
+
+  // Fire 'Invoice Settled/Paid' workflow event
+  setImmediate(() => evaluateWorkflows(companyId, 'Invoice Settled/Paid', { value: amount, invoiceId: id, invoiceNumber: inv.invoiceNumber }));
 
   res.json(updatedInv);
     }));
@@ -2482,6 +2560,8 @@ app.post('/api/inventory/adjust', asyncHandler(async (req, res) => {
   if (newStock <= item.minStockLevel) {
     lowStockAlert = true;
     console.log(`[LOW STOCK AUTOMATION TRIGGERED] Creating purchase order request draft with Supplier: ${item.supplier}`);
+    // Fire 'Inventory Low Stock Event' workflow event
+    setImmediate(() => evaluateWorkflows(companyId, 'Inventory Low Stock Event', { sku: item.sku, name: item.name, stockLevel: newStock, minStockLevel: item.minStockLevel, supplier: item.supplier }));
   }
 
   res.json({
@@ -2573,6 +2653,14 @@ app.post('/api/workflows', asyncHandler(async (req, res) => {
   res.status(201).json(newWf);
     }));
 
+app.put('/api/workflows/:id/toggle', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isActive, companyId, userId, userName } = req.body;
+  const updated = await dbUpdate(schema.workflows, id, { isActive });
+  logAudit(companyId || 'unknown', userId || 'u-acme-admin', userName || 'Alex Mercer', 'WORKFLOW_TOGGLE', 'Administration', `Toggled workflow status to ${isActive ? 'Active' : 'Muted'}`);
+  res.json(updated);
+}));
+
 // 8.1 Workflow Triggers (DB-backed, company-specific)
 const DEFAULT_WORKFLOW_TRIGGERS = [
   { name: 'CRM Lead Created', event: 'CRM Lead Created', description: 'Fires immediately when a new lead is added to CRM.', enabled: true },
@@ -2587,7 +2675,9 @@ app.get('/api/workflow-triggers', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   let rows = companyId ? await dbByCompany<any>(schema.workflowTriggers, companyId as string) : await dbAll<any>(schema.workflowTriggers);
   if (rows.length === 0 && companyId) {
-    rows = DEFAULT_WORKFLOW_TRIGGERS.map((t, i) => ({ id: `wt-seed-${i}`, companyId, ...t, createdAt: new Date().toISOString() }));
+    const seed = DEFAULT_WORKFLOW_TRIGGERS.map((t, i) => ({ id: `wt-seed-${i}-${companyId}`, companyId: companyId as string, ...t, createdAt: new Date().toISOString() }));
+    await dbInsertMany(schema.workflowTriggers, seed);
+    rows = seed;
   }
   res.json(rows);
     }));
@@ -2626,7 +2716,9 @@ app.get('/api/email-templates', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   let rows = companyId ? await dbByCompany<any>(schema.emailTemplates, companyId as string) : await dbAll<any>(schema.emailTemplates);
   if (rows.length === 0 && companyId) {
-    rows = DEFAULT_EMAIL_TEMPLATES.map((t, i) => ({ id: `et-seed-${i}`, companyId, ...t, createdAt: new Date().toISOString() }));
+    const seed = DEFAULT_EMAIL_TEMPLATES.map((t, i) => ({ id: `et-seed-${i}-${companyId}`, companyId: companyId as string, ...t, createdAt: new Date().toISOString() }));
+    await dbInsertMany(schema.emailTemplates, seed);
+    rows = seed;
   }
   res.json(rows);
     }));
@@ -3389,12 +3481,261 @@ app.delete('/api/project-milestones/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
     }));
 
+
 // 10. Audit Logs
 app.get('/api/audit-logs', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   const all = await dbAll<any>(schema.auditLogs);
   res.json(companyId ? all.filter((l: any) => l.companyId === companyId) : all);
     }));
+
+// --- PROCUREMENT ---
+app.get('/api/vendors', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.vendors, companyId as string) : await dbAll<any>(schema.vendors);
+  res.json(all);
+}));
+
+app.post('/api/vendors', asyncHandler(async (req, res) => {
+  const { companyId, name, type, contact, email, rating, userId, userName } = req.body;
+  const v = { id: `vnd-${Date.now()}`, companyId, name, type, contact, email, rating: Number(rating) || 5, ordersCount: 0, status: 'Active', createdAt: new Date().toISOString() };
+  await dbInsert(schema.vendors, v);
+  logAudit(companyId, userId, userName, 'CREATE_VENDOR', 'Procurement', `Added vendor: ${name}`);
+  res.status(201).json(v);
+}));
+
+app.put('/api/vendors/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.vendors, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/vendors/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const v = await dbById<any>(schema.vendors, id);
+  if (!v) return res.status(404).json({ error: 'Vendor not found' });
+  await dbDelete(schema.vendors, id);
+  logAudit(v.companyId, userId, userName, 'DELETE_VENDOR', 'Procurement', `Deleted vendor: ${v.name}`);
+  res.json({ success: true });
+}));
+
+app.get('/api/purchase-orders', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.purchaseOrders, companyId as string) : await dbAll<any>(schema.purchaseOrders);
+  res.json(all);
+}));
+
+app.post('/api/purchase-orders', asyncHandler(async (req, res) => {
+  const { companyId, vendorId, vendorName, item, qty, unitPrice, userId, userName } = req.body;
+  const total = Number(qty) * Number(unitPrice);
+  const count = (await dbAll<any>(schema.purchaseOrders)).length + 1;
+  const po = { id: `po-${Date.now()}`, companyId, poNumber: `PO-${String(count).padStart(4, '0')}`, vendorId, vendorName, item, qty: Number(qty), unitPrice: Number(unitPrice), total, status: 'Pending', date: new Date().toISOString().split('T')[0], createdBy: userId, createdAt: new Date().toISOString() };
+  await dbInsert(schema.purchaseOrders, po);
+  logAudit(companyId, userId, userName, 'CREATE_PO', 'Procurement', `Created PO ${po.poNumber} for ${vendorName}`);
+  res.status(201).json(po);
+}));
+
+app.put('/api/purchase-orders/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.purchaseOrders, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/purchase-orders/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const po = await dbById<any>(schema.purchaseOrders, id);
+  if (!po) return res.status(404).json({ error: 'PO not found' });
+  await dbDelete(schema.purchaseOrders, id);
+  logAudit(po.companyId, userId, userName, 'DELETE_PO', 'Procurement', `Deleted PO ${po.poNumber}`);
+  res.json({ success: true });
+}));
+
+app.get('/api/rfqs', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.rfqs, companyId as string) : await dbAll<any>(schema.rfqs);
+  res.json(all);
+}));
+
+app.post('/api/rfqs', asyncHandler(async (req, res) => {
+  const { companyId, item, vendorsInvited, userId, userName } = req.body;
+  const count = (await dbAll<any>(schema.rfqs)).length + 1;
+  const rfq = { id: `rfq-${Date.now()}`, companyId, rfqNumber: `RFQ-${String(count).padStart(3, '0')}`, item, vendorsInvited: Number(vendorsInvited) || 1, sentDate: new Date().toISOString().split('T')[0], quotesReceived: 0, status: 'Open', createdAt: new Date().toISOString() };
+  await dbInsert(schema.rfqs, rfq);
+  logAudit(companyId, userId, userName, 'CREATE_RFQ', 'Procurement', `Sent RFQ ${rfq.rfqNumber} for ${item}`);
+  res.status(201).json(rfq);
+}));
+
+app.put('/api/rfqs/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.rfqs, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/rfqs/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const r = await dbById<any>(schema.rfqs, id);
+  if (!r) return res.status(404).json({ error: 'RFQ not found' });
+  await dbDelete(schema.rfqs, id);
+  logAudit(r.companyId, userId, userName, 'DELETE_RFQ', 'Procurement', `Deleted RFQ ${r.rfqNumber}`);
+  res.json({ success: true });
+}));
+
+// --- MANUFACTURING ---
+app.get('/api/work-orders', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.workOrders, companyId as string) : await dbAll<any>(schema.workOrders);
+  res.json(all);
+}));
+
+app.post('/api/work-orders', asyncHandler(async (req, res) => {
+  const { companyId, product, qty, line, dueDate, userId, userName } = req.body;
+  const count = (await dbAll<any>(schema.workOrders)).length + 1;
+  const wo = { id: `wo-${Date.now()}`, companyId, woNumber: `WO-${String(500 + count)}`, product, qty: Number(qty), line, status: 'Scheduled', completion: 0, startDate: new Date().toISOString().split('T')[0], dueDate: dueDate || '', createdAt: new Date().toISOString() };
+  await dbInsert(schema.workOrders, wo);
+  logAudit(companyId, userId, userName, 'CREATE_WORK_ORDER', 'Manufacturing', `Created WO ${wo.woNumber}: ${product}`);
+  res.status(201).json(wo);
+}));
+
+app.put('/api/work-orders/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.workOrders, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/work-orders/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const wo = await dbById<any>(schema.workOrders, id);
+  if (!wo) return res.status(404).json({ error: 'Work order not found' });
+  await dbDelete(schema.workOrders, id);
+  logAudit(wo.companyId, userId, userName, 'DELETE_WORK_ORDER', 'Manufacturing', `Deleted WO ${wo.woNumber}`);
+  res.json({ success: true });
+}));
+
+app.get('/api/bom-items', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.bomItems, companyId as string) : await dbAll<any>(schema.bomItems);
+  res.json(all);
+}));
+
+app.post('/api/bom-items', asyncHandler(async (req, res) => {
+  const { companyId, product, part, qty, unit, cost, userId, userName } = req.body;
+  const item = { id: `bom-${Date.now()}`, companyId, product, part, qty: Number(qty), unit, cost: Number(cost), createdAt: new Date().toISOString() };
+  await dbInsert(schema.bomItems, item);
+  logAudit(companyId, userId, userName, 'CREATE_BOM_ITEM', 'Manufacturing', `Added BOM item: ${part} for ${product}`);
+  res.status(201).json(item);
+}));
+
+app.delete('/api/bom-items/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const b = await dbById<any>(schema.bomItems, id);
+  if (!b) return res.status(404).json({ error: 'BOM item not found' });
+  await dbDelete(schema.bomItems, id);
+  logAudit(b.companyId, userId, userName, 'DELETE_BOM_ITEM', 'Manufacturing', `Deleted BOM item: ${b.part}`);
+  res.json({ success: true });
+}));
+
+app.get('/api/quality-checks', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.qualityChecks, companyId as string) : await dbAll<any>(schema.qualityChecks);
+  res.json(all);
+}));
+
+app.post('/api/quality-checks', asyncHandler(async (req, res) => {
+  const { companyId, check, result, inspector, notes, userId, userName } = req.body;
+  const qc = { id: `qc-${Date.now()}`, companyId, check, result: result || 'Pending', date: new Date().toISOString().split('T')[0], inspector, notes: notes || '', createdAt: new Date().toISOString() };
+  await dbInsert(schema.qualityChecks, qc);
+  logAudit(companyId, userId, userName, 'CREATE_QUALITY_CHECK', 'Manufacturing', `Logged QC: ${check}`);
+  res.status(201).json(qc);
+}));
+
+app.put('/api/quality-checks/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.qualityChecks, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/quality-checks/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const qc = await dbById<any>(schema.qualityChecks, id);
+  if (!qc) return res.status(404).json({ error: 'Quality check not found' });
+  await dbDelete(schema.qualityChecks, id);
+  res.json({ success: true });
+}));
+
+// --- ASSET MAINTENANCE TASKS ---
+app.get('/api/maintenance-tasks', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.maintenanceTasks, companyId as string) : await dbAll<any>(schema.maintenanceTasks);
+  res.json(all);
+}));
+
+app.post('/api/maintenance-tasks', asyncHandler(async (req, res) => {
+  const { companyId, assetId, assetName, task, due, owner, userId, userName } = req.body;
+  const mt = { id: `mt-${Date.now()}`, companyId, assetId, assetName, task, due, owner, status: 'Scheduled', createdAt: new Date().toISOString() };
+  await dbInsert(schema.maintenanceTasks, mt);
+  logAudit(companyId, userId, userName, 'CREATE_MAINTENANCE_TASK', 'Assets', `Scheduled maintenance: ${task} for ${assetName}`);
+  res.status(201).json(mt);
+}));
+
+app.put('/api/maintenance-tasks/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.maintenanceTasks, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/maintenance-tasks/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const mt = await dbById<any>(schema.maintenanceTasks, id);
+  if (!mt) return res.status(404).json({ error: 'Maintenance task not found' });
+  await dbDelete(schema.maintenanceTasks, id);
+  logAudit(mt.companyId, userId, userName, 'DELETE_MAINTENANCE_TASK', 'Assets', `Deleted maintenance task: ${mt.task}`);
+  res.json({ success: true });
+}));
+
+// --- DOCUMENT MANAGEMENT ---
+app.get('/api/documents', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.managedDocuments, companyId as string) : await dbAll<any>(schema.managedDocuments);
+  res.json(all);
+}));
+
+app.post('/api/documents', asyncHandler(async (req, res) => {
+  const { companyId, name, type, size, userId, userName } = req.body;
+  const doc = { id: `doc-${Date.now()}`, companyId, name, type, size: size || '0 KB', status: 'Draft', date: new Date().toISOString().split('T')[0], uploadedBy: userId, createdAt: new Date().toISOString() };
+  await dbInsert(schema.managedDocuments, doc);
+  logAudit(companyId, userId, userName, 'UPLOAD_DOCUMENT', 'Documents', `Uploaded document: ${name}`);
+  res.status(201).json(doc);
+}));
+
+app.put('/api/documents/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.managedDocuments, id, values);
+  res.json(updated);
+}));
+
+app.delete('/api/documents/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const doc = await dbById<any>(schema.managedDocuments, id);
+  if (!doc) return res.status(404).json({ error: 'Document not found' });
+  await dbDelete(schema.managedDocuments, id);
+  logAudit(doc.companyId, userId, userName, 'DELETE_DOCUMENT', 'Documents', `Deleted document: ${doc.name}`);
+  res.json({ success: true });
+}));
 
 
 // --- GEMINI CO-PILOT ENTERPRISE ENDPOINTS ---

@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
-import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
-import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
+import { isAdminRole } from '../../permissions';
 import { parseActiveView } from '../../parseActiveView';
 
 export const AssetView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const {
+    activeView, onNavigateView, selectedCompany, selectedUser,
+    fixedAssets, depreciationEntries, onCreateFixedAsset, onDisposeAsset, onRunDepreciation,
+    maintenanceTasks, onCreateMaintenanceTask, onUpdateMaintenanceTask, onDeleteMaintenanceTask,
+  } = props;
 
-  const [assets, setAssets] = useState([
-    { id: 'AST-082', name: 'Laser CNC Cutter v4', category: 'Heavy Machinery', location: 'Plant A', status: 'Operational', value: 85000, qr: 'AST-082-CNC', nextService: '2026-09-01', lifeYears: 10 },
-    { id: 'AST-091', name: 'MacBook Pro M3 16"', category: 'IT Hardware', location: 'NYC HQ', status: 'Assigned', value: 3200, qr: 'AST-091-MBP', nextService: '2026-12-15', lifeYears: 4 },
-    { id: 'AST-103', name: 'Forklift Hyster 50', category: 'Logistics', location: 'Warehouse B', status: 'Maintenance', value: 42000, qr: 'AST-103-FKL', nextService: '2026-07-20', lifeYears: 8 },
-  ]);
+  const isAdmin = isAdminRole(selectedUser.activeRole);
+  const localAssets = fixedAssets.filter(a => a.companyId === selectedCompany.id);
+  const localMaintenance = maintenanceTasks.filter(m => m.companyId === selectedCompany.id);
+  const localDepEntries = depreciationEntries.filter(d => d.companyId === selectedCompany.id);
+
   const initialAssetTab = (): 'register' | 'maintenance' | 'depreciation' => {
     const { sub } = parseActiveView(activeView);
     if (sub === 'maintenance') return 'maintenance';
@@ -20,20 +23,6 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
   };
   const [assetTab, setAssetTab] = useState<'register' | 'maintenance' | 'depreciation'>(initialAssetTab);
   useEffect(() => { setAssetTab(initialAssetTab()); }, [activeView]);
-  const [newAssetName, setNewAssetName] = useState(''); const [newAssetCat, setNewAssetCat] = useState('IT Hardware');
-  const [newAssetLoc, setNewAssetLoc] = useState('NYC HQ'); const [newAssetVal, setNewAssetVal] = useState('1000');
-  const [newAssetLife, setNewAssetLife] = useState('5');
-
-  const [maintenance, setMaintenance] = useState([
-    { id: 'MT-01', asset: 'AST-103', task: 'Hydraulic fluid flush', due: '2026-07-20', owner: 'Logistics Team', status: 'Scheduled' },
-    { id: 'MT-02', asset: 'AST-082', task: 'Quarterly calibration', due: '2026-09-01', owner: 'Plant A Eng.', status: 'Scheduled' },
-    { id: 'MT-03', asset: 'AST-091', task: 'Battery health check', due: '2026-12-15', owner: 'IT Support', status: 'Scheduled' },
-  ]);
-  const [maintTask, setMaintTask] = useState(''); const [maintDue, setMaintDue] = useState('2026-08-01');
-  const [maintOwner, setMaintOwner] = useState('');
-  const assetModal = useRowModal<typeof assets[0]>();
-  const maintModal = useRowModal<typeof maintenance[0]>();
-  const depModal = useRowModal<typeof depreciationRows[0]>();
 
   const assetTabs = [
     { id: 'register', label: 'Asset Register' },
@@ -41,205 +30,257 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
     { id: 'depreciation', label: 'Depreciation' },
   ] as const;
 
-  const depreciationRows = assets.map(a => {
-    const life = a.lifeYears || 5;
-    const salvage = a.value * 0.1;
-    const annual = (a.value - salvage) / life;
-    const ageYears = 2;
-    const accumulated = annual * ageYears;
-    const netBook = Math.max(salvage, a.value - accumulated);
+  // Register new asset form
+  const [newAssetName, setNewAssetName] = useState('');
+  const [newAssetCat, setNewAssetCat] = useState('IT Hardware');
+  const [newAssetLoc, setNewAssetLoc] = useState('');
+  const [newAssetVal, setNewAssetVal] = useState('1000');
+  const [newAssetLife, setNewAssetLife] = useState('5');
+  const [newAssetCode, setNewAssetCode] = useState('');
+  const [newPurchaseDate, setNewPurchaseDate] = useState('');
+
+  // Maintenance form
+  const [maintAssetId, setMaintAssetId] = useState('');
+  const [maintTask, setMaintTask] = useState('');
+  const [maintDue, setMaintDue] = useState('');
+  const [maintOwner, setMaintOwner] = useState('');
+
+  const assetModal = useRowModal<typeof localAssets[0]>();
+  const maintModal = useRowModal<typeof localMaintenance[0]>();
+
+  // Depreciation summary: computed per asset from depreciationEntries or straight-line calc
+  const depRows = localAssets.map(a => {
+    const life = a.usefulLifeYears || 5;
+    const salvage = (a.purchasePrice || 0) * 0.1;
+    const annual = ((a.purchasePrice || 0) - salvage) / life;
+    const accumulated = a.accumulatedDepreciation || 0;
+    const netBook = Math.max(salvage, (a.purchasePrice || 0) - accumulated);
     return { ...a, annual, netBook };
   });
+
+  const totalGross = localAssets.reduce((s, a) => s + (a.purchasePrice || 0), 0);
+  const totalAccum = depRows.reduce((s, r) => s + ((r.purchasePrice || 0) - r.netBook), 0);
+  const totalNetBook = depRows.reduce((s, r) => s + r.netBook, 0);
 
   return (
     <div>
       <PageHeader title="Asset Management" subtitle="Track company assets, manage maintenance schedules and monitor asset depreciation." />
 
+      {/* Tab Bar */}
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {assetTabs.map(t => (
-          <button key={t.id} onClick={() => setAssetTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${assetTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => { setAssetTab(t.id); onNavigateView(t.id === 'register' ? 'asset' : `asset-${t.id}`); }}
+            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${assetTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
+            {t.label}
+          </button>
         ))}
       </div>
 
+      {/* Asset Register Tab */}
       {assetTab === 'register' && (
         <>
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
-            <StatCard label="Total Assets" value={assets.length} icon="bi bi-collection" sub="Registered in system" />
-            <StatCard label="Asset Value" value={`$${assets.reduce((s, a) => s + a.value, 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="Total acquisition cost" accent />
-            <StatCard label="Operational" value={assets.filter(a => a.status === 'Operational').length} icon="bi bi-check-circle" sub="Running normally" />
-            <StatCard label="In Maintenance" value={assets.filter(a => a.status === 'Maintenance').length} icon="bi bi-wrench" sub="Under servicing" />
+            <StatCard label="Total Assets" value={localAssets.length} icon="bi bi-collection" sub="Registered in system" />
+            <StatCard label="Asset Value" value={`$${totalGross.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Total acquisition cost" accent />
+            <StatCard label="Active" value={localAssets.filter(a => a.status === 'Active').length} icon="bi bi-check-circle" sub="Running normally" />
+            <StatCard label="Disposed" value={localAssets.filter(a => a.status === 'Disposed').length} icon="bi bi-trash" sub="Retired assets" />
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Asset Register</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Asset ID' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Value', right: true }, { label: 'Status' }]} />
+                <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Purchase Price', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
                 <tbody className="divide-y divide-slate-100">
-                  {assets.map(a => (
+                  {localAssets.map(a => (
                     <tr key={a.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => assetModal.open(a)}>
-                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{a.id}</td>
+                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{a.assetCode}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-900">{a.name}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{a.category}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{a.location}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${a.value.toLocaleString()}</td>
-                      <td className="px-4 py-3"><Badge label={a.status} variant={a.status === 'Operational' ? 'success' : a.status === 'Assigned' ? 'info' : 'warning'} /></td>
+                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${(a.purchasePrice || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3"><Badge label={a.status} variant={a.status === 'Active' ? 'success' : a.status === 'Disposed' ? 'danger' : 'warning'} /></td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                          {a.status === 'Active' && (
+                            <button onClick={() => onDisposeAsset(a.id, (a.purchasePrice || 0) * 0.1)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Dispose</button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
+                  {localAssets.length === 0 && <EmptyRow cols={isAdmin ? 7 : 6} message="No assets registered yet." />}
                 </tbody>
               </table>
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-              <h3 className="section-title text-slate-500 mb-5">Register New Asset</h3>
-              <div className="space-y-3">
-                <div><Label>Asset Name</Label><Input value={newAssetName} onChange={e => setNewAssetName(e.target.value)} placeholder="Dell Workstation" /></div>
-                <div><Label>Category</Label><Select value={newAssetCat} onChange={e => setNewAssetCat(e.target.value)}><option>IT Hardware</option><option>Heavy Machinery</option><option>Logistics</option><option>Furniture</option><option>Vehicles</option></Select></div>
-                <div><Label>Location</Label><Input value={newAssetLoc} onChange={e => setNewAssetLoc(e.target.value)} placeholder="NYC HQ" /></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Purchase Value (USD)</Label><Input type="number" value={newAssetVal} onChange={e => setNewAssetVal(e.target.value)} /></div>
-                  <div><Label>Useful Life (yrs)</Label><Input type="number" value={newAssetLife} onChange={e => setNewAssetLife(e.target.value)} /></div>
-                </div>
-                <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
-                  if (!newAssetName) return;
-                  const id = `AST-${100 + assets.length + 1}`;
-                  setAssets(prev => [...prev, { id, name: newAssetName, category: newAssetCat, location: newAssetLoc, status: 'Operational', value: Number(newAssetVal), qr: `${id}-${newAssetCat.slice(0, 3).toUpperCase()}`, nextService: '2026-12-31', lifeYears: Number(newAssetLife) || 5 }]);
-                  setNewAssetName(''); setNewAssetVal('1000'); setNewAssetLife('5');
-                }}>Register Asset</PrimaryBtn>
-              </div>
-              <div className="mt-5 pt-4 border-t border-slate-100">
-                <h4 className="section-title text-slate-400 mb-3">QR Codes</h4>
-                {assets.slice(0, 2).map(a => (
-                  <div key={a.id} className="p-2.5 mb-2 border border-slate-100 rounded-lg flex items-center gap-3 bg-slate-50">
-                    <div className="h-10 w-10 bg-white border border-slate-200 rounded flex items-center justify-center shrink-0">
-                      <i className="bi bi-qr-code text-slate-700 text-lg"></i>
-                    </div>
-                    <div><div className="data-value font-semibold text-slate-800">{a.name}</div><div className="data-value-small font-sans tabular-nums text-slate-400">{a.qr}</div></div>
+            {isAdmin && (
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
+                <h3 className="section-title text-slate-500 mb-5">Register New Asset</h3>
+                <div className="space-y-3">
+                  <div><Label>Asset Code *</Label><Input value={newAssetCode} onChange={e => setNewAssetCode(e.target.value)} placeholder="AST-001" /></div>
+                  <div><Label>Asset Name *</Label><Input value={newAssetName} onChange={e => setNewAssetName(e.target.value)} placeholder="Dell Workstation" /></div>
+                  <div><Label>Category</Label><Select value={newAssetCat} onChange={e => setNewAssetCat(e.target.value)}><option>IT Hardware</option><option>Heavy Machinery</option><option>Logistics</option><option>Furniture</option><option>Vehicles</option></Select></div>
+                  <div><Label>Location</Label><Input value={newAssetLoc} onChange={e => setNewAssetLoc(e.target.value)} placeholder="NYC HQ" /></div>
+                  <div><Label>Purchase Date</Label><Input type="date" value={newPurchaseDate} onChange={e => setNewPurchaseDate(e.target.value)} /></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label>Purchase Value ($)</Label><Input type="number" value={newAssetVal} onChange={e => setNewAssetVal(e.target.value)} /></div>
+                    <div><Label>Useful Life (yrs)</Label><Input type="number" value={newAssetLife} onChange={e => setNewAssetLife(e.target.value)} /></div>
                   </div>
-                ))}
+                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
+                    if (!newAssetName.trim() || !newAssetCode.trim()) return;
+                    onCreateFixedAsset({
+                      companyId: selectedCompany.id, assetCode: newAssetCode, name: newAssetName,
+                      description: '', category: newAssetCat, purchaseDate: newPurchaseDate,
+                      purchasePrice: Number(newAssetVal), salvageValue: Number(newAssetVal) * 0.1,
+                      usefulLifeYears: Number(newAssetLife), depreciationMethod: 'Straight-Line',
+                      location: newAssetLoc,
+                    });
+                    setNewAssetName(''); setNewAssetCode(''); setNewAssetLoc(''); setNewAssetVal('1000'); setNewAssetLife('5'); setNewPurchaseDate('');
+                  }}>Register Asset</PrimaryBtn>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </>
       )}
 
+      {/* Maintenance Tab */}
       {assetTab === 'maintenance' && (
         <>
           <div className="grid gap-4 sm:grid-cols-3 mb-6">
-            <StatCard label="Scheduled" value={maintenance.length} icon="bi bi-calendar-check" sub="Upcoming tasks" />
-            <StatCard label="Overdue" value={maintenance.filter(m => new Date(m.due) < new Date()).length} icon="bi bi-exclamation-triangle" sub="Past due date" accent />
-            <StatCard label="In Maintenance" value={assets.filter(a => a.status === 'Maintenance').length} icon="bi bi-wrench" sub="Assets being serviced" />
+            <StatCard label="Scheduled" value={localMaintenance.filter(m => m.status === 'Scheduled').length} icon="bi bi-calendar-check" sub="Upcoming tasks" />
+            <StatCard label="Overdue" value={localMaintenance.filter(m => new Date(m.due) < new Date() && m.status !== 'Completed').length} icon="bi bi-exclamation-triangle" sub="Past due date" accent />
+            <StatCard label="Completed" value={localMaintenance.filter(m => m.status === 'Completed').length} icon="bi bi-check-circle" sub="Tasks done" />
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Maintenance Schedule</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Task ID' }, { label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }]} />
+                <TableHead cols={[{ label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
                 <tbody className="divide-y divide-slate-100">
-                  {maintenance.map(m => (
+                  {localMaintenance.map(m => (
                     <tr key={m.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => maintModal.open(m)}>
-                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{m.id}</td>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{m.asset}</td>
+                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{m.assetName}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{m.task}</td>
                       <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{m.due}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{m.owner}</td>
-                      <td className="px-4 py-3"><Badge label={m.status} variant={new Date(m.due) < new Date() ? 'danger' : 'info'} /></td>
+                      <td className="px-4 py-3"><Badge label={m.status} variant={(m.status as string) === 'Completed' ? 'success' : new Date(m.due) < new Date() && (m.status as string) !== 'Completed' ? 'danger' : 'info'} /></td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                          <div className="flex gap-1 justify-end">
+                            {m.status !== 'Completed' && <button onClick={() => onUpdateMaintenanceTask(m.id, { status: 'Completed' })} className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Done</button>}
+                            <button onClick={() => onDeleteMaintenanceTask(m.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
-                  {maintenance.length === 0 && <EmptyRow cols={6} message="No maintenance tasks scheduled." />}
+                  {localMaintenance.length === 0 && <EmptyRow cols={isAdmin ? 6 : 5} message="No maintenance tasks scheduled." />}
                 </tbody>
               </table>
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-              <h3 className="section-title text-slate-500 mb-5">Schedule Maintenance</h3>
-              <div className="space-y-3">
-                <div><Label>Asset</Label><Select value={maintTask} onChange={e => setMaintTask(e.target.value)}><option value="">Select asset…</option>{assets.map(a => <option key={a.id} value={a.id}>{a.id} — {a.name}</option>)}</Select></div>
-                <div><Label>Task</Label><Input value={maintTask && !assets.find(a => a.id === maintTask) ? maintTask : ''} onChange={e => setMaintTask(e.target.value)} placeholder="e.g. Annual inspection" /></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><Label>Due Date</Label><Input type="date" value={maintDue} onChange={e => setMaintDue(e.target.value)} /></div>
-                  <div><Label>Owner</Label><Input value={maintOwner} onChange={e => setMaintOwner(e.target.value)} placeholder="Team / person" /></div>
+            {isAdmin && (
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
+                <h3 className="section-title text-slate-500 mb-5">Schedule Maintenance</h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label>Asset</Label>
+                    <Select value={maintAssetId} onChange={e => {
+                      setMaintAssetId(e.target.value);
+                    }}>
+                      <option value="">Select asset…</option>
+                      {localAssets.map(a => <option key={a.id} value={a.id}>{a.assetCode} — {a.name}</option>)}
+                    </Select>
+                  </div>
+                  <div><Label>Task Description *</Label><Input value={maintTask} onChange={e => setMaintTask(e.target.value)} placeholder="e.g. Annual inspection" /></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><Label>Due Date</Label><Input type="date" value={maintDue} onChange={e => setMaintDue(e.target.value)} /></div>
+                    <div><Label>Owner / Team</Label><Input value={maintOwner} onChange={e => setMaintOwner(e.target.value)} placeholder="Engineering" /></div>
+                  </div>
+                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
+                    if (!maintTask.trim()) return;
+                    const asset = localAssets.find(a => a.id === maintAssetId);
+                    onCreateMaintenanceTask({
+                      assetId: maintAssetId,
+                      assetName: asset ? asset.name : 'General',
+                      task: maintTask,
+                      due: maintDue || new Date().toISOString().split('T')[0],
+                      owner: maintOwner || 'Unassigned',
+                    });
+                    setMaintTask(''); setMaintOwner(''); setMaintAssetId(''); setMaintDue('');
+                  }}>Add Task</PrimaryBtn>
                 </div>
-                <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
-                  if (!maintTask) return;
-                  const id = `MT-${maintenance.length + 1}`;
-                  const assetLabel = assets.find(a => a.id === maintTask) ? maintTask : 'General';
-                  setMaintenance(prev => [...prev, { id, asset: assetLabel, task: assets.find(a => a.id === maintTask) ? 'Service request' : maintTask, due: maintDue, owner: maintOwner || 'Unassigned', status: 'Scheduled' }]);
-                  setMaintTask(''); setMaintOwner(''); setMaintDue('2026-08-01');
-                }}>Add Task</PrimaryBtn>
               </div>
-            </div>
+            )}
           </div>
         </>
       )}
 
+      {/* Depreciation Tab */}
       {assetTab === 'depreciation' && (
         <>
           <div className="grid gap-4 sm:grid-cols-3 mb-6">
-            <StatCard label="Gross Value" value={`$${assets.reduce((s, a) => s + a.value, 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="Acquisition cost" />
-            <StatCard label="Accumulated Depreciation" value={`$${depreciationRows.reduce((s, r) => s + (r.value - r.netBook), 0).toLocaleString()}`} icon="bi bi-graph-down" sub="2 yrs elapsed" accent />
-            <StatCard label="Net Book Value" value={`$${depreciationRows.reduce((s, r) => s + r.netBook, 0).toLocaleString()}`} icon="bi bi-collection" sub="Current carrying value" />
+            <StatCard label="Gross Value" value={`$${totalGross.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Acquisition cost" />
+            <StatCard label="Accumulated Depreciation" value={`$${totalAccum.toLocaleString()}`} icon="bi bi-graph-down" sub="Total depreciated" accent />
+            <StatCard label="Net Book Value" value={`$${totalNetBook.toLocaleString()}`} icon="bi bi-collection" sub="Current carrying value" />
           </div>
+          {isAdmin && (
+            <div className="flex justify-end mb-4">
+              <PrimaryBtn icon="bi bi-arrow-repeat" onClick={() => onRunDepreciation(new Date().toISOString().slice(0, 7))}>Run Depreciation ({new Date().toISOString().slice(0, 7)})</PrimaryBtn>
+            </div>
+          )}
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Depreciation Schedule (Straight-Line, 10% Salvage)</h3></div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Asset' }, { label: 'Cost', right: true }, { label: 'Life (yrs)' }, { label: 'Annual', right: true }, { label: 'Accumulated', right: true }, { label: 'Net Book', right: true }]} />
+              <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Purchase Price', right: true }, { label: 'Life (yrs)' }, { label: 'Annual Dep.', right: true }, { label: 'Accumulated', right: true }, { label: 'Net Book Value', right: true }]} />
               <tbody className="divide-y divide-slate-100">
-                {depreciationRows.map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => depModal.open(r)}>
+                {depRows.map(r => (
+                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
+                    <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{r.assetCode}</td>
                     <td className="px-4 py-3 text-xs font-semibold text-slate-900">{r.name}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${r.value.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{r.lifeYears}</td>
+                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${(r.purchasePrice || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{r.usefulLifeYears}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${r.annual.toFixed(0)}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${(r.value - r.netBook).toFixed(0)}</td>
+                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${((r.purchasePrice || 0) - r.netBook).toFixed(0)}</td>
                     <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">${r.netBook.toFixed(0)}</td>
                   </tr>
                 ))}
+                {depRows.length === 0 && <EmptyRow cols={7} message="No assets registered. Add assets in the Asset Register tab." />}
               </tbody>
             </table>
           </div>
         </>
       )}
+
+      {/* Modals */}
       {assetModal.selected && (
         <RowModal row={assetModal.selected}
           icon="bi bi-building-gear" accentColor="#4f46e5"
           fields={[
-            { label: 'Asset ID', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Asset Code', key: 'assetCode', mono: true, icon: 'bi bi-hash' },
             { label: 'Name', key: 'name', icon: 'bi bi-tag' },
             { label: 'Category', key: 'category', icon: 'bi bi-collection', section: 'Details' },
             { label: 'Location', key: 'location', icon: 'bi bi-geo-alt', section: 'Details' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
-            { label: 'Value', key: 'value', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Valuation' },
-            { label: 'Next Service', key: 'nextService', icon: 'bi bi-tools', section: 'Valuation' },
-            { label: 'QR Code', key: 'qr', icon: 'bi bi-qr-code', section: 'Valuation' },
+            { label: 'Purchase Price', key: 'purchasePrice', format: (v: number) => `$${(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Valuation' },
+            { label: 'Purchase Date', key: 'purchaseDate', icon: 'bi bi-calendar-event', section: 'Valuation' },
+            { label: 'Useful Life (yrs)', key: 'usefulLifeYears', icon: 'bi bi-hourglass-split', section: 'Valuation' },
+            { label: 'Depreciation Method', key: 'depreciationMethod', icon: 'bi bi-graph-down-arrow', section: 'Valuation' },
           ]}
-          title={r => r.name} subtitle={r => r.id}
+          title={r => r.name} subtitle={r => r.assetCode}
           onClose={assetModal.close} />
       )}
       {maintModal.selected && (
         <RowModal row={maintModal.selected}
           icon="bi bi-tools" accentColor="#0891b2"
           fields={[
-            { label: 'Task ID', key: 'id', mono: true, icon: 'bi bi-hash' },
-            { label: 'Asset', key: 'asset', icon: 'bi bi-building-gear' },
+            { label: 'Asset', key: 'assetName', icon: 'bi bi-building-gear' },
             { label: 'Task', key: 'task', icon: 'bi bi-card-text', section: 'Task' },
             { label: 'Owner', key: 'owner', icon: 'bi bi-person', section: 'Task' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Task' },
             { label: 'Due', key: 'due', mono: true, icon: 'bi bi-calendar-check', section: 'Schedule' },
           ]}
-          title={r => `Task ${r.id}`} subtitle={r => r.task}
+          title={r => `Maintenance Task`} subtitle={r => r.task}
           onClose={maintModal.close} />
-      )}
-      {depModal.selected && (
-        <RowModal row={depModal.selected}
-          icon="bi bi-graph-down-arrow" accentColor="#9333ea"
-          fields={[
-            { label: 'Asset', key: 'name', icon: 'bi bi-building-gear' },
-            { label: 'Cost', key: 'value', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Values' },
-            { label: 'Life (yrs)', key: 'lifeYears', icon: 'bi bi-hourglass-split', section: 'Values' },
-            { label: 'Annual', key: 'annual', format: (v: number) => `$${v.toFixed(0)}`, icon: 'bi bi-calendar-check', section: 'Values' },
-            { label: 'Net Book', key: 'netBook', format: (v: number) => `$${v.toFixed(0)}`, icon: 'bi bi-wallet2', section: 'Values' },
-            { label: 'QR', key: 'qr', icon: 'bi bi-qr-code', section: 'System' },
-          ]}
-          title={r => r.name} subtitle={r => 'Depreciation Detail'}
-          onClose={depModal.close} />
       )}
     </div>
   );

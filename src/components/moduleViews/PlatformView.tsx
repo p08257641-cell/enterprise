@@ -563,7 +563,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                     </button>
                   </div>
 
-                  <div className="px-6 py-4 space-y-4 overflow-y-auto">
+                  <div className="flex-1 px-6 py-4 space-y-4 overflow-y-auto">
                     <div>
                       <Label>Tenant</Label>
                       <Select value={planTenantId} onChange={e => setPlanTenantId(e.target.value)}>

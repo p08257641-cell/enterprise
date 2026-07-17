@@ -253,15 +253,34 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Assignment Modal */}
         {showAssignModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="section-title text-slate-900">Assign Lead</h3>
-                <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                  <i className="bi bi-x-lg text-lg"></i>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={() => {
+            setShowAssignModal(false);
+            setSelectedLeadForAssign(null);
+            setAssignedUser('');
+            setAssignedDepartment('');
+          }}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <i className="bi bi-person-check text-blue-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">Assign Lead</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Delegate this lead to an employee or department.</p>
+                </div>
+                <button type="button" onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedLeadForAssign(null);
+                  setAssignedUser('');
+                  setAssignedDepartment('');
+                }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
                 </button>
               </div>
-              <div className="space-y-4">
+
+              <div className="p-6 space-y-4">
                 <div>
                   <Label>Assign to Employee</Label>
                   <Select value={assignedUser} onChange={e => setAssignedUser(e.target.value)}>
@@ -280,20 +299,26 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     ))}
                   </Select>
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <SecBtn onClick={() => setShowAssignModal(false)}>Cancel</SecBtn>
-                  <PrimaryBtn icon="bi bi-person-check" onClick={() => {
-                    if (selectedLeadForAssign && (assignedUser || assignedDepartment)) {
-                      const emp = localEmployees.find(e => e.userId === assignedUser || e.id === assignedUser);
-                      const userName = emp ? `${emp.firstName} ${emp.lastName}` : '';
-                      onAssignLead(selectedLeadForAssign, assignedUser, userName, assignedDepartment || '');
-                    }
-                    setShowAssignModal(false);
-                    setSelectedLeadForAssign(null);
-                    setAssignedUser('');
-                    setAssignedDepartment('');
-                  }}>Assign</PrimaryBtn>
-                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedLeadForAssign(null);
+                  setAssignedUser('');
+                  setAssignedDepartment('');
+                }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
+                  if (selectedLeadForAssign && (assignedUser || assignedDepartment)) {
+                    const emp = localEmployees.find(e => e.userId === assignedUser || e.id === assignedUser);
+                    const userName = emp ? `${emp.firstName} ${emp.lastName}` : '';
+                    onAssignLead(selectedLeadForAssign, assignedUser, userName, assignedDepartment || '');
+                  }
+                  setShowAssignModal(false);
+                  setSelectedLeadForAssign(null);
+                  setAssignedUser('');
+                  setAssignedDepartment('');
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Assign Lead</button>
               </div>
             </div>
           </div>
@@ -301,15 +326,24 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Comment Panel */}
         {showCommentPanel && selectedLeadForComments && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="section-title text-slate-900">Lead Comments</h3>
-                <button onClick={() => setShowCommentPanel(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                  <i className="bi bi-x-lg text-lg"></i>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={() => setShowCommentPanel(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                      <i className="bi bi-chat-left-text text-amber-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">Lead Comments</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Internal collaboration notes and logs for this lead.</p>
+                </div>
+                <button type="button" onClick={() => setShowCommentPanel(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
                 </button>
               </div>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+
+              <div className="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
                 {localLeads.find(l => l.id === selectedLeadForComments)?.comments?.map(comment => (
                   <div key={comment.id} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
                     <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center avatar-text font-semibold text-slate-600">
@@ -324,27 +358,28 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                   </div>
                 ))}
-                <div className="border-t border-slate-200 pt-4">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newComment}
-                      onChange={e => setNewComment(e.target.value)}
-                      placeholder="Add a comment..."
-                      className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 data-value text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300"
-                    />
-                    <button
-                      onClick={() => {
-                        if (newComment.trim() && selectedLeadForComments) {
-                          onAddComment(selectedLeadForComments, newComment);
-                          setNewComment('');
-                        }
-                      }}
-                      className="px-4 py-2 bg-slate-900 text-white rounded-lg btn font-semibold cursor-pointer hover:bg-slate-800 transition-colors"
-                    >
-                      Send
-                    </button>
-                  </div>
+              </div>
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={e => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 data-value text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                  />
+                  <button
+                    onClick={() => {
+                      if (newComment.trim() && selectedLeadForComments) {
+                        onAddComment(selectedLeadForComments, newComment);
+                        setNewComment('');
+                      }
+                    }}
+                    className="px-4 py-2 bg-slate-900 text-white rounded-lg btn font-semibold cursor-pointer hover:bg-slate-800 transition-colors"
+                  >
+                    Send
+                  </button>
                 </div>
               </div>
             </div>
@@ -353,15 +388,24 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
 
         {/* Log Activity Modal */}
         {showLogActivity && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="section-title text-slate-900">Log Activity</h3>
-                <button onClick={() => setShowLogActivity(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                  <i className="bi bi-x-lg text-lg"></i>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={() => setShowLogActivity(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                      <i className="bi bi-telephone text-emerald-600 text-xs"></i>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">Log Activity</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Record customer touchpoints, calls, emails, or meetings.</p>
+                </div>
+                <button type="button" onClick={() => setShowLogActivity(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x text-xl"></i>
                 </button>
               </div>
-              <div className="space-y-4">
+
+              <div className="p-6 space-y-4">
                 <div>
                   <Label>Activity Type</Label>
                   <Select value={logActivityType} onChange={e => setLogActivityType(e.target.value as any)}>
@@ -380,24 +424,25 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   <Label>Description</Label>
                   <textarea value={logActivityDesc} onChange={e => setLogActivityDesc(e.target.value)} placeholder="What happened during this activity..." rows={3} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 data-value text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" />
                 </div>
-                <div className="flex gap-2 pt-2">
-                  <SecBtn onClick={() => setShowLogActivity(false)}>Cancel</SecBtn>
-                  <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
-                    if (logActivitySubject.trim() && logActivityLeadId) {
-                      onLogCrmActivity({
-                        companyId: selectedCompany.id,
-                        leadId: logActivityLeadId,
-                        type: logActivityType,
-                        subject: logActivitySubject,
-                        description: logActivityDesc
-                      });
-                      setShowLogActivity(false);
-                      setLogActivitySubject('');
-                      setLogActivityDesc('');
-                      setLogActivityLeadId('');
-                    }
-                  }}>Log Activity</PrimaryBtn>
-                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowLogActivity(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
+                  if (logActivitySubject.trim() && logActivityLeadId) {
+                    onLogCrmActivity({
+                      companyId: selectedCompany.id,
+                      leadId: logActivityLeadId,
+                      type: logActivityType,
+                      subject: logActivitySubject,
+                      description: logActivityDesc
+                    });
+                    setShowLogActivity(false);
+                    setLogActivitySubject('');
+                    setLogActivityDesc('');
+                    setLogActivityLeadId('');
+                  }
+                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Log Activity</button>
               </div>
             </div>
           </div>
@@ -635,13 +680,24 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             )}
             {showCreateTask && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="section-title text-slate-900">Create Task</h3>
-                    <button onClick={() => setShowCreateTask(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x-lg text-lg"></i></button>
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={() => setShowCreateTask(false)}>
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
+                          <i className="bi bi-check2-square text-white text-xs"></i>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-900">Create Task</h3>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Add a new action item or follow-up task to a lead.</p>
+                    </div>
+                    <button type="button" onClick={() => setShowCreateTask(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                      <i className="bi bi-x text-xl"></i>
+                    </button>
                   </div>
-                  <div className="space-y-4">
+
+                  <div className="p-6 space-y-4">
                     <div><Label>Lead</Label><Select value={taskLeadId} onChange={e => setTaskLeadId(e.target.value)}><option value="">Select lead...</option>{localLeads.map(l => <option key={l.id} value={l.id}>{l.firstName} {l.lastName} — {l.companyName}</option>)}</Select></div>
                     <div><Label>Title</Label><Input value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="e.g. Follow-up call" required /></div>
                     <div><Label>Description</Label><textarea value={taskDesc} onChange={e => setTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" /></div>
@@ -651,34 +707,35 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       <div><Label>Priority</Label><Select value={taskPriority} onChange={e => setTaskPriority(e.target.value as any)}>{['Low', 'Medium', 'High', 'Urgent'].map(p => <option key={p}>{p}</option>)}</Select></div>
                     </div>
                     <div><Label>Due Date</Label><Input type="date" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} required /></div>
-                    <div className="flex gap-2 pt-2">
-                      <SecBtn onClick={() => setShowCreateTask(false)}>Cancel</SecBtn>
-                      <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
-                        if (taskTitle.trim() && taskLeadId && taskDueDate) {
-                          const lead = localLeads.find(l => l.id === taskLeadId);
-                          const assigneeId = taskAssignee || selectedUser.id;
-                          const assigneeEmp = localEmployees.find(e => e.userId === assigneeId || e.id === assigneeId);
-                          const assigneeName = assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : selectedUser.name;
-                          if (lead) {
-                            onCreateCrmTask({
-                              companyId: selectedCompany.id,
-                              leadId: taskLeadId,
-                              leadName: `${lead.firstName} ${lead.lastName}`,
-                              companyName: lead.companyName,
-                              title: taskTitle,
-                              description: taskDesc,
-                              type: taskType,
-                              priority: taskPriority,
-                              assignedTo: assigneeId,
-                              assignedToName: assigneeName,
-                              dueDate: new Date(taskDueDate).toISOString()
-                            });
-                            setShowCreateTask(false);
-                            setTaskTitle(''); setTaskDesc(''); setTaskLeadId(''); setTaskDueDate(''); setTaskAssignee('');
-                          }
+                  </div>
+
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onClick={() => setShowCreateTask(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => {
+                      if (taskTitle.trim() && taskLeadId && taskDueDate) {
+                        const lead = localLeads.find(l => l.id === taskLeadId);
+                        const assigneeId = taskAssignee || selectedUser.id;
+                        const assigneeEmp = localEmployees.find(e => e.userId === assigneeId || e.id === assigneeId);
+                        const assigneeName = assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : selectedUser.name;
+                        if (lead) {
+                          onCreateCrmTask({
+                            companyId: selectedCompany.id,
+                            leadId: taskLeadId,
+                            leadName: `${lead.firstName} ${lead.lastName}`,
+                            companyName: lead.companyName,
+                            title: taskTitle,
+                            description: taskDesc,
+                            type: taskType,
+                            priority: taskPriority,
+                            assignedTo: assigneeId,
+                            assignedToName: assigneeName,
+                            dueDate: new Date(taskDueDate).toISOString()
+                          });
+                          setShowCreateTask(false);
+                          setTaskTitle(''); setTaskDesc(''); setTaskLeadId(''); setTaskDueDate(''); setTaskAssignee('');
                         }
-                      }}>Create Task</PrimaryBtn>
-                    </div>
+                      }
+                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Task</button>
                   </div>
                 </div>
               </div>
@@ -724,13 +781,24 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             )}
             {showSendEmail && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="section-title text-slate-900">Send Email</h3>
-                    <button onClick={() => setShowSendEmail(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x-lg text-lg"></i></button>
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={() => setShowSendEmail(false)}>
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="h-7 w-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                          <i className="bi bi-envelope text-indigo-600 text-xs"></i>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-900">Send Email</h3>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Compose and send an email directly to a lead.</p>
+                    </div>
+                    <button type="button" onClick={() => setShowSendEmail(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                      <i className="bi bi-x text-xl"></i>
+                    </button>
                   </div>
-                  <div className="space-y-4">
+
+                  <div className="p-6 space-y-4">
                     <div><Label>To</Label><Select value={emailLeadId} onChange={e => {
                       setEmailLeadId(e.target.value);
                       const lead = localLeads.find(l => l.id === e.target.value);
@@ -739,22 +807,23 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     {emailTo && <div className="text-[10px] text-slate-400">Sending to: {emailTo}</div>}
                     <div><Label>Subject</Label><Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="Email subject" required /></div>
                     <div><Label>Body</Label><textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" placeholder="Write your email..." /></div>
-                    <div className="flex gap-2 pt-2">
-                      <SecBtn onClick={() => setShowSendEmail(false)}>Cancel</SecBtn>
-                      <PrimaryBtn icon="bi bi-send" onClick={() => {
-                        if (emailTo && emailSubject.trim() && emailBody.trim() && emailLeadId) {
-                          onSendCrmEmail({
-                            companyId: selectedCompany.id,
-                            leadId: emailLeadId,
-                            to: emailTo,
-                            subject: emailSubject,
-                            body: emailBody
-                          });
-                          setShowSendEmail(false);
-                          setEmailTo(''); setEmailSubject(''); setEmailBody(''); setEmailLeadId('');
-                        }
-                      }}>Send Email</PrimaryBtn>
-                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onClick={() => setShowSendEmail(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => {
+                      if (emailTo && emailSubject.trim() && emailBody.trim() && emailLeadId) {
+                        onSendCrmEmail({
+                          companyId: selectedCompany.id,
+                          leadId: emailLeadId,
+                          to: emailTo,
+                          subject: emailSubject,
+                          body: emailBody
+                        });
+                        setShowSendEmail(false);
+                        setEmailTo(''); setEmailSubject(''); setEmailBody(''); setEmailLeadId('');
+                      }
+                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Send Email</button>
                   </div>
                 </div>
               </div>

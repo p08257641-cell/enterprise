@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -16,6 +16,15 @@ import { FadeIn, Skeleton } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
 // No lucide-react imports needed
 import { modalAlert } from './utils/modal';
+
+const safeJson = async (res: Response): Promise<any> => {
+  try {
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  } catch (e) {
+    return {};
+  }
+};
 
 export default function App() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -100,8 +109,19 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [projectTasks, setProjectTasks] = useState<ProjectTask[]>([]);
   const [projectMilestones, setProjectMilestones] = useState<ProjectMilestone[]>([]);
 
+  // Operations & Projects module state
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [rfqs, setRfqs] = useState<RFQ[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [bomItems, setBomItems] = useState<BOMItem[]>([]);
+  const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
+  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
+  const [managedDocuments, setManagedDocuments] = useState<ManagedDocument[]>([]);
+
   // Navigation states
   const [activeView, setActiveView] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showTenantSetup, setShowTenantSetup] = useState(false);
   const [notificationCount, setNotificationCount] = useState(2);
   const [searchTerm, setSearchTerm] = useState('');
@@ -168,54 +188,54 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           fetch('/api/email-templates')
         ]);
 
-        const cData = await cRes.json();
-        const uData = await uRes.json();
-        const eData = await eRes.json();
-        const dData = await dRes.json();
-        const bData = await bRes.json();
-        const lData = await lRes.json();
-        const accData = await aRes.json();
-        const invData = await iRes.json();
-        const tData = await tRes.json();
-        const wData = await wRes.json();
-        const kData = await kRes.json();
-        const logData = await logRes.json();
-        const posProdData = await posProdRes.json();
-        const posCustData = await posCustRes.json();
-        const posSalesData = await posSalesRes.json();
-        const posCatData = await posCatRes.json();
-        const posTermData = await posTermRes.json();
-        const posShiftData = await posShiftRes.json();
-        const posDiscData = await posDiscRes.json();
-        const posRetData = await posRetRes.json();
-        const posReportData = await posReportRes.json();
-        const leavesData = await leavesRes.json();
-        const attData = await attRes.json();
-        const okrsData = await okrsRes.json();
-        const slipsData = await slipsRes.json();
-        const jeData = await jeRes.json();
-        const expData = await expRes.json();
-        const fpData = await fpRes.json();
-        const obData = await obRes.json();
-        const billData = await billRes.json();
-        const bpPayData = await bpPayRes.json();
-        const cpData = await cpRes.json();
-        const baData = await baRes.json();
-        const btxData = await btxRes.json();
-        const brData = await brRes.json();
-        const faData = await faRes.json();
-        const deData = await deRes.json();
-        const budData = await budRes.json();
-        const ccData = await ccRes.json();
-        const onbData = await onbRes.json();
-        const pgData = await pgRes.json();
-        const sbData = await sbRes.json();
-        const soData = await soRes.json();
-        const kbData = await kbRes.json();
-        const lmsData = await lmsRes.json();
-        const annData = await annRes.json();
-        const wtData = await wtRes.json();
-        const etData = await etRes.json();
+        const cData = await safeJson(cRes);
+        const uData = await safeJson(uRes);
+        const eData = await safeJson(eRes);
+        const dData = await safeJson(dRes);
+        const bData = await safeJson(bRes);
+        const lData = await safeJson(lRes);
+        const accData = await safeJson(aRes);
+        const invData = await safeJson(iRes);
+        const tData = await safeJson(tRes);
+        const wData = await safeJson(wRes);
+        const kData = await safeJson(kRes);
+        const logData = await safeJson(logRes);
+        const posProdData = await safeJson(posProdRes);
+        const posCustData = await safeJson(posCustRes);
+        const posSalesData = await safeJson(posSalesRes);
+        const posCatData = await safeJson(posCatRes);
+        const posTermData = await safeJson(posTermRes);
+        const posShiftData = await safeJson(posShiftRes);
+        const posDiscData = await safeJson(posDiscRes);
+        const posRetData = await safeJson(posRetRes);
+        const posReportData = await safeJson(posReportRes);
+        const leavesData = await safeJson(leavesRes);
+        const attData = await safeJson(attRes);
+        const okrsData = await safeJson(okrsRes);
+        const slipsData = await safeJson(slipsRes);
+        const jeData = await safeJson(jeRes);
+        const expData = await safeJson(expRes);
+        const fpData = await safeJson(fpRes);
+        const obData = await safeJson(obRes);
+        const billData = await safeJson(billRes);
+        const bpPayData = await safeJson(bpPayRes);
+        const cpData = await safeJson(cpRes);
+        const baData = await safeJson(baRes);
+        const btxData = await safeJson(btxRes);
+        const brData = await safeJson(brRes);
+        const faData = await safeJson(faRes);
+        const deData = await safeJson(deRes);
+        const budData = await safeJson(budRes);
+        const ccData = await safeJson(ccRes);
+        const onbData = await safeJson(onbRes);
+        const pgData = await safeJson(pgRes);
+        const sbData = await safeJson(sbRes);
+        const soData = await safeJson(soRes);
+        const kbData = await safeJson(kbRes);
+        const lmsData = await safeJson(lmsRes);
+        const annData = await safeJson(annRes);
+        const wtData = await safeJson(wtRes);
+        const etData = await safeJson(etRes);
 
         setCompanies(cData);
         setUsers(uData);
@@ -247,9 +267,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setSalaryBands(sbData);
         setSalesOrders(soData);
 
-        const scData = await scRes.json();
-        const sqData = await sqRes.json();
-        const stData = await stRes.json();
+        const scData = await safeJson(scRes);
+        const sqData = await safeJson(sqRes);
+        const stData = await safeJson(stRes);
         setSalesCustomers(scData);
         setSalesQuotations(sqData);
         setSalesTargets(stData);
@@ -261,15 +281,15 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
         // Fetch CRM activities
         const actRes = await fetch('/api/crm-activities');
-        setCrmActivities(await actRes.json());
+        setCrmActivities(await safeJson(actRes));
 
         // Fetch CRM tasks
         const taskRes = await fetch('/api/crm-tasks');
-        setCrmTasks(await taskRes.json());
+        setCrmTasks(await safeJson(taskRes));
 
         // Fetch CRM emails
         const emailRes = await fetch('/api/crm-emails');
-        setCrmEmails(await emailRes.json());
+        setCrmEmails(await safeJson(emailRes));
         setPayslips(slipsData);
         setJournalEntries(jeData);
         setExpenses(expData);
@@ -289,7 +309,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         // Fetch currency rates separately
         try {
           const crRes = await fetch('/api/currency-rates');
-          const crData = await crRes.json();
+          const crData = await safeJson(crRes);
           setCurrencyRates(crData);
         } catch (e) { console.error('Failed to load currency rates:', e); }
 
@@ -305,14 +325,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
             fetch('/api/policy-documents'),
             fetch('/api/filing-deadlines')
           ]);
-          setTaxCodes(await tcRes.json());
-          setTaxReturns(await trRes.json());
-          setIntercompanyTxns(await icRes.json());
-          setConsolidationRules(await conRes.json());
-          setComplianceChecks(await compRes.json());
-          setAuditSnapshots(await asRes.json());
-          setPolicyDocuments(await pdRes.json());
-          setFilingDeadlines(await fdRes.json());
+          setTaxCodes(await safeJson(tcRes));
+          setTaxReturns(await safeJson(trRes));
+          setIntercompanyTxns(await safeJson(icRes));
+          setConsolidationRules(await safeJson(conRes));
+          setComplianceChecks(await safeJson(compRes));
+          setAuditSnapshots(await safeJson(asRes));
+          setPolicyDocuments(await safeJson(pdRes));
+          setFilingDeadlines(await safeJson(fdRes));
         } catch (e) { console.error('Failed to load Tier 3 data:', e); }
 
         // Fetch project data
@@ -321,9 +341,31 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
             fetch('/api/project-tasks'),
             fetch('/api/project-milestones')
           ]);
-          setProjectTasks(await ptRes.json());
-          setProjectMilestones(await pmRes.json());
+          setProjectTasks(await safeJson(ptRes));
+          setProjectMilestones(await safeJson(pmRes));
         } catch (e) { console.error('Failed to load project data:', e); }
+
+        // Fetch Operations & Projects module data
+        try {
+          const [vnRes, poRes, rfqRes, woRes, bomRes, qcRes, mtRes, docRes] = await Promise.all([
+            fetch('/api/vendors'),
+            fetch('/api/purchase-orders'),
+            fetch('/api/rfqs'),
+            fetch('/api/work-orders'),
+            fetch('/api/bom-items'),
+            fetch('/api/quality-checks'),
+            fetch('/api/maintenance-tasks'),
+            fetch('/api/documents'),
+          ]);
+          setVendors(await safeJson(vnRes));
+          setPurchaseOrders(await safeJson(poRes));
+          setRfqs(await safeJson(rfqRes));
+          setWorkOrders(await safeJson(woRes));
+          setBomItems(await safeJson(bomRes));
+          setQualityChecks(await safeJson(qcRes));
+          setMaintenanceTasks(await safeJson(mtRes));
+          setManagedDocuments(await safeJson(docRes));
+        } catch (e) { console.error('Failed to load Operations & Projects data:', e); }
 
         // Select default tenant and user role
         if (cData.length > 0) setSelectedCompany(cData[0]);
@@ -344,7 +386,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     (async () => {
       try {
         const res = await fetch(`/api/payroll-tax-config?companyId=${selectedCompany.id}`);
-        const cfg = await res.json();
+        const cfg = await safeJson(res);
         if (!cancelled) setPayrollTaxConfig(cfg || null);
       } catch (e) { console.error('Failed to load payroll tax config:', e); }
     })();
@@ -381,15 +423,15 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(companyInput)
       });
-      const newComp = await res.json();
+      const newComp = await safeJson(res);
       setCompanies([...companies, newComp]);
       setSelectedCompany(newComp);
       
       // Reload logs and GL accounts
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
       const accRes = await fetch('/api/accounting');
-      const accData = await accRes.json();
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
     } catch (err) {
       console.error(err);
@@ -408,14 +450,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           billingPlan: bPlan
         })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       
       // Update local states
       setCompanies(companies.map(c => c.id === selectedCompany.id ? updated : c));
       setSelectedCompany(updated);
 
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -428,7 +470,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ activeModules: activeMods, billingPlan: bPlan })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setCompanies(companies.map(c => (c.id === companyId ? updated : c)));
       if (selectedCompany && selectedCompany.id === companyId) setSelectedCompany(updated);
     } catch (err) {
@@ -443,14 +485,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(empInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       
       setEmployees([...employees, data.employee]);
       setNotificationCount(prev => prev + 1);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -463,7 +505,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setEmployees(employees.map(e => e.id === id ? { ...e, ...data } : e));
     } catch (err) {
       console.error(err);
@@ -477,12 +519,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(deptInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setDepartments([...departments, data]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -495,12 +537,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(branchInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setBranches([...branches, data.branch]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -513,10 +555,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setDepartments(departments.map(d => d.id === id ? { ...d, ...data } : d));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -525,7 +567,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       await fetch(`/api/departments/${id}`, { method: 'DELETE' });
       setDepartments(departments.filter(d => d.id !== id));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -536,10 +578,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setOnboardings([...onboardings, data]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -550,7 +592,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setOnboardings(onboardings.map(o => o.id === id ? { ...o, ...data } : o));
     } catch (err) { console.error(err); }
   };
@@ -560,7 +602,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       await fetch(`/api/onboardings/${id}`, { method: 'DELETE' });
       setOnboardings(onboardings.filter(o => o.id !== id));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -571,12 +613,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(leadInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setLeads([...leads, data.lead]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -590,7 +632,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, companyId: selectedCompany.id })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
 
       setLeads(leads.map(l => l.id === leadId ? data.lead : l));
       if (data.invoiceCreated) {
@@ -603,8 +645,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/audit-logs'),
         fetch('/api/accounting')
       ]);
-      setAuditLogs(await logRes.json());
-      const accData = await accRes.json();
+      setAuditLogs(await safeJson(logRes));
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
     } catch (err) {
       console.error(err);
@@ -618,7 +660,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invInput)
       });
-      const newInv = await res.json();
+      const newInv = await safeJson(res);
       setInvoices([newInv, ...invoices]);
 
       // Reload audits & ledger
@@ -626,8 +668,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/audit-logs'),
         fetch('/api/accounting')
       ]);
-      setAuditLogs(await logRes.json());
-      const accData = await accRes.json();
+      setAuditLogs(await safeJson(logRes));
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
     } catch (err) {
       console.error(err);
@@ -642,7 +684,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyId: selectedCompany.id })
       });
-      const paid = await res.json();
+      const paid = await safeJson(res);
       setInvoices(invoices.map(i => i.id === invId ? paid : i));
 
       // Reload audits & ledger balances
@@ -650,8 +692,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/audit-logs'),
         fetch('/api/accounting')
       ]);
-      setAuditLogs(await logRes.json());
-      const accData = await accRes.json();
+      setAuditLogs(await safeJson(logRes));
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
     } catch (err) {
       console.error(err);
@@ -665,7 +707,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newRole })
       });
-      const updatedUser = await res.json();
+      const updatedUser = await safeJson(res);
       
       // Update local state
       setUsers(users.map(u => 
@@ -704,9 +746,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/employees'),
         fetch('/api/audit-logs')
       ]);
-      setLeaves(await lRes.json());
-      setEmployees(await eRes.json());
-      setAuditLogs(await logRes.json());
+      setLeaves(await safeJson(lRes));
+      setEmployees(await safeJson(eRes));
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -727,9 +769,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/employees'),
         fetch('/api/audit-logs')
       ]);
-      setLeaves(await lRes.json());
-      setEmployees(await eRes.json());
-      setAuditLogs(await logRes.json());
+      setLeaves(await safeJson(lRes));
+      setEmployees(await safeJson(eRes));
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -752,7 +794,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...leaveInput, companyId: selectedCompany.id })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setLeaves([...leaves, data]);
     } catch (err) {
       console.error(err);
@@ -779,7 +821,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       
       const attRes = await fetch('/api/attendance');
-      setAttendance(await attRes.json());
+      setAttendance(await safeJson(attRes));
     } catch (err) {
       console.error(err);
     }
@@ -800,7 +842,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...okrInput, companyId: selectedCompany.id })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setOkrs([...okrs, data]);
     } catch (err) {
       console.error(err);
@@ -816,7 +858,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       
       const oRes = await fetch('/api/okrs');
-      setOkrs(await oRes.json());
+      setOkrs(await safeJson(oRes));
     } catch (err) {
       console.error(err);
     }
@@ -844,10 +886,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/accounting'),
         fetch('/api/audit-logs')
       ]);
-      setPayslips(await pRes.json());
-      const accData = await aRes.json();
+      setPayslips(await safeJson(pRes));
+      const accData = await safeJson(aRes);
       setGlAccounts(accData.accounts);
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -868,7 +910,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           userName: selectedUser.name
         })
       });
-      const group = await res.json();
+      const group = await safeJson(res);
       setPayrollGroups([...payrollGroups, group]);
     } catch (err) {
       console.error(err);
@@ -900,7 +942,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           userName: selectedUser.name
         })
       });
-      const band = await res.json();
+      const band = await safeJson(res);
       setSalaryBands([...salaryBands, band]);
     } catch (err) {
       console.error(err);
@@ -914,7 +956,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setSalaryBands(salaryBands.map(b => b.id === bandId ? updated : b));
     } catch (err) {
       console.error(err);
@@ -939,7 +981,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: itemId, adjustment: qty, companyId: selectedCompany.id })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setInventory(inventory.map(i => i.id === itemId ? data.item : i));
 
       if (data.lowStockAlert) {
@@ -948,7 +990,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -961,12 +1003,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(tktInput)
       });
-      const newTkt = await res.json();
+      const newTkt = await safeJson(res);
       setTickets([newTkt, ...tickets]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -979,11 +1021,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setTickets(tickets.map(t => t.id === id ? { ...t, ...updated } : t));
 
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -996,11 +1038,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyId, ...cfg })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setPayrollTaxConfig(updated);
 
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1013,10 +1055,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(article)
       });
-      const created = await res.json();
+      const created = await safeJson(res);
       setKbArticles([created, ...kbArticles]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1029,10 +1071,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(course)
       });
-      const created = await res.json();
+      const created = await safeJson(res);
       setLmsCourses([created, ...lmsCourses]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1045,10 +1087,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(announcement)
       });
-      const created = await res.json();
+      const created = await safeJson(res);
       setAnnouncements([created, ...announcements]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1061,7 +1103,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setWorkflowTriggers(prev => prev.map(t => t.id === triggerId ? { ...t, enabled } : t));
     } catch (err) {
       console.error(err);
@@ -1075,10 +1117,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(template)
       });
-      const created = await res.json();
+      const created = await safeJson(res);
       setEmailTemplates([created, ...emailTemplates]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1091,19 +1133,31 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(wfInput)
       });
-      const newWf = await res.json();
+      const newWf = await safeJson(res);
       setWorkflows([...workflows, newWf]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleToggleWorkflow = (id: string, active: boolean) => {
-    setWorkflows(workflows.map(w => w.id === id ? { ...w, isActive: active } : w));
+  const handleToggleWorkflow = async (id: string, active: boolean) => {
+    try {
+      const res = await fetch(`/api/workflows/${id}/toggle`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: active, companyId: selectedCompany?.id, ...actorBody() })
+      });
+      const data = await safeJson(res);
+      setWorkflows(workflows.map(w => w.id === id ? { ...w, isActive: active } : w));
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await safeJson(logRes));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleInviteUser = async (usrInput: { name: string; email: string; role: string; roles?: string[]; department: string; branch: string }) => {
@@ -1114,12 +1168,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...usrInput, companyId: selectedCompany.id })
       });
-      const newUser = await res.json();
+      const newUser = await safeJson(res);
       setUsers([...users, newUser]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1133,12 +1187,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, permissions, companyId: selectedCompany.id })
       });
-      const newKey = await res.json();
+      const newKey = await safeJson(res);
       setApiKeys([...apiKeys, newKey]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1152,12 +1206,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productInput)
       });
-      const data = await res.json();
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to add POS product', { variant: 'danger' });
+        return;
+      }
+      const data = await safeJson(res);
       setPosProducts([...posProducts, data]);
       
-      // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1170,12 +1228,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(customerInput)
       });
-      const data = await res.json();
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to add POS customer', { variant: 'danger' });
+        return;
+      }
+      const data = await safeJson(res);
       setPosCustomers([...posCustomers, data]);
       
-      // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1188,7 +1250,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(saleInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setPosSales([...posSales, data]);
       setNotificationCount(prev => prev + 1);
       
@@ -1197,12 +1259,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/pos/products'),
         fetch('/api/pos/customers')
       ]);
-      setPosProducts(await posProdRes.json());
-      setPosCustomers(await posCustRes.json());
+      setPosProducts(await safeJson(posProdRes));
+      setPosCustomers(await safeJson(posCustRes));
       
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1215,7 +1277,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(catInput),
       });
-      const newCat = await res.json();
+      const newCat = await safeJson(res);
       setPosCategories([...posCategories, newCat]);
     } catch (e) { console.error('Failed to create POS category:', e); }
   };
@@ -1227,7 +1289,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(termInput),
       });
-      const newTerm = await res.json();
+      const newTerm = await safeJson(res);
       setPosTerminals([...posTerminals, newTerm]);
     } catch (e) { console.error('Failed to create POS terminal:', e); }
   };
@@ -1239,7 +1301,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(shiftInput),
       });
-      const newShift = await res.json();
+      const newShift = await safeJson(res);
       setPosShifts([...posShifts, newShift]);
     } catch (e) { console.error('Failed to create POS shift:', e); }
   };
@@ -1250,7 +1312,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setPosShifts(posShifts.map(s => s.id === shiftId ? updated : s));
     } catch (e) { console.error('Failed to close POS shift:', e); }
   };
@@ -1262,7 +1324,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(discInput),
       });
-      const newDisc = await res.json();
+      const newDisc = await safeJson(res);
       setPosDiscounts([...posDiscounts, newDisc]);
     } catch (e) { console.error('Failed to create POS discount:', e); }
   };
@@ -1274,7 +1336,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setPosDiscounts(posDiscounts.map(d => d.id === id ? updated : d));
     } catch (e) { console.error('Failed to update POS discount:', e); }
   };
@@ -1286,7 +1348,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(retInput),
       });
-      const newRet = await res.json();
+      const newRet = await safeJson(res);
       setPosReturns([...posReturns, newRet]);
     } catch (e) { console.error('Failed to create POS return:', e); }
   };
@@ -1297,7 +1359,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setPosReturns(posReturns.map(r => r.id === returnId ? updated : r));
     } catch (e) { console.error('Failed to approve POS return:', e); }
   };
@@ -1309,7 +1371,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reportInput),
       });
-      const newReport = await res.json();
+      const newReport = await safeJson(res);
       setPosDailyReports([...posDailyReports, newReport]);
     } catch (e) { console.error('Failed to generate POS report:', e); }
   };
@@ -1321,12 +1383,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const lead = await res.json();
+      const lead = await safeJson(res);
       setLeads(leads.map(l => l.id === leadId ? lead : l));
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1339,10 +1401,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assignedTo: userId, assignedToName: userName, department })
       });
-      const lead = await res.json();
+      const lead = await safeJson(res);
       setLeads(leads.map(l => l.id === leadId ? lead : l));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1355,7 +1417,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser?.id, userName: selectedUser?.name, content })
       });
-      const lead = await res.json();
+      const lead = await safeJson(res);
       setLeads(leads.map(l => l.id === leadId ? lead : l));
     } catch (err) {
       console.error(err);
@@ -1369,7 +1431,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...activity, performedBy: selectedUser?.id, performedByName: selectedUser?.name })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setCrmActivities([data, ...crmActivities]);
     } catch (err) {
       console.error(err);
@@ -1383,7 +1445,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setCrmTasks([data, ...crmTasks]);
     } catch (err) {
       console.error(err);
@@ -1397,7 +1459,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setCrmTasks(crmTasks.map(t => t.id === taskId ? data : t));
     } catch (err) {
       console.error(err);
@@ -1411,11 +1473,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...email, sentBy: selectedUser?.id, sentByName: selectedUser?.name })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setCrmEmails([data, ...crmEmails]);
       // Also update activities since the API logs it
       const actRes = await fetch('/api/crm-activities');
-      setCrmActivities(await actRes.json());
+      setCrmActivities(await safeJson(actRes));
     } catch (err) {
       console.error(err);
     }
@@ -1428,12 +1490,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setInventory([...inventory, data.item]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1446,7 +1508,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setAuditLogs([...auditLogs, data.log]);
     } catch (err) {
       console.error(err);
@@ -1460,12 +1522,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(keyInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setApiKeys([...apiKeys, data.key]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1478,12 +1540,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(wfInput)
       });
-      const data = await res.json();
+      const data = await safeJson(res);
       setWorkflows([...workflows, data.workflow]);
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1502,14 +1564,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         body: JSON.stringify({ ...accountInput, companyId: selectedCompany.id })
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await safeJson(res);
         await modalAlert(err.error, { variant: 'danger' });
         return;
       }
-      const newAccount = await res.json();
+      const newAccount = await safeJson(res);
       setGlAccounts([...glAccounts, newAccount]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1522,7 +1584,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setGlAccounts(glAccounts.map(a => a.id === accountId ? updated : a));
     } catch (err) {
       console.error(err);
@@ -1533,7 +1595,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     try {
       const res = await fetch(`/api/gl-accounts/${accountId}`, { method: 'DELETE' });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await safeJson(res);
         await modalAlert(err.error, { variant: 'danger' });
         return;
       }
@@ -1557,14 +1619,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         })
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await safeJson(res);
         await modalAlert(err.error, { variant: 'danger' });
         return;
       }
-      const newEntry = await res.json();
+      const newEntry = await safeJson(res);
       setJournalEntries([...journalEntries, newEntry]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1578,14 +1640,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setJournalEntries(journalEntries.map(j => j.id === entryId ? updated : j));
       // Reload GL accounts to reflect balance changes
       const accRes = await fetch('/api/accounting');
-      const accData = await accRes.json();
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1599,10 +1661,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setJournalEntries(journalEntries.map(j => j.id === entryId ? updated : j));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1616,14 +1678,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setJournalEntries(journalEntries.map(j => j.id === entryId ? updated : j));
       // Reload GL accounts to reflect reversed balances
       const accRes = await fetch('/api/accounting');
-      const accData = await accRes.json();
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1637,10 +1699,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...expInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newExp = await res.json();
+      const newExp = await safeJson(res);
       setExpenses([...expenses, newExp]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1654,18 +1716,18 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setExpenses(expenses.map(e => e.id === expenseId ? updated : e));
       // Reload GL accounts and journal entries
       const [accRes, jeRes] = await Promise.all([
         fetch('/api/accounting'),
         fetch('/api/journal-entries')
       ]);
-      const accData = await accRes.json();
+      const accData = await safeJson(accRes);
       setGlAccounts(accData.accounts);
-      setJournalEntries(await jeRes.json());
+      setJournalEntries(await safeJson(jeRes));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1679,10 +1741,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setFiscalPeriods(fiscalPeriods.map(f => f.id === periodId ? updated : f));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
     }
@@ -1696,7 +1758,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...obInput, companyId: selectedCompany.id })
       });
-      const newOb = await res.json();
+      const newOb = await safeJson(res);
       const exists = openingBalances.find(o => o.accountId === obInput.accountId && o.periodId === obInput.periodId);
       if (exists) {
         setOpeningBalances(openingBalances.map(o => o.id === newOb.id ? newOb : o));
@@ -1720,11 +1782,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...billInput, companyId: selectedCompany.id, createdBy: selectedUser.id, createdByName: selectedUser.name })
       });
-      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
-      const newBill = await res.json();
+      if (!res.ok) { const err = await safeJson(res); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newBill = await safeJson(res);
       setBills([...bills, newBill]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1736,10 +1798,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setBills(bills.map(b => b.id === billId ? updated : b));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1751,14 +1813,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, paymentDate: new Date().toISOString().split('T')[0], paymentMethod, bankAccountId, createdBy: selectedUser.id })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setBills(bills.map(b => b.id === billId ? updated : b));
       // Reload bank data
       const [baRes, bpRes] = await Promise.all([fetch('/api/bank-accounts'), fetch('/api/bills')]);
-      setBankAccounts(await baRes.json());
-      setBills(await bpRes.json());
+      setBankAccounts(await safeJson(baRes));
+      setBills(await safeJson(bpRes));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1770,16 +1832,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...paymentInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
-      const newPayment = await res.json();
+      if (!res.ok) { const err = await safeJson(res); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newPayment = await safeJson(res);
       setCustomerPayments([...customerPayments, newPayment]);
       // Reload invoices and bank
       const [invRes, baRes] = await Promise.all([fetch('/api/accounting'), fetch('/api/bank-accounts')]);
-      const accData = await invRes.json();
+      const accData = await safeJson(invRes);
       setInvoices(accData.invoices);
-      setBankAccounts(await baRes.json());
+      setBankAccounts(await safeJson(baRes));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1791,11 +1853,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...orderInput, companyId: selectedCompany.id })
       });
-      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
-      const newOrder = await res.json();
+      if (!res.ok) { const err = await safeJson(res); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newOrder = await safeJson(res);
       setSalesOrders([newOrder, ...salesOrders]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1807,10 +1869,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setSalesOrders(salesOrders.map(o => o.id === orderId ? updated : o));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1822,8 +1884,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...custInput, companyId: selectedCompany.id })
       });
-      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
-      const newCust = await res.json();
+      if (!res.ok) { const err = await safeJson(res); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newCust = await safeJson(res);
       setSalesCustomers([newCust, ...salesCustomers]);
     } catch (err) { console.error(err); }
   };
@@ -1836,7 +1898,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setSalesCustomers(salesCustomers.map(c => c.id === custId ? updated : c));
     } catch (err) { console.error(err); }
   };
@@ -1857,8 +1919,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...quoteInput, companyId: selectedCompany.id })
       });
-      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
-      const newQuote = await res.json();
+      if (!res.ok) { const err = await safeJson(res); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newQuote = await safeJson(res);
       setSalesQuotations([newQuote, ...salesQuotations]);
     } catch (err) { console.error(err); }
   };
@@ -1871,7 +1933,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setSalesQuotations(salesQuotations.map(q => q.id === quoteId ? updated : q));
     } catch (err) { console.error(err); }
   };
@@ -1892,8 +1954,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...targetInput, companyId: selectedCompany.id })
       });
-      if (!res.ok) { const err = await res.json(); await modalAlert(err.error, { variant: 'danger' }); return; }
-      const newTarget = await res.json();
+      if (!res.ok) { const err = await safeJson(res); await modalAlert(err.error, { variant: 'danger' }); return; }
+      const newTarget = await safeJson(res);
       setSalesTargets([newTarget, ...salesTargets]);
     } catch (err) { console.error(err); }
   };
@@ -1906,7 +1968,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setSalesTargets(salesTargets.map(t => t.id === targetId ? updated : t));
     } catch (err) { console.error(err); }
   };
@@ -1927,7 +1989,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...baInput, companyId: selectedCompany.id })
       });
-      const newBA = await res.json();
+      const newBA = await safeJson(res);
       setBankAccounts([...bankAccounts, newBA]);
     } catch (err) { console.error(err); }
   };
@@ -1940,12 +2002,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...recInput, companyId: selectedCompany.id, completedBy: selectedUser.id, completedByName: selectedUser.name })
       });
-      const newRec = await res.json();
+      const newRec = await safeJson(res);
       setBankReconciliations([...bankReconciliations, newRec]);
       const txRes = await fetch('/api/bank-transactions');
-      setBankTransactions(await txRes.json());
+      setBankTransactions(await safeJson(txRes));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1957,10 +2019,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...assetInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newAsset = await res.json();
+      const newAsset = await safeJson(res);
       setFixedAssets([...fixedAssets, newAsset]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1972,10 +2034,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ disposalPrice, disposalDate: new Date().toISOString().split('T')[0], userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setFixedAssets(fixedAssets.map(a => a.id === assetId ? updated : a));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -1987,13 +2049,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyId: selectedCompany.id, period, createdBy: selectedUser.id })
       });
-      const newEntries = await res.json();
+      const newEntries = await safeJson(res);
       setDepreciationEntries([...depreciationEntries, ...newEntries]);
       // Reload fixed assets
       const faRes = await fetch('/api/fixed-assets');
-      setFixedAssets(await faRes.json());
+      setFixedAssets(await safeJson(faRes));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2005,10 +2067,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...budgetInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newBudget = await res.json();
+      const newBudget = await safeJson(res);
       setBudgets([...budgets, newBudget]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2020,10 +2082,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setBudgets(budgets.map(b => b.id === budgetId ? updated : b));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2035,10 +2097,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...ccInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newCC = await res.json();
+      const newCC = await safeJson(res);
       setCostCenters([...costCenters, newCC]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2050,10 +2112,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...rateInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newRate = await res.json();
+      const newRate = await safeJson(res);
       setCurrencyRates([...currencyRates.filter(r => !(r.baseCurrency === rateInput.baseCurrency && r.targetCurrency === rateInput.targetCurrency)), newRate]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2069,7 +2131,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...trInput, companyId: selectedCompany.id, createdBy: selectedUser.id, createdByName: selectedUser.name })
       });
-      const newTR = await res.json();
+      const newTR = await safeJson(res);
       setTaxReturns([...taxReturns, newTR]);
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2083,10 +2145,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setTaxReturns(taxReturns.map(t => t.id === returnId ? updated : t));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2098,10 +2160,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...txInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newTx = await res.json();
+      const newTx = await safeJson(res);
       setIntercompanyTxns([...intercompanyTxns, newTx]);
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2113,10 +2175,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setIntercompanyTxns(intercompanyTxns.map(t => t.id === txId ? updated : t));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2128,10 +2190,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setIntercompanyTxns(intercompanyTxns.map(t => t.id === txId ? updated : t));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2143,7 +2205,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...ruleInput, companyId: selectedCompany.id, createdBy: selectedUser.id })
       });
-      const newRule = await res.json();
+      const newRule = await safeJson(res);
       setConsolidationRules([...consolidationRules, newRule]);
     } catch (err) { console.error(err); }
   };
@@ -2156,10 +2218,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setComplianceChecks(complianceChecks.map(c => c.id === checkId ? updated : c));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2170,7 +2232,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ employeeId })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setPolicyDocuments(policyDocuments.map(p => p.id === policyId ? updated : p));
     } catch (err) { console.error(err); }
   };
@@ -2183,10 +2245,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setFilingDeadlines(filingDeadlines.map(f => f.id === filingId ? updated : f));
       const logRes = await fetch('/api/audit-logs');
-      setAuditLogs(await logRes.json());
+      setAuditLogs(await safeJson(logRes));
     } catch (err) { console.error(err); }
   };
 
@@ -2197,7 +2259,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(checkInput)
       });
-      const newCheck = await res.json();
+      const newCheck = await safeJson(res);
       setComplianceChecks([...complianceChecks, newCheck]);
     } catch (err) { console.error(err); }
   };
@@ -2209,13 +2271,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filingInput)
       });
-      const newFiling = await res.json();
+      const newFiling = await safeJson(res);
       setFilingDeadlines([...filingDeadlines, newFiling]);
     } catch (err) { console.error(err); }
   };
 
   const refreshAuditLogs = async () => {
-    try { const res = await fetch('/api/audit-logs'); setAuditLogs(await res.json()); } catch (err) { console.error(err); }
+    try { const res = await fetch('/api/audit-logs'); setAuditLogs(await safeJson(res)); } catch (err) { console.error(err); }
   };
   const actorBody = () => ({ userId: selectedUser?.id, userName: selectedUser?.name });
 
@@ -2226,7 +2288,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...tcInput, companyId: selectedCompany.id, createdBy: selectedUser.id, createdByName: selectedUser.name })
       });
-      setTaxCodes([...taxCodes, await res.json()]);
+      setTaxCodes([...taxCodes, await safeJson(res)]);
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
   };
@@ -2236,7 +2298,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...values, ...actorBody() })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setTaxCodes(taxCodes.map(t => t.id === id ? updated : t));
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2255,7 +2317,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...values, ...actorBody() })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setTaxReturns(taxReturns.map(t => t.id === id ? updated : t));
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2274,7 +2336,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...values, ...actorBody() })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setComplianceChecks(complianceChecks.map(c => c.id === id ? updated : c));
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2293,7 +2355,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...values, ...actorBody() })
       });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setFilingDeadlines(filingDeadlines.map(f => f.id === id ? updated : f));
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2309,7 +2371,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const handleCreateProjectTask = async (task: { companyId: string; title: string; description?: string; status?: string; priority?: string; assignee?: string; assigneeName?: string; due?: string }) => {
     try {
       const res = await fetch('/api/project-tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...task, ...actorBody() }) });
-      const newTask = await res.json();
+      const newTask = await safeJson(res);
       setProjectTasks([...projectTasks, newTask]);
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2318,7 +2380,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const handleUpdateProjectTask = async (id: string, values: any) => {
     try {
       const res = await fetch(`/api/project-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setProjectTasks(projectTasks.map(t => t.id === id ? updated : t));
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2335,7 +2397,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const handleCreateProjectMilestone = async (ms: { companyId: string; name: string; due?: string; status?: string; completion?: number }) => {
     try {
       const res = await fetch('/api/project-milestones', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...ms, ...actorBody() }) });
-      const newMs = await res.json();
+      const newMs = await safeJson(res);
       setProjectMilestones([...projectMilestones, newMs]);
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2344,7 +2406,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const handleUpdateProjectMilestone = async (id: string, values: any) => {
     try {
       const res = await fetch(`/api/project-milestones/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
-      const updated = await res.json();
+      const updated = await safeJson(res);
       setProjectMilestones(projectMilestones.map(m => m.id === id ? updated : m));
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
@@ -2358,9 +2420,181 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     } catch (err) { console.error(err); }
   };
 
+  // --- PROCUREMENT HANDLERS ---
+  const handleCreateVendor = async (data: { name: string; type: string; contact: string; email: string; rating: number }) => {
+    try {
+      const res = await fetch('/api/vendors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to create vendor', { variant: 'danger' });
+        return;
+      }
+      const v = await safeJson(res); setVendors(prev => [...prev, v]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateVendor = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/vendors/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to update vendor', { variant: 'danger' });
+        return;
+      }
+      const updated = await safeJson(res); setVendors(vendors.map(v => v.id === id ? updated : v));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteVendor = async (id: string) => {
+    try {
+      const res = await fetch(`/api/vendors/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to delete vendor', { variant: 'danger' });
+        return;
+      }
+      setVendors(vendors.filter(v => v.id !== id));
+    } catch (err) { console.error(err); }
+  };
+  const handleCreatePurchaseOrder = async (data: { vendorId: string; vendorName: string; item: string; qty: number; unitPrice: number }) => {
+    try {
+      const res = await fetch('/api/purchase-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to create purchase order', { variant: 'danger' });
+        return;
+      }
+      const po = await safeJson(res); setPurchaseOrders(prev => [...prev, po]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdatePurchaseOrder = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/purchase-orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      if (!res.ok) {
+        const err = await safeJson(res);
+        await modalAlert(err.error || 'Failed to update purchase order', { variant: 'danger' });
+        return;
+      }
+      const updated = await safeJson(res); setPurchaseOrders(purchaseOrders.map(po => po.id === id ? updated : po));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeletePurchaseOrder = async (id: string) => {
+    try {
+      await fetch(`/api/purchase-orders/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setPurchaseOrders(purchaseOrders.filter(po => po.id !== id));
+    } catch (err) { console.error(err); }
+  };
+  const handleCreateRFQ = async (data: { item: string; vendorsInvited: number }) => {
+    try {
+      const res = await fetch('/api/rfqs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      const rfq = await safeJson(res); setRfqs(prev => [...prev, rfq]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateRFQ = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/rfqs/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await safeJson(res); setRfqs(rfqs.map(r => r.id === id ? updated : r));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteRFQ = async (id: string) => {
+    try {
+      await fetch(`/api/rfqs/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setRfqs(rfqs.filter(r => r.id !== id));
+    } catch (err) { console.error(err); }
+  };
+
+  // --- MANUFACTURING HANDLERS ---
+  const handleCreateWorkOrder = async (data: { product: string; qty: number; line: string; dueDate?: string }) => {
+    try {
+      const res = await fetch('/api/work-orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      const wo = await safeJson(res); setWorkOrders(prev => [...prev, wo]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateWorkOrder = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/work-orders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await safeJson(res); setWorkOrders(workOrders.map(wo => wo.id === id ? updated : wo));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteWorkOrder = async (id: string) => {
+    try {
+      await fetch(`/api/work-orders/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setWorkOrders(workOrders.filter(wo => wo.id !== id));
+    } catch (err) { console.error(err); }
+  };
+  const handleCreateBOMItem = async (data: { product: string; part: string; qty: number; unit: string; cost: number }) => {
+    try {
+      const res = await fetch('/api/bom-items', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      const item = await safeJson(res); setBomItems(prev => [...prev, item]);
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteBOMItem = async (id: string) => {
+    try {
+      await fetch(`/api/bom-items/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setBomItems(bomItems.filter(b => b.id !== id));
+    } catch (err) { console.error(err); }
+  };
+  const handleCreateQualityCheck = async (data: { check: string; result: string; inspector: string; notes?: string }) => {
+    try {
+      const res = await fetch('/api/quality-checks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      const qc = await safeJson(res); setQualityChecks(prev => [...prev, qc]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateQualityCheck = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/quality-checks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await safeJson(res); setQualityChecks(qualityChecks.map(q => q.id === id ? updated : q));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteQualityCheck = async (id: string) => {
+    try {
+      await fetch(`/api/quality-checks/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setQualityChecks(qualityChecks.filter(q => q.id !== id));
+    } catch (err) { console.error(err); }
+  };
+
+  // --- ASSET MAINTENANCE HANDLERS ---
+  const handleCreateMaintenanceTask = async (data: { assetId: string; assetName: string; task: string; due: string; owner: string }) => {
+    try {
+      const res = await fetch('/api/maintenance-tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      const mt = await safeJson(res); setMaintenanceTasks(prev => [...prev, mt]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateMaintenanceTask = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/maintenance-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await safeJson(res); setMaintenanceTasks(maintenanceTasks.map(mt => mt.id === id ? updated : mt));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteMaintenanceTask = async (id: string) => {
+    try {
+      await fetch(`/api/maintenance-tasks/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setMaintenanceTasks(maintenanceTasks.filter(mt => mt.id !== id));
+    } catch (err) { console.error(err); }
+  };
+
+  // --- DOCUMENT HANDLERS ---
+  const handleCreateDocument = async (data: { name: string; type: string; size?: string }) => {
+    try {
+      const res = await fetch('/api/documents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, companyId: selectedCompany?.id, ...actorBody() }) });
+      const doc = await safeJson(res); setManagedDocuments(prev => [...prev, doc]);
+    } catch (err) { console.error(err); }
+  };
+  const handleUpdateDocument = async (id: string, values: any) => {
+    try {
+      const res = await fetch(`/api/documents/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...values, ...actorBody() }) });
+      const updated = await safeJson(res); setManagedDocuments(managedDocuments.map(d => d.id === id ? updated : d));
+    } catch (err) { console.error(err); }
+  };
+  const handleDeleteDocument = async (id: string) => {
+    try {
+      await fetch(`/api/documents/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setManagedDocuments(managedDocuments.filter(d => d.id !== id));
+    } catch (err) { console.error(err); }
+  };
+
   const handleClearNotifications = () => {
     setNotificationCount(0);
   };
+
 
 
     if (loading || !selectedCompany || !selectedUser) {
@@ -2401,7 +2635,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         selectedCompany={selectedCompany}
         selectedUser={selectedUser}
         activeView={activeView}
-        onSelectView={setActiveView}
+        onSelectView={(view) => {
+          setActiveView(view);
+          setSidebarOpen(false);
+        }}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       {/* Main Content Layout Container */}
@@ -2418,10 +2657,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           onClearNotifications={handleClearNotifications}
           onSearch={setSearchTerm}
           onSwitchRole={handleSwitchRole}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
         {/* Dynamic Dashboard/Controls View stage */}
-        <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
           {/* Quick Platform Actions Banner for Super Admin */}
           {selectedUser.activeRole === 'Super Admin' && activeView === 'dashboard' && (
             <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -2474,8 +2714,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               attendance={attendance}
               okrs={okrs}
               payslips={payslips}
+              expenses={expenses}
+              journalEntries={journalEntries}
+              bills={bills}
               onApproveLeave={handleApproveLeave}
               onRejectLeave={handleDeclineLeave}
+              onApproveExpense={handleApproveExpense}
+              onApproveBill={handleApproveBill}
+              onApproveJournalEntry={handleApproveJournalEntry}
               onPayInvoice={handlePayInvoice}
               onAdjustStock={handleAdjustStock}
               onNavigateView={setActiveView}
@@ -2492,7 +2738,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onToggleWorkflow={handleToggleWorkflow}
             />
           ) : activeView === 'ai-copilot' || activeView.startsWith('ai-') ? (
-            <AIAssistant selectedCompany={selectedCompany} />
+            <AIAssistant selectedCompany={selectedCompany} activeView={activeView} />
           ) : (
             <ModuleViews
               activeView={activeView}
@@ -2679,6 +2925,37 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onCreateProjectMilestone={handleCreateProjectMilestone}
               onUpdateProjectMilestone={handleUpdateProjectMilestone}
               onDeleteProjectMilestone={handleDeleteProjectMilestone}
+              vendors={vendors}
+              purchaseOrders={purchaseOrders}
+              rfqs={rfqs}
+              onCreateVendor={handleCreateVendor}
+              onUpdateVendor={handleUpdateVendor}
+              onDeleteVendor={handleDeleteVendor}
+              onCreatePurchaseOrder={handleCreatePurchaseOrder}
+              onUpdatePurchaseOrder={handleUpdatePurchaseOrder}
+              onDeletePurchaseOrder={handleDeletePurchaseOrder}
+              onCreateRFQ={handleCreateRFQ}
+              onUpdateRFQ={handleUpdateRFQ}
+              onDeleteRFQ={handleDeleteRFQ}
+              workOrders={workOrders}
+              bomItems={bomItems}
+              qualityChecks={qualityChecks}
+              onCreateWorkOrder={handleCreateWorkOrder}
+              onUpdateWorkOrder={handleUpdateWorkOrder}
+              onDeleteWorkOrder={handleDeleteWorkOrder}
+              onCreateBOMItem={handleCreateBOMItem}
+              onDeleteBOMItem={handleDeleteBOMItem}
+              onCreateQualityCheck={handleCreateQualityCheck}
+              onUpdateQualityCheck={handleUpdateQualityCheck}
+              onDeleteQualityCheck={handleDeleteQualityCheck}
+              maintenanceTasks={maintenanceTasks}
+              onCreateMaintenanceTask={handleCreateMaintenanceTask}
+              onUpdateMaintenanceTask={handleUpdateMaintenanceTask}
+              onDeleteMaintenanceTask={handleDeleteMaintenanceTask}
+              managedDocuments={managedDocuments}
+              onCreateDocument={handleCreateDocument}
+              onUpdateDocument={handleUpdateDocument}
+              onDeleteDocument={handleDeleteDocument}
             />
           )}
           </FadeIn>

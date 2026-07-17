@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord } from '../types';
+import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, Expense, JournalEntry, Bill } from '../types';
 
 // Role → quick-access module shortcuts for the generic Business Overview dashboard
 const BUSINESS_SHORTCUTS: Record<string, { label: string; view: string; icon: string }[]> = {
@@ -145,8 +145,14 @@ interface RoleDashboardsProps {
   attendance: AttendanceRecord[];
   okrs: OKRRecord[];
   payslips: PayslipRecord[];
+  expenses: Expense[];
+  journalEntries: JournalEntry[];
+  bills: Bill[];
   onApproveLeave: (empId: string) => void;
   onRejectLeave: (empId: string) => void;
+  onApproveExpense: (id: string) => void;
+  onApproveBill: (id: string) => void;
+  onApproveJournalEntry: (id: string) => void;
   onPayInvoice: (invId: string) => void;
   onAdjustStock: (itemId: string, qty: number) => void;
   onNavigateView: (view: string) => void;
@@ -210,8 +216,14 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   leaves,
   attendance,
   okrs,
+  expenses,
+  journalEntries,
+  bills,
   onApproveLeave,
   onRejectLeave,
+  onApproveExpense,
+  onApproveBill,
+  onApproveJournalEntry,
   onPayInvoice,
   onAdjustStock,
   onNavigateView
@@ -261,9 +273,9 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                 <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                 System Administrator
@@ -437,37 +449,40 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     const openInvoices = localInvoices.filter(i => i.status === 'Sent' || i.status === 'Overdue');
     const openTickets = localTickets.filter(t => t.status === 'Open' || t.status === 'In Progress');
 
-    const departments = [...new Set(localEmployees.map(e => e.department))];
-    const branches = [...new Set(localEmployees.map(e => e.branch))];
+    const deptNames = [...new Set(localEmployees.map(e => e.department))] as string[];
+    const branchNames = [...new Set(localEmployees.map(e => e.branch))];
+
+    const pendingLeaves = leaves.filter(l => l.status === 'Pending' && l.companyId === selectedCompany.id);
+    const pendingExpenses = expenses.filter(e => e.status === 'Pending' && e.companyId === selectedCompany.id);
+    const pendingJournals = journalEntries.filter(j => j.status === 'Draft' && j.companyId === selectedCompany.id);
+    const pendingBillsList = bills.filter(b => b.status === 'Pending' && b.companyId === selectedCompany.id);
+    const totalPending = pendingLeaves.length + pendingExpenses.length + pendingJournals.length + pendingBillsList.length;
 
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="text-2xl">{selectedCompany.logo}</span>
               <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                Company Administrator
+                {role === 'CEO' ? 'Chief Executive Officer' : 'Company Administrator'}
               </span>
+              {totalPending > 0 && (
+                <span className="inline-flex items-center gap-1 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                  <i className="bi bi-bell-fill text-[8px]"></i> {totalPending} pending
+                </span>
+              )}
             </div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">{selectedCompany.name} — Control Panel</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Company-wide settings, workforce overview, module licensing &amp; activity monitoring.</p>
+            <p className="text-sm text-slate-500 mt-0.5">Company-wide settings, workforce overview, approvals, module licensing &amp; activity monitoring.</p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => onNavigateView('admin')}
-              className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer"
-            >
-              <i className="bi bi-gear text-xs"></i>
-              Settings
+            <button onClick={() => onNavigateView('admin-settings')} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer">
+              <i className="bi bi-gear text-xs"></i> Settings
             </button>
-            <button
-              onClick={() => onNavigateView('hr')}
-              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs"
-            >
-              <i className="bi bi-person-plus text-xs"></i>
-              Invite User
+            <button onClick={() => onNavigateView('admin-users')} className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs">
+              <i className="bi bi-person-plus text-xs"></i> Invite User
             </button>
           </div>
         </div>
@@ -475,35 +490,177 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         {/* KPI Row */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Employees" value={localEmployees.length} sub={`${activeEmployees.length} active · ${onLeave.length} on leave`} icon="bi bi-people" />
-          <StatCard label="Departments" value={departments.length} sub={`${branches.length} branch locations`} icon="bi bi-diagram-3" />
-          <StatCard label="Open Invoices" value={openInvoices.length} sub={`$${openInvoices.reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-file-earmark-text" accent />
+          <StatCard label="Departments" value={deptNames.length} sub={`${branchNames.length} branch locations`} icon="bi bi-diagram-3" />
+          <StatCard label="Open Invoices" value={openInvoices.length} sub={`${selectedCompany.currency} ${openInvoices.reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-file-earmark-text" accent />
           <StatCard label="Support Tickets" value={openTickets.length} sub={`${localTickets.filter(t => t.priority === 'Critical').length} critical priority`} icon="bi bi-ticket" />
         </div>
 
-        {/* Charts Row — Pie Chart + Bar Graph */}
-        {(() => {
-          const deptNames = [...new Set(localEmployees.map(e => e.department))] as string[];
-          return (
-            <div className="grid gap-6 lg:grid-cols-2">
-              <PieChart
-                title="Workforce Distribution"
-                data={deptNames.slice(0, 6).map((dept, i) => ({
-                  label: dept,
-                  value: localEmployees.filter(e => e.department === dept).length,
-                  color: ['#0f172a', '#2563eb', '#7c3aed', '#059669', '#d97706', '#64748b'][i],
-                }))}
-              />
-              <BarGraph
-                title="Department Headcount"
-                data={deptNames.slice(0, 6).map((dept, i) => ({
-                  label: dept.length > 14 ? dept.slice(0, 12) + '…' : dept,
-                  value: localEmployees.filter(e => e.department === dept).length,
-                  color: ['#0f172a', '#2563eb', '#7c3aed', '#059669', '#d97706', '#64748b'][i],
-                }))}
-              />
+        {/* Charts Row */}
+        <AnalyticsRow
+          pie={
+            <PieChart
+              title="Workforce Distribution"
+              data={deptNames.slice(0, 6).map((dept, i) => ({
+                label: dept,
+                value: localEmployees.filter(e => e.department === dept).length,
+                color: CHART_PALETTE[i],
+              }))}
+            />
+          }
+          bar={
+            <BarGraph
+              title="Department Headcount"
+              data={deptNames.slice(0, 6).map((dept, i) => ({
+                label: dept.length > 14 ? dept.slice(0, 12) + '…' : dept,
+                value: localEmployees.filter(e => e.department === dept).length,
+                color: CHART_PALETTE[i],
+              }))}
+            />
+          }
+        />
+
+        {/* Approvals + Admin Actions Row */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Pending Approvals Queue */}
+          <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                  <i className="bi bi-hourglass-split text-amber-600 text-xs"></i>
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Pending Approvals</h3>
+                {totalPending > 0 && (
+                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">{totalPending}</span>
+                )}
+              </div>
+              <button onClick={() => onNavigateView('hr-leave')} className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 cursor-pointer transition-colors">View All →</button>
             </div>
-          );
-        })()}
+            <div className="divide-y divide-slate-50 max-h-80 overflow-y-auto">
+              {pendingLeaves.map(req => {
+                const emp = localEmployees.find(e => e.id === req.employeeId);
+                return (
+                  <div key={req.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-slate-900 truncate">{emp ? `${emp.firstName} ${emp.lastName}` : 'Employee'}</div>
+                      <div className="text-[10px] text-slate-400">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">Leave</span>
+                      <button onClick={() => onApproveLeave(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
+                      <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Reject</button>
+                    </div>
+                  </div>
+                );
+              })}
+              {pendingExpenses.map(exp => (
+                <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-900 truncate">{exp.description || 'Expense Claim'}</div>
+                    <div className="text-[10px] text-slate-400">{selectedCompany.currency} {exp.amount?.toLocaleString()} · {exp.category}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-violet-600 bg-violet-50 border border-violet-100 px-1.5 py-0.5 rounded">Expense</span>
+                    <button onClick={() => onApproveExpense(exp.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
+                  </div>
+                </div>
+              ))}
+              {pendingBillsList.map(bill => (
+                <div key={bill.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-900 truncate">{bill.vendorName || 'Vendor Bill'}</div>
+                    <div className="text-[10px] text-slate-400">{selectedCompany.currency} {bill.total?.toLocaleString()} · Due {bill.dueDate}</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">Bill</span>
+                    <button onClick={() => onApproveBill(bill.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
+                  </div>
+                </div>
+              ))}
+              {pendingJournals.map(je => (
+                <div key={je.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-900 truncate">{je.description || 'Journal Entry'}</div>
+                    <div className="text-[10px] text-slate-400">{je.date} · {je.lines?.length || 0} lines</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-3">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Journal</span>
+                    <button onClick={() => onApproveJournalEntry(je.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Post</button>
+                  </div>
+                </div>
+              ))}
+              {totalPending === 0 && (
+                <div className="px-5 py-8 text-center">
+                  <i className="bi bi-check2-circle text-2xl text-emerald-400"></i>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">All caught up — no pending approvals</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right column: Quick Actions + Financial Health */}
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-xs p-5">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Admin Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Manage Users', icon: 'bi bi-people-gear', view: 'admin-users' },
+                  { label: 'Role Permissions', icon: 'bi bi-shield-lock', view: 'admin-roles' },
+                  { label: 'Approval Flows', icon: 'bi bi-diagram-3', view: 'admin-approvals' },
+                  { label: 'Branches', icon: 'bi bi-geo-alt', view: 'admin-branches' },
+                  { label: 'Departments', icon: 'bi bi-collection', view: 'admin-departments' },
+                  { label: 'System Settings', icon: 'bi bi-gear', view: 'admin-settings' },
+                  { label: 'Audit Logs', icon: 'bi bi-journal-text', view: 'compliance' },
+                  { label: 'Run Payroll', icon: 'bi bi-cash-stack', view: 'payroll-run' },
+                ].map(sc => (
+                  <button
+                    key={sc.view}
+                    onClick={() => onNavigateView(sc.view)}
+                    className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer text-left"
+                  >
+                    <i className={`${sc.icon} text-slate-400 text-sm w-4 text-center shrink-0`}></i>
+                    {sc.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white shadow-xs p-5">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">Financial Health</h3>
+              <div className="space-y-2">
+                {[
+                  { label: 'Collected Revenue', value: `${selectedCompany.currency} ${localInvoices.filter(i => i.status === 'Paid').reduce((s, i) => s + i.total, 0).toLocaleString()}`, icon: 'bi bi-graph-up-arrow', color: 'text-emerald-600' },
+                  { label: 'Outstanding Receivables', value: `${selectedCompany.currency} ${openInvoices.reduce((s, i) => s + i.total, 0).toLocaleString()}`, icon: 'bi bi-hourglass', color: 'text-amber-600' },
+                  { label: 'Pending Payables', value: `${selectedCompany.currency} ${pendingBillsList.reduce((s, b) => s + (b.total || 0), 0).toLocaleString()}`, icon: 'bi bi-receipt', color: 'text-red-500' },
+                  { label: 'Pending Expense Claims', value: `${selectedCompany.currency} ${pendingExpenses.reduce((s, e) => s + (e.amount || 0), 0).toLocaleString()}`, icon: 'bi bi-wallet2', color: 'text-violet-600' },
+                ].map(row => (
+                  <div key={row.label} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <i className={`${row.icon} ${row.color} text-sm`}></i>
+                      <span className="text-[11px] text-slate-500">{row.label}</span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 font-mono tabular-nums">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Module Licensing Status */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-xs p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Active Module Licenses</h3>
+            <span className="text-[11px] text-slate-500 font-semibold">{selectedCompany.activeModules.length} of 21 modules active</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedCompany.activeModules.map(mod => (
+              <span key={mod} className="inline-flex items-center gap-1.5 bg-slate-900 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
+                <i className="bi bi-check-circle-fill text-emerald-400 text-[9px]"></i>
+                {mod}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -515,13 +672,15 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     const hasHRModule = selectedCompany.activeModules.includes('HR');
     const hasPayrollModule = selectedCompany.activeModules.includes('Payroll');
     const pendingLeaves = leaves.filter(l => l.status === 'Pending' && l.companyId === selectedCompany.id);
+    const pendingExpenses = expenses.filter(e => e.status === 'Pending' && e.companyId === selectedCompany.id);
     const depts = [...new Set(localEmployees.map(e => e.department))] as string[];
+    const totalPendingHR = pendingLeaves.length;
 
     if (!hasHRModule && !hasPayrollModule) {
       // Show core employee directory when HR module is not available
       return (
         <div className="space-y-6">
-          <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900">Employee Directory</h1>
               <p className="text-sm text-slate-500 mt-0.5">Core employee information and organizational structure.</p>
@@ -571,9 +730,16 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">HR &amp; Workforce Command</h1>
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">HR &amp; Workforce Command</h1>
+              {totalPendingHR > 0 && (
+                <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                  <i className="bi bi-bell-fill text-[8px]"></i> {totalPendingHR} pending
+                </span>
+              )}
+            </div>
             <p className="text-sm text-slate-500 mt-0.5">Manage employees, attendance, leaves, recruitment and performance reviews.</p>
           </div>
           <button onClick={() => onNavigateView('hr')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">
@@ -613,50 +779,72 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Leave Requests */}
-          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Pending Leave Requests</h3>
-            <div className="space-y-3">
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+                  <i className="bi bi-calendar-check text-amber-600 text-xs"></i>
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Pending Leave Requests</h3>
+                {pendingLeaves.length > 0 && (
+                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">{pendingLeaves.length}</span>
+                )}
+              </div>
+              <button onClick={() => onNavigateView('hr-leave')} className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 cursor-pointer">View All →</button>
+            </div>
+            <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
               {pendingLeaves.length === 0 && (
-                <div className="text-xs text-slate-400 italic">No pending requests</div>
+                <div className="px-5 py-8 text-center">
+                  <i className="bi bi-check2-circle text-2xl text-emerald-400"></i>
+                  <p className="text-xs text-slate-400 mt-2">No pending leave requests</p>
+                </div>
               )}
               {pendingLeaves.map(req => {
                 const emp = localEmployees.find(e => e.id === req.employeeId);
                 const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
                 const empDept = emp?.department || '';
-                
-                const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
-                const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
-                const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
-                const isHOD = empDeptRecord?.managerId === selectedUser.id;
-                const canApprove = isCompanyAdmin || hasLeavePermission || isHOD;
-
                 return (
-                  <div key={req.id} className="p-4 rounded-xl border border-slate-100 bg-amber-50/30 hover:border-slate-200 transition-all">
+                  <div key={req.id} className="px-5 py-3 hover:bg-slate-50/50 transition-colors">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <div className="text-xs font-bold text-slate-900">{empName} <span className="font-normal text-slate-500">· {empDept}</span></div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}</div>
-                        <div className="text-[11px] text-slate-400 mt-0.5 italic">"{req.reason}"</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.days} day{req.days !== 1 ? 's' : ''}</div>
+                        {req.reason && <div className="text-[10px] text-slate-400 mt-0.5 italic truncate">&ldquo;{req.reason}&rdquo;</div>}
                       </div>
                       <div className="flex gap-1.5 shrink-0">
-                        {canApprove ? (
-                          <>
-                            <button onClick={() => onApproveLeave(req.id)} className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all">
-                              Approve
-                            </button>
-                            <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all">
-                              Decline
-                            </button>
-                          </>
-                        ) : (
-                          <div className="text-[10px] text-slate-400 italic">Awaiting HOD/Admin approval</div>
-                        )}
+                        <button onClick={() => onApproveLeave(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
+                          Approve
+                        </button>
+                        <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
+                          Reject
+                        </button>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            {pendingExpenses.length > 0 && (
+              <>
+                <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                  <i className="bi bi-wallet2 text-violet-500 text-xs"></i>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pending Expense Claims ({pendingExpenses.length})</span>
+                </div>
+                <div className="divide-y divide-slate-50 max-h-48 overflow-y-auto">
+                  {pendingExpenses.map(exp => (
+                    <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-slate-900 truncate">{exp.description || 'Expense Claim'}</div>
+                        <div className="text-[10px] text-slate-400">{selectedCompany.currency} {exp.amount?.toLocaleString()} · {exp.category}</div>
+                      </div>
+                      <button onClick={() => onApproveExpense(exp.id)} className="shrink-0 ml-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
+                        Approve
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Dept Summary */}
@@ -680,8 +868,34 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               })}
             </div>
 
+            {/* HR Quick Actions */}
+            <div className="mt-5 pt-4 border-t border-slate-100">
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">HR Quick Actions</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Employees', icon: 'bi bi-people', view: 'hr-employees' },
+                  { label: 'Attendance', icon: 'bi bi-calendar-check', view: 'hr-attendance' },
+                  { label: 'Leave Requests', icon: 'bi bi-calendar-x', view: 'hr-leave' },
+                  { label: 'Recruitment', icon: 'bi bi-person-plus', view: 'hr-recruitment' },
+                  { label: 'Payroll Run', icon: 'bi bi-cash-stack', view: 'payroll-run' },
+                  { label: 'Payslips', icon: 'bi bi-receipt-cutoff', view: 'payroll-slips' },
+                  { label: 'Performance', icon: 'bi bi-bullseye', view: 'hr-performance' },
+                  { label: 'Org Chart', icon: 'bi bi-diagram-2', view: 'hr-orgchart' },
+                ].map(sc => (
+                  <button
+                    key={sc.view}
+                    onClick={() => onNavigateView(sc.view)}
+                    className="flex items-center gap-1.5 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-700 text-[11px] font-semibold transition-all cursor-pointer text-left"
+                  >
+                    <i className={`${sc.icon} text-slate-400 text-xs w-3.5 text-center shrink-0`}></i>
+                    {sc.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* AI Recruiter Banner */}
-            <div className="mt-5 p-4 bg-slate-900 rounded-xl text-white">
+            <div className="mt-4 p-4 bg-slate-900 rounded-xl text-white">
               <div className="flex items-center gap-2 mb-1.5">
                 <i className="bi bi-robot text-xs text-slate-300"></i>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">AI Resume Screener</span>
@@ -706,7 +920,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     if (!hasAccountingModule) {
       return (
         <div className="space-y-6">
-          <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900">Finance &amp; Accounting Ledger</h1>
               <p className="text-sm text-slate-500 mt-0.5">Chart of accounts, invoice management, P&amp;L projection and cash flow monitoring.</p>
@@ -730,7 +944,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">Finance &amp; Accounting Ledger</h1>
             <p className="text-sm text-slate-500 mt-0.5">Chart of accounts, invoice management, P&amp;L projection and cash flow monitoring.</p>
@@ -858,7 +1072,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     if (!hasCRMModule) {
       return (
         <div className="space-y-6">
-          <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900">Sales &amp; CRM Dashboard</h1>
               <p className="text-sm text-slate-500 mt-0.5">Pipeline management, lead tracking, revenue forecasting and sales team performance.</p>
@@ -879,7 +1093,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">Sales &amp; CRM Dashboard</h1>
             <p className="text-sm text-slate-500 mt-0.5">Lead pipeline, deal tracking, AI lead scoring and territory performance.</p>
@@ -961,7 +1175,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     if (!hasInventoryModule) {
       return (
         <div className="space-y-6">
-          <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900">Inventory &amp; Stock Control</h1>
               <p className="text-sm text-slate-500 mt-0.5">Real-time inventory levels, warehouse transfers, procurement and stock valuation.</p>
@@ -981,7 +1195,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">Inventory &amp; Stock Control</h1>
             <p className="text-sm text-slate-500 mt-0.5">Monitor safety thresholds, warehouse stock, replenishment orders and barcode tracking.</p>
@@ -1067,9 +1281,9 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                 Employee Self Service (ESS)
               </span>
@@ -1258,7 +1472,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <span className="inline-flex items-center gap-1.5 bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
               Department Head

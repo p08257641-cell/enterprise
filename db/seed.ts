@@ -61,7 +61,49 @@ const INITIAL_ONBOARDINGS = [
   { id: 'ob-1', companyId: 'c-acme', employeeId: 'emp-5', employeeName: 'Michael Chang', department: 'Logistics & Stock', role: 'Warehouse Supervisor', phase: 'Orientation', tasks: ['Welcome email', 'IT setup', 'Policy acknowledgment'], completedTasks: ['Welcome email', 'IT setup'], status: 'In Progress', startDate: '2026-07-01' },
 ];
 
+const INITIAL_VENDORS = [
+  { id: 'vnd-1', companyId: 'c-acme', name: 'Industrial Tooling Co.', type: 'Manufacturer', contact: 'John Smith', email: 'sales@industrialtooling.com', rating: 4.8, ordersCount: 2, status: 'Active', createdAt: '2026-06-15T09:00:00Z' },
+  { id: 'vnd-2', companyId: 'c-acme', name: 'Apex Chemical Lab', type: 'Manufacturer', contact: 'Sarah Miller', email: 'orders@apexchem.com', rating: 4.5, ordersCount: 1, status: 'Active', createdAt: '2026-06-20T10:00:00Z' },
+];
+
+const INITIAL_PURCHASE_ORDERS = [
+  { id: 'po-1', companyId: 'c-acme', poNumber: 'PO-0001', vendorId: 'vnd-1', vendorName: 'Industrial Tooling Co.', item: 'CNC Drill Bits x50', qty: 50, unitPrice: 84.00, total: 4200.00, status: 'Approved', date: '2026-06-15', createdBy: 'u-admin', createdAt: '2026-06-15T10:00:00Z' },
+  { id: 'po-2', companyId: 'c-acme', poNumber: 'PO-0002', vendorId: 'vnd-2', vendorName: 'Apex Chemical Lab', item: 'Synthetic Lubricant 200L', qty: 1, unitPrice: 7600.00, total: 7600.00, status: 'Received', date: '2026-06-20', createdBy: 'u-admin', createdAt: '2026-06-20T11:00:00Z' },
+];
+
+const INITIAL_RFQS = [
+  { id: 'rfq-1', companyId: 'c-acme', rfqNumber: 'RFQ-001', item: 'Precision Bearings x500', vendorsInvited: 3, sentDate: '2026-07-01', quotesReceived: 2, status: 'Open', createdAt: '2026-07-01T08:00:00Z' },
+];
+
+const INITIAL_WORK_ORDERS = [
+  { id: 'wo-1', companyId: 'c-acme', woNumber: 'WO-501', product: 'Pneumatic Actuator', qty: 150, line: 'Assembly Line A', status: 'In Progress', completion: 45, startDate: '2026-07-10', dueDate: '2026-07-25', createdAt: '2026-07-10T08:00:00Z' },
+  { id: 'wo-2', companyId: 'c-acme', woNumber: 'WO-502', product: 'Hydraulic Valve Block', qty: 80, line: 'Assembly Line B', status: 'Scheduled', completion: 0, startDate: '2026-07-15', dueDate: '2026-07-30', createdAt: '2026-07-15T09:00:00Z' },
+];
+
+const INITIAL_BOM_ITEMS = [
+  { id: 'bom-1', companyId: 'c-acme', product: 'Pneumatic Actuator', part: 'Aluminum Housing', qty: 1, unit: 'pcs', cost: 15.50, createdAt: '2026-07-10T08:00:00Z' },
+  { id: 'bom-2', companyId: 'c-acme', product: 'Pneumatic Actuator', part: 'Stainless Steel Piston', qty: 1, unit: 'pcs', cost: 8.20, createdAt: '2026-07-10T08:00:00Z' },
+  { id: 'bom-3', companyId: 'c-acme', product: 'Pneumatic Actuator', part: 'NBR O-Ring Set', qty: 1, unit: 'set', cost: 1.80, createdAt: '2026-07-10T08:00:00Z' },
+];
+
+const INITIAL_QUALITY_CHECKS = [
+  { id: 'qc-1', companyId: 'c-acme', check: 'Dimensional Tolerance Verification - Lot A4', result: 'Passed', date: '2026-07-12', inspector: 'QC Team A', notes: 'All dimensions within +/- 0.01mm spec.', createdAt: '2026-07-12T14:00:00Z' },
+  { id: 'qc-2', companyId: 'c-acme', check: 'Pressure Seal Test - Lot B1', result: 'Pending', date: '2026-07-14', inspector: 'QC Team B', notes: 'Seal pressure holding under 8 bar.', createdAt: '2026-07-14T15:00:00Z' },
+];
+
+const INITIAL_MAINTENANCE_TASKS = [
+  { id: 'mt-1', companyId: 'c-acme', assetId: 'fa-1', assetName: 'CNC Milling Machine', task: 'Hydraulic Fluid & Filter Replacement', due: '2026-07-20', owner: 'Engineering Team', status: 'Scheduled', createdAt: '2026-07-12T08:00:00Z' },
+  { id: 'mt-2', companyId: 'c-acme', assetId: 'fa-2', assetName: 'Warehouse Forklift', task: 'Battery Load Test & Calibration', due: '2026-07-15', owner: 'Logistics Maintenance', status: 'Completed', createdAt: '2026-07-11T09:00:00Z' },
+];
+
+const INITIAL_MANAGED_DOCUMENTS = [
+  { id: 'doc-1', companyId: 'c-acme', name: 'Q3 Material Supply Agreement.pdf', type: 'PDF', size: '1.2 MB', status: 'Pending Signature', date: '2026-07-05', uploadedBy: 'u-admin', createdAt: '2026-07-05T10:00:00Z' },
+  { id: 'doc-2', companyId: 'c-acme', name: 'Facility B Safety Guidelines.docx', type: 'DOCX', size: '340 KB', status: 'Approved', date: '2026-07-08', uploadedBy: 'u-admin', createdAt: '2026-07-08T11:00:00Z' },
+];
+
 const TABLES = [
+  schema.vendors, schema.purchaseOrders, schema.rfqs, schema.workOrders, schema.bomItems,
+  schema.qualityChecks, schema.maintenanceTasks, schema.managedDocuments,
   schema.filingDeadlines, schema.policyDocuments, schema.auditSnapshots, schema.complianceChecks,
   schema.consolidationRules, schema.intercompanyTxns, schema.taxReturns, schema.taxCodes,
   schema.currencyRates, schema.costCenters, schema.budgets, schema.depreciationEntries,
@@ -73,7 +115,7 @@ const TABLES = [
   schema.apiKeys, schema.workflows, schema.auditLogs, schema.tickets, schema.inventory,
   schema.invoices, schema.glAccounts, schema.crmEmails, schema.crmTasks, schema.crmActivities,
   schema.crmLeads, schema.payslips, schema.payrollGroups, schema.salaryBands, schema.okrs, schema.leaves, schema.attendance,
-  schema.onboardings, schema.employees, schema.branches, schema.departments, schema.users, schema.companies,
+  schema.onboardings, schema.employees, schema.branches, schema.departments, schema.users, schema.companies, schema.salesOrders,
 ];
 
 async function seed() {
@@ -140,6 +182,16 @@ async function seed() {
   await db.insert(schema.filingDeadlines).values(INITIAL_FILING_DEADLINES);
   await db.insert(schema.salesOrders).values(INITIAL_SALES_ORDERS);
 
+  // New modules seed data
+  await db.insert(schema.vendors).values(INITIAL_VENDORS);
+  await db.insert(schema.purchaseOrders).values(INITIAL_PURCHASE_ORDERS);
+  await db.insert(schema.rfqs).values(INITIAL_RFQS);
+  await db.insert(schema.workOrders).values(INITIAL_WORK_ORDERS);
+  await db.insert(schema.bomItems).values(INITIAL_BOM_ITEMS);
+  await db.insert(schema.qualityChecks).values(INITIAL_QUALITY_CHECKS);
+  await db.insert(schema.maintenanceTasks).values(INITIAL_MAINTENANCE_TASKS);
+  await db.insert(schema.managedDocuments).values(INITIAL_MANAGED_DOCUMENTS);
+
   console.log('Seed complete ✅');
   process.exit(0);
 }
@@ -148,3 +200,4 @@ seed().catch((e) => {
   console.error('Seed failed ❌', e);
   process.exit(1);
 });
+

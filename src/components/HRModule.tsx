@@ -78,12 +78,12 @@ const StatCard = ({ label, value, sub, icon, accent = false, color = '' }: {
 );
 
 const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => (
-  <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 pb-4 border-b border-slate-100 gap-3">
     <div>
       <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
       {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
     </div>
-    {action && <div className="shrink-0 ml-4">{action}</div>}
+    {action && <div className="shrink-0">{action}</div>}
   </div>
 );
 
@@ -292,7 +292,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           title="HR & Employee Directory"
           subtitle={`${selectedCompany.name} · ${localEmployees.length} employees registered`}
           action={isHRorAdmin ? (
-            <a href="#hire" onClick={(e) => { e.preventDefault(); onNavigateView('hire'); }}>
+            <a href="#hire" onClick={(e) => { e.preventDefault(); onNavigateView('hr-recruitment'); }}>
               <PrimaryBtn icon="bi bi-person-plus">Register Employee</PrimaryBtn>
             </a>
           ) : undefined}
@@ -332,7 +332,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             </div>
 
             {/* Quick Info Row */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[
                 { icon: 'bi bi-envelope', label: selectedEmp.email },
                 { icon: 'bi bi-geo-alt', label: selectedEmp.branch },
@@ -398,7 +398,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               <div className="lg:col-span-2 space-y-4">
                 <div className="bg-slate-50 rounded-xl p-4">
                   <h3 className="section-title text-slate-500 mb-3">Attendance — July 2026</h3>
-                  <div className="grid grid-cols-4 gap-3 mb-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     {[
                       { label: 'Present', value: 21, color: 'text-emerald-600', bg: 'bg-emerald-100' },
                       { label: 'Absent', value: 0, color: 'text-rose-600', bg: 'bg-rose-100' },
@@ -600,7 +600,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   }
 
   // ── VIEW: HIRE / REGISTER ─────────────────────────────────────────────────
-  if (activeView === 'hr-recruitment') {
+  if (activeView === 'hr-recruitment' || activeView === 'hire') {
     return (
       <div className="space-y-6">
         <SectionHeader title="Recruitment & ATS" subtitle="Post vacancies, track applicants and register new employees." />
@@ -1531,6 +1531,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               <form className="space-y-4" onSubmit={e => {
                 e.preventDefault();
                 if (!exitEmp || !exitDate) return;
+                onUpdateEmployee(exitEmp, { status: 'Terminated' });
                 setExitSuccess(true);
                 setTimeout(() => { setExitSuccess(false); setExitEmp(''); setExitDate(''); setExitReason(''); }, 3000);
               }}>

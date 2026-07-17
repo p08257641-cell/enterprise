@@ -4,7 +4,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { isAdminRole } from '../../permissions';
 
 export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, attendance, projectTasks: dbTasks, projectMilestones: dbMilestones, onCreateProjectTask, onUpdateProjectTask, onDeleteProjectTask, onCreateProjectMilestone, onUpdateProjectMilestone, onDeleteProjectMilestone } = props;
+  const { activeView, onNavigateView, selectedCompany, selectedUser, employees, attendance, projectTasks: dbTasks, projectMilestones: dbMilestones, onCreateProjectTask, onUpdateProjectTask, onDeleteProjectTask, onCreateProjectMilestone, onUpdateProjectMilestone, onDeleteProjectMilestone } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localTasks = dbTasks.filter(t => t.companyId === selectedCompany.id);
@@ -114,12 +114,12 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
 
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {[
-          { id: 'kanban' as const, label: 'Kanban Board' },
-          { id: 'milestones' as const, label: 'Milestones' },
-          { id: 'time' as const, label: 'Time Logs' },
-          { id: 'resources' as const, label: 'Resources' },
+          { id: 'kanban' as const, label: 'Kanban Board', viewId: 'project' },
+          { id: 'milestones' as const, label: 'Milestones', viewId: 'proj-milestones' },
+          { id: 'time' as const, label: 'Time Logs', viewId: 'proj-time' },
+          { id: 'resources' as const, label: 'Resources', viewId: 'proj-resources' },
         ].map(t => (
-          <button key={t.id} onClick={() => setProjTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${projTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => { setProjTab(t.id); onNavigateView(t.viewId); }} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${projTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
         ))}
       </div>
 

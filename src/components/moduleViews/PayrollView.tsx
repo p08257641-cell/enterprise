@@ -242,24 +242,41 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
 
             {/* New Salary Band Modal */}
             {showBandModal && (
-              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowBandModal(false)}>
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
-                  <h3 className="text-base font-bold text-slate-900 mb-4">New Salary Band</h3>
-                  <div className="space-y-3">
-                    <div><Label>Band Name</Label><Input value={newBandName} onChange={e => setNewBandName(e.target.value)} placeholder="e.g. Senior" /></div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><Label>Min Salary ($)</Label><Input type="number" value={newBandMin} onChange={e => setNewBandMin(e.target.value)} placeholder="5000" /></div>
-                      <div><Label>Max Salary ($)</Label><Input type="number" value={newBandMax} onChange={e => setNewBandMax(e.target.value)} placeholder="8000" /></div>
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={() => setShowBandModal(false)}>
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                          <i className="bi bi-cash-stack text-emerald-600 text-xs"></i>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-900">New Salary Band</h3>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Define a new compensation scale with minimum and maximum bounds.</p>
+                    </div>
+                    <button type="button" onClick={() => setShowBandModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                      <i className="bi bi-x text-xl"></i>
+                    </button>
+                  </div>
+                  
+                  <div className="p-6 space-y-4">
+                    <div className="space-y-3">
+                      <div><Label>Band Name</Label><Input value={newBandName} onChange={e => setNewBandName(e.target.value)} placeholder="e.g. Senior" /></div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><Label>Min Salary ($)</Label><Input type="number" value={newBandMin} onChange={e => setNewBandMin(e.target.value)} placeholder="5000" /></div>
+                        <div><Label>Max Salary ($)</Label><Input type="number" value={newBandMax} onChange={e => setNewBandMax(e.target.value)} placeholder="8000" /></div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2 mt-5">
-                    <SecBtn onClick={() => setShowBandModal(false)}>Cancel</SecBtn>
-                    <PrimaryBtn onClick={() => {
+
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onClick={() => setShowBandModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => {
                       if (!newBandName || !newBandMin || !newBandMax) return;
                       onCreateSalaryBand(newBandName, Number(newBandMin), Number(newBandMax));
                       setNewBandName(''); setNewBandMin(''); setNewBandMax('');
                       setShowBandModal(false);
-                    }}>Create Band</PrimaryBtn>
+                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Band</button>
                   </div>
                 </div>
               </div>
@@ -331,12 +348,34 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             
             {/* Create Group Modal */}
             {showGroupModal && (
-              <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                  <div className="p-5 border-b border-slate-100">
-                    <h3 className="text-sm font-semibold text-slate-900">Create Payroll Group</h3>
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4" onClick={() => {
+                setShowGroupModal(false);
+                setNewGroupName('');
+                setNewGroupDesc('');
+                setGroupEmployeeIds(new Set());
+              }}>
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                          <i className="bi bi-collection text-blue-600 text-xs"></i>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-900">Create Payroll Group</h3>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Batch process payroll by grouping specific employees together.</p>
+                    </div>
+                    <button type="button" onClick={() => {
+                      setShowGroupModal(false);
+                      setNewGroupName('');
+                      setNewGroupDesc('');
+                      setGroupEmployeeIds(new Set());
+                    }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                      <i className="bi bi-x text-xl"></i>
+                    </button>
                   </div>
-                  <div className="p-5 space-y-4">
+
+                  <div className="p-6 space-y-4">
                     <div>
                       <Label>Group Name</Label>
                       <Input value={newGroupName} onChange={e => setNewGroupName(e.target.value)} placeholder="e.g., Engineering Team" />
@@ -368,14 +407,15 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       </div>
                     </div>
                   </div>
-                  <div className="p-5 border-t border-slate-100 flex gap-2 justify-end">
-                    <SecBtn onClick={() => {
+
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onClick={() => {
                       setShowGroupModal(false);
                       setNewGroupName('');
                       setNewGroupDesc('');
                       setGroupEmployeeIds(new Set());
-                    }}>Cancel</SecBtn>
-                    <PrimaryBtn onClick={() => {
+                    }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => {
                       if (newGroupName && groupEmployeeIds.size > 0) {
                         onCreatePayrollGroup(newGroupName, newGroupDesc, Array.from(groupEmployeeIds));
                         setShowGroupModal(false);
@@ -383,7 +423,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         setNewGroupDesc('');
                         setGroupEmployeeIds(new Set());
                       }
-                    }}>Create Group</PrimaryBtn>
+                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Group</button>
                   </div>
                 </div>
               </div>

@@ -12,6 +12,8 @@ interface SidebarProps {
   selectedUser: User;
   activeView: string;
   onSelectView: (view: string) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 interface SubMenuItem {
@@ -40,7 +42,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   selectedCompany,
   selectedUser,
   activeView,
-  onSelectView
+  onSelectView,
+  isOpen = false,
+  onClose
 }) => {
   // Use activeRole for permission checks
   const userRole = selectedUser.activeRole || selectedUser.role;
@@ -98,7 +102,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isSubViewActive = (mod: ModuleItem) =>
     mod.subMenus
       ?.filter(sub => !sub.moduleId || selectedCompany.activeModules.includes(sub.moduleId))
-      .some(s => s.viewId === activeView) ?? false;
+      .some(s => 
+        s.viewId === activeView || 
+        (s.id === 'proj-kanban' && activeView.startsWith('proj-')) ||
+        (s.id === 'proc-pos' && activeView.startsWith('proc-')) ||
+        (s.id === 'mfg-bom' && activeView.startsWith('mfg-')) ||
+        (s.id === 'asset-register' && activeView.startsWith('asset-')) ||
+        (s.id === 'doc-locker' && activeView.startsWith('doc-'))
+      ) ?? false;
 
   const moduleGroups: ModuleGroup[] = [
     {
@@ -219,19 +230,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           id: 'Operations', label: 'Operations & Projects', iconClass: 'bi bi-gear-wide-connected', viewId: 'project',
           subMenus: [
-            { id: 'proj-kanban', label: 'Kanban Board', viewId: 'project', iconClass: 'bi bi-columns-gap', moduleId: 'Project Management' },
-            { id: 'proc-pos', label: 'Purchase Orders', viewId: 'procurement', iconClass: 'bi bi-file-earmark-plus', moduleId: 'Procurement' },
-            { id: 'proc-vendors', label: 'Vendors', viewId: 'proc-vendors', iconClass: 'bi bi-shop', moduleId: 'Procurement' },
-            { id: 'proc-rfq', label: 'RFQ / Bids', viewId: 'proc-rfq', iconClass: 'bi bi-clipboard-check', moduleId: 'Procurement' },
-            { id: 'mfg-bom', label: 'Bill of Materials', viewId: 'manufacturing', iconClass: 'bi bi-list-nested', moduleId: 'Manufacturing' },
-            { id: 'mfg-orders', label: 'Work Orders', viewId: 'mfg-orders', iconClass: 'bi bi-clipboard2-data', moduleId: 'Manufacturing' },
-            { id: 'mfg-quality', label: 'Quality Control', viewId: 'mfg-quality', iconClass: 'bi bi-check-circle', moduleId: 'Manufacturing' },
-            { id: 'asset-register', label: 'Asset Register', viewId: 'asset', iconClass: 'bi bi-collection', moduleId: 'Asset Management' },
-            { id: 'asset-maintenance', label: 'Maintenance', viewId: 'asset-maintenance', iconClass: 'bi bi-wrench', moduleId: 'Asset Management' },
-            { id: 'asset-depreciation', label: 'Depreciation', viewId: 'asset-depreciation', iconClass: 'bi bi-graph-down', moduleId: 'Asset Management' },
-            { id: 'doc-locker', label: 'Document Locker', viewId: 'document', iconClass: 'bi bi-folder2-open', moduleId: 'Document Management' },
-            { id: 'doc-esign', label: 'e-Signatures', viewId: 'doc-esign', iconClass: 'bi bi-pen', moduleId: 'Document Management' },
-            { id: 'doc-ocr', label: 'OCR / Scan', viewId: 'doc-ocr', iconClass: 'bi bi-upc-scan', moduleId: 'Document Management' },
+            { id: 'proj-kanban', label: 'Project Management', viewId: 'project', iconClass: 'bi bi-columns-gap', moduleId: 'Project Management' },
+            { id: 'proc-pos', label: 'Procurement', viewId: 'procurement', iconClass: 'bi bi-file-earmark-plus', moduleId: 'Procurement' },
+            { id: 'mfg-bom', label: 'Manufacturing', viewId: 'manufacturing', iconClass: 'bi bi-list-nested', moduleId: 'Manufacturing' },
+            { id: 'asset-register', label: 'Asset Management', viewId: 'asset', iconClass: 'bi bi-collection', moduleId: 'Asset Management' },
+            { id: 'doc-locker', label: 'Document Management', viewId: 'document', iconClass: 'bi bi-folder2-open', moduleId: 'Document Management' },
           ]
         },
         {
@@ -284,19 +287,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white text-slate-600">
-      {/* Brand Header */}
-      <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-6">
-        <span className="text-2xl">{userRole === 'Super Admin' ? '🌐' : selectedCompany.logo}</span>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold text-slate-900 tracking-tight leading-tight truncate w-40">
-            {userRole === 'Super Admin' ? 'Platform Admin' : selectedCompany.name}
-          </span>
-          <span className="text-xs font-medium text-slate-400">
-            {userRole === 'Super Admin' ? 'erp-platform.com' : selectedCompany.domain}
-          </span>
+    <>
+      {/* Mobile Sidebar Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs lg:hidden transition-all duration-300"
+          onClick={onClose}
+        />
+      )}
+
+      <aside className={`fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white text-slate-600 transition-transform duration-300 lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:flex'}`}>
+        {/* Brand Header */}
+        <div className="flex h-16 items-center justify-between border-b border-slate-100 px-6">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{userRole === 'Super Admin' ? '🌐' : selectedCompany.logo}</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 tracking-tight leading-tight truncate w-32">
+                {userRole === 'Super Admin' ? 'Platform Admin' : selectedCompany.name}
+              </span>
+              <span className="text-xs font-medium text-slate-400">
+                {userRole === 'Super Admin' ? 'erp-platform.com' : selectedCompany.domain}
+              </span>
+            </div>
+          </div>
+          {onClose && (
+            <button 
+              onClick={onClose} 
+              className="lg:hidden p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+            >
+              <i className="bi bi-x-lg text-sm"></i>
+            </button>
+          )}
         </div>
-      </div>
 
       {/* Main Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
@@ -326,9 +348,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 const isTopActive = activeView === mod.viewId && !isSubViewActive(mod);
 
                 // Filter submenus based on role permissions
-                const accessibleSubMenus = hasSubMenus 
+                let accessibleSubMenus = hasSubMenus 
                   ? mod.subMenus!.filter(sub => hasSubmenuAccess(sub.id))
                   : [];
+
+
 
                 // Hide module completely if user doesn't have access (for Super Admin and all roles)
                 if (!hasModuleAccessPermission) {
@@ -386,7 +410,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             key={sub.id}
                             onClick={() => onSelectView(sub.viewId)}
                             className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition-all cursor-pointer ${
-                              activeView === sub.viewId
+                              activeView === sub.viewId ||
+                              (sub.id === 'proj-kanban' && (activeView === 'project' || activeView.startsWith('proj-'))) ||
+                              (sub.id === 'proc-pos' && (activeView === 'procurement' || activeView.startsWith('proc-'))) ||
+                              (sub.id === 'mfg-bom' && (activeView === 'manufacturing' || activeView.startsWith('mfg-'))) ||
+                              (sub.id === 'asset-register' && (activeView === 'asset' || activeView.startsWith('asset-'))) ||
+                              (sub.id === 'doc-locker' && (activeView === 'document' || activeView.startsWith('doc-')))
                                 ? 'bg-slate-800 text-white'
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                             }`}
@@ -424,5 +453,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
     </aside>
+  </>
   );
 };

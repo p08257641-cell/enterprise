@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ModuleViewsProps, PageHeader, Badge, TableHead, PrimaryBtn, StatCard, useRowModal, RowModal, ViewModal } from './shared';
+import { ModuleViewsProps, PageHeader, Badge, TableHead, PrimaryBtn, SecBtn, StatCard, useRowModal, RowModal, ViewModal } from './shared';
 
 export const POSView: React.FC<ModuleViewsProps> = (props) => {
   const {
     activeView, selectedCompany,
     posProducts, posCustomers, posSales, posCategories, posTerminals, posShifts, posDiscounts, posReturns, posDailyReports,
-    onCreatePOSSale,
+    onCreatePOSSale, onAddPOSProduct, onAddPOSCustomer
   } = props;
 
   const tab: 'terminal' | 'products' | 'customers' | 'shifts' | 'sales' | 'discounts' | 'returns' | 'reports' | 'sessions' =
@@ -28,6 +28,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
   const localReturns = posReturns.filter(r => r.companyId === selectedCompany.id);
   const localTerminals = posTerminals.filter(t => t.companyId === selectedCompany.id);
   const localReports = posDailyReports.filter(r => r.companyId === selectedCompany.id);
+
   const productModal = useRowModal<typeof localProducts[0]>();
   const customerModal = useRowModal<typeof localCustomers[0]>();
   const saleModal = useRowModal<typeof localSales[0]>();
@@ -35,9 +36,27 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
   const returnModal = useRowModal<typeof localReturns[0]>();
   const terminalModal = useRowModal<typeof localTerminals[0]>();
 
+  // Cart & Terminal Checkout states
   const [cart, setCart] = useState<{ id: string; name: string; price: number; qty: number }[]>([]);
   const [discount, setDiscount] = useState(0);
   const [receipt, setReceipt] = useState<{ ref: string; total: number; ts: string } | null>(null);
+
+  // Add Product Modal states
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [prodSku, setProdSku] = useState('');
+  const [prodName, setProdName] = useState('');
+  const [prodCat, setProdCat] = useState('Beverages');
+  const [prodPrice, setProdPrice] = useState('');
+  const [prodStock, setProdStock] = useState('100');
+  const [prodReorder, setProdReorder] = useState('10');
+
+  // Add Customer Modal states
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [custFirst, setCustFirst] = useState('');
+  const [custLast, setCustLast] = useState('');
+  const [custEmail, setCustEmail] = useState('');
+  const [custPhone, setCustPhone] = useState('');
+  const [custTier, setCustTier] = useState('Standard');
 
   const addToCart = (p: { id: string; name: string; unitPrice: number }) => {
     setCart(prev => {
@@ -46,12 +65,63 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
       return [...prev, { id: p.id, name: p.name, price: p.unitPrice, qty: 1 }];
     });
   };
+
   const updateQty = (id: string, delta: number) => {
     setCart(prev => prev.map(i => i.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i));
   };
+
   const removeFromCart = (id: string) => setCart(prev => prev.filter(i => i.id !== id));
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const total = subtotal * (1 - discount / 100);
+
+  const handleProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prodSku || !prodName || !prodPrice) return;
+    onAddPOSProduct({
+      companyId: selectedCompany.id,
+      sku: prodSku,
+      name: prodName,
+      category: prodCat,
+      unitPrice: Number(prodPrice) || 0,
+      costPrice: 0,
+      taxRate: 0,
+      isActive: true,
+      stockLevel: Number(prodStock) || 0,
+      reorderLevel: Number(prodReorder) || 0,
+      updatedAt: new Date().toISOString()
+    });
+    setProdSku('');
+    setProdName('');
+    setProdPrice('');
+    setProdStock('100');
+    setProdReorder('10');
+    setShowAddProductModal(false);
+  };
+
+  const handleCustomerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!custFirst || !custLast || !custEmail) return;
+    onAddPOSCustomer({
+      companyId: selectedCompany.id,
+      firstName: custFirst,
+      lastName: custLast,
+      email: custEmail,
+      phone: custPhone,
+      tier: custTier as 'Bronze' | 'Silver' | 'Gold' | 'Platinum',
+      loyaltyPoints: 0,
+      totalPurchases: 0,
+      totalSpent: 0,
+      storeCredit: 0,
+      isActive: true,
+      updatedAt: new Date().toISOString()
+    });
+    setCustFirst('');
+    setCustLast('');
+    setCustEmail('');
+    setCustPhone('');
+    setCustTier('Standard');
+    setShowAddCustomerModal(false);
+  };
 
   const pageTitle: Record<string, string> = {
     terminal: 'POS Terminal', products: 'Products', customers: 'Customers', shifts: 'Shifts',
@@ -71,7 +141,17 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={pageTitle[tab]} subtitle={pageSubtitle[tab]} />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-5 border-b border-slate-100 gap-4">
+        <div>
+          <PageHeader title={pageTitle[tab]} subtitle={pageSubtitle[tab]} />
+        </div>
+        {tab === 'products' && (
+          <PrimaryBtn onClick={() => setShowAddProductModal(true)} icon="bi bi-plus-lg">Add Product</PrimaryBtn>
+        )}
+        {tab === 'customers' && (
+          <PrimaryBtn onClick={() => setShowAddCustomerModal(true)} icon="bi bi-person-plus">Register Customer</PrimaryBtn>
+        )}
+      </div>
 
       {tab === 'terminal' && (
         receipt ? (
@@ -206,101 +286,6 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
 
-      {tab === 'shifts' && (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Open Shifts" value={localShifts.filter(s => s.status === 'Open').length} icon="bi bi-lock" sub="Currently active" />
-            <StatCard label="Closed Today" value={localShifts.filter(s => s.status === 'Closed').length} icon="bi bi-unlock" sub="Completed" />
-            <StatCard label="Total Sales" value={`$${localShifts.reduce((s, sh) => s + (sh.totalSales || 0), 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="All shifts" accent />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {localShifts.map(s => (
-              <div key={s.id} className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-slate-900">Shift #{s.id.slice(-6)}</span>
-                  <Badge label={s.status} variant={s.status === 'Open' ? 'info' : 'default'} />
-                </div>
-                <div className="text-xs text-slate-500 space-y-0.5">
-                  <div>Terminal: {s.terminalId}</div>
-                  <div>Opening: ${(s.openingBalance || 0).toFixed(2)}</div>
-                  {s.closingBalance != null && <div>Closing: ${(s.closingBalance || 0).toFixed(2)}</div>}
-                </div>
-                <div className="flex justify-between items-center mt-3 text-xs">
-                  <span className="text-slate-500">Sales: <b className="text-slate-900">${(s.totalSales || 0).toFixed(2)}</b></span>
-                  {s.refunds ? <span className="text-rose-600">Refunds: ${s.refunds.toFixed(2)}</span> : null}
-                </div>
-              </div>
-            ))}
-            {localShifts.length === 0 && <div className="col-span-3 text-xs text-slate-400 text-center py-8">No shifts recorded.</div>}
-          </div>
-        </div>
-      )}
-
-      {tab === 'sales' && (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Total Sales" value={localSales.length} icon="bi bi-receipt" sub="All transactions" />
-            <StatCard label="Revenue" value={`$${localSales.reduce((s, x) => s + (x.total || 0), 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="Gross revenue" accent />
-            <StatCard label="Completed" value={localSales.filter(s => s.paymentStatus === 'Paid').length} icon="bi bi-check-circle" sub="Successful" />
-            <StatCard label="Avg Sale" value={localSales.length ? `$${(localSales.reduce((s, x) => s + (x.total || 0), 0) / localSales.length).toFixed(2)}` : '$0.00'} icon="bi bi-graph-up" sub="Per transaction" />
-          </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-            <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Reference' }, { label: 'Items' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Total', right: true }]} />
-              <tbody className="divide-y divide-slate-100">
-                {localSales.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => saleModal.open(s)}>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900">{s.saleNumber || s.id}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{s.items?.length || 0}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{s.paymentMethod}</td>
-                    <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : s.paymentStatus === 'Partial' ? 'warning' : 'default'} /></td>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'discounts' && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-          <table className="w-full text-left">
-            <TableHead cols={[{ label: 'Name' }, { label: 'Type' }, { label: 'Value' }, { label: 'Max Usage' }, { label: 'Status' }]} />
-            <tbody className="divide-y divide-slate-100">
-              {localDiscounts.map(d => (
-                  <tr key={d.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => discountModal.open(d)}>
-                  <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900">{d.name}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{d.type}</td>
-                  <td className="px-4 py-3 text-xs font-bold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : `$${d.value}`}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
-                  <td className="px-4 py-3"><Badge label={d.isActive !== false ? 'Active' : 'Inactive'} variant={d.isActive !== false ? 'success' : 'default'} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === 'returns' && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-          <table className="w-full text-left">
-            <TableHead cols={[{ label: 'Return #' }, { label: 'Original Sale' }, { label: 'Reason' }, { label: 'Refund' }, { label: 'Status' }]} />
-            <tbody className="divide-y divide-slate-100">
-              {localReturns.map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => returnModal.open(r)}>
-                  <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900">{r.returnNumber}</td>
-                  <td className="px-4 py-3 text-xs font-mono text-slate-500">{r.originalSaleId}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{r.reason}</td>
-                  <td className="px-4 py-3 text-xs font-mono text-slate-500">{r.refundMethod}</td>
-                  <td className="px-4 py-3"><Badge label={r.refundStatus} variant={r.refundStatus === 'Processed' ? 'success' : r.refundStatus === 'Pending' ? 'warning' : 'default'} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
       {tab === 'sessions' && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <table className="w-full text-left">
@@ -345,6 +330,94 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
         </div>
       )}
+
+      {/* Add Product Modal */}
+      {showAddProductModal && (
+        <ViewModal title="Add POS Product" subtitle="Create a new catalog item for point of sale" onClose={() => setShowAddProductModal(false)} size="md">
+          <form onSubmit={handleProductSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">SKU *</label>
+                <input type="text" value={prodSku} onChange={e => setProdSku(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="SKU-8080" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
+                <select value={prodCat} onChange={e => setProdCat(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950">
+                  <option value="Beverages">Beverages</option>
+                  <option value="Bakery">Bakery</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Apparel">Apparel</option>
+                  <option value="Industrial">Industrial</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Product Name *</label>
+              <input type="text" value={prodName} onChange={e => setProdName(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Product Name" required />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Unit Price ($) *</label>
+                <input type="number" step="0.01" value={prodPrice} onChange={e => setProdPrice(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="9.99" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Stock Level</label>
+                <input type="number" value={prodStock} onChange={e => setProdStock(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Reorder Level</label>
+                <input type="number" value={prodReorder} onChange={e => setProdReorder(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <SecBtn onClick={() => setShowAddProductModal(false)}>Cancel</SecBtn>
+              <PrimaryBtn type="submit" icon="bi bi-check-lg">Save Product</PrimaryBtn>
+            </div>
+          </form>
+        </ViewModal>
+      )}
+
+      {/* Add Customer Modal */}
+      {showAddCustomerModal && (
+        <ViewModal title="Register Customer" subtitle="Register a new customer for loyalty benefits" onClose={() => setShowAddCustomerModal(false)} size="md">
+          <form onSubmit={handleCustomerSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">First Name *</label>
+                <input type="text" value={custFirst} onChange={e => setCustFirst(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Jane" required />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name *</label>
+                <input type="text" value={custLast} onChange={e => setCustLast(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Doe" required />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Email *</label>
+              <input type="email" value={custEmail} onChange={e => setCustEmail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="jane.doe@email.com" required />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
+                <input type="text" value={custPhone} onChange={e => setCustPhone(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="+1 555-0199" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Tier *</label>
+                <select value={custTier} onChange={e => setCustTier(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950">
+                  <option value="Standard">Standard</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Platinum">Platinum</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <SecBtn onClick={() => setShowAddCustomerModal(false)}>Cancel</SecBtn>
+              <PrimaryBtn type="submit" icon="bi bi-check-lg">Register Customer</PrimaryBtn>
+            </div>
+          </form>
+        </ViewModal>
+      )}
+
       {productModal.selected && (
         <RowModal row={productModal.selected}
           icon="bi bi-tag" accentColor="#db2777"
@@ -428,3 +501,4 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
     </div>
   );
 };
+export default POSView;

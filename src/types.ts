@@ -1139,3 +1139,108 @@ export interface ProjectMilestone {
   completion: number;
   createdAt: string;
 }
+
+// --- Operations & Projects: Procurement ---
+export interface Vendor {
+  id: string;
+  companyId: string;
+  name: string;
+  type: string;
+  contact: string;
+  email: string;
+  rating: number;
+  ordersCount: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  companyId: string;
+  poNumber: string;
+  vendorId: string;
+  vendorName: string;
+  item: string;
+  qty: number;
+  unitPrice: number;
+  total: number;
+  status: 'Pending' | 'Approved' | 'Received' | 'Cancelled';
+  date: string;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface RFQ {
+  id: string;
+  companyId: string;
+  rfqNumber: string;
+  item: string;
+  vendorsInvited: number;
+  sentDate: string;
+  quotesReceived: number;
+  status: 'Open' | 'In Review' | 'Awarded' | 'Cancelled';
+  createdAt: string;
+}
+
+// --- Operations & Projects: Manufacturing ---
+export interface WorkOrder {
+  id: string;
+  companyId: string;
+  woNumber: string;
+  product: string;
+  qty: number;
+  line: string;
+  status: 'Scheduled' | 'In Progress' | 'Completed' | 'On Hold';
+  completion: number;
+  startDate?: string;
+  dueDate?: string;
+  createdAt: string;
+}
+
+export interface BOMItem {
+  id: string;
+  companyId: string;
+  product: string;
+  part: string;
+  qty: number;
+  unit: string;
+  cost: number;
+  createdAt: string;
+}
+
+export interface QualityCheck {
+  id: string;
+  companyId: string;
+  check: string;
+  result: 'Passed' | 'Failed' | 'Pending';
+  date: string;
+  inspector: string;
+  notes?: string;
+  createdAt: string;
+}
+
+// --- Operations & Projects: Asset Management ---
+export interface MaintenanceTask {
+  id: string;
+  companyId: string;
+  assetId: string;
+  assetName: string;
+  task: string;
+  due: string;
+  owner: string;
+  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
+  createdAt: string;
+}
+
+// --- Operations & Projects: Document Management ---
+export interface ManagedDocument {
+  id: string;
+  companyId: string;
+  name: string;
+  type: string;
+  size: string;
+  status: 'Draft' | 'Pending Signature' | 'Signed' | 'Approved' | 'Archived';
+  date: string;
+  uploadedBy?: string;
+  createdAt: string;
+}

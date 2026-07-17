@@ -35,7 +35,7 @@ export const ModuleViews: React.FC<ModuleViewsProps> = (props) => {
   if (activeView.startsWith('platform')) return <PlatformView {...props} />;
   if (activeView === 'dashboard') return <DashboardView {...props} />;
   if (activeView.startsWith('admin')) return <AdminView {...props} />;
-  if (activeView.startsWith('hr')) return <HRView {...props} />;
+  if (activeView.startsWith('hr') || activeView === 'hire') return <HRView {...props} />;
   if (activeView.startsWith('payroll')) return <PayrollView {...props} />;
   if (activeView.startsWith('crm')) return <CRMView {...props} />;
   if (activeView === 'accounting' || activeView.startsWith('acc-')) return <AccountingView {...props} />;

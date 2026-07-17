@@ -152,10 +152,24 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {showTransferModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Stock Transfer</h2>
-            <div className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowTransferModal(false)}>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <i className="bi bi-arrow-left-right text-blue-600 text-xs"></i>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">New Stock Transfer</h3>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Transfer stock items between warehouse locations or stores.</p>
+              </div>
+              <button type="button" onClick={() => setShowTransferModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                <i className="bi bi-x text-xl"></i>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
               <div><Label>Item *</Label><Select value={trfItem} onChange={e => setTrfItem(e.target.value)}>{localStock.map(i => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}</Select></div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div><Label>From</Label><Select value={trfFrom} onChange={e => setTrfFrom(e.target.value)}><option>Warehouse A</option><option>Warehouse B</option><option>Warehouse C</option><option>Main Store</option></Select></div>
@@ -163,14 +177,15 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               </div>
               <div><Label>Quantity</Label><Input type="number" value={trfQty} onChange={e => setTrfQty(e.target.value)} /></div>
             </div>
-            <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
-              <SecBtn onClick={() => setShowTransferModal(false)}>Cancel</SecBtn>
-              <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button type="button" onClick={() => setShowTransferModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => {
                 if (!trfItem) return void modalAlert('Select an item', { variant: 'warning' });
                 const item = localStock.find(i => i.id === trfItem);
                 setTransfers(prev => [{ id: `TRF-${1005 + prev.length}`, item: item?.name ?? trfItem, from: trfFrom, to: trfTo, qty: Number(trfQty) || 0, status: 'In Transit' }, ...prev]);
                 setShowTransferModal(false);
-              }}>Create Transfer</PrimaryBtn>
+              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Transfer</button>
             </div>
           </div>
         </div>

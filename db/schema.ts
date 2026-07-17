@@ -1024,3 +1024,108 @@ export const projectMilestones = pgTable('project_milestones', {
   completion: integer('completion'),
   createdAt: text('createdAt'),
 });
+
+// --- Procurement ---
+export const vendors = pgTable('vendors', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  type: text('type'),
+  contact: text('contact'),
+  email: text('email'),
+  rating: real('rating'),
+  ordersCount: integer('ordersCount'),
+  status: text('status'),
+  createdAt: text('createdAt'),
+});
+
+export const purchaseOrders = pgTable('purchase_orders', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  poNumber: text('poNumber'),
+  vendorId: text('vendorId'),
+  vendorName: text('vendorName'),
+  item: text('item'),
+  qty: integer('qty'),
+  unitPrice: real('unitPrice'),
+  total: real('total'),
+  status: text('status'),
+  date: text('date'),
+  createdBy: text('createdBy'),
+  createdAt: text('createdAt'),
+});
+
+export const rfqs = pgTable('rfqs', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  rfqNumber: text('rfqNumber'),
+  item: text('item'),
+  vendorsInvited: integer('vendorsInvited'),
+  sentDate: text('sentDate'),
+  quotesReceived: integer('quotesReceived'),
+  status: text('status'),
+  createdAt: text('createdAt'),
+});
+
+// --- Manufacturing ---
+export const workOrders = pgTable('work_orders', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  woNumber: text('woNumber'),
+  product: text('product'),
+  qty: integer('qty'),
+  line: text('line'),
+  status: text('status'),
+  completion: integer('completion'),
+  startDate: text('startDate'),
+  dueDate: text('dueDate'),
+  createdAt: text('createdAt'),
+});
+
+export const bomItems = pgTable('bom_items', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  product: text('product'),
+  part: text('part'),
+  qty: real('qty'),
+  unit: text('unit'),
+  cost: real('cost'),
+  createdAt: text('createdAt'),
+});
+
+export const qualityChecks = pgTable('quality_checks', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  check: text('check'),
+  result: text('result'),
+  date: text('date'),
+  inspector: text('inspector'),
+  notes: text('notes'),
+  createdAt: text('createdAt'),
+});
+
+// --- Asset Maintenance ---
+export const maintenanceTasks = pgTable('maintenance_tasks', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  assetId: text('assetId'),
+  assetName: text('assetName'),
+  task: text('task'),
+  due: text('due'),
+  owner: text('owner'),
+  status: text('status'),
+  createdAt: text('createdAt'),
+});
+
+// --- Document Management ---
+export const managedDocuments = pgTable('managed_documents', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  type: text('type'),
+  size: text('size'),
+  status: text('status'),
+  date: text('date'),
+  uploadedBy: text('uploadedBy'),
+  createdAt: text('createdAt'),
+});
