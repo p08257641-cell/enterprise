@@ -248,11 +248,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         {
           id: 'Learning Management (LMS)', label: 'LMS / Learning', iconClass: 'bi bi-journal-bookmark-fill', viewId: 'lms',
-          subMenus: [
-            { id: 'lms-courses', label: 'Courses', viewId: 'lms', iconClass: 'bi bi-book-half' },
-            { id: 'lms-quizzes', label: 'Quizzes', viewId: 'lms-quizzes', iconClass: 'bi bi-question-circle' },
-            { id: 'lms-progress', label: 'My Progress', viewId: 'lms-progress', iconClass: 'bi bi-award' },
-          ]
         },
         {
           id: 'Communication', label: 'Communication', iconClass: 'bi bi-megaphone', viewId: 'communication',
