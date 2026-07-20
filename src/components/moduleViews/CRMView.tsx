@@ -70,6 +70,18 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
   const [emailBody, setEmailBody] = useState('');
   const [emailLeadId, setEmailLeadId] = useState('');
 
+  // Pipeline stage custom colors
+  const defaultStageColors: Record<string, string> = {
+    New: '#64748b',
+    Contacted: '#3b82f6',
+    Qualified: '#f59e0b',
+    'Proposal Sent': '#a855f7',
+    Won: '#10b981',
+    Lost: '#f43f5e',
+  };
+  const [stageHeaderColors, setStageHeaderColors] = useState<Record<string, string>>(defaultStageColors);
+  const [editingStageColor, setEditingStageColor] = useState<string | null>(null);
+
   // Auto-generate leads on interval
   useEffect(() => {
     if (autoGenerate && onGenerateLeads) {
@@ -82,6 +94,13 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
     return () => { if (autoGenerateRef.current) { clearInterval(autoGenerateRef.current); autoGenerateRef.current = null; } };
   }, [autoGenerate, onGenerateLeads]);
 
+  useEffect(() => {
+    if (!editingStageColor) return;
+    const handler = () => setEditingStageColor(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [editingStageColor]);
+
   if (activeView.startsWith('crm')) {
     const stages: CRMLead['status'][] = ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'];
     const stageColors: Record<string, string> = {
@@ -92,6 +111,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
       Won: 'border-emerald-200 bg-emerald-50/30',
       Lost: 'border-rose-200 bg-rose-50/30',
     };
+    const presetColors = ['#64748b','#3b82f6','#f59e0b','#a855f7','#10b981','#f43f5e','#06b6d4','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#0ea5e9','#e11d48','#7c3aed'];
     const filtered = localLeads.filter(l => crmFilter === 'All' || l.status === crmFilter)
       .filter(l => `${l.firstName} ${l.lastName} ${l.companyName}`.toLowerCase().includes(crmSearch.toLowerCase()));
     const pipelineValue = localLeads.filter(l => l.status !== 'Lost').reduce((s, l) => s + l.value, 0);
@@ -203,7 +223,27 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   }}
                 >
                   <div className="flex items-center justify-between mb-3 shrink-0">
-                    <span className="section-title text-slate-600">{stage}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <button onClick={() => setEditingStageColor(editingStageColor === stage ? null : stage)} className="h-3 w-3 rounded-full cursor-pointer ring-2 ring-white shadow-sm hover:scale-125 transition-transform" style={{ backgroundColor: stageHeaderColors[stage] }} title={`Change ${stage} color`}></button>
+                        {editingStageColor === stage && (
+                          <div className="absolute top-5 left-0 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-44" onClick={e => e.stopPropagation()}>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-2">Pick Color</div>
+                            <div className="grid grid-cols-8 gap-1.5 mb-2">
+                              {presetColors.map(c => (
+                                <button key={c} onClick={() => setStageHeaderColors(prev => ({ ...prev, [stage]: c }))} className={`h-5 w-5 rounded-full cursor-pointer border-2 transition-all hover:scale-110 ${stageHeaderColors[stage] === c ? 'border-slate-900 ring-1 ring-slate-400' : 'border-white hover:border-slate-300'}`} style={{ backgroundColor: c }}></button>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input type="color" value={stageHeaderColors[stage]} onChange={e => setStageHeaderColors(prev => ({ ...prev, [stage]: e.target.value }))} className="h-6 w-6 rounded cursor-pointer border-0 p-0" />
+                              <input type="text" value={stageHeaderColors[stage]} onChange={e => setStageHeaderColors(prev => ({ ...prev, [stage]: e.target.value }))} className="flex-1 text-[10px] font-mono rounded border border-slate-200 px-1.5 py-1" />
+                            </div>
+                            <button onClick={() => setEditingStageColor(null)} className="mt-2 w-full text-[10px] font-semibold text-slate-500 hover:text-slate-700 cursor-pointer py-1 rounded hover:bg-slate-50">Done</button>
+                          </div>
+                        )}
+                      </div>
+                      <span className="section-title text-slate-600">{stage}</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="data-value-small font-sans tabular-nums text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded">{stageLeads.length}</span>
                       {hasMore && (
@@ -912,7 +952,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           return (
                             <div key={stage} className="flex items-center gap-3">
                               <span className="text-xs font-semibold text-slate-700 w-32 shrink-0">{stage}</span>
-                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full transition-all" style={{ width: `${pct}%` }} /></div>
+                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: stageHeaderColors[stage] }} /></div>
                               <span className="data-value-small font-sans tabular-nums text-slate-500 w-12 text-right">{count} leads</span>
                             </div>
                           );
