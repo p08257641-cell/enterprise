@@ -252,6 +252,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [deptManager, setDeptManager] = useState('');
   const [deptParent, setDeptParent] = useState('');
   const [editEmp, setEditEmp] = useState<Employee | null>(null);
+  const [terminateEmp, setTerminateEmp] = useState<Employee | null>(null);
+  const [terminateReason, setTerminateReason] = useState('');
+  const [terminateType, setTerminateType] = useState<'Termination' | 'End of Contract' | 'Layoff' | 'Misconduct'>('Termination');
   const [editFirst, setEditFirst] = useState(''); const [editLast, setEditLast] = useState('');
   const [editDept, setEditDept] = useState(''); const [editDesignation, setEditDesignation] = useState(''); const [editBranch, setEditBranch] = useState(''); const [editSalary, setEditSalary] = useState('');
   const [showVacancyModal, setShowVacancyModal] = useState(false);
@@ -454,11 +457,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       </div>
                     </div>
 
-                    {isHRorAdmin && (
+                    {isHRorAdmin && selectedEmp.status !== 'Terminated' && (
                       <div className="flex gap-2 pt-2 border-t border-slate-200">
                         <PrimaryBtn icon="bi bi-pencil" onClick={() => { setEditEmp(selectedEmp); setEditFirst(selectedEmp.firstName); setEditLast(selectedEmp.lastName); setEditDept(selectedEmp.department); setEditDesignation(selectedEmp.designation); setEditBranch(selectedEmp.branch); setEditSalary(String(selectedEmp.salary)); }}>Edit Employee</PrimaryBtn>
                         <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('payroll'); }}>View Payslips</SecBtn>
                         <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('comm-compose'); }}>Send Message</SecBtn>
+                        <button onClick={() => setTerminateEmp(selectedEmp)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 cursor-pointer transition-all shadow-xs"><i className="bi bi-x-octagon"></i>Terminate</button>
                       </div>
                     )}
                   </>
@@ -502,6 +506,55 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 onUpdateEmployee(editEmp.id, { firstName: editFirst, lastName: editLast, department: editDept, designation: editDesignation, branch: editBranch, salary: Number(editSalary) });
                 setEditEmp(null); setSelectedEmp(null);
               }}>Save Changes</PrimaryBtn>
+            </div>
+          </ViewModal>
+        )}
+
+        {/* Terminate Employee Modal */}
+        {terminateEmp && (
+          <ViewModal title={`Terminate — ${terminateEmp.firstName} ${terminateEmp.lastName}`} onClose={() => { setTerminateEmp(null); setTerminateReason(''); }} size="md">
+            <div className="space-y-4">
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
+                <i className="bi bi-exclamation-triangle-fill text-rose-500 text-lg mt-0.5"></i>
+                <div>
+                  <p className="text-sm font-bold text-rose-800">This action will terminate the employee's contract.</p>
+                  <p className="text-xs text-rose-600 mt-1">Employee <span className="font-semibold">{terminateEmp.firstName} {terminateEmp.lastName}</span> ({terminateEmp.employeeNumber}) will be marked as <span className="font-semibold">Terminated</span> and removed from active payroll.</p>
+                </div>
+              </div>
+              <div>
+                <Label>Termination Type *</Label>
+                <Select value={terminateType} onChange={e => setTerminateType(e.target.value as typeof terminateType)}>
+                  <option value="Termination">Standard Termination</option>
+                  <option value="End of Contract">End of Contract</option>
+                  <option value="Layoff">Layoff / Redundancy</option>
+                  <option value="Misconduct">Termination for Misconduct</option>
+                </Select>
+              </div>
+              <div>
+                <Label>Reason / Notes *</Label>
+                <textarea value={terminateReason} onChange={e => setTerminateReason(e.target.value)} rows={3} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Provide reason for termination (will be recorded in employee file)..." required />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <SecBtn onClick={() => { setTerminateEmp(null); setTerminateReason(''); }}>Cancel</SecBtn>
+              <button onClick={() => {
+                if (!terminateEmp || !terminateReason.trim()) return;
+                onUpdateEmployee(terminateEmp.id, { status: 'Terminated' });
+                onSubmitExitRequest({
+                  companyId: selectedCompany.id,
+                  employeeId: terminateEmp.id,
+                  employeeName: `${terminateEmp.firstName} ${terminateEmp.lastName}`,
+                  department: terminateEmp.department,
+                  exitType: terminateType === 'End of Contract' ? 'End of Contract' : 'Resignation',
+                  lastWorkingDay: new Date().toISOString().split('T')[0],
+                  reason: `[${terminateType}] ${terminateReason}`,
+                });
+                setTerminateEmp(null);
+                setTerminateReason('');
+                setSelectedEmp(null);
+              }} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 cursor-pointer transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed" disabled={!terminateReason.trim()}>
+                <i className="bi bi-x-octagon"></i>Confirm Termination
+              </button>
             </div>
           </ViewModal>
         )}
@@ -609,9 +662,16 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setSelectedEmp(emp)} className="text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
-                        View <i className="bi bi-arrow-right ml-0.5"></i>
-                      </button>
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {isHRorAdmin && emp.status !== 'Terminated' && (
+                          <button onClick={(e) => { e.stopPropagation(); setTerminateEmp(emp); }} className="text-xs font-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer" title="Terminate">
+                            <i className="bi bi-x-octagon"></i>
+                          </button>
+                        )}
+                        <button onClick={() => setSelectedEmp(emp)} className="text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
+                          View <i className="bi bi-arrow-right ml-0.5"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
