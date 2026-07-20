@@ -42,11 +42,35 @@ const BUSINESS_SHORTCUTS: Record<string, { label: string; view: string; icon: st
     { label: 'Warehouses', view: 'inv-warehouses', icon: 'bi bi-building' },
     { label: 'Stock Transfers', view: 'inv-transfers', icon: 'bi bi-arrow-left-right' },
   ],
-  'Department Head': [
+  'HR Department Head': [
     { label: 'My Team', view: 'hr-employees', icon: 'bi bi-people' },
     { label: 'Attendance', view: 'hr-attendance', icon: 'bi bi-calendar-check' },
     { label: 'Leave Requests', view: 'hr-leave', icon: 'bi bi-calendar-x' },
-    { label: 'User Management', view: 'admin-users', icon: 'bi bi-people-gear' },
+    { label: 'Compliance', view: 'comp-checklists', icon: 'bi bi-shield-check' },
+  ],
+  'Sales Department Head': [
+    { label: 'CRM Pipeline', view: 'crm-pipeline', icon: 'bi bi-funnel' },
+    { label: 'Sales Orders', view: 'sales-orders', icon: 'bi bi-cart' },
+    { label: 'Customers', view: 'crm-contacts', icon: 'bi bi-person-lines-fill' },
+    { label: 'POS Terminal', view: 'pos-terminal', icon: 'bi bi-cash-stack' },
+  ],
+  'Finance Department Head': [
+    { label: 'General Ledger', view: 'accounting', icon: 'bi bi-journal-bookmark' },
+    { label: 'Invoices', view: 'acc-invoices', icon: 'bi bi-file-earmark-text' },
+    { label: 'Payroll Run', view: 'payroll-run', icon: 'bi bi-play-circle' },
+    { label: 'Bank Reconciliation', view: 'acc-bank', icon: 'bi bi-bank' },
+  ],
+  'Operations Department Head': [
+    { label: 'Kanban Board', view: 'project', icon: 'bi bi-columns-gap' },
+    { label: 'Stock Levels', view: 'inv-stock', icon: 'bi bi-boxes' },
+    { label: 'Work Orders', view: 'mfg-orders', icon: 'bi bi-clipboard2-data' },
+    { label: 'Fixed Assets', view: 'asset-register', icon: 'bi bi-collection' },
+  ],
+  'IT Department Head': [
+    { label: 'Users', view: 'admin-users', icon: 'bi bi-people-gear' },
+    { label: 'Roles', view: 'admin-roles', icon: 'bi bi-shield-lock' },
+    { label: 'Help Desk', view: 'hd-tickets', icon: 'bi bi-headset' },
+    { label: 'Settings', view: 'admin-settings', icon: 'bi bi-toggles' },
   ],
   'CEO': [
     { label: 'Financial Reports', view: 'acc-reports', icon: 'bi bi-graph-up' },
@@ -1464,114 +1488,163 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   }
 
   // ════════════════════════════════════════════════════════════════
-  // DEPARTMENT HEAD — Team oversight & approvals
+  // HR DEPARTMENT HEAD — HR, Payroll, Compliance oversight
   // ════════════════════════════════════════════════════════════════
-  if (role === 'Department Head') {
+  if (role === 'HR Department Head') {
     const pendingLeaves = leaves.filter(l => l.status === 'Pending' && l.companyId === selectedCompany.id);
-    const depts = [...new Set(localEmployees.map(e => e.department))] as string[];
-
+    const hrEmployees = localEmployees.filter(e => e.department === 'HR');
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              Department Head
-            </span>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">Team Command Center</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Oversee your department, approve leave and act on team requests.</p>
+            <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">HR Department Head</span>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">HR Command Center</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Manage employees, payroll, compliance and leave approvals.</p>
           </div>
-          <button onClick={() => onNavigateView('hr')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">
-            <i className="bi bi-people text-xs"></i> My Team
-          </button>
+          <button onClick={() => onNavigateView('hr')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-people text-xs"></i> My Team</button>
         </div>
-
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Headcount" value={localEmployees.length} sub={`${depts.length} departments`} icon="bi bi-people" />
+          <StatCard label="HR Headcount" value={hrEmployees.length} sub="In HR department" icon="bi bi-people" />
           <StatCard label="Pending Leaves" value={pendingLeaves.length} sub="Awaiting your approval" icon="bi bi-calendar-check" accent />
-          <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length} sub="Across the company" icon="bi bi-ticket" />
+          <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open').length} sub="Help desk queue" icon="bi bi-ticket" />
           <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
         </div>
-
-        <AnalyticsRow
-          pie={
-            <PieChart
-              title="Workforce Distribution"
-              data={depts.slice(0, 6).map((dept, i) => ({
-                label: dept,
-                value: localEmployees.filter(e => e.department === dept).length,
-                color: CHART_PALETTE[i],
-              }))}
-            />
-          }
-          bar={
-            <BarGraph
-              title="Department Headcount"
-              data={depts.slice(0, 6).map((dept, i) => ({
-                label: dept.length > 14 ? dept.slice(0, 12) + '…' : dept,
-                value: localEmployees.filter(e => e.department === dept).length,
-                color: CHART_PALETTE[i],
-              }))}
-            />
-          }
-        />
-
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Pending Leave Approvals */}
           <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Leave Approvals</h3>
             <div className="space-y-3">
-              {pendingLeaves.length === 0 && (
-                <div className="text-xs text-slate-400 italic">No pending requests</div>
-              )}
-              {pendingLeaves.map(req => {
-                const emp = localEmployees.find(e => e.id === req.employeeId);
-                const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
-                const empDept = emp?.department || '';
-                return (
-                  <div key={req.id} className="p-4 rounded-xl border border-slate-100 bg-amber-50/30 hover:border-slate-200 transition-all">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs font-bold text-slate-900">{empName} <span className="font-normal text-slate-500">· {empDept}</span></div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}</div>
-                      </div>
-                      <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => onApproveLeave(req.id)} className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all">
-                          Approve
-                        </button>
-                        <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition-all">
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {pendingLeaves.length === 0 && <div className="text-xs text-slate-400 italic">No pending requests</div>}
+              {pendingLeaves.map(req => { const emp = localEmployees.find(e => e.id === req.employeeId); return (<div key={req.id} className="p-4 rounded-xl border border-slate-100 bg-amber-50/30"><div className="flex items-start justify-between gap-3"><div><div className="text-xs font-bold text-slate-900">{emp ? `${emp.firstName} ${emp.lastName}` : 'Employee'}</div><div className="text-[11px] text-slate-500 mt-0.5">{req.leaveType} · {req.startDate}</div></div><div className="flex gap-1.5 shrink-0"><button onClick={() => onApproveLeave(req.id)} className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer">Approve</button><button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer">Decline</button></div></div></div>);})}
             </div>
           </div>
-
-          {/* Quick Shortcuts */}
           <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Actions</h3>
             <div className="space-y-2">
-              {[
-                { label: 'My Team', icon: 'bi bi-people', view: 'hr-employees' },
-                { label: 'Attendance', icon: 'bi bi-calendar-check', view: 'hr-attendance' },
-                { label: 'Leave Requests', icon: 'bi bi-calendar-x', view: 'hr-leave' },
-                { label: 'User Management', icon: 'bi bi-people-gear', view: 'admin-users' },
-              ].map(sc => (
-                <button
-                  key={sc.view}
-                  onClick={() => onNavigateView(sc.view)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-semibold transition-all cursor-pointer text-left"
-                >
-                  <span className="flex items-center gap-2">
-                    <i className={`${sc.icon} text-slate-400`}></i>
-                    {sc.label}
-                  </span>
-                  <i className="bi bi-chevron-right text-[10px] text-slate-400"></i>
-                </button>
-              ))}
+              {[{ label: 'My Team', icon: 'bi bi-people', view: 'hr-employees' }, { label: 'Attendance', icon: 'bi bi-calendar-check', view: 'hr-attendance' }, { label: 'Leave Requests', icon: 'bi bi-calendar-x', view: 'hr-leave' }, { label: 'Compliance', icon: 'bi bi-shield-check', view: 'comp-checklists' }].map(sc => (<button key={sc.view} onClick={() => onNavigateView(sc.view)} className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer text-left"><span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span><i className="bi bi-chevron-right text-[10px] text-slate-400"></i></button>))}
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // SALES DEPARTMENT HEAD — CRM, Sales, POS oversight
+  // ════════════════════════════════════════════════════════════════
+  if (role === 'Sales Department Head') {
+    const salesLeads = leads.filter(l => l.companyId === selectedCompany.id);
+    const openLeads = salesLeads.filter(l => l.status !== 'Won' && l.status !== 'Lost');
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Sales Department Head</span>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">Sales Command Center</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Pipeline, sales orders and POS management.</p>
+          </div>
+          <button onClick={() => onNavigateView('crm')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-funnel text-xs"></i> Pipeline</button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Open Leads" value={openLeads.length} sub="In pipeline" icon="bi bi-funnel" />
+          <StatCard label="Total Leads" value={salesLeads.length} sub="All time" icon="bi bi-graph-up" accent />
+          <StatCard label="Sales Orders" value={localInvoices.length} sub="All invoices" icon="bi bi-receipt" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+        </div>
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Actions</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[{ label: 'CRM Pipeline', icon: 'bi bi-funnel', view: 'crm-pipeline' }, { label: 'Sales Orders', icon: 'bi bi-cart', view: 'sales-orders' }, { label: 'Customers', icon: 'bi bi-person-lines-fill', view: 'crm-contacts' }, { label: 'POS Terminal', icon: 'bi bi-cash-stack', view: 'pos-terminal' }].map(sc => (<button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer text-left"><span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span><i className="bi bi-chevron-right text-[10px] text-slate-400"></i></button>))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // FINANCE DEPARTMENT HEAD — Accounting, Payroll oversight
+  // ════════════════════════════════════════════════════════════════
+  if (role === 'Finance Department Head') {
+    const unpaid = localInvoices.filter(i => i.status !== 'Paid');
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Finance Department Head</span>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">Finance Command Center</h1>
+            <p className="text-sm text-slate-500 mt-0.5">General ledger, invoices, payroll and bank reconciliation.</p>
+          </div>
+          <button onClick={() => onNavigateView('accounting')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-journal-bookmark text-xs"></i> General Ledger</button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Open Invoices" value={unpaid.length} sub={`$${unpaid.reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-receipt" />
+          <StatCard label="GL Accounts" value={localGL.length} sub="Chart of accounts" icon="bi bi-journal-text" accent />
+          <StatCard label="Expenses" value={expenses.filter(e => e.companyId === selectedCompany.id).length} sub="Recorded expenses" icon="bi bi-credit-card" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+        </div>
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Actions</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[{ label: 'General Ledger', icon: 'bi bi-journal-bookmark', view: 'accounting' }, { label: 'Invoices', icon: 'bi bi-file-earmark-text', view: 'acc-invoices' }, { label: 'Payroll Run', icon: 'bi bi-play-circle', view: 'payroll-run' }, { label: 'Bank Reconciliation', icon: 'bi bi-bank', view: 'acc-bank' }].map(sc => (<button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer text-left"><span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span><i className="bi bi-chevron-right text-[10px] text-slate-400"></i></button>))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // OPERATIONS DEPARTMENT HEAD — Operations, Inventory, Manufacturing
+  // ════════════════════════════════════════════════════════════════
+  if (role === 'Operations Department Head') {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Operations Department Head</span>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">Operations Command Center</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Projects, inventory, procurement and manufacturing.</p>
+          </div>
+          <button onClick={() => onNavigateView('project')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-columns-gap text-xs"></i> Kanban Board</button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Inventory Items" value={localStock.length} sub="Tracked items" icon="bi bi-box-seam" />
+          <StatCard label="Employees" value={localEmployees.length} sub="Company headcount" icon="bi bi-people" accent />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open').length} sub="Help desk queue" icon="bi bi-ticket" />
+        </div>
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Actions</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[{ label: 'Kanban Board', icon: 'bi bi-columns-gap', view: 'project' }, { label: 'Stock Levels', icon: 'bi bi-boxes', view: 'inv-stock' }, { label: 'Work Orders', icon: 'bi bi-clipboard2-data', view: 'mfg-orders' }, { label: 'Fixed Assets', icon: 'bi bi-collection', view: 'asset-register' }].map(sc => (<button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer text-left"><span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span><i className="bi bi-chevron-right text-[10px] text-slate-400"></i></button>))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // IT DEPARTMENT HEAD — Administration, Help Desk, POS
+  // ════════════════════════════════════════════════════════════════
+  if (role === 'IT Department Head') {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">IT Department Head</span>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 mt-1">IT Command Center</h1>
+            <p className="text-sm text-slate-500 mt-0.5">User management, help desk and POS administration.</p>
+          </div>
+          <button onClick={() => onNavigateView('admin-users')} className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-people-gear text-xs"></i> User Management</button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Users" value={localEmployees.length} sub="Company users" icon="bi bi-people-gear" />
+          <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length} sub="Help desk queue" icon="bi bi-ticket" accent />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Audit Logs" value={localLogs.length} sub="System events" icon="bi bi-journal-text" />
+        </div>
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Actions</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[{ label: 'Users', icon: 'bi bi-people-gear', view: 'admin-users' }, { label: 'Roles', icon: 'bi bi-shield-lock', view: 'admin-roles' }, { label: 'Help Desk', icon: 'bi bi-headset', view: 'hd-tickets' }, { label: 'Settings', icon: 'bi bi-toggles', view: 'admin-settings' }].map(sc => (<button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer text-left"><span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span><i className="bi bi-chevron-right text-[10px] text-slate-400"></i></button>))}
           </div>
         </div>
       </div>

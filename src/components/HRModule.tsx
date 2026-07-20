@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { ViewModal } from './moduleViews/shared';
 import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord } from '../types';
-import { isAdminRole, isHRRole } from '../permissions';
+import { isAdminRole, isHRRole, isHRDeptHead } from '../permissions';
 import { downloadCSV } from '../utils/export';
 import { modalAlert, modalConfirm } from '../utils/modal';
 
@@ -25,9 +25,9 @@ interface HRModuleProps {
   attendance: AttendanceRecord[];
   okrs: OKRRecord[];
   onAddEmployee: (emp: Omit<Employee, 'id' | 'employeeNumber' | 'status' | 'joiningDate'>) => void;
-  onApproveLeave: (id: string) => void;
+  onApproveLeave: (id: string, status?: string) => void;
   onRejectLeave: (id: string) => void;
-  onAddLeave: (input: { employeeId: string; employeeName: string; department: string; leaveType: string; startDate: string; endDate: string; reason: string; days: number }) => void;
+  onAddLeave: (input: { employeeId: string; employeeName: string; department: string; leaveType: string; startDate: string; endDate: string; reason: string; days: number; replacementId?: string; replacementName?: string }) => void;
   onClockIn: (mode?: string) => void;
   onClockOut: () => void;
   onAddOKR: (input: { employeeId: string; employeeName: string; department: string; title: string; keyResult: string; period: string }) => void;
@@ -39,7 +39,7 @@ interface HRModuleProps {
   onUpdateOnboarding: (id: string, updates: Partial<OnboardingRecord>) => void;
   onDeleteOnboarding: (id: string) => void;
   onUpdateEmployee: (id: string, updates: Partial<Employee>) => void;
-  onUpdateOKRProgress: (id: string, progress: number) => void;
+  onUpdateOKRProgress: (id: string, progress: number, status?: string) => void;
   onNavigateView: (view: string) => void;
 }
 
@@ -155,7 +155,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isAdmin = isAdminRole(userRole);
   const isHR = isHRRole(userRole);
-  const isDeptHead = userRole === 'Department Head';
+  const isDeptHead = isHRDeptHead(userRole);
   const isHRorAdmin = isAdmin || isHR;
   const isEmployee = !isHRorAdmin && !isDeptHead;
 
@@ -187,6 +187,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
   const [colleaguePopup, setColleaguePopup] = useState<Employee | null>(null);
   const [myProfileEdit, setMyProfileEdit] = useState(false);
+  const isOwnProfile = selectedEmp ? selectedEmp.email === selectedUser.email : false;
 
   // Hire form
   const [hrFirst, setHrFirst] = useState('');
@@ -206,12 +207,13 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [leaveStart, setLeaveStart] = useState('');
   const [leaveEnd, setLeaveEnd] = useState('');
   const [leaveReason, setLeaveReason] = useState('');
+  const [leaveReplacementId, setLeaveReplacementId] = useState('');
   const [leaveSuccess, setLeaveSuccess] = useState(false);
 
   // Find the currently logged-in user's employee record
   const myEmpRecord = localEmployees.find(e => e.email === selectedUser.email) || localEmployees[0] || null;
   const companyLeaves = leaves.filter(l => l.companyId === selectedCompany.id);
-  const [leaveFilter, setLeaveFilter] = useState<'All' | 'Pending' | 'Approved' | 'Rejected'>('All');
+  const [leaveFilter, setLeaveFilter] = useState<'All' | 'Pending' | 'HOD Approved' | 'Approved' | 'Rejected'>('All');
   const filteredLeaves = leaveFilter === 'All' ? companyLeaves : companyLeaves.filter(l => l.status === leaveFilter);
   const myLeaves = myEmpRecord ? companyLeaves.filter(l => l.employeeId === myEmpRecord.id) : [];
   const companyAttendance = attendance.filter(a => a.companyId === selectedCompany.id);
@@ -374,71 +376,87 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     )}
                   </div>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-4">
-                  <h3 className="section-title text-slate-500 mb-3">Leave Balances</h3>
-                  <div className="space-y-3">
-                    {[
-                      { type: 'Annual Leave', used: 7, total: 25, color: 'bg-blue-500' },
-                      { type: 'Sick Leave', used: 2, total: 10, color: 'bg-amber-500' },
-                      { type: 'Casual Leave', used: 1, total: 5, color: 'bg-violet-500' },
-                    ].map(lb => (
-                      <div key={lb.type}>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-600">{lb.type}</span>
-                          <span className="font-semibold text-slate-800 tabular-nums">{lb.total - lb.used} / {lb.total}</span>
+                {(isHRorAdmin || isOwnProfile) && (
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <h3 className="section-title text-slate-500 mb-3">Leave Balances</h3>
+                    <div className="space-y-3">
+                      {[
+                        { type: 'Annual Leave', used: 7, total: 25, color: 'bg-blue-500' },
+                        { type: 'Sick Leave', used: 2, total: 10, color: 'bg-amber-500' },
+                        { type: 'Casual Leave', used: 1, total: 5, color: 'bg-violet-500' },
+                      ].map(lb => (
+                        <div key={lb.type}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-slate-600">{lb.type}</span>
+                            <span className="font-semibold text-slate-800 tabular-nums">{lb.total - lb.used} / {lb.total}</span>
+                          </div>
+                          <ProgressBar value={(lb.used / lb.total) * 100} color={lb.color} />
                         </div>
-                        <ProgressBar value={(lb.used / lb.total) * 100} color={lb.color} />
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Right cols */}
               <div className="lg:col-span-2 space-y-4">
-                <div className="bg-slate-50 rounded-xl p-4">
-                  <h3 className="section-title text-slate-500 mb-3">Attendance — July 2026</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                    {[
-                      { label: 'Present', value: 21, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-                      { label: 'Absent', value: 0, color: 'text-rose-600', bg: 'bg-rose-100' },
-                      { label: 'Late', value: 1, color: 'text-amber-600', bg: 'bg-amber-100' },
-                      { label: 'Rate', value: '95.5%', color: 'text-blue-600', bg: 'bg-blue-100' },
-                    ].map(s => (
-                      <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
-                        <div className={`text-lg font-bold tabular-nums ${s.color}`}>{s.value}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
+                {isHRorAdmin || isOwnProfile ? (
+                  <>
+                    <div className="bg-slate-50 rounded-xl p-4">
+                      <h3 className="section-title text-slate-500 mb-3">Attendance — July 2026</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                        {[
+                          { label: 'Present', value: 21, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                          { label: 'Absent', value: 0, color: 'text-rose-600', bg: 'bg-rose-100' },
+                          { label: 'Late', value: 1, color: 'text-amber-600', bg: 'bg-amber-100' },
+                          { label: 'Rate', value: '95.5%', color: 'text-blue-600', bg: 'bg-blue-100' },
+                        ].map(s => (
+                          <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
+                            <div className={`text-lg font-bold tabular-nums ${s.color}`}>{s.value}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <div className="bg-slate-50 rounded-xl p-4">
-                  <h3 className="section-title text-slate-500 mb-3">Active OKRs — Q3 2026</h3>
-                  <div className="space-y-3">
-                    {[
-                      { title: 'Complete product beta with 10 enterprise clients', progress: 82, status: 'On Track' },
-                      { title: 'Reduce deployment pipeline time by 20%', progress: 45, status: 'At Risk' },
-                    ].map((okr, i) => (
-                      <div key={i}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs font-medium text-slate-800">{okr.title}</span>
-                          <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : 'warning'} />
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1"><ProgressBar value={okr.progress} color={okr.progress >= 70 ? 'bg-emerald-500' : 'bg-amber-500'} /></div>
-                          <span className="text-xs font-bold text-slate-700 tabular-nums w-8 text-right">{okr.progress}%</span>
-                        </div>
+                    <div className="bg-slate-50 rounded-xl p-4">
+                      <h3 className="section-title text-slate-500 mb-3">Active OKRs — Q3 2026</h3>
+                      <div className="space-y-3">
+                        {[
+                          { title: 'Complete product beta with 10 enterprise clients', progress: 82, status: 'On Track' },
+                          { title: 'Reduce deployment pipeline time by 20%', progress: 45, status: 'At Risk' },
+                        ].map((okr, i) => (
+                          <div key={i}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-xs font-medium text-slate-800">{okr.title}</span>
+                              <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : 'warning'} />
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1"><ProgressBar value={okr.progress} color={okr.progress >= 70 ? 'bg-emerald-500' : 'bg-amber-500'} /></div>
+                              <span className="text-xs font-bold text-slate-700 tabular-nums w-8 text-right">{okr.progress}%</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {isHRorAdmin && (
-                  <div className="flex gap-2 pt-2 border-t border-slate-200">
-                    <PrimaryBtn icon="bi bi-pencil" onClick={() => { setEditEmp(selectedEmp); setEditFirst(selectedEmp.firstName); setEditLast(selectedEmp.lastName); setEditDept(selectedEmp.department); setEditDesignation(selectedEmp.designation); setEditBranch(selectedEmp.branch); setEditSalary(String(selectedEmp.salary)); }}>Edit Employee</PrimaryBtn>
-                    <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('payroll'); }}>View Payslips</SecBtn>
-                    <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('comm-compose'); }}>Send Message</SecBtn>
+                    {isHRorAdmin && (
+                      <div className="flex gap-2 pt-2 border-t border-slate-200">
+                        <PrimaryBtn icon="bi bi-pencil" onClick={() => { setEditEmp(selectedEmp); setEditFirst(selectedEmp.firstName); setEditLast(selectedEmp.lastName); setEditDept(selectedEmp.department); setEditDesignation(selectedEmp.designation); setEditBranch(selectedEmp.branch); setEditSalary(String(selectedEmp.salary)); }}>Edit Employee</PrimaryBtn>
+                        <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('payroll'); }}>View Payslips</SecBtn>
+                        <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('comm-compose'); }}>Send Message</SecBtn>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-200/60 flex flex-col items-center justify-center text-center gap-3 h-full min-h-[250px]">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-lg">
+                      <i className="bi bi-shield-lock"></i>
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-800">Privacy Notice</h4>
+                    <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
+                      Leave balances, attendance history, and performance OKRs of colleagues are confidential and only accessible by HR Managers, Administrators, or the employees themselves.
+                    </p>
                   </div>
                 )}
               </div>
@@ -744,11 +762,25 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
   // ── VIEW: LEAVE ────────────────────────────────────────────────────────────
   if (activeView === 'hr-leave') {
-    if (isHRorAdmin) {
-      const pending = companyLeaves.filter(l => l.status === 'Pending');
-      const approved = companyLeaves.filter(l => l.status === 'Approved');
-      const todayOnLeave = localEmployees.filter(e => e.status === 'On Leave');
-      const totalDays = companyLeaves.filter(l => l.status === 'Approved').reduce((s, l) => s + (l.days || 0), 0);
+    const canViewTeamLeaves = isHRorAdmin || isDeptHead;
+    if (canViewTeamLeaves) {
+      const managedDeptNames = isHRorAdmin 
+        ? null 
+        : departments.filter(d => d.managerId === selectedUser.id && d.companyId === selectedCompany.id).map(d => d.name);
+      
+      const visibleLeaves = isHRorAdmin 
+        ? companyLeaves 
+        : companyLeaves.filter(l => {
+            const emp = localEmployees.find(e => e.id === l.employeeId);
+            return emp && managedDeptNames?.includes(emp.department);
+          });
+
+      const displayLeaves = leaveFilter === 'All' ? visibleLeaves : visibleLeaves.filter(l => l.status === leaveFilter);
+
+      const pending = visibleLeaves.filter(l => l.status === 'Pending' || l.status === 'HOD Approved');
+      const approved = visibleLeaves.filter(l => l.status === 'Approved');
+      const todayOnLeave = localEmployees.filter(e => e.status === 'On Leave' && (isHRorAdmin || managedDeptNames?.includes(e.department)));
+      const totalDays = visibleLeaves.filter(l => l.status === 'Approved').reduce((s, l) => s + (l.days || 0), 0);
       return (
         <div className="space-y-6">
           <SectionHeader title="Leave Management" subtitle="Review, approve and track all employee leave requests." />
@@ -763,7 +795,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">Leave Requests</h3>
               <div className="flex gap-2">
-                {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
+                {['All', 'Pending', 'HOD Approved', 'Approved', 'Rejected'].map(f => (
                   <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} className={`text-xs font-semibold border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${leaveFilter === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                     {f}
                   </button>
@@ -771,13 +803,13 @@ export const HRModule: React.FC<HRModuleProps> = ({
               </div>
             </div>
             <div className="divide-y divide-slate-100">
-              {companyLeaves.length === 0 && (
+              {visibleLeaves.length === 0 && (
                 <div className="p-10 text-center">
                   <i className="bi bi-inbox text-3xl text-slate-200 block mb-2"></i>
                   <p className="text-sm text-slate-400">No leave requests found.</p>
                 </div>
               )}
-              {filteredLeaves.map((req, i) => {
+              {displayLeaves.map((req, i) => {
                 const emp = localEmployees.find(e => e.id === req.employeeId);
                 const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
                 const empDept = emp?.department || '';
@@ -798,27 +830,54 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full tabular-nums">{req.days || 1} day{(req.days || 1) > 1 ? 's' : ''}</span>
                         </div>
                         <div className="text-xs text-slate-400 mt-1 italic">"{req.reason}"</div>
+                        {req.replacementName && (
+                          <div className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-600 flex items-center gap-1">
+                              <i className="bi bi-arrow-left-right text-[8px]"></i> Covering Officer: {req.replacementName}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : req.status === 'Pending' ? 'warning' : 'danger'} />
+                      <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : (req.status === 'Pending' || req.status === 'HOD Approved') ? 'warning' : 'danger'} />
                       
                       {req.status === 'Pending' && (() => {
                         const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
                         const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
                         const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
                         const isHOD = empDeptRecord?.managerId === selectedUser.id;
-                        const canApprove = isCompanyAdmin || hasLeavePermission || isHOD;
                         
-                        if (canApprove) {
+                        if (isHOD && !isCompanyAdmin && !hasLeavePermission) {
                           return (
                             <div className="flex gap-2">
-                              <button onClick={() => onApproveLeave(req.id)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                              <button onClick={() => onApproveLeave(req.id, 'HOD Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">HOD Approve</button>
+                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                            </div>
+                          );
+                        } else if (isCompanyAdmin || hasLeavePermission) {
+                          return (
+                            <div className="flex gap-2">
+                              <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
                               <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                             </div>
                           );
                         }
-                        return <div className="text-[10px] text-slate-400 italic">Awaiting HOD/Admin approval</div>;
+                        return <div className="text-[10px] text-slate-400 italic">Awaiting HOD approval</div>;
+                      })()}
+
+                      {req.status === 'HOD Approved' && (() => {
+                        const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
+                        const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
+                        if (isCompanyAdmin || hasLeavePermission) {
+                          return (
+                            <div className="flex gap-2">
+                              <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
+                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                            </div>
+                          );
+                        }
+                        return <div className="text-[10px] text-slate-400 italic">Awaiting HR/Admin approval</div>;
                       })()}
                       
                       {req.status === 'Approved' && req.approvedBy && (
@@ -875,6 +934,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               const days = leaveEnd && leaveStart
                 ? Math.max(1, Math.round((new Date(leaveEnd).getTime() - new Date(leaveStart).getTime()) / 86400000) + 1)
                 : 1;
+              const coveringEmp = localEmployees.find(emp => emp.id === leaveReplacementId);
               onAddLeave({
                 employeeId: myEmpRecord.id,
                 employeeName: `${myEmpRecord.firstName} ${myEmpRecord.lastName}`,
@@ -883,9 +943,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 startDate: leaveStart,
                 endDate: leaveEnd || leaveStart,
                 reason: leaveReason,
-                days
+                days,
+                replacementId: leaveReplacementId || undefined,
+                replacementName: coveringEmp ? `${coveringEmp.firstName} ${coveringEmp.lastName}` : undefined
               });
-              setLeaveStart(''); setLeaveEnd(''); setLeaveReason('');
+              setLeaveStart(''); setLeaveEnd(''); setLeaveReason(''); setLeaveReplacementId('');
               setLeaveSuccess(true);
               setTimeout(() => setLeaveSuccess(false), 3000);
             }}>
@@ -899,6 +961,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div><Label>Start Date *</Label><Input type="date" value={leaveStart} onChange={e => setLeaveStart(e.target.value)} required /></div>
                 <div><Label>End Date</Label><Input type="date" value={leaveEnd} onChange={e => setLeaveEnd(e.target.value)} /></div>
+              </div>
+              <div>
+                <Label>Replacement Employee (Covering Officer)</Label>
+                <Select value={leaveReplacementId} onChange={e => setLeaveReplacementId(e.target.value)}>
+                  <option value="">— Select covering officer —</option>
+                  {localEmployees.filter(emp => emp.id !== myEmpRecord?.id).map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.firstName} {emp.lastName} ({emp.designation} · {emp.department})
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <Label>Reason *</Label>
@@ -934,6 +1007,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <div className="text-xs text-slate-500 mt-0.5">
                         <i className="bi bi-calendar3 mr-1"></i>{req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.reason}
                       </div>
+                      {req.replacementName && (
+                        <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                          <i className="bi bi-person-fill text-slate-400"></i>
+                          Covering officer: <span className="font-semibold text-slate-600">{req.replacementName}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1266,6 +1345,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
       const onTrack = companyOkrs.filter(o => o.status === 'On Track');
       const atRisk = companyOkrs.filter(o => o.status === 'At Risk');
       const completed = companyOkrs.filter(o => o.status === 'Completed');
+      const awaitingReview = companyOkrs.filter(o => o.status === 'Awaiting Review');
       return (
         <div className="space-y-6">
           <SectionHeader title="Performance & OKRs" subtitle="Track objectives, key results and employee performance reviews." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setOkrTitle(''); setOkrKeyResult(''); setOkrPeriod('Q3 2026'); setOkrEmployeeId(''); setShowOkrModal(true); }}>New OKR</PrimaryBtn>} />
@@ -1300,10 +1380,25 @@ export const HRModule: React.FC<HRModuleProps> = ({
               </div>
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-4">
+
+          {/* Awaiting Review Banner */}
+          {awaitingReview.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
+                <i className="bi bi-hourglass-split text-amber-600"></i>
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-bold text-amber-800">{awaitingReview.length} OKR{awaitingReview.length !== 1 ? 's' : ''} Awaiting Your Review</div>
+                <div className="text-xs text-amber-600">Employees have marked these objectives as complete. Please review and approve or decline below.</div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-5">
             <StatCard label="Active OKRs" value={companyOkrs.length} icon="bi bi-bullseye" sub="Across all departments" />
             <StatCard label="On Track" value={onTrack.length} icon="bi bi-check-circle" sub="Meeting targets" color="text-emerald-600" />
             <StatCard label="At Risk" value={atRisk.length} icon="bi bi-exclamation-triangle" sub="Needs attention" accent />
+            <StatCard label="Awaiting Review" value={awaitingReview.length} icon="bi bi-hourglass-split" sub="Pending approval" color="text-amber-600" />
             <StatCard label="Completed" value={completed.length} icon="bi bi-trophy" sub="This quarter" color="text-emerald-600" />
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
@@ -1325,8 +1420,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
               )}
               {companyOkrs.map((okr, i) => {
                 const p = okr.progress;
+                const isAwaitingReview = okr.status === 'Awaiting Review';
                 return (
-                  <div key={okr.id} className="p-5 hover:bg-slate-50/30 transition-colors">
+                  <div key={okr.id} className={`p-5 transition-colors ${isAwaitingReview ? 'bg-amber-50/40 hover:bg-amber-50/60 border-l-4 border-l-amber-400' : 'hover:bg-slate-50/30'}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <Avatar first={okr.employeeName.split(' ')[0]} last={okr.employeeName.split(' ')[1] || 'X'} index={i} size="sm" />
@@ -1341,10 +1437,34 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</div>
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
-                        <ProgressBar value={p} color={p >= 90 ? 'bg-blue-500' : p >= 70 ? 'bg-emerald-500' : p >= 40 ? 'bg-amber-500' : 'bg-rose-500'} />
+                        <ProgressBar value={p} color={isAwaitingReview ? 'bg-amber-500' : p >= 90 ? 'bg-blue-500' : p >= 70 ? 'bg-emerald-500' : p >= 40 ? 'bg-amber-500' : 'bg-rose-500'} />
                       </div>
                       <span className="text-xs font-bold tabular-nums text-slate-700 w-8 text-right">{p}%</span>
                     </div>
+
+                    {/* Approve / Decline actions for Awaiting Review OKRs */}
+                    {isAwaitingReview && (
+                      <div className="mt-4 pt-3 border-t border-amber-200/60 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-amber-700">
+                          <i className="bi bi-hourglass-split"></i>
+                          <span className="font-medium">Employee marked this as complete — awaiting your review</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => onUpdateOKRProgress(okr.id, 95, 'On Track')}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <i className="bi bi-x-circle"></i> Decline
+                          </button>
+                          <button
+                            onClick={() => onUpdateOKRProgress(okr.id, 100, 'Completed')}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <i className="bi bi-check-circle"></i> Approve Completion
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1354,43 +1474,214 @@ export const HRModule: React.FC<HRModuleProps> = ({
       );
     }
 
-    // Employee: own OKRs
+    // Employee: own OKRs — expanded detail view
     const myOnTrack = myOkrs.filter(o => o.status === 'On Track');
+    const myAtRisk = myOkrs.filter(o => o.status === 'At Risk');
+    const myCompleted = myOkrs.filter(o => o.status === 'Completed');
+    const avgProgress = myOkrs.length > 0 ? Math.round(myOkrs.reduce((s, o) => s + o.progress, 0) / myOkrs.length) : 0;
+    const [expandedOkr, setExpandedOkr] = useState<string | null>(null);
+    const [progressSlider, setProgressSlider] = useState<number>(0);
+
     return (
       <div className="space-y-6">
-        <SectionHeader title="My Performance & OKRs" subtitle="Track your goals and key results for Q3 2026." />
-        <div className="grid gap-4 sm:grid-cols-3">
+        <SectionHeader title="My Performance & OKRs" subtitle="Track your goals, update progress and review key results." />
+
+        {/* Summary stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="My Active Goals" value={myOkrs.filter(o => o.status !== 'Completed').length} icon="bi bi-bullseye" sub="Assigned OKRs" />
           <StatCard label="On Track" value={myOnTrack.length} icon="bi bi-check-circle" sub="Meeting targets" color="text-emerald-600" />
-          <StatCard label="Quarter Deadline" value={(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); return end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); })()} icon="bi bi-calendar3" sub="End of quarter" accent />
+          <StatCard label="At Risk" value={myAtRisk.length} icon="bi bi-exclamation-triangle" sub="Needs attention" accent />
+          <StatCard label="Avg Progress" value={`${avgProgress}%`} icon="bi bi-graph-up" sub="Across all OKRs" color="text-blue-600" />
         </div>
+
+        {/* Overall progress ring */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6">
+          <div className="flex items-center gap-6">
+            <div className="relative h-20 w-20 shrink-0">
+              <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="#f1f5f9" strokeWidth="6" />
+                <circle cx="40" cy="40" r="34" fill="none" stroke={avgProgress >= 70 ? '#10b981' : avgProgress >= 40 ? '#f59e0b' : '#f43f5e'} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${(avgProgress / 100) * 213.6} 213.6`} />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-slate-900 tabular-nums">{avgProgress}%</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-slate-900 mb-1">Quarter Progress Summary</h3>
+              <p className="text-xs text-slate-500 mb-3">Your average OKR completion across {myOkrs.length} objective{myOkrs.length !== 1 ? 's' : ''} this quarter.</p>
+              <div className="flex gap-4">
+                {[
+                  { label: 'Completed', count: myCompleted.length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'On Track', count: myOnTrack.length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'At Risk', count: myAtRisk.length, color: 'text-amber-600', bg: 'bg-amber-50' },
+                ].map(s => (
+                  <div key={s.label} className={`${s.bg} rounded-lg px-3 py-1.5 flex items-center gap-1.5`}>
+                    <span className={`text-sm font-bold tabular-nums ${s.color}`}>{s.count}</span>
+                    <span className="text-[10px] text-slate-500">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="shrink-0 text-right hidden sm:block">
+              <div className="text-xs text-slate-400 mb-1">Quarter Deadline</div>
+              <div className="text-sm font-bold text-slate-800">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); })()}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); const diff = Math.ceil((end.getTime() - now.getTime()) / 86400000); return `${diff} days remaining`; })()}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* OKR cards */}
         <div className="space-y-4">
           {myOkrs.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-10 text-center">
               <i className="bi bi-bullseye text-3xl text-slate-200 block mb-2"></i>
               <p className="text-sm text-slate-400">No OKRs assigned to you yet.</p>
+              <p className="text-xs text-slate-300 mt-1">Your manager or HR will create objectives for you.</p>
             </div>
           )}
-          {myOkrs.map((okr) => (
-            <div key={okr.id} className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="text-sm font-bold text-slate-900">{okr.title}</div>
-                  <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                    <i className="bi bi-arrow-right-short text-slate-400"></i>
-                    Key Result: {okr.keyResult}
+          {myOkrs.map((okr) => {
+            const isExpanded = expandedOkr === okr.id;
+            const progressColor = okr.progress >= 90 ? 'bg-blue-500' : okr.progress >= 70 ? 'bg-emerald-500' : okr.progress >= 40 ? 'bg-amber-500' : 'bg-rose-500';
+            const progressTextColor = okr.progress >= 90 ? 'text-blue-600' : okr.progress >= 70 ? 'text-emerald-600' : okr.progress >= 40 ? 'text-amber-600' : 'text-rose-600';
+            return (
+              <div key={okr.id} className={`bg-white border rounded-2xl shadow-xs overflow-hidden transition-all ${isExpanded ? 'border-slate-300 shadow-sm' : 'border-slate-200'}`}>
+                {/* Card header — always visible */}
+                <div
+                  className="p-5 cursor-pointer hover:bg-slate-50/40 transition-colors"
+                  onClick={() => { setExpandedOkr(isExpanded ? null : okr.id); setProgressSlider(okr.progress); }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-slate-900">{okr.title}</span>
+                        <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : okr.status === 'Completed' ? 'info' : 'warning'} />
+                      </div>
+                      <div className="text-xs text-slate-500 flex items-center gap-2">
+                        <span className="flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</span>
+                        <span className="text-slate-300">·</span>
+                        <span className="flex items-center gap-1"><i className="bi bi-calendar3 text-slate-400 text-[10px]"></i>{okr.period}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-4">
+                      <div className={`text-lg font-bold tabular-nums ${progressTextColor}`}>{okr.progress}%</div>
+                      <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'} text-slate-400 text-xs transition-transform`}></i>
+                    </div>
                   </div>
+                  <ProgressBar value={okr.progress} color={progressColor} />
                 </div>
-                <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : okr.status === 'Completed' ? 'info' : 'warning'} />
+
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="border-t border-slate-100 px-5 py-5 bg-slate-50/30">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      {/* Left: Details */}
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Objective Details</h4>
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5">
+                            {[
+                              { label: 'Objective', value: okr.title, icon: 'bi bi-bullseye' },
+                              { label: 'Key Result', value: okr.keyResult, icon: 'bi bi-arrow-right' },
+                              { label: 'Period', value: okr.period, icon: 'bi bi-calendar3' },
+                              { label: 'Department', value: okr.department, icon: 'bi bi-diagram-3' },
+                              { label: 'Status', value: okr.status, icon: 'bi bi-flag' },
+                            ].map(item => (
+                              <div key={item.label} className="flex items-start gap-2">
+                                <i className={`${item.icon} text-slate-400 text-xs mt-0.5`}></i>
+                                <div>
+                                  <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{item.label}</div>
+                                  <div className="text-xs text-slate-800 font-medium">{item.value}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Progress milestones */}
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Progress Milestones</h4>
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+                            {[
+                              { pct: 25, label: 'Planning & Discovery', reached: okr.progress >= 25 },
+                              { pct: 50, label: 'In Progress', reached: okr.progress >= 50 },
+                              { pct: 75, label: 'Review & Refine', reached: okr.progress >= 75 },
+                              { pct: 100, label: 'Completed', reached: okr.progress >= 100 },
+                            ].map(ms => (
+                              <div key={ms.pct} className="flex items-center gap-3">
+                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${ms.reached ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                                  {ms.reached ? <i className="bi bi-check"></i> : ms.pct}
+                                </div>
+                                <div className="flex-1">
+                                  <div className={`text-xs font-medium ${ms.reached ? 'text-slate-800' : 'text-slate-400'}`}>{ms.label}</div>
+                                </div>
+                                <span className={`text-[10px] font-mono tabular-nums ${ms.reached ? 'text-emerald-600' : 'text-slate-300'}`}>{ms.pct}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Update progress */}
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Update Progress</h4>
+                          <div className="bg-white rounded-xl border border-slate-200 p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs text-slate-600">Drag slider or enter value:</span>
+                              <span className={`text-lg font-bold tabular-nums ${progressTextColor}`}>{progressSlider}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={progressSlider}
+                              onChange={e => setProgressSlider(Number(e.target.value))}
+                              className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-slate-900"
+                            />
+                            <div className="flex justify-between text-[10px] text-slate-400 mt-1 tabular-nums">
+                              <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                            </div>
+                            <div className="mt-4">
+                              <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                                onUpdateOKRProgress(okr.id, progressSlider);
+                                setExpandedOkr(null);
+                              }}>Save Progress</PrimaryBtn>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quick actions */}
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quick Actions</h4>
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+                            {[
+                              { label: 'Mark as On Track', pct: null, status: 'On Track', icon: 'bi bi-check-circle', color: 'text-emerald-600 hover:bg-emerald-50', disabled: okr.status === 'On Track' },
+                              { label: 'Mark as At Risk', pct: null, status: 'At Risk', icon: 'bi bi-exclamation-triangle', color: 'text-amber-600 hover:bg-amber-50', disabled: okr.status === 'At Risk' },
+                              { label: 'Mark Complete (100%)', pct: 100, status: 'Completed', icon: 'bi bi-trophy', color: 'text-blue-600 hover:bg-blue-50', disabled: okr.progress === 100 },
+                            ].map(act => (
+                              <button
+                                key={act.label}
+                                disabled={act.disabled}
+                                onClick={() => {
+                                  if (act.pct !== null) {
+                                    onUpdateOKRProgress(okr.id, act.pct);
+                                  }
+                                  setExpandedOkr(null);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer border border-transparent ${act.disabled ? 'text-slate-300 bg-slate-50 cursor-not-allowed' : act.color}`}
+                              >
+                                <i className={act.icon}></i> {act.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <ProgressBar value={okr.progress} color={okr.progress >= 70 ? 'bg-emerald-500' : 'bg-amber-500'} />
-                </div>
-                <span className="text-sm font-bold tabular-nums text-slate-900 w-10 text-right">{okr.progress}%</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -1439,10 +1730,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <div className={`text-xs font-bold ${dc.text}`}>{dept.name}</div>
             <div className="text-xs text-slate-500 mt-0.5">{(() => { const mgr = dept.managerId ? employees.find(e => e.id === dept.managerId) : null; return mgr ? `${mgr.firstName} ${mgr.lastName}` : 'Unassigned'; })()}</div>
             <div className="text-xs font-bold text-slate-700 tabular-nums mt-1">{count} staff</div>
-            <div className="mt-2 flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => { setEditDeptModal(dept); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="text-[10px] bg-white border border-slate-300 text-slate-700 rounded px-2 py-0.5 hover:bg-slate-50 transition-colors">Edit</button>
-              <button onClick={async () => { if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id); }} className="text-[10px] bg-white border border-rose-300 text-rose-700 rounded px-2 py-0.5 hover:bg-rose-50 transition-colors">Delete</button>
-            </div>
+            {isHRorAdmin && (
+              <div className="mt-2 flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => { setEditDeptModal(dept); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="text-[10px] bg-white border border-slate-300 text-slate-700 rounded px-2 py-0.5 hover:bg-slate-50 transition-colors">Edit</button>
+                <button onClick={async () => { if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id); }} className="text-[10px] bg-white border border-rose-300 text-rose-700 rounded px-2 py-0.5 hover:bg-rose-50 transition-colors">Delete</button>
+              </div>
+            )}
           </div>
           {children.length > 0 && <div className="w-px h-5 bg-slate-300"></div>}
           {children.length > 0 && (

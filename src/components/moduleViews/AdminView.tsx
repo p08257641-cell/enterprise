@@ -37,12 +37,12 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const userModal = useRowModal<typeof localEmployees[0]>();
 
   const [approvalPolicies, setApprovalPolicies] = useState<Record<string, string[]>>({
-    'Leave Requests': ['Department Head', 'Company Admin'],
-    'Payroll Processing': ['HR Manager', 'Company Admin'],
-    'Expense Claims': ['Finance Manager', 'Company Admin'],
-    'Procurement / PO': ['Finance Manager', 'Company Admin'],
-    'Recruitment Offers': ['Department Head', 'HR Manager'],
-    'Asset Requests': ['Company Admin'],
+    'Leave Requests': ['HR Department Head', 'HR Manager', 'Company Admin'],
+    'Payroll Processing': ['HR Manager', 'Finance Department Head', 'Company Admin'],
+    'Expense Claims': ['Finance Manager', 'Finance Department Head', 'Company Admin'],
+    'Procurement / PO': ['Finance Manager', 'Operations Department Head', 'Company Admin'],
+    'Recruitment Offers': ['HR Department Head', 'HR Manager'],
+    'Asset Requests': ['Company Admin', 'Operations Department Head'],
   });
   const [approvalSaveSuccess, setApprovalSaveSuccess] = useState(false);
 
@@ -64,7 +64,11 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
     { id: 'role-5', name: 'Inventory Manager', permissions: 'Stock Levels, Warehouse transfers, Procurement POs', rawPermissions: ['inventory_manage'], users: 1 },
     { id: 'role-sk', name: 'Store Keeper', permissions: 'Stock Levels, Warehouse management', rawPermissions: ['inventory_view', 'inventory_edit'], users: 1 },
     { id: 'role-6', name: 'Support Agent', permissions: 'Help Desk tickets, Visitor logs, Internal chat', rawPermissions: ['helpdesk_edit'], users: 3 },
-    { id: 'role-dh', name: 'Department Head', permissions: 'Department management, limited admin access', rawPermissions: ['hr_view', 'admin_manage'], users: 0 },
+    { id: 'role-dh-hr', name: 'HR Department Head', permissions: 'HR, Payroll, Compliance, LMS — full authority', rawPermissions: ['hr_view', 'hr_edit', 'leave_approve', 'payroll_manage', 'compliance_manage'], users: 0 },
+    { id: 'role-dh-sales', name: 'Sales Department Head', permissions: 'Sales, CRM, POS — full authority', rawPermissions: ['sales_manage', 'crm_view', 'crm_edit'], users: 0 },
+    { id: 'role-dh-finance', name: 'Finance Department Head', permissions: 'Accounting, Payroll — full authority', rawPermissions: ['accounting_view', 'accounting_edit', 'payroll_manage'], users: 0 },
+    { id: 'role-dh-ops', name: 'Operations Department Head', permissions: 'Operations, Inventory, Manufacturing — full authority', rawPermissions: ['inventory_manage', 'project_manage'], users: 0 },
+    { id: 'role-dh-it', name: 'IT Department Head', permissions: 'Administration, Help Desk, POS — full authority', rawPermissions: ['admin_manage', 'helpdesk_edit'], users: 0 },
   ]);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [editingRole, setEditingRole] = useState<{ id: string; name: string; permissions: string; rawPermissions: string[]; users: number } | null>(null);
@@ -377,7 +381,11 @@ const [deptParent, setDeptParent] = useState('');
                         {selectedCompany.activeModules.includes('Operations') && <option value="Inventory Manager">Inventory Manager</option>}
                         {selectedCompany.activeModules.includes('Operations') && <option value="Store Keeper">Store Keeper</option>}
                         {selectedCompany.activeModules.includes('Help Desk') && <option value="Support Agent">Support Agent</option>}
-                        {selectedCompany.activeModules.includes('HR') && <option value="Department Head">Department Head</option>}
+                        {selectedCompany.activeModules.includes('HR') && <option value="HR Department Head">HR Department Head</option>}
+                        {selectedCompany.activeModules.includes('Sales') && <option value="Sales Department Head">Sales Department Head</option>}
+                        {selectedCompany.activeModules.includes('Accounting') && <option value="Finance Department Head">Finance Department Head</option>}
+                        {selectedCompany.activeModules.includes('Operations') && <option value="Operations Department Head">Operations Department Head</option>}
+                        {selectedCompany.activeModules.includes('Administration') && <option value="IT Department Head">IT Department Head</option>}
                       </Select>
                     </div>
                     <div>
@@ -397,9 +405,14 @@ const [deptParent, setDeptParent] = useState('');
                   <div>
                     <Label>Additional Roles (multi-select)</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                      {['Employee', 'Department Head', 'CEO', 'HR Manager', 'HR Officer', 'Accountant', 'Finance Manager', 'Sales Manager', 'Sales Rep', 'Sales Executive', 'Inventory Manager', 'Store Keeper', 'Support Agent']
+                      {['Employee', 'HR Department Head', 'Sales Department Head', 'Finance Department Head', 'Operations Department Head', 'IT Department Head', 'CEO', 'HR Manager', 'HR Officer', 'Accountant', 'Finance Manager', 'Sales Manager', 'Sales Rep', 'Sales Executive', 'Inventory Manager', 'Store Keeper', 'Support Agent']
                         .filter(role => {
-                          if (role === 'Employee' || role === 'Department Head') return selectedCompany.activeModules.includes('HR');
+                          if (role === 'Employee') return selectedCompany.activeModules.includes('HR');
+                          if (role === 'HR Department Head') return selectedCompany.activeModules.includes('HR');
+                          if (role === 'Sales Department Head') return selectedCompany.activeModules.includes('Sales');
+                          if (role === 'Finance Department Head') return selectedCompany.activeModules.includes('Accounting');
+                          if (role === 'Operations Department Head') return selectedCompany.activeModules.includes('Operations');
+                          if (role === 'IT Department Head') return selectedCompany.activeModules.includes('Administration');
                           if (role === 'CEO') return selectedCompany.activeModules.includes('Administration');
                           if (['HR Manager', 'HR Officer'].includes(role)) return selectedCompany.activeModules.includes('HR');
                           if (['Accountant', 'Finance Manager'].includes(role)) return selectedCompany.activeModules.includes('Accounting');
@@ -567,7 +580,11 @@ const [deptParent, setDeptParent] = useState('');
                   'Asset Requests': 'Equipment requisitions and asset assignments',
                 };
                 const availableRoles = [
-                  'Department Head',
+                  'HR Department Head',
+                  'Sales Department Head',
+                  'Finance Department Head',
+                  'Operations Department Head',
+                  'IT Department Head',
                   'HR Manager',
                   'HR Officer',
                   'Finance Manager',
