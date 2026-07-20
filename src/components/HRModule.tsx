@@ -700,10 +700,10 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {/* ATS Pipeline */}
         <div className="grid gap-4 sm:grid-cols-4">
           {[
-            { stage: 'Applications', count: 24, icon: 'bi bi-inbox', color: 'bg-blue-50 border-blue-100', text: 'text-blue-700' },
-            { stage: 'Screening', count: 11, icon: 'bi bi-funnel', color: 'bg-violet-50 border-violet-100', text: 'text-violet-700' },
-            { stage: 'Interview', count: 6, icon: 'bi bi-camera-video', color: 'bg-amber-50 border-amber-100', text: 'text-amber-700' },
-            { stage: 'Offer Sent', count: 2, icon: 'bi bi-envelope-check', color: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700' },
+            { stage: 'Applications', count: applicants.filter(a => a.stage === 'Applications').length, icon: 'bi bi-inbox', color: 'bg-blue-50 border-blue-100', text: 'text-blue-700' },
+            { stage: 'Screening', count: applicants.filter(a => a.stage === 'Screening').length, icon: 'bi bi-funnel', color: 'bg-violet-50 border-violet-100', text: 'text-violet-700' },
+            { stage: 'Interview', count: applicants.filter(a => a.stage === 'Interview').length, icon: 'bi bi-camera-video', color: 'bg-amber-50 border-amber-100', text: 'text-amber-700' },
+            { stage: 'Offer Sent', count: applicants.filter(a => a.stage === 'Offer Sent').length, icon: 'bi bi-envelope-check', color: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700' },
           ].map(s => (
             <div key={s.stage} className={`${s.color} border rounded-xl p-5`}>
               <i className={`${s.icon} ${s.text} text-lg block mb-2`}></i>
@@ -756,13 +756,28 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     <span className="text-xs text-slate-400">{app.applied}</span>
                     <Badge
                       label={app.stage}
-                      variant={app.stage === 'Offer Sent' ? 'success' : app.stage === 'Interview' ? 'info' : app.stage === 'Screening' ? 'purple' : 'default'}
+                      variant={app.stage === 'Hired' ? 'success' : app.stage === 'Offer Sent' ? 'success' : app.stage === 'Interview' ? 'info' : app.stage === 'Screening' ? 'purple' : 'default'}
                     />
-                    {isHRorAdmin && (
+                    {isHRorAdmin && app.stage !== 'Hired' && (
                       <button onClick={() => {
                         const idx = STAGES.indexOf(app.stage);
                         const next = idx >= 0 && idx < STAGES.length - 1 ? STAGES[idx + 1] : app.stage;
                         setApplicants(prev => prev.map((a, j) => j === i ? { ...a, stage: next } : a));
+                        if (next === 'Hired') {
+                          const nameParts = app.name.split(' ');
+                          const firstName = nameParts[0] || app.name;
+                          const lastName = nameParts.slice(1).join(' ') || 'Employee';
+                          onAddEmployee({
+                            companyId: selectedCompany.id,
+                            firstName,
+                            lastName,
+                            email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${selectedCompany.domain || 'company'}.com`,
+                            department: app.dept,
+                            designation: app.role,
+                            branch: 'HQ',
+                            salary: 0,
+                          });
+                        }
                       }} className="text-xs font-semibold text-slate-500 hover:text-slate-900 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">
                         Move Stage
                       </button>
@@ -2244,7 +2259,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
   const selectedEmp = employees.find(e => e.id === selectedEmpId);
   const today = new Date().toISOString().split('T')[0];
   const companyName = selectedCompany.name;
-  const companyAddr = [selectedCompany.address, selectedCompany.city, selectedCompany.state, selectedCompany.country].filter(Boolean).join(', ');
+  const companyAddr = [selectedCompany.address, selectedCompany.country].filter(Boolean).join(', ');
 
   const generateLetter = (type: string, emp?: any) => {
     const e = emp || selectedEmp;
@@ -2261,7 +2276,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
     }
     if (type === 'appointment') {
       const salary = e.salary ? `$${Number(e.salary).toLocaleString()}/year` : '[Salary]';
-      return `Date: ${today}\n\nTo: ${empName}\n\nSubject: Appointment Letter\n\nDear ${empName},\n\nWe are pleased to offer you the position of ${position} in the ${dept} department at ${companyName}, effective from ${today}.\n\nTerms of Employment:\n\nPosition: ${position}\nDepartment: ${dept}\nReporting To: ${e.managerId ? (employees.find(m => m.id === e.managerId)?.firstName + ' ' + employees.find(m => m.id === e.managerId)?.lastName || 'Department Head') : 'Department Head'}\nCompensation: ${salary}\nEmployment Type: ${e.employmentType || 'Full-time'}\nWork Location: ${e.workLocation || selectedCompany.city || 'Office'}\n\nYour employment will be subject to a probation period of ${selectedCompany.probationPeriodDays || 90} days, during which your performance will be evaluated.\n\nYou are expected to adhere to all company policies, code of conduct, and professional standards as outlined in the employee handbook.\n\nWe look forward to your valuable contributions to our team.\n\nSincerely,\n\n_________________________\n${selectedUser.name}\nHuman Resources\n${companyName}`;
+      return `Date: ${today}\n\nTo: ${empName}\n\nSubject: Appointment Letter\n\nDear ${empName},\n\nWe are pleased to offer you the position of ${position} in the ${dept} department at ${companyName}, effective from ${today}.\n\nTerms of Employment:\n\nPosition: ${position}\nDepartment: ${dept}\nReporting To: ${e.managerId ? (employees.find(m => m.id === e.managerId)?.firstName + ' ' + employees.find(m => m.id === e.managerId)?.lastName || 'Department Head') : 'Department Head'}\nCompensation: ${salary}\nEmployment Type: ${e.employmentType || 'Full-time'}\nWork Location: ${e.workLocation || 'Office'}\n\nYour employment will be subject to a probation period of ${selectedCompany.probationPeriodDays || 90} days, during which your performance will be evaluated.\n\nYou are expected to adhere to all company policies, code of conduct, and professional standards as outlined in the employee handbook.\n\nWe look forward to your valuable contributions to our team.\n\nSincerely,\n\n_________________________\n${selectedUser.name}\nHuman Resources\n${companyName}`;
     }
     if (type === 'confirmation') {
       return `Date: ${today}\n\nTo: ${empName}\nDepartment: ${dept}\nPosition: ${position}\n\nSubject: Confirmation of Employment\n\nDear ${empName},\n\nWe are delighted to inform you that, upon review of your performance during your probationary period, your employment with ${companyName} has been confirmed effective ${today}.\n\nYour contributions, dedication, and performance during the probation period have met and often exceeded our expectations. We are confident that you will continue to be a valuable asset to our organization.\n\nAs a confirmed employee, you are now entitled to all benefits and privileges as per the company's policies, including:\n\n• Full employee benefits package\n• Annual leave entitlement\n• Health insurance coverage\n• Retirement plan eligibility\n• Performance bonus eligibility\n\nPlease continue to uphold the high standards of professionalism and commitment that you have demonstrated thus far.\n\nCongratulations and welcome to the team!\n\nSincerely,\n\n_________________________\n${selectedUser.name}\nHuman Resources\n${companyName}`;
