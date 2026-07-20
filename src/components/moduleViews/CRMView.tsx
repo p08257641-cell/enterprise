@@ -192,7 +192,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               return (
                 <div
                   key={stage}
-                  className={`rounded-xl border p-3 min-h-[300px] ${stageColors[stage]}`}
+                  className={`rounded-xl border p-3 min-h-[200px] max-h-[65vh] flex flex-col ${stageColors[stage]}`}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
@@ -202,7 +202,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     }
                   }}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 shrink-0">
                     <span className="section-title text-slate-600">{stage}</span>
                     <div className="flex items-center gap-2">
                       <span className="data-value-small font-sans tabular-nums text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded">{stageLeads.length}</span>
@@ -217,7 +217,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       )}
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 overflow-y-auto flex-1 min-h-0">
                     {visibleLeads.map(l => (
                       <div
                         key={l.id}
