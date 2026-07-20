@@ -368,7 +368,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         } catch (e) { console.error('Failed to load Operations & Projects data:', e); }
 
         // Select default tenant and user role
-        if (cData.length > 0) setSelectedCompany(cData[0]);
+        if (cData.length > 0) {
+          const acme = cData.find((c: any) => c.id === 'c-acme');
+          setSelectedCompany(acme || cData[0]);
+        }
         if (uData.length > 0) setSelectedUser(uData[1]); // default to Alex Mercer (Company Admin)
         } catch (err) {
           console.error("Error loading full-stack database tables:", err);
@@ -752,13 +755,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     setActiveView('dashboard');
   };
 
-  const handleApproveLeave = async (leaveId: string) => {
+  const handleApproveLeave = async (leaveId: string, status: string = 'Approved') => {
     if (!selectedUser || !selectedCompany) return;
     try {
       await fetch(`/api/leaves/${leaveId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
+        body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name, status })
       });
       
       // Reload leaves, employees, audits
@@ -807,6 +810,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     endDate: string;
     reason: string;
     days: number;
+    replacementId?: string;
+    replacementName?: string;
   }) => {
     if (!selectedCompany) return;
     try {
@@ -870,12 +875,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
-  const handleUpdateOKRProgress = async (okrId: string, progress: number) => {
+  const handleUpdateOKRProgress = async (okrId: string, progress: number, status?: string) => {
     try {
       await fetch(`/api/okrs/${okrId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ progress })
+        body: JSON.stringify({ progress, status, role: selectedUser?.activeRole || selectedUser?.role })
       });
       
       const oRes = await fetch('/api/okrs');
