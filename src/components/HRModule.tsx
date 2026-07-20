@@ -214,7 +214,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   // Find the currently logged-in user's employee record
   const myEmpRecord = localEmployees.find(e => e.email === selectedUser.email) || localEmployees[0] || null;
   const companyLeaves = leaves.filter(l => l.companyId === selectedCompany.id);
-  const [leaveFilter, setLeaveFilter] = useState<'All' | 'Pending' | 'HOD Approved' | 'Approved' | 'Rejected'>('All');
+  const [leaveFilter, setLeaveFilter] = useState<'All' | 'Pending' | 'Approved' | 'Rejected'>('All');
   const filteredLeaves = leaveFilter === 'All' ? companyLeaves : companyLeaves.filter(l => l.status === leaveFilter);
   const myLeaves = myEmpRecord ? companyLeaves.filter(l => l.employeeId === myEmpRecord.id) : [];
   const companyAttendance = attendance.filter(a => a.companyId === selectedCompany.id);
@@ -778,7 +778,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
       const displayLeaves = leaveFilter === 'All' ? visibleLeaves : visibleLeaves.filter(l => l.status === leaveFilter);
 
-      const pending = visibleLeaves.filter(l => l.status === 'Pending' || l.status === 'HOD Approved');
+      const pending = visibleLeaves.filter(l => l.status === 'Pending');
       const approved = visibleLeaves.filter(l => l.status === 'Approved');
       const todayOnLeave = localEmployees.filter(e => e.status === 'On Leave' && (isHRorAdmin || managedDeptNames?.includes(e.department)));
       const totalDays = visibleLeaves.filter(l => l.status === 'Approved').reduce((s, l) => s + (l.days || 0), 0);
@@ -796,7 +796,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900">Leave Requests</h3>
               <div className="flex gap-2">
-                {['All', 'Pending', 'HOD Approved', 'Approved', 'Rejected'].map(f => (
+                {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
                   <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} className={`text-xs font-semibold border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${leaveFilter === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                     {f}
                   </button>
@@ -848,24 +848,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
                         const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
                         const isHOD = empDeptRecord?.managerId === selectedUser.id;
-                        const canFinalApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser;
+                        const canApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser || isHOD;
                         
-                        if (canFinalApprove) {
+                        if (canApprove) {
                           return (
                             <div className="flex gap-2">
                               <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
                               <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                             </div>
                           );
-                        } else if (isHOD) {
-                          return (
-                            <div className="flex gap-2">
-                              <button onClick={() => onApproveLeave(req.id, 'HOD Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">HOD Approve</button>
-                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
-                            </div>
-                          );
                         }
-                        return <div className="text-[10px] text-slate-400 italic">Awaiting HOD approval</div>;
+                        return <div className="text-[10px] text-slate-400 italic">Awaiting approval</div>;
                       })()}
 
                       {req.status === 'HOD Approved' && (() => {
