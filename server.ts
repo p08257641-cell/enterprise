@@ -398,7 +398,7 @@ app.get('/api/leaves', asyncHandler(async (req, res) => {
     }));
 
 app.post('/api/leaves', asyncHandler(async (req, res) => {
-  const { companyId, employeeId, employeeName, department, leaveType, startDate, endDate, reason, days } = req.body;
+  const { companyId, employeeId, employeeName, department, leaveType, startDate, endDate, reason, days, replacementId, replacementName } = req.body;
   const newLeave: LeaveRequest = {
     id: `lr-${Date.now()}`,
     companyId,
@@ -408,7 +408,9 @@ app.post('/api/leaves', asyncHandler(async (req, res) => {
     endDate,
     reason,
     status: 'Pending',
-    days: Number(days) || 1
+    days: Number(days) || 1,
+    replacementId,
+    replacementName
   };
 
   await dbInsert(schema.leaves, newLeave);
@@ -418,20 +420,27 @@ app.post('/api/leaves', asyncHandler(async (req, res) => {
 
 app.post('/api/leaves/:id/approve', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { userId, userName } = req.body;
+  const { userId, userName, status } = req.body;
   const leave = await dbById<any>(schema.leaves, id);
   if (!leave) return res.status(404).json({ error: 'Leave request not found' });
 
+  const newStatus = status || 'Approved';
+
   const updatedLeave = await dbUpdate(schema.leaves, id, {
-    status: 'Approved',
+    status: newStatus,
     approvedBy: userName || 'Admin'
   });
 
-  // Update employee status to 'On Leave'
   const emp = await dbById<any>(schema.employees, leave.employeeId);
-  if (emp) await dbUpdate(schema.employees, emp.id, { status: 'On Leave' });
+  
+  if (newStatus === 'Approved') {
+    // Only update employee status to 'On Leave' when fully approved
+    if (emp) await dbUpdate(schema.employees, emp.id, { status: 'On Leave' });
+    logAudit(leave.companyId, userId, userName, 'LEAVE_APPROVE', 'HR', `Fully approved ${leave.leaveType} leave request for ${emp ? emp.firstName + ' ' + emp.lastName : 'employee'}.`);
+  } else {
+    logAudit(leave.companyId, userId, userName, 'LEAVE_HOD_APPROVE', 'HR', `HOD approved ${leave.leaveType} leave request for ${emp ? emp.firstName + ' ' + emp.lastName : 'employee'}.`);
+  }
 
-  logAudit(leave.companyId, userId, userName, 'LEAVE_APPROVE', 'HR', `Approved ${leave.leaveType} leave request for ${emp ? emp.firstName + ' ' + emp.lastName : 'employee'}.`);
   res.json(updatedLeave);
     }));
 
@@ -526,19 +535,25 @@ app.post('/api/okrs', asyncHandler(async (req, res) => {
 
 app.post('/api/okrs/:id/progress', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { progress } = req.body;
+  const { progress, status: reqStatus, role } = req.body;
   const okr = await dbById<any>(schema.okrs, id);
   if (!okr) return res.status(404).json({ error: 'OKR not found' });
 
   const prog = Number(progress);
-  let status = okr.status;
-  if (prog >= 100) status = 'Completed';
-  else if (prog < 40) status = 'At Risk';
-  else status = 'On Track';
+  let status = reqStatus;
+  if (!status) {
+    if (prog >= 100) {
+      status = role === 'Employee' ? 'Awaiting Review' : 'Completed';
+    } else if (prog < 40) {
+      status = 'At Risk';
+    } else {
+      status = 'On Track';
+    }
+  }
 
   const updated = await dbUpdate(schema.okrs, id, { progress: prog, status });
 
-  logAudit(okr.companyId, okr.employeeId, okr.employeeName, 'OKR_UPDATE', 'HR', `Updated OKR "${okr.title}" progress to ${progress}%`);
+  logAudit(okr.companyId, okr.employeeId, okr.employeeName, 'OKR_UPDATE', 'HR', `Updated OKR "${okr.title}" progress to ${progress}% (Status: ${status})`);
   res.json(updated);
     }));
 
@@ -2398,10 +2413,10 @@ app.get('/api/compliance-checks', asyncHandler(async (req, res) => {
     }));
 
 app.post('/api/compliance-checks', asyncHandler(async (req, res) => {
-  const { companyId, category, title, description, dueDate, assignee, assigneeName, createdBy } = req.body;
+  const { companyId, category, title, description, dueDate, assignee, assigneeName, createdBy, status } = req.body;
   const newCheck: ComplianceCheck = {
     id: `comp-${Date.now()}`, companyId, category, title, description,
-    status: 'Open', dueDate, assignee, assigneeName,
+    status: status || 'Open', dueDate, assignee, assigneeName,
     createdAt: new Date().toISOString()
   };
   await dbInsert(schema.complianceChecks, newCheck);

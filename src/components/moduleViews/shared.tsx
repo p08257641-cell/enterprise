@@ -135,7 +135,7 @@ export interface ModuleViewsProps {
   onEliminateIntercompanyTxn: (txId: string) => void;
   onCreateConsolidationRule: (rule: any) => void;
   onResolveComplianceCheck: (checkId: string, status: string) => void;
-  onCreateComplianceCheck: (check: { companyId: string; category: string; title: string; description: string; dueDate: string; assignee: string; assigneeName: string; createdBy: string }) => void;
+  onCreateComplianceCheck: (check: { companyId: string; category: string; title: string; description: string; dueDate: string; assignee: string; assigneeName: string; createdBy: string; status?: string }) => void;
   onUpdateComplianceCheck: (id: string, values: any) => void;
   onDeleteComplianceCheck: (id: string) => void;
   onAcknowledgePolicy: (policyId: string, employeeId: string) => void;

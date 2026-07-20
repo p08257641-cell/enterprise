@@ -98,6 +98,8 @@ export const leaves = pgTable('leaves', {
   status: text('status'),
   approvedBy: text('approvedBy'),
   days: integer('days'),
+  replacementId: text('replacementId'),
+  replacementName: text('replacementName'),
 });
 
 export const onboardings = pgTable('onboardings', {

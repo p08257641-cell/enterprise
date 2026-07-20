@@ -86,13 +86,15 @@ export interface LeaveRequest {
   id: string;
   companyId: string;
   employeeId: string;
-  leaveType: 'Annual' | 'Sick' | 'Maternity' | 'Casual' | 'Unpaid';
+  leaveType: 'Annual' | 'Sick' | 'Maternity' | 'Casual' | 'Unpaid' | string;
   startDate: string;
   endDate: string;
   reason: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: 'Pending' | 'HOD Approved' | 'Approved' | 'Rejected';
   approvedBy?: string;
   days?: number;
+  replacementId?: string;
+  replacementName?: string;
 }
 
 export interface OnboardingRecord {
@@ -118,7 +120,7 @@ export interface OKRRecord {
   title: string;
   keyResult: string;
   progress: number;
-  status: 'On Track' | 'At Risk' | 'Completed';
+  status: 'On Track' | 'At Risk' | 'Completed' | 'Awaiting Review' | string;
   period: string;
 }
 
@@ -1096,6 +1098,9 @@ export interface PolicyDocument {
   createdAt: string;
   status?: string;
   requiresAcknowledgmentFrom?: string[];
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentType?: 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'txt' | 'other';
 }
 
 export interface FilingDeadline {

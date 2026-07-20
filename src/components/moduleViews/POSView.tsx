@@ -34,6 +34,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
   const saleModal = useRowModal<typeof localSales[0]>();
   const discountModal = useRowModal<typeof localDiscounts[0]>();
   const returnModal = useRowModal<typeof localReturns[0]>();
+  const shiftModal = useRowModal<typeof localShifts[0]>();
   const terminalModal = useRowModal<typeof localTerminals[0]>();
 
   // Cart & Terminal Checkout states
@@ -331,6 +332,126 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
 
+      {tab === 'shifts' && (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Total Shifts" value={localShifts.length} icon="bi bi-clock-history" sub="All recorded" />
+            <StatCard label="Open Shifts" value={localShifts.filter(s => s.status === 'Open').length} icon="bi bi-lock" sub="Currently active" />
+            <StatCard label="Closed Shifts" value={localShifts.filter(s => s.status === 'Closed').length} icon="bi bi-unlock" sub="Completed" />
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <table className="w-full text-left">
+              <TableHead cols={[{ label: 'Shift ID' }, { label: 'Terminal' }, { label: 'Cashier' }, { label: 'Status' }, { label: 'Opened', right: true }, { label: 'Closed', right: true }]} />
+              <tbody className="divide-y divide-slate-100">
+                {localShifts.map(s => (
+                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => shiftModal.open(s)}>
+                    <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{s.id}</td>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{s.terminalId || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{s.employeeName || '—'}</td>
+                    <td className="px-4 py-3"><Badge label={s.status} variant={s.status === 'Open' ? 'success' : 'default'} /></td>
+                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{s.startTime ? new Date(s.startTime).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{s.endTime ? new Date(s.endTime).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))}
+                {localShifts.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No shifts recorded</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'sales' && (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Total Sales" value={localSales.length} icon="bi bi-receipt" sub="Transactions" />
+            <StatCard label="Revenue" value={`$${localSales.reduce((s, x) => s + (x.total || 0), 0).toFixed(2)}`} icon="bi bi-currency-dollar" sub="Gross total" accent />
+            <StatCard label="Average Sale" value={`$${localSales.length > 0 ? (localSales.reduce((s, x) => s + (x.total || 0), 0) / localSales.length).toFixed(2) : '0.00'}`} icon="bi bi-bar-chart" sub="Per transaction" />
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <table className="w-full text-left">
+              <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Items' }, { label: 'Total', right: true }, { label: 'Date', right: true }]} />
+              <tbody className="divide-y divide-slate-100">
+                {localSales.map(s => (
+                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => saleModal.open(s)}>
+                    <td className="px-4 py-3 text-[10px] font-mono font-semibold text-slate-900">{s.saleNumber || s.id}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{s.paymentMethod}</td>
+                    <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{s.items?.length || 0}</td>
+                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))}
+                {localSales.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No sales recorded</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'discounts' && (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Total Discounts" value={localDiscounts.length} icon="bi bi-percent" sub="All codes" />
+            <StatCard label="Active" value={localDiscounts.filter(d => d.isActive !== false).length} icon="bi bi-check-circle" sub="Available" />
+            <StatCard label="Inactive" value={localDiscounts.filter(d => d.isActive === false).length} icon="bi bi-pause-circle" sub="Disabled" />
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <table className="w-full text-left">
+              <TableHead cols={[{ label: 'Name' }, { label: 'Type' }, { label: 'Value' }, { label: 'Usage' }, { label: 'Max Usage' }, { label: 'Status' }]} />
+              <tbody className="divide-y divide-slate-100">
+                {localDiscounts.map(d => (
+                  <tr key={d.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => discountModal.open(d)}>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{d.name}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{d.type}</td>
+                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : `$${d.value}`}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{d.usageCount || 0}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
+                    <td className="px-4 py-3"><Badge label={d.isActive !== false ? 'Active' : 'Inactive'} variant={d.isActive !== false ? 'success' : 'default'} /></td>
+                  </tr>
+                ))}
+                {localDiscounts.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No discounts configured</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === 'returns' && (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Total Returns" value={localReturns.length} icon="bi bi-arrow-return-left" sub="All returns" />
+            <StatCard label="Processed" value={localReturns.filter(r => r.refundStatus === 'Processed').length} icon="bi bi-check-circle" sub="Completed" />
+            <StatCard label="Pending" value={localReturns.filter(r => r.refundStatus === 'Pending').length} icon="bi bi-hourglass" sub="Awaiting" />
+          </div>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <table className="w-full text-left">
+              <TableHead cols={[{ label: 'Return #' }, { label: 'Original Sale' }, { label: 'Reason' }, { label: 'Refund Method' }, { label: 'Status' }, { label: 'Date', right: true }]} />
+              <tbody className="divide-y divide-slate-100">
+                {localReturns.map(r => (
+                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => returnModal.open(r)}>
+                    <td className="px-4 py-3 text-[10px] font-mono font-semibold text-slate-900">{r.returnNumber || r.id}</td>
+                    <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{r.originalSaleId || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{r.reason || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-slate-500">{r.refundMethod || '—'}</td>
+                    <td className="px-4 py-3"><Badge label={r.refundStatus || 'Pending'} variant={r.refundStatus === 'Processed' ? 'success' : 'warning'} /></td>
+                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                  </tr>
+                ))}
+                {localReturns.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No returns recorded</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Add Product Modal */}
       {showAddProductModal && (
         <ViewModal title="Add POS Product" subtitle="Create a new catalog item for point of sale" onClose={() => setShowAddProductModal(false)} size="md">
@@ -446,6 +567,20 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           ]}
           title={r => `${r.firstName} ${r.lastName}`} subtitle={r => r.tier || 'Standard'}
           onClose={customerModal.close} />
+      )}
+      {shiftModal.selected && (
+        <RowModal row={shiftModal.selected}
+          icon="bi bi-clock-history" accentColor="#ea580c"
+          fields={[
+            { label: 'Shift ID', key: 'id', mono: true, icon: 'bi bi-hash' },
+            { label: 'Terminal', key: 'terminalId', icon: 'bi bi-hdd-network', section: 'Details' },
+            { label: 'Cashier', key: 'employeeName', icon: 'bi bi-person', section: 'Details' },
+            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+            { label: 'Opened At', key: 'startTime', icon: 'bi bi-clock', section: 'Timing' },
+            { label: 'Closed At', key: 'endTime', icon: 'bi bi-clock-history', section: 'Timing' },
+          ]}
+          title={r => `Shift ${r.id?.slice(-6) || ''}`} subtitle={r => r.status}
+          onClose={shiftModal.close} />
       )}
       {saleModal.selected && (
         <RowModal row={saleModal.selected}
