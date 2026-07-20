@@ -15,7 +15,7 @@ import { TenantSetup } from './components/TenantSetup';
 import { FadeIn, Skeleton } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
 // No lucide-react imports needed
-import { modalAlert } from './utils/modal';
+import { modalAlert, toast } from './utils/modal';
 
 const safeJson = async (res: Response): Promise<any> => {
   try {
@@ -458,7 +458,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const updated = await safeJson(res);
       setCompanies(companies.map(c => c.id === companyId ? updated : c));
       if (selectedCompany.id === companyId) setSelectedCompany(updated);
-    } catch (err) { console.error(err); }
+      toast('Company settings updated', 'success', 'Settings Saved');
+    } catch (err) { console.error(err); toast('Failed to update settings', 'error', 'Error'); }
   };
 
   const handleUpdateSubscription = async (activeMods: string[], premiumFeats: string[], bPlan?: Company['billingPlan']) => {
@@ -512,12 +513,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       
       setEmployees([...employees, data.employee]);
       setNotificationCount(prev => prev + 1);
+      toast('Employee registered successfully', 'success', 'Employee Added');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to register employee', 'error', 'Error');
     }
   };
 
@@ -530,8 +533,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setEmployees(employees.map(e => e.id === id ? { ...e, ...data } : e));
+      toast('Employee updated successfully', 'success', 'Updated');
     } catch (err) {
       console.error(err);
+      toast('Failed to update employee', 'error', 'Error');
     }
   };
 
@@ -544,12 +549,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setDepartments([...departments, data]);
+      toast('Department created successfully', 'success', 'Department Added');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to create department', 'error', 'Error');
     }
   };
 
@@ -562,12 +569,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setBranches([...branches, data.branch]);
+      toast('Branch created successfully', 'success', 'Branch Added');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to create branch', 'error', 'Error');
     }
   };
 
@@ -580,18 +589,20 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setDepartments(departments.map(d => d.id === id ? { ...d, ...data } : d));
+      toast('Department updated successfully', 'success', 'Updated');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); toast('Failed to update department', 'error', 'Error'); }
   };
 
   const handleDeleteDepartment = async (id: string) => {
     try {
       await fetch(`/api/departments/${id}`, { method: 'DELETE' });
       setDepartments(departments.filter(d => d.id !== id));
+      toast('Department deleted', 'success', 'Deleted');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); toast('Failed to delete department', 'error', 'Error'); }
   };
 
   const handleAddOnboarding = async (record: Omit<OnboardingRecord, 'id'>) => {
@@ -603,9 +614,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setOnboardings([...onboardings, data]);
+      toast('Onboarding record created', 'success', 'Onboarding Added');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); toast('Failed to create onboarding', 'error', 'Error'); }
   };
 
   const handleUpdateOnboarding = async (id: string, updates: Partial<OnboardingRecord>) => {
@@ -617,16 +629,18 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setOnboardings(onboardings.map(o => o.id === id ? { ...o, ...data } : o));
-    } catch (err) { console.error(err); }
+      toast('Onboarding updated', 'success', 'Updated');
+    } catch (err) { console.error(err); toast('Failed to update onboarding', 'error', 'Error'); }
   };
 
   const handleDeleteOnboarding = async (id: string) => {
     try {
       await fetch(`/api/onboardings/${id}`, { method: 'DELETE' });
       setOnboardings(onboardings.filter(o => o.id !== id));
+      toast('Onboarding deleted', 'success', 'Deleted');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); toast('Failed to delete onboarding', 'error', 'Error'); }
   };
 
   // Exit request handlers
@@ -639,7 +653,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setExitRequests([...exitRequests, data]);
-    } catch (err) { console.error(err); }
+      toast('Exit request submitted', 'success', 'Submitted');
+    } catch (err) { console.error(err); toast('Failed to submit exit request', 'error', 'Error'); }
   };
 
   const handleApproveExitRequest = async (id: string, status: string, approverName: string) => {
@@ -659,7 +674,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setExitRequests(exitRequests.map(e => e.id === id ? data : e));
-    } catch (err) { console.error(err); }
+      toast(`Exit request ${status.toLowerCase()}`, 'success', 'Approved');
+    } catch (err) { console.error(err); toast('Failed to approve exit request', 'error', 'Error'); }
   };
 
   const handleRejectExitRequest = async (id: string, rejectedBy: string) => {
@@ -671,7 +687,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setExitRequests(exitRequests.map(e => e.id === id ? data : e));
-    } catch (err) { console.error(err); }
+      toast('Exit request rejected', 'info', 'Rejected');
+    } catch (err) { console.error(err); toast('Failed to reject exit request', 'error', 'Error'); }
   };
 
   const handleAddLead = async (leadInput: Omit<CRMLead, 'id' | 'status' | 'aiLeadScore' | 'aiFollowUpSuggested' | 'createdAt'>) => {
@@ -683,12 +700,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setLeads([...leads, data.lead]);
+      toast('Lead registered successfully', 'success', 'Lead Added');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to register lead', 'error', 'Error');
     }
   };
 
@@ -703,6 +722,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const data = await safeJson(res);
       if (data.leads && Array.isArray(data.leads)) {
         setLeads([...leads, ...data.leads]);
+        toast(`${data.leads.length} leads generated`, 'success', 'AI Generated');
       }
 
       // Reload audits
@@ -710,6 +730,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to generate leads', 'error', 'Error');
     }
   };
 
@@ -724,9 +745,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const data = await safeJson(res);
 
       setLeads(leads.map(l => l.id === leadId ? data.lead : l));
+      toast(`Lead moved to ${status}`, 'success', 'Pipeline Updated');
       if (data.invoiceCreated) {
         setInvoices([data.invoiceCreated, ...invoices]);
         setNotificationCount(prev => prev + 1);
+        toast('Invoice auto-created for won deal', 'success', 'Invoice Created');
       }
 
       // Reload audits & GL
@@ -739,6 +762,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setGlAccounts(accData.accounts);
     } catch (err) {
       console.error(err);
+      toast('Failed to move lead', 'error', 'Error');
     }
   };
 
@@ -751,6 +775,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const newInv = await safeJson(res);
       setInvoices([newInv, ...invoices]);
+      toast('Invoice created successfully', 'success', 'Invoice Added');
 
       // Reload audits & ledger
       const [logRes, accRes] = await Promise.all([
@@ -762,6 +787,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setGlAccounts(accData.accounts);
     } catch (err) {
       console.error(err);
+      toast('Failed to create invoice', 'error', 'Error');
     }
   };
 
@@ -775,6 +801,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const paid = await safeJson(res);
       setInvoices(invoices.map(i => i.id === invId ? paid : i));
+      toast('Payment recorded successfully', 'success', 'Payment Received');
 
       // Reload audits & ledger balances
       const [logRes, accRes] = await Promise.all([
@@ -828,6 +855,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name, status })
       });
+      toast('Leave request approved', 'success', 'Approved');
       
       // Reload leaves, employees, audits
       const [lRes, eRes, logRes] = await Promise.all([
@@ -840,6 +868,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to approve leave', 'error', 'Error');
     }
   };
 
@@ -851,6 +880,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
       });
+      toast('Leave request declined', 'info', 'Declined');
       
       // Reload leaves, employees, audits
       const [lRes, eRes, logRes] = await Promise.all([
@@ -863,6 +893,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to decline leave', 'error', 'Error');
     }
   };
 
@@ -887,8 +918,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setLeaves([...leaves, data]);
+      toast('Leave request submitted', 'success', 'Leave Created');
     } catch (err) {
       console.error(err);
+      toast('Failed to create leave request', 'error', 'Error');
     }
   };
 
@@ -910,11 +943,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           locationType
         })
       });
+      toast(action === 'in' ? 'Clocked in successfully' : 'Clocked out successfully', 'success', action === 'in' ? 'Clock In' : 'Clock Out');
       
       const attRes = await fetch('/api/attendance');
       setAttendance(await safeJson(attRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to clock attendance', 'error', 'Error');
     }
   };
 
@@ -935,8 +970,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setOkrs([...okrs, data]);
+      toast('OKR created successfully', 'success', 'OKR Added');
     } catch (err) {
       console.error(err);
+      toast('Failed to create OKR', 'error', 'Error');
     }
   };
 
@@ -947,11 +984,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ progress, status, role: selectedUser?.activeRole || selectedUser?.role })
       });
+      toast('OKR progress updated', 'success', 'Updated');
       
       const oRes = await fetch('/api/okrs');
       setOkrs(await safeJson(oRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to update OKR', 'error', 'Error');
     }
   };
 
@@ -970,6 +1009,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           employeeIds: employeeIds || []
         })
       });
+      toast('Payroll processed successfully', 'success', 'Payroll Run');
       
       // Reload payslips, ledger, audits
       const [pRes, aRes, logRes] = await Promise.all([
@@ -983,6 +1023,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to run payroll', 'error', 'Error');
     }
   };
 
@@ -1003,8 +1044,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const group = await safeJson(res);
       setPayrollGroups([...payrollGroups, group]);
+      toast('Payroll group created', 'success', 'Group Added');
     } catch (err) {
       console.error(err);
+      toast('Failed to create payroll group', 'error', 'Error');
     }
   };
 
@@ -1013,8 +1056,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     try {
       await fetch(`/api/payroll-groups/${groupId}`, { method: 'DELETE' });
       setPayrollGroups(payrollGroups.filter(g => g.id !== groupId));
+      toast('Payroll group deleted', 'success', 'Deleted');
     } catch (err) {
       console.error(err);
+      toast('Failed to delete payroll group', 'error', 'Error');
     }
   };
 
@@ -1035,8 +1080,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const band = await safeJson(res);
       setSalaryBands([...salaryBands, band]);
+      toast('Salary band created', 'success', 'Band Added');
     } catch (err) {
       console.error(err);
+      toast('Failed to create salary band', 'error', 'Error');
     }
   };
 
@@ -1049,8 +1096,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setSalaryBands(salaryBands.map(b => b.id === bandId ? updated : b));
+      toast('Salary band updated', 'success', 'Updated');
     } catch (err) {
       console.error(err);
+      toast('Failed to update salary band', 'error', 'Error');
     }
   };
 
@@ -1059,8 +1108,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     try {
       await fetch(`/api/salary-bands/${bandId}`, { method: 'DELETE' });
       setSalaryBands(salaryBands.filter(b => b.id !== bandId));
+      toast('Salary band deleted', 'success', 'Deleted');
     } catch (err) {
       console.error(err);
+      toast('Failed to delete salary band', 'error', 'Error');
     }
   };
 
@@ -1074,9 +1125,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setInventory(inventory.map(i => i.id === itemId ? data.item : i));
+      toast('Stock adjusted successfully', 'success', 'Stock Updated');
 
       if (data.lowStockAlert) {
         setNotificationCount(prev => prev + 1);
+        toast('Low stock alert triggered', 'warning', 'Low Stock');
       }
 
       // Reload audits
@@ -1084,6 +1137,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to adjust stock', 'error', 'Error');
     }
   };
 
@@ -1096,12 +1150,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const newTkt = await safeJson(res);
       setTickets([newTkt, ...tickets]);
+      toast('Support ticket created', 'success', 'Ticket Added');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to create ticket', 'error', 'Error');
     }
   };
 
@@ -1114,11 +1170,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setTickets(tickets.map(t => t.id === id ? { ...t, ...updated } : t));
+      toast('Ticket updated', 'success', 'Updated');
 
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to update ticket', 'error', 'Error');
     }
   };
 
@@ -1244,10 +1302,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const data = await safeJson(res);
       setWorkflows(workflows.map(w => w.id === id ? { ...w, isActive: active } : w));
+      toast(active ? 'Workflow enabled' : 'Workflow disabled', 'success', active ? 'Enabled' : 'Disabled');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to toggle workflow', 'error', 'Error');
     }
   };
 
@@ -1261,12 +1321,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const newUser = await safeJson(res);
       setUsers([...users, newUser]);
+      toast('User invited successfully', 'success', 'User Invited');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to invite user', 'error', 'Error');
     }
   };
 
@@ -1280,12 +1342,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const newKey = await safeJson(res);
       setApiKeys([...apiKeys, newKey]);
+      toast('API key generated', 'success', 'Key Created');
 
       // Reload audits
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to generate API key', 'error', 'Error');
     }
   };
 
@@ -1299,16 +1363,18 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       if (!res.ok) {
         const err = await safeJson(res);
-        await modalAlert(err.error || 'Failed to add POS product', { variant: 'danger' });
+        toast(err.error || 'Failed to add POS product', 'error', 'Error');
         return;
       }
       const data = await safeJson(res);
       setPosProducts([...posProducts, data]);
+      toast('POS product added', 'success', 'Product Added');
       
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to add POS product', 'error', 'Error');
     }
   };
 
@@ -1321,16 +1387,18 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       if (!res.ok) {
         const err = await safeJson(res);
-        await modalAlert(err.error || 'Failed to add POS customer', { variant: 'danger' });
+        toast(err.error || 'Failed to add POS customer', 'error', 'Error');
         return;
       }
       const data = await safeJson(res);
       setPosCustomers([...posCustomers, data]);
+      toast('POS customer registered', 'success', 'Customer Added');
       
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to add POS customer', 'error', 'Error');
     }
   };
 
@@ -1344,6 +1412,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const data = await safeJson(res);
       setPosSales([...posSales, data]);
       setNotificationCount(prev => prev + 1);
+      toast('Sale completed successfully', 'success', 'Sale Recorded');
       
       // Reload POS data to update stock
       const [posProdRes, posCustRes] = await Promise.all([
@@ -1656,15 +1725,17 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       if (!res.ok) {
         const err = await safeJson(res);
-        await modalAlert(err.error, { variant: 'danger' });
+        toast(err.error || 'Failed to add account', 'error', 'Error');
         return;
       }
       const newAccount = await safeJson(res);
       setGlAccounts([...glAccounts, newAccount]);
+      toast('GL account created', 'success', 'Account Added');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to add GL account', 'error', 'Error');
     }
   };
 
@@ -1677,8 +1748,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setGlAccounts(glAccounts.map(a => a.id === accountId ? updated : a));
+      toast('GL account updated', 'success', 'Updated');
     } catch (err) {
       console.error(err);
+      toast('Failed to update GL account', 'error', 'Error');
     }
   };
 
@@ -1687,12 +1760,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const res = await fetch(`/api/gl-accounts/${accountId}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = await safeJson(res);
-        await modalAlert(err.error, { variant: 'danger' });
+        toast(err.error || 'Failed to delete account', 'error', 'Error');
         return;
       }
       setGlAccounts(glAccounts.filter(a => a.id !== accountId));
+      toast('GL account deleted', 'success', 'Deleted');
     } catch (err) {
       console.error(err);
+      toast('Failed to delete GL account', 'error', 'Error');
     }
   };
 
@@ -1711,15 +1786,17 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       if (!res.ok) {
         const err = await safeJson(res);
-        await modalAlert(err.error, { variant: 'danger' });
+        toast(err.error || 'Failed to create journal entry', 'error', 'Error');
         return;
       }
       const newEntry = await safeJson(res);
       setJournalEntries([...journalEntries, newEntry]);
+      toast('Journal entry created', 'success', 'Entry Added');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to create journal entry', 'error', 'Error');
     }
   };
 
@@ -1733,6 +1810,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setJournalEntries(journalEntries.map(j => j.id === entryId ? updated : j));
+      toast('Journal entry posted', 'success', 'Posted');
       // Reload GL accounts to reflect balance changes
       const accRes = await fetch('/api/accounting');
       const accData = await safeJson(accRes);
@@ -1741,6 +1819,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to post journal entry', 'error', 'Error');
     }
   };
 
@@ -1754,10 +1833,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setJournalEntries(journalEntries.map(j => j.id === entryId ? updated : j));
+      toast('Journal entry approved', 'success', 'Approved');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to approve journal entry', 'error', 'Error');
     }
   };
 
@@ -1771,6 +1852,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setJournalEntries(journalEntries.map(j => j.id === entryId ? updated : j));
+      toast('Journal entry voided', 'info', 'Voided');
       // Reload GL accounts to reflect reversed balances
       const accRes = await fetch('/api/accounting');
       const accData = await safeJson(accRes);
@@ -1779,6 +1861,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to void journal entry', 'error', 'Error');
     }
   };
 
@@ -1792,10 +1875,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const newExp = await safeJson(res);
       setExpenses([...expenses, newExp]);
+      toast('Expense submitted', 'success', 'Expense Added');
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to submit expense', 'error', 'Error');
     }
   };
 
@@ -1809,6 +1894,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const updated = await safeJson(res);
       setExpenses(expenses.map(e => e.id === expenseId ? updated : e));
+      toast('Expense approved', 'success', 'Approved');
       // Reload GL accounts and journal entries
       const [accRes, jeRes] = await Promise.all([
         fetch('/api/accounting'),
@@ -1821,6 +1907,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to approve expense', 'error', 'Error');
     }
   };
 

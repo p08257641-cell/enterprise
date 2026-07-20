@@ -6,6 +6,7 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 
 export type ModalVariant = 'info' | 'success' | 'warning' | 'danger';
+export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
 interface AlertOptions { title?: string; variant?: ModalVariant; okText?: string; }
 interface ConfirmOptions { title?: string; variant?: ModalVariant; okText?: string; cancelText?: string; }
@@ -133,4 +134,96 @@ export function modalPrompt(message: string, opts: PromptOptions = {}): Promise<
     );
     setTimeout(() => inputRef.current?.focus(), 0);
   });
+}
+
+// ── TOAST NOTIFICATIONS ────────────────────────────────────────────────────────
+let toastContainer: HTMLDivElement | null = null;
+let toastRoot: Root | null = null;
+let toastIdCounter = 0;
+
+interface ToastItem {
+  id: number;
+  message: string;
+  variant: ToastVariant;
+  title?: string;
+}
+
+let toasts: ToastItem[] = [];
+let renderScheduled = false;
+
+function ensureToastRoot(): Root {
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-portal-root';
+    toastContainer.style.cssText = 'position:fixed;top:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
+    document.body.appendChild(toastContainer);
+    toastRoot = createRoot(toastContainer);
+  }
+  return toastRoot!;
+}
+
+const TOAST_STYLES: Record<ToastVariant, { icon: string; ring: string; border: string; bg: string }> = {
+  success: { icon: 'bi bi-check-circle-fill', ring: 'text-emerald-500', border: 'border-emerald-200', bg: 'bg-white' },
+  error: { icon: 'bi bi-x-circle-fill', ring: 'text-rose-500', border: 'border-rose-200', bg: 'bg-white' },
+  info: { icon: 'bi bi-info-circle-fill', ring: 'text-blue-500', border: 'border-blue-200', bg: 'bg-white' },
+  warning: { icon: 'bi bi-exclamation-triangle-fill', ring: 'text-amber-500', border: 'border-amber-200', bg: 'bg-white' },
+};
+
+function ToastContainer() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', pointerEvents: 'none' }}>
+      {toasts.map(t => {
+        const s = TOAST_STYLES[t.variant];
+        return (
+          <div
+            key={t.id}
+            style={{ pointerEvents: 'auto', animation: 'toastSlideIn 0.3s ease-out' }}
+            className={`${s.bg} border ${s.border} rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[420px]`}
+          >
+            <i className={`${s.icon} ${s.ring} text-lg shrink-0`}></i>
+            <div className="min-w-0 flex-1">
+              {t.title && <div className="text-xs font-bold text-slate-900">{t.title}</div>}
+              <div className="text-xs text-slate-600 leading-snug">{t.message}</div>
+            </div>
+            <button
+              onClick={() => { toasts = toasts.filter(x => x.id !== t.id); scheduleRender(); }}
+              className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
+            >
+              <i className="bi bi-x text-sm"></i>
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function scheduleRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    renderScheduled = false;
+    ensureToastRoot().render(<ToastContainer />);
+    // auto-dismiss after 4s
+    setTimeout(() => {
+      if (toasts.length > 0) {
+        toasts = toasts.slice(1);
+        ensureToastRoot().render(<ToastContainer />);
+      }
+    }, 4000);
+  });
+}
+
+export function toast(message: string, variant: ToastVariant = 'success', title?: string) {
+  const id = ++toastIdCounter;
+  toasts = [...toasts, { id, message, variant, title }];
+  scheduleRender();
+}
+
+// Inject keyframes once
+if (typeof document !== 'undefined' && !document.getElementById('toast-keyframes')) {
+  const style = document.createElement('style');
+  style.id = 'toast-keyframes';
+  style.textContent = `@keyframes toastSlideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }`;
+  document.head.appendChild(style);
 }
