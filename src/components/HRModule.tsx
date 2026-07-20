@@ -774,11 +774,14 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
   // ── VIEW: LEAVE ────────────────────────────────────────────────────────────
   if (activeView === 'hr-leave') {
-    const canViewTeamLeaves = isHRorAdmin || isDeptHead;
+    // Any user who manages at least one department can see team leaves
+    const userManagedDepts = departments.filter(d => d.managerId === selectedUser.id && d.companyId === selectedCompany.id);
+    const isDeptManager = userManagedDepts.length > 0;
+    const canViewTeamLeaves = isHRorAdmin || isDeptHead || isDeptManager;
     if (canViewTeamLeaves) {
       const managedDeptNames = isHRorAdmin 
         ? null 
-        : departments.filter(d => d.managerId === selectedUser.id && d.companyId === selectedCompany.id).map(d => d.name);
+        : userManagedDepts.map(d => d.name);
       
       const visibleLeaves = isHRorAdmin 
         ? companyLeaves 

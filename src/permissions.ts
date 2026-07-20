@@ -93,7 +93,7 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
     'wf-builder', 'ai-chat', 'ai-insights',
   ],
   'Inventory Manager': [
-    'hr-employees', 'hr-orgchart',
+    'hr-employees', 'hr-orgchart', 'hr-leave',
     'proj-kanban',
     'inv-stock', 'inv-warehouses', 'inv-transfers', 'inv-valuation',
     'proc-pos', 'proc-vendors', 'proc-rfq',
@@ -131,12 +131,14 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
     'wf-builder', 'ai-chat', 'ai-insights',
   ],
   'Sales Department Head': [
+    'hr-employees', 'hr-orgchart', 'hr-leave',
     'crm-pipeline', 'crm-contacts', 'crm-activities', 'crm-tasks', 'crm-emails', 'crm-reports',
     'sales-orders', 'sales-quotes', 'sales-customers', 'sales-targets',
     'pos-terminal', 'pos-products', 'pos-customers', 'pos-shifts', 'pos-sales', 'pos-discounts', 'pos-returns', 'pos-reports',
     'wf-builder', 'ai-chat', 'ai-insights',
   ],
   'Finance Department Head': [
+    'hr-employees', 'hr-orgchart', 'hr-leave',
     'accounting', 'acc-invoices', 'acc-expenses', 'acc-ap', 'acc-ar', 'acc-bank', 'acc-assets', 'acc-tax', 'acc-reports',
     'payroll-run', 'payroll-slips', 'payroll-groups', 'payroll-tax', 'payroll-overtime',
     'wf-builder', 'ai-chat', 'ai-insights',
