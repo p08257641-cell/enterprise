@@ -185,11 +185,14 @@ app.post('/api/companies/:id/subscription', asyncHandler(async (req, res) => {
 // Update company settings (e.g. notice period)
 app.put('/api/companies/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { noticePeriodDays, userId, userName } = req.body;
+  const { noticePeriodDays, companyLogo, companySignature, userId, userName } = req.body;
   const updates: any = {};
   if (noticePeriodDays !== undefined) updates.noticePeriodDays = noticePeriodDays;
+  if (companyLogo !== undefined) updates.companyLogo = companyLogo;
+  if (companySignature !== undefined) updates.companySignature = companySignature;
   const updated = await dbUpdate(schema.companies, id, updates);
-  logAudit(id, userId, userName, 'UPDATE_COMPANY_SETTINGS', 'Administration', `Updated notice period to ${noticePeriodDays} days`);
+  const changes = Object.keys(updates).filter(k => k !== 'userId' && k !== 'userName').join(', ');
+  logAudit(id, userId, userName, 'UPDATE_COMPANY_SETTINGS', 'Administration', `Updated: ${changes}`);
   res.json(updated);
 }));
 

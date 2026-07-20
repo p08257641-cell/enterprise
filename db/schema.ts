@@ -22,6 +22,8 @@ export const companies = pgTable('companies', {
   billingPlan: text('billingPlan'),
   billingStatus: text('billingStatus'),
   noticePeriodDays: integer('noticePeriodDays'),
+  companyLogo: text('companyLogo'),
+  companySignature: text('companySignature'),
   createdAt: text('createdAt'),
 });
 

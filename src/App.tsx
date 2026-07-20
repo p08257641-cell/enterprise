@@ -448,12 +448,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
-  const handleUpdateCompanySettings = async (companyId: string, noticePeriodDays: number) => {
+  const handleUpdateCompanySettings = async (companyId: string, updates: Record<string, any>) => {
     try {
       const res = await fetch(`/api/companies/${companyId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ noticePeriodDays, userId: selectedUser.id, userName: selectedUser.name }),
+        body: JSON.stringify({ ...updates, userId: selectedUser.id, userName: selectedUser.name }),
       });
       const updated = await safeJson(res);
       setCompanies(companies.map(c => c.id === companyId ? updated : c));

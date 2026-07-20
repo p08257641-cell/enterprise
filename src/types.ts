@@ -17,6 +17,8 @@ export interface Company {
   billingPlan: 'Trial' | 'Core' | 'Premium' | 'Enterprise';
   billingStatus: 'Active' | 'Past Due' | 'Trialing';
   noticePeriodDays?: number;
+  companyLogo?: string;
+  companySignature?: string;
   createdAt: string;
 }
 

@@ -45,7 +45,7 @@ interface HRModuleProps {
   onSubmitExitRequest: (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => void;
   onApproveExitRequest: (id: string, status: string, approverName: string) => void;
   onRejectExitRequest: (id: string, rejectedBy: string) => void;
-  onUpdateCompanySettings: (companyId: string, noticePeriodDays: number) => void;
+  onUpdateCompanySettings: (companyId: string, updates: Record<string, any>) => void;
 }
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -167,6 +167,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const isEmployee = !isHRorAdmin && !isDeptHead;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
+  const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
 
   // Check if HR module is subscribed
   const hasHRModule = selectedCompany.activeModules.includes('HR');
@@ -1858,7 +1859,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <input type="number" min="1" max="365" value={noticeInput} onChange={e => setNoticeInput(e.target.value)} className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none" />
                   <span className="text-xs text-slate-500">days</span>
                 </div>
-                <PrimaryBtn onClick={() => { const v = parseInt(noticeInput); if (v > 0) { onUpdateCompanySettings(selectedCompany.id, v); setEditingNotice(false); } }}>Save</PrimaryBtn>
+                <PrimaryBtn onClick={() => { const v = parseInt(noticeInput); if (v > 0) { onUpdateCompanySettings(selectedCompany.id, { noticePeriodDays: v }); setEditingNotice(false); } }}>Save</PrimaryBtn>
                 <SecBtn onClick={() => setEditingNotice(false)}>Cancel</SecBtn>
               </div>
             ) : (
@@ -2051,6 +2052,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
             })}
           </div>
         </div>
+
+        {/* HR/Admin: Official Letters */}
+        {isHRorAdmin && (
+          <HRLettersSection
+            selectedCompany={selectedCompany}
+            selectedUser={selectedUser}
+            employees={localEmployees}
+            departments={localDepartments}
+            exitRequests={deptExitReqs}
+          />
+        )}
       </div>
     );
   }
@@ -2152,4 +2164,147 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
   // Fallback
   return null;
+};
+
+// ── HR LETTERS SECTION ────────────────────────────────────────────────────────
+interface HRLettersSectionProps {
+  selectedCompany: any;
+  selectedUser: any;
+  employees: any[];
+  departments: any[];
+  exitRequests: any[];
+}
+
+const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, selectedUser, employees, departments, exitRequests }) => {
+  const [letterType, setLetterType] = useState<'resignation' | 'appointment' | 'confirmation'>('resignation');
+  const [selectedEmpId, setSelectedEmpId] = useState('');
+  const [letterContent, setLetterContent] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+
+  const selectedEmp = employees.find(e => e.id === selectedEmpId);
+  const today = new Date().toISOString().split('T')[0];
+  const companyName = selectedCompany.name;
+  const companyAddr = [selectedCompany.address, selectedCompany.city, selectedCompany.state, selectedCompany.country].filter(Boolean).join(', ');
+
+  const generateLetter = (type: string, emp?: any) => {
+    const e = emp || selectedEmp;
+    if (!e) return '';
+    const empName = `${e.firstName} ${e.lastName}`;
+    const dept = e.department || 'N/A';
+    const position = e.jobTitle || e.position || 'N/A';
+
+    if (type === 'resignation') {
+      const exitReq = exitRequests.find(r => r.employeeId === e.id && (r.status === 'Approved' || r.status === 'HOD Approved' || r.status === 'Pending'));
+      const lastDay = exitReq?.lastWorkingDay || '[Last Working Day]';
+      const exitType = exitReq?.exitType || 'Resignation';
+      return `Date: ${today}\n\nTo: ${empName}\nDepartment: ${dept}\nPosition: ${position}\n\nSubject: ${exitType} Acceptance Letter\n\nDear ${empName},\n\nThis letter is to formally acknowledge and accept your ${exitType.toLowerCase()} from ${companyName}, effective ${lastDay}.\n\nWe confirm that your ${exitType.toLowerCase()} has been processed and accepted. During your tenure with us, you have been a valued member of our team, and we appreciate your contributions to the organization.\n\nPlease coordinate with the HR department to complete all necessary clearance procedures, including the return of company assets, final settlement of dues, and any other exit formalities.\n\nWe wish you all the best in your future endeavors.\n\nSincerely,\n\n_________________________\n${selectedUser.name}\nHuman Resources\n${companyName}`;
+    }
+    if (type === 'appointment') {
+      const salary = e.salary ? `$${Number(e.salary).toLocaleString()}/year` : '[Salary]';
+      return `Date: ${today}\n\nTo: ${empName}\n\nSubject: Appointment Letter\n\nDear ${empName},\n\nWe are pleased to offer you the position of ${position} in the ${dept} department at ${companyName}, effective from ${today}.\n\nTerms of Employment:\n\nPosition: ${position}\nDepartment: ${dept}\nReporting To: ${e.managerId ? (employees.find(m => m.id === e.managerId)?.firstName + ' ' + employees.find(m => m.id === e.managerId)?.lastName || 'Department Head') : 'Department Head'}\nCompensation: ${salary}\nEmployment Type: ${e.employmentType || 'Full-time'}\nWork Location: ${e.workLocation || selectedCompany.city || 'Office'}\n\nYour employment will be subject to a probation period of ${selectedCompany.probationPeriodDays || 90} days, during which your performance will be evaluated.\n\nYou are expected to adhere to all company policies, code of conduct, and professional standards as outlined in the employee handbook.\n\nWe look forward to your valuable contributions to our team.\n\nSincerely,\n\n_________________________\n${selectedUser.name}\nHuman Resources\n${companyName}`;
+    }
+    if (type === 'confirmation') {
+      return `Date: ${today}\n\nTo: ${empName}\nDepartment: ${dept}\nPosition: ${position}\n\nSubject: Confirmation of Employment\n\nDear ${empName},\n\nWe are delighted to inform you that, upon review of your performance during your probationary period, your employment with ${companyName} has been confirmed effective ${today}.\n\nYour contributions, dedication, and performance during the probation period have met and often exceeded our expectations. We are confident that you will continue to be a valuable asset to our organization.\n\nAs a confirmed employee, you are now entitled to all benefits and privileges as per the company's policies, including:\n\n• Full employee benefits package\n• Annual leave entitlement\n• Health insurance coverage\n• Retirement plan eligibility\n• Performance bonus eligibility\n\nPlease continue to uphold the high standards of professionalism and commitment that you have demonstrated thus far.\n\nCongratulations and welcome to the team!\n\nSincerely,\n\n_________________________\n${selectedUser.name}\nHuman Resources\n${companyName}`;
+    }
+    return '';
+  };
+
+  const handleGenerate = () => {
+    const content = generateLetter(letterType);
+    setLetterContent(content);
+    setShowPreview(true);
+  };
+
+  const handlePrint = () => {
+    const logoHtml = selectedCompany.companyLogo ? `<div style="text-align:center;margin-bottom:20px;"><img src="${selectedCompany.companyLogo}" style="max-height:80px;max-width:200px;" alt="Company Logo" /></div>` : '';
+    const sigHtml = selectedCompany.companySignature ? `<div style="margin-top:30px;"><img src="${selectedCompany.companySignature}" style="max-height:60px;" alt="Signature" /></div>` : `<div style="margin-top:40px;">_________________________</div>`;
+    const html = `<!DOCTYPE html><html><head><title>${letterType} Letter</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.8;color:#1e293b;}h2{text-align:center;font-size:14px;color:#64748b;margin-bottom:30px;letter-spacing:1px;}</style></head><body>${logoHtml}<h2>${letterType.toUpperCase()} LETTER</h2><pre style="white-space:pre-wrap;font-family:inherit;">${letterContent}</pre>${sigHtml}<div style="margin-top:20px;font-size:11px;color:#94a3b8;text-align:center;">${companyName} | ${companyAddr}</div></body></html>`;
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); win.print(); }
+  };
+
+  const handleDownload = () => {
+    const logoText = selectedCompany.companyLogo ? `[Company Logo: ${selectedCompany.companyLogo}]\n` : '';
+    const sigText = selectedCompany.companySignature ? `\n\n[Signature: ${selectedCompany.companySignature}]\n` : '\n\n_________________________\n';
+    const full = `${logoText}${letterContent}${sigText}\n${companyName} | ${companyAddr}`;
+    const blob = new Blob([full], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${letterType}_letter_${selectedEmp ? selectedEmp.lastName : 'employee'}_${today}.txt`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <i className="bi bi-file-earmark-text text-lg text-slate-700"></i>
+        <h3 className="text-sm font-bold text-slate-900">Official Letters</h3>
+      </div>
+      <p className="text-xs text-slate-500 mb-4">Generate, edit, and print official HR documents using company letterhead.</p>
+
+      <div className="grid gap-4 sm:grid-cols-3 mb-4">
+        {([
+          { key: 'resignation', label: 'Resignation / Exit Letter', icon: 'bi bi-door-open', desc: 'For approved exit requests' },
+          { key: 'appointment', label: 'Appointment Letter', icon: 'bi bi-person-check', desc: 'For new hire onboarding' },
+          { key: 'confirmation', label: 'Confirmation Letter', icon: 'bi bi-patch-check', desc: 'Post-probation confirmation' },
+        ] as const).map(lt => (
+          <button key={lt.key} onClick={() => { setLetterType(lt.key); setShowPreview(false); setLetterContent(''); }} className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${letterType === lt.key ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'}`}>
+            <i className={`${lt.icon} text-lg mb-2 block ${letterType === lt.key ? 'text-white' : 'text-slate-500'}`}></i>
+            <div className="text-xs font-bold">{lt.label}</div>
+            <div className={`text-[10px] mt-0.5 ${letterType === lt.key ? 'text-slate-300' : 'text-slate-400'}`}>{lt.desc}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div className="flex-1 min-w-[200px]">
+          <Label>Select Employee *</Label>
+          <Select value={selectedEmpId} onChange={e => { setSelectedEmpId(e.target.value); setShowPreview(false); }}>
+            <option value="">Choose employee...</option>
+            {employees.map(emp => (
+              <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} — {emp.department || 'No dept'}</option>
+            ))}
+          </Select>
+        </div>
+        <button onClick={handleGenerate} disabled={!selectedEmpId} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-all ${selectedEmpId ? 'bg-slate-900 text-white hover:bg-slate-700 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}><i className="bi bi-file-earmark-text"></i>Generate Letter</button>
+      </div>
+
+      {showPreview && letterContent && (
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Letter Preview</span>
+            <div className="flex gap-2">
+              <button onClick={() => setShowPreview(false)} className="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer px-2 py-1 rounded hover:bg-slate-200 transition-all"><i className="bi bi-x-lg mr-1"></i>Close</button>
+              <button onClick={handlePrint} className="text-xs font-semibold text-white bg-slate-900 hover:bg-slate-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-printer mr-1"></i>Print / PDF</button>
+              <button onClick={handleDownload} className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-download mr-1"></i>Download</button>
+            </div>
+          </div>
+          <div className="p-6 bg-white">
+            {selectedCompany.companyLogo && (
+              <div className="text-center mb-4">
+                <img src={selectedCompany.companyLogo} alt="Logo" className="h-16 mx-auto object-contain" />
+              </div>
+            )}
+            <h2 className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{letterType} Letter</h2>
+            <textarea
+              value={letterContent}
+              onChange={e => setLetterContent(e.target.value)}
+              rows={20}
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 font-mono leading-relaxed focus:border-slate-400 focus:outline-none resize-y"
+              style={{ minHeight: '300px' }}
+            />
+            {selectedCompany.companySignature && (
+              <div className="mt-4">
+                <img src={selectedCompany.companySignature} alt="Signature" className="h-12 object-contain" />
+              </div>
+            )}
+          </div>
+          <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center gap-2">
+            <i className="bi bi-info-circle text-xs text-slate-400"></i>
+            <span className="text-[10px] text-slate-500">Edit the content above before printing. Changes will reflect in the printed/downloaded letter.</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
