@@ -448,6 +448,19 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
+  const handleUpdateCompanySettings = async (companyId: string, noticePeriodDays: number) => {
+    try {
+      const res = await fetch(`/api/companies/${companyId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ noticePeriodDays, userId: selectedUser.id, userName: selectedUser.name }),
+      });
+      const updated = await safeJson(res);
+      setCompanies(companies.map(c => c.id === companyId ? updated : c));
+      if (selectedCompany.id === companyId) setSelectedCompany(updated);
+    } catch (err) { console.error(err); }
+  };
+
   const handleUpdateSubscription = async (activeMods: string[], premiumFeats: string[], bPlan?: Company['billingPlan']) => {
     if (!selectedCompany) return;
     try {
@@ -3039,6 +3052,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onSubmitExitRequest={handleSubmitExitRequest}
               onApproveExitRequest={handleApproveExitRequest}
               onRejectExitRequest={handleRejectExitRequest}
+              onUpdateCompanySettings={handleUpdateCompanySettings}
             />
           )}
           </FadeIn>

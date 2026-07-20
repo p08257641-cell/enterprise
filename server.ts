@@ -182,6 +182,17 @@ app.post('/api/companies/:id/subscription', asyncHandler(async (req, res) => {
   res.json(updated);
     }));
 
+// Update company settings (e.g. notice period)
+app.put('/api/companies/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { noticePeriodDays, userId, userName } = req.body;
+  const updates: any = {};
+  if (noticePeriodDays !== undefined) updates.noticePeriodDays = noticePeriodDays;
+  const updated = await dbUpdate(schema.companies, id, updates);
+  logAudit(id, userId, userName, 'UPDATE_COMPANY_SETTINGS', 'Administration', `Updated notice period to ${noticePeriodDays} days`);
+  res.json(updated);
+}));
+
 // 2. Users & Departments
 app.get('/api/users', asyncHandler(async (req, res) => {
   const { companyId } = req.query;

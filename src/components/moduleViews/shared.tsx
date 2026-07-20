@@ -256,6 +256,7 @@ export interface ModuleViewsProps {
   onSubmitExitRequest: (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => void;
   onApproveExitRequest: (id: string, status: string, approverName: string) => void;
   onRejectExitRequest: (id: string, rejectedBy: string) => void;
+  onUpdateCompanySettings: (companyId: string, noticePeriodDays: number) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {

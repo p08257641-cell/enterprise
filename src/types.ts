@@ -16,6 +16,7 @@ export interface Company {
   premiumFeatures: string[]; // List of premium features enabled
   billingPlan: 'Trial' | 'Core' | 'Premium' | 'Enterprise';
   billingStatus: 'Active' | 'Past Due' | 'Trialing';
+  noticePeriodDays?: number;
   createdAt: string;
 }
 

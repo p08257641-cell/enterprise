@@ -45,6 +45,7 @@ interface HRModuleProps {
   onSubmitExitRequest: (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => void;
   onApproveExitRequest: (id: string, status: string, approverName: string) => void;
   onRejectExitRequest: (id: string, rejectedBy: string) => void;
+  onUpdateCompanySettings: (companyId: string, noticePeriodDays: number) => void;
 }
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -155,7 +156,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   leaves, attendance, okrs,
   onAddEmployee, onApproveLeave, onRejectLeave, onAddLeave,
   onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onAddDepartment, onUpdateDepartment, onDeleteDepartment, onboardings, onAddOnboarding, onUpdateOnboarding, onDeleteOnboarding, onUpdateEmployee, onNavigateView,
-  exitRequests, onSubmitExitRequest, onApproveExitRequest, onRejectExitRequest,
+  exitRequests, onSubmitExitRequest, onApproveExitRequest, onRejectExitRequest, onUpdateCompanySettings,
 }) => {
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isAdmin = isAdminRole(userRole);
@@ -1823,6 +1824,10 @@ export const HRModule: React.FC<HRModuleProps> = ({
     const pendingExits = deptExitReqs.filter(e => e.status === 'Pending');
     const approvedExits = deptExitReqs.filter(e => e.status === 'Approved');
     const isEmployeeOnly = !isHRorAdmin && !isDeptHead;
+    const noticeDays = selectedCompany.noticePeriodDays || 30;
+    const minLastDay = new Date(Date.now() + noticeDays * 86400000).toISOString().split('T')[0];
+    const [editingNotice, setEditingNotice] = useState(false);
+    const [noticeInput, setNoticeInput] = useState(String(noticeDays));
 
     return (
       <div className="space-y-6">
@@ -1835,10 +1840,40 @@ export const HRModule: React.FC<HRModuleProps> = ({
           <StatCard label="Rejected" value={isEmployeeOnly ? myExitReqs.filter(e => e.status === 'Rejected').length : deptExitReqs.filter(e => e.status === 'Rejected').length} icon="bi bi-x-circle" sub="Declined" color="text-rose-600" />
         </div>
 
+        {/* HR/Admin: Notice Period Setting */}
+        {isHRorAdmin && (
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-900">Notice Period Setting</h3>
+              {!editingNotice && (
+                <button onClick={() => { setEditingNotice(true); setNoticeInput(String(noticeDays)); }} className="text-xs font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all">
+                  <i className="bi bi-pencil mr-1"></i> Edit
+                </button>
+              )}
+            </div>
+            {editingNotice ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Label>Notice Period (days)</Label>
+                  <input type="number" min="1" max="365" value={noticeInput} onChange={e => setNoticeInput(e.target.value)} className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none" />
+                  <span className="text-xs text-slate-500">days</span>
+                </div>
+                <PrimaryBtn onClick={() => { const v = parseInt(noticeInput); if (v > 0) { onUpdateCompanySettings(selectedCompany.id, v); setEditingNotice(false); } }}>Save</PrimaryBtn>
+                <SecBtn onClick={() => setEditingNotice(false)}>Cancel</SecBtn>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Employees must serve <span className="font-bold text-slate-900">{noticeDays} days</span> notice before their last working day. Minimum last working day for new requests: <span className="font-semibold text-slate-900">{minLastDay}</span>.</p>
+            )}
+          </div>
+        )}
+
         {/* Employee self-service: Submit resignation */}
         {isEmployeeOnly && myEmpRecord && (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
             <h3 className="text-sm font-bold text-slate-900 mb-4">Submit Resignation</h3>
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700">
+              <i className="bi bi-info-circle mr-1"></i> Company notice period is <span className="font-bold">{noticeDays} days</span>. Your last working day must be on or after <span className="font-bold">{minLastDay}</span>.
+            </div>
             {selfExitSuccess && (
               <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
                 <i className="bi bi-check-circle-fill"></i> Resignation request submitted! Awaiting department head approval.
@@ -1868,7 +1903,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <option value="Retirement">Retirement</option>
                 </Select>
               </div>
-              <div><Label>Last Working Day *</Label><Input type="date" value={selfExitDate} onChange={e => setSelfExitDate(e.target.value)} required /></div>
+              <div><Label>Last Working Day *</Label><Input type="date" min={minLastDay} value={selfExitDate} onChange={e => setSelfExitDate(e.target.value)} required /></div>
               <div><Label>Reason</Label><Input value={selfExitReason} onChange={e => setSelfExitReason(e.target.value)} placeholder="Career progression, relocation…" /></div>
               <PrimaryBtn type="submit" icon="bi bi-send">Submit Resignation</PrimaryBtn>
             </form>
