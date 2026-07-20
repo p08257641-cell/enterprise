@@ -26,12 +26,19 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
   const [commTitle, setCommTitle] = useState(''); const [commBody, setCommBody] = useState('');
   const [commChannel, setCommChannel] = useState('Company'); const [commSent, setCommSent] = useState(false);
   const [commPinned, setCommPinned] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ who: string; msg: string; me: boolean }[]>([
-    { who: 'Elena Rostova', msg: 'Morning team — Q3 targets are locked. Let us sync at 11.', me: false },
-    { who: 'Kaito Matsuda', msg: 'On it. Pulling the manufacturing variance now.', me: false },
-    { who: 'You', msg: 'Sent the revised forecast to Finance.', me: true },
-  ]);
+  type ChatRecipient = { type: 'team' | 'person'; id: string; name: string };
+  const [chatRecipient, setChatRecipient] = useState<ChatRecipient | null>(null);
+  const [chatThreads, setChatThreads] = useState<Record<string, { who: string; msg: string; me: boolean; time?: string }[]>>({
+    'dept-1': [
+      { who: 'Elena Rostova', msg: 'Morning team — Q3 targets are locked. Let us sync at 11.', me: false, time: '9:02 AM' },
+      { who: 'Kaito Matsuda', msg: 'On it. Pulling the manufacturing variance now.', me: false, time: '9:05 AM' },
+    ],
+    'emp-3': [
+      { who: 'You', msg: 'Sent the revised forecast to Finance.', me: true, time: '9:10 AM' },
+    ],
+  });
   const [chatInput, setChatInput] = useState('');
+  const [chatSearch, setChatSearch] = useState('');
   const canManage = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole);
   const [showAddTemplate, setShowAddTemplate] = useState(false);
   const [tplName, setTplName] = useState('');
@@ -45,7 +52,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard label="Announcements" value={localAnnouncements.length} sub={`${localAnnouncements.filter(a => a.pinned).length} pinned`} icon="bi bi-megaphone" accent />
         <StatCard label="Active Channels" value={new Set(localAnnouncements.map(a => a.channel)).size} sub="Broadcast groups" icon="bi bi-collection" color="text-slate-900" />
-        <StatCard label="Team Chat" value={chatMessages.length} sub="Messages this session" icon="bi bi-chat-dots" color="text-sky-600" />
+        <StatCard label="Team Chat" value={Object.values(chatThreads).flat().length} sub="Messages this session" icon="bi bi-chat-dots" color="text-sky-600" />
         <StatCard label="Email Templates" value={4} sub="Reusable campaigns" icon="bi bi-envelope" color="text-violet-600" />
       </div>
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
@@ -92,27 +99,96 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {commTab === 'chat' && (
-        <div className="max-w-2xl">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Team Chat</h3></div>
-            <div className="p-5 space-y-3">
-              {chatMessages.map((m, i) => (
-                <div key={i} className={`flex ${m.me ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-xs ${m.me ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'}`}>
-                    {!m.me && <div className="font-semibold mb-0.5">{m.who}</div>}
-                    <div>{m.msg}</div>
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex" style={{ height: '72vh' }}>
+          {/* Left: Recipients */}
+          <div className="w-64 border-r border-slate-200 flex flex-col shrink-0">
+            <div className="px-4 py-3 border-b border-slate-100">
+              <Input placeholder="Search…" value={chatSearch} onChange={e => setChatSearch(e.target.value)} />
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {/* Teams */}
+              <div className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Teams</div>
+              {departments.filter(d => d.companyId === selectedCompany.id)
+                .filter(d => !chatSearch || d.name.toLowerCase().includes(chatSearch.toLowerCase()))
+                .map(d => (
+                  <button key={`dept-${d.id}`} onClick={() => { setChatRecipient({ type: 'team', id: d.id, name: d.name }); }}
+                    className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-xs cursor-pointer transition-all ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{d.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>
+                    <span className="truncate font-semibold">{d.name}</span>
+                  </button>
+                ))}
+              {/* People */}
+              <div className="px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">People</div>
+              {employees.filter(e => e.companyId === selectedCompany.id)
+                .filter(e => !chatSearch || `${e.firstName} ${e.lastName}`.toLowerCase().includes(chatSearch.toLowerCase()) || e.department?.toLowerCase().includes(chatSearch.toLowerCase()))
+                .map(e => {
+                  const fullName = `${e.firstName} ${e.lastName}`;
+                  const initials = `${e.firstName[0]}${e.lastName[0]}`.toUpperCase();
+                  return (
+                    <button key={`emp-${e.id}`} onClick={() => { setChatRecipient({ type: 'person', id: e.id, name: fullName }); }}
+                      className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-xs cursor-pointer transition-all ${chatRecipient?.type === 'person' && chatRecipient.id === e.id ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${chatRecipient?.type === 'person' && chatRecipient.id === e.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{initials}</span>
+                      <div className="min-w-0">
+                        <div className={`truncate font-semibold ${chatRecipient?.type === 'person' && chatRecipient.id === e.id ? 'text-white' : 'text-slate-900'}`}>{fullName}</div>
+                        <div className={`truncate text-[10px] ${chatRecipient?.type === 'person' && chatRecipient.id === e.id ? 'text-white/60' : 'text-slate-400'}`}>{e.department || '—'}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+          {/* Right: Chat */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {chatRecipient ? (
+              <>
+                <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold">{chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
+                  <div>
+                    <div className="text-sm font-bold text-slate-900">{chatRecipient.name}</div>
+                    <div className="text-[10px] text-slate-400">{chatRecipient.type === 'team' ? 'Team channel' : 'Direct message'}</div>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="px-5 py-4 border-t border-slate-100 flex gap-2">
-              <Input placeholder="Type a message…" value={chatInput} onChange={e => setChatInput(e.target.value)} />
-              <PrimaryBtn icon="bi bi-send" onClick={() => {
-                if (!chatInput.trim()) return;
-                setChatMessages(prev => [...prev, { who: 'You', msg: chatInput.trim(), me: true }]);
-                setChatInput('');
-              }}>Send</PrimaryBtn>
-            </div>
+                <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                  {(chatThreads[chatRecipient.id] || []).map((m, i) => (
+                    <div key={i} className={`flex ${m.me ? 'justify-end' : 'justify-start'}`}>
+                      <div className="max-w-[75%] rounded-2xl px-4 py-2.5 text-xs shadow-xs ${m.me ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'}">
+                        {!m.me && <div className="font-semibold mb-0.5 text-slate-600">{m.who}</div>}
+                        <div className="leading-relaxed">{m.msg}</div>
+                        {m.time && <div className={`text-[9px] mt-1 ${m.me ? 'text-white/50' : 'text-slate-400'}`}>{m.time}</div>}
+                      </div>
+                    </div>
+                  ))}
+                  {(chatThreads[chatRecipient.id] || []).length === 0 && (
+                    <div className="flex items-center justify-center h-full text-xs text-slate-400">No messages yet. Start the conversation!</div>
+                  )}
+                </div>
+                <div className="px-5 py-3 border-t border-slate-100 flex gap-2">
+                  <Input placeholder={`Message ${chatRecipient.name}…`} value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => {
+                    if (e.key === 'Enter' && chatInput.trim()) {
+                      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      const rid = chatRecipient.id;
+                      setChatThreads(prev => ({
+                        ...prev,
+                        [rid]: [...(prev[rid] || []), { who: selectedUser.name, msg: chatInput.trim(), me: true, time: now }],
+                      }));
+                      setChatInput('');
+                    }
+                  }} />
+                  <PrimaryBtn icon="bi bi-send" onClick={() => {
+                    if (!chatInput.trim() || !chatRecipient) return;
+                    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const rid = chatRecipient.id;
+                    setChatThreads(prev => ({
+                      ...prev,
+                      [rid]: [...(prev[rid] || []), { who: selectedUser.name, msg: chatInput.trim(), me: true, time: now }],
+                    }));
+                    setChatInput('');
+                  }}>Send</PrimaryBtn>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-sm text-slate-400">Select a team or person to start chatting</div>
+            )}
           </div>
         </div>
       )}
