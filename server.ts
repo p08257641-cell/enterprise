@@ -1002,6 +1002,10 @@ app.post('/api/leads/generate', asyncHandler(async (req, res) => {
   const { companyId } = req.body;
   if (!companyId) { res.status(400).json({ error: 'companyId required' }); return; }
 
+  // Get existing lead company names to avoid duplicates
+  const existingLeads = await dbByCompany<any>(schema.crmLeads, companyId);
+  const existingCompanies = new Set(existingLeads.map((l: any) => (l.companyName || '').toLowerCase()));
+
   const ai = getAIClient();
   let generatedLeads: any[] = [];
 
@@ -1011,12 +1015,13 @@ app.post('/api/leads/generate', asyncHandler(async (req, res) => {
         model: 'gemini-3.5-flash',
         contents: `Generate 5 realistic B2B sales leads for an ERP software company. 
 Each lead should have different industries and company sizes.
+Do NOT use any of these existing companies: ${[...existingCompanies].slice(0, 20).join(', ') || 'none'}
 Return a JSON array where each object has:
 - firstName (string)
 - lastName (string) 
 - email (string, realistic business email)
 - phone (string, US format)
-- companyName (string, realistic company name)
+- companyName (string, realistic company name, must be unique)
 - source (one of: "Website", "Referral", "LinkedIn", "Ad Campaign", "Partner")
 - value (number between 5000 and 150000, deal value in USD)
 - score (number 0-100, lead quality score)
@@ -1036,15 +1041,29 @@ Make the leads diverse and realistic. Only return the JSON array, no other text.
     }
   }
 
-  // Fallback leads if AI is unavailable or fails
+  // Fallback leads if AI is unavailable or fails — randomized pool
   if (generatedLeads.length === 0) {
-    generatedLeads = [
+    const leadPool = [
       { firstName: 'Marcus', lastName: 'Chen', email: 'mchen@novatech.io', phone: '(415) 555-8821', companyName: 'NovaTech Solutions', source: 'LinkedIn', value: 85000, score: 82, followUp: 'High-value SaaS prospect. Schedule a product demo focusing on manufacturing module capabilities.' },
       { firstName: 'Priya', lastName: 'Sharma', email: 'priya.s@greenleaf.com', phone: '(212) 555-3347', companyName: 'GreenLeaf Industries', source: 'Website', value: 42000, score: 71, followUp: 'Inbound inquiry from website. Follow up with pricing sheet and case studies for mid-market manufacturing.' },
       { firstName: 'David', lastName: 'Okonkwo', email: 'dokonkwo@steelbridge.co', phone: '(312) 555-9102', companyName: 'SteelBridge Corp', source: 'Referral', value: 120000, score: 91, followUp: 'Referred by existing client. High-priority enterprise deal — assign senior AE and schedule executive briefing.' },
       { firstName: 'Sarah', lastName: 'Mitchell', email: 'smitchell@coastalretail.com', phone: '(305) 555-6670', companyName: 'Coastal Retail Group', source: 'Ad Campaign', value: 28000, score: 58, followUp: 'Clicked POS module ad. Send targeted content about retail POS and inventory management integration.' },
       { firstName: 'Tomás', lastName: 'Rivera', email: 'trivera@apexlogistics.mx', phone: '(832) 555-4419', companyName: 'Apex Logistics', source: 'Partner', value: 67000, score: 76, followUp: 'Partner channel lead. Coordinate with partner team for joint demo covering procurement and operations modules.' },
+      { firstName: 'Aisha', lastName: 'Patel', email: 'apatel@quantumhealth.org', phone: '(617) 555-2190', companyName: 'Quantum Health Systems', source: 'LinkedIn', value: 95000, score: 87, followUp: 'Healthcare org looking for ERP integration. Focus on compliance and patient data workflow modules.' },
+      { firstName: 'James', lastName: 'Whitfield', email: 'jwhitfield@pinnacleenergy.com', phone: '(713) 555-3384', companyName: 'Pinnacle Energy Corp', source: 'Referral', value: 145000, score: 93, followUp: 'Enterprise energy company. High budget — prepare custom proposal with asset management and operations modules.' },
+      { firstName: 'Mei', lastName: 'Tanaka', email: 'mtanaka@synthwave.io', phone: '(408) 555-7712', companyName: 'SynthWave Technologies', source: 'Website', value: 38000, score: 64, followUp: 'Tech startup scaling fast. Pitch HR and payroll modules for their 50+ employee growth plan.' },
+      { firstName: 'Carlos', lastName: 'Fuentes', email: 'cfuentes@meridianfoods.com', phone: '(305) 555-8845', companyName: 'Meridian Foods Inc', source: 'Ad Campaign', value: 52000, score: 73, followUp: 'Food distribution company. Highlight inventory management and supply chain modules with lot tracking.' },
+      { firstName: 'Olivia', lastName: 'Bennett', email: 'obennett@clearviewlaw.com', phone: '(212) 555-6623', companyName: 'ClearView Legal Partners', source: 'Partner', value: 22000, score: 55, followUp: 'Small law firm needs document management. Propose Doc Locker module with e-sign integration.' },
+      { firstName: 'Raj', lastName: 'Gupta', email: 'rgupta@titanmfg.com', phone: '(313) 555-4491', companyName: 'Titan Manufacturing', source: 'LinkedIn', value: 110000, score: 89, followUp: 'Large manufacturer. Focus on BOM, production planning, and quality check modules.' },
+      { firstName: 'Emily', lastName: 'Zhao', email: 'ezhao@blueoceanretail.com', phone: '(604) 555-1178', companyName: 'BlueOcean Retail', source: 'Website', value: 34000, score: 62, followUp: 'Multi-store retailer. Demo POS, inventory, and customer loyalty integration.' },
+      { firstName: 'André', lastName: 'Dupont', email: 'adupont@eurotech.de', phone: '(312) 555-9903', companyName: 'EuroTech GmbH', source: 'Referral', value: 98000, score: 85, followUp: 'European tech firm expanding to US market. Emphasize multi-currency and intercompany consolidation.' },
+      { firstName: 'Lisa', lastName: 'Kowalski', email: 'lkowalski@harbormedical.org', phone: '(415) 555-2247', companyName: 'Harbor Medical Center', source: 'Ad Campaign', value: 76000, score: 78, followUp: 'Healthcare provider. Focus on compliance, attendance tracking, and payroll for medical staff.' },
+      { firstName: 'Omar', lastName: 'Hassan', email: 'ohassan@desertwindenergy.com', phone: '(602) 555-5568', companyName: 'Desert Wind Energy', source: 'Partner', value: 130000, score: 90, followUp: 'Renewable energy company. Pitch fixed asset management, depreciation, and project tracking modules.' },
     ];
+    // Filter out existing companies and pick 5 random
+    const available = leadPool.filter(l => !existingCompanies.has(l.companyName.toLowerCase()));
+    const shuffled = available.sort(() => Math.random() - 0.5);
+    generatedLeads = shuffled.slice(0, 5);
   }
 
   const newLeads: CRMLead[] = [];
