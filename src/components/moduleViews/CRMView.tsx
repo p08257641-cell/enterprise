@@ -10,6 +10,9 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
   const localLeads = leads.filter(l => l.companyId === selectedCompany.id);
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
+  const [generatingLeads, setGeneratingLeads] = useState(false);
+  const [autoGenerate, setAutoGenerate] = useState(false);
+  const autoGenerateRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const resolveUserName = (userId: string): string => {
     const emp = getEmployeeByUserId(employees, userId);
@@ -67,7 +70,17 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
   const [emailBody, setEmailBody] = useState('');
   const [emailLeadId, setEmailLeadId] = useState('');
 
-  const [generatingLeads, setGeneratingLeads] = useState(false);
+  // Auto-generate leads on interval
+  useEffect(() => {
+    if (autoGenerate && onGenerateLeads) {
+      autoGenerateRef.current = setInterval(async () => {
+        setGeneratingLeads(true);
+        try { await onGenerateLeads(); } catch (e) { console.error(e); }
+        setGeneratingLeads(false);
+      }, 8000);
+    }
+    return () => { if (autoGenerateRef.current) { clearInterval(autoGenerateRef.current); autoGenerateRef.current = null; } };
+  }, [autoGenerate, onGenerateLeads]);
 
   if (activeView.startsWith('crm')) {
     const stages: CRMLead['status'][] = ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'];
@@ -99,23 +112,31 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
           action={
             <div className="flex gap-2.5">
               {onGenerateLeads && (
-                <button
-                  onClick={async () => {
-                    setGeneratingLeads(true);
-                    try {
-                      await onGenerateLeads();
-                    } catch (e) {
-                      console.error(e);
-                    } finally {
+                <>
+                  <button
+                    onClick={async () => {
+                      setGeneratingLeads(true);
+                      try { await onGenerateLeads(); } catch (e) { console.error(e); }
                       setGeneratingLeads(false);
-                    }
-                  }}
-                  disabled={generatingLeads}
-                  className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                >
-                  <i className={`bi ${generatingLeads ? 'bi-arrow-repeat animate-spin' : 'bi-cpu'} text-xs`}></i>
-                  {generatingLeads ? 'Generating...' : 'AI Generate Leads'}
-                </button>
+                    }}
+                    disabled={generatingLeads}
+                    className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <i className={`bi ${generatingLeads ? 'bi-arrow-repeat animate-spin' : 'bi-cpu'} text-xs`}></i>
+                    {generatingLeads ? 'Generating...' : 'AI Generate Leads'}
+                  </button>
+                  <button
+                    onClick={() => setAutoGenerate(prev => !prev)}
+                    className={`flex items-center gap-1.5 border font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs ${
+                      autoGenerate
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                    }`}
+                  >
+                    <i className={`bi ${autoGenerate ? 'bi-pause-circle' : 'bi-arrow-repeat'} text-xs`}></i>
+                    {autoGenerate ? 'Stop Auto-Generate' : 'Auto-Repeat'}
+                  </button>
+                </>
               )}
               <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowLeadForm(true)}>Add Lead</PrimaryBtn>
             </div>
