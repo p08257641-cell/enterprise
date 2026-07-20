@@ -53,6 +53,7 @@ export interface ModuleViewsProps {
   onDeleteOnboarding: (id: string) => void;
   onAddBranch: (branch: Omit<Branch, 'id'>) => void;
   onAddLead: (lead: Omit<CRMLead, 'id' | 'status' | 'aiLeadScore' | 'aiFollowUpSuggested' | 'createdAt'>) => void;
+  onGenerateLeads?: () => void;
   onMoveLead: (leadId: string, status: CRMLead['status']) => void;
   onAssignLead: (leadId: string, userId: string, userName: string, department: string) => void;
   onAddComment: (leadId: string, content: string) => void;

@@ -5,7 +5,7 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { CRMLead } from '../../types';
 
 export const CRMView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onGenerateLeads, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
 
   const localLeads = leads.filter(l => l.companyId === selectedCompany.id);
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
@@ -67,6 +67,8 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
   const [emailBody, setEmailBody] = useState('');
   const [emailLeadId, setEmailLeadId] = useState('');
 
+  const [generatingLeads, setGeneratingLeads] = useState(false);
+
   if (activeView.startsWith('crm')) {
     const stages: CRMLead['status'][] = ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'];
     const stageColors: Record<string, string> = {
@@ -91,8 +93,34 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
 
     return (
       <div>
-        <PageHeader title={`CRM — ${crmTabTitles[crmTab] ?? 'Lead Pipeline'}`} subtitle="Track prospects, manage the sales funnel, score leads with AI and dispatch follow-ups."
-          action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowLeadForm(true)}>Add Lead</PrimaryBtn>} />
+        <PageHeader 
+          title={`CRM — ${crmTabTitles[crmTab] ?? 'Lead Pipeline'}`} 
+          subtitle="Track prospects, manage the sales funnel, score leads with AI and dispatch follow-ups."
+          action={
+            <div className="flex gap-2.5">
+              {onGenerateLeads && (
+                <button
+                  onClick={async () => {
+                    setGeneratingLeads(true);
+                    try {
+                      await onGenerateLeads();
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setGeneratingLeads(false);
+                    }
+                  }}
+                  disabled={generatingLeads}
+                  className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  <i className={`bi ${generatingLeads ? 'bi-arrow-repeat animate-spin' : 'bi-cpu'} text-xs`}></i>
+                  {generatingLeads ? 'Generating...' : 'AI Generate Leads'}
+                </button>
+              )}
+              <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowLeadForm(true)}>Add Lead</PrimaryBtn>
+            </div>
+          } 
+        />
         {crmTab !== 'reports' && (
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
             <StatCard label="Total Leads" value={localLeads.length} icon="bi bi-people" sub="All pipeline contacts" />

@@ -983,6 +983,83 @@ app.post('/api/leads', asyncHandler(async (req, res) => {
   });
     }));
 
+app.post('/api/leads/generate', asyncHandler(async (req, res) => {
+  const { companyId } = req.body;
+  if (!companyId) { res.status(400).json({ error: 'companyId required' }); return; }
+
+  const ai = getAIClient();
+  let generatedLeads: any[] = [];
+
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: `Generate 5 realistic B2B sales leads for an ERP software company. 
+Each lead should have different industries and company sizes.
+Return a JSON array where each object has:
+- firstName (string)
+- lastName (string) 
+- email (string, realistic business email)
+- phone (string, US format)
+- companyName (string, realistic company name)
+- source (one of: "Website", "Referral", "LinkedIn", "Ad Campaign", "Partner")
+- value (number between 5000 and 150000, deal value in USD)
+- score (number 0-100, lead quality score)
+- followUp (string, 1-2 sentence actionable sales recommendation)
+
+Make the leads diverse and realistic. Only return the JSON array, no other text.`,
+        config: {
+          responseMimeType: 'application/json',
+        }
+      });
+      const parsed = JSON.parse(response.text || '[]');
+      if (Array.isArray(parsed)) {
+        generatedLeads = parsed;
+      }
+    } catch (err) {
+      console.error('AI lead generation failed, using fallback:', err);
+    }
+  }
+
+  // Fallback leads if AI is unavailable or fails
+  if (generatedLeads.length === 0) {
+    generatedLeads = [
+      { firstName: 'Marcus', lastName: 'Chen', email: 'mchen@novatech.io', phone: '(415) 555-8821', companyName: 'NovaTech Solutions', source: 'LinkedIn', value: 85000, score: 82, followUp: 'High-value SaaS prospect. Schedule a product demo focusing on manufacturing module capabilities.' },
+      { firstName: 'Priya', lastName: 'Sharma', email: 'priya.s@greenleaf.com', phone: '(212) 555-3347', companyName: 'GreenLeaf Industries', source: 'Website', value: 42000, score: 71, followUp: 'Inbound inquiry from website. Follow up with pricing sheet and case studies for mid-market manufacturing.' },
+      { firstName: 'David', lastName: 'Okonkwo', email: 'dokonkwo@steelbridge.co', phone: '(312) 555-9102', companyName: 'SteelBridge Corp', source: 'Referral', value: 120000, score: 91, followUp: 'Referred by existing client. High-priority enterprise deal — assign senior AE and schedule executive briefing.' },
+      { firstName: 'Sarah', lastName: 'Mitchell', email: 'smitchell@coastalretail.com', phone: '(305) 555-6670', companyName: 'Coastal Retail Group', source: 'Ad Campaign', value: 28000, score: 58, followUp: 'Clicked POS module ad. Send targeted content about retail POS and inventory management integration.' },
+      { firstName: 'Tomás', lastName: 'Rivera', email: 'trivera@apexlogistics.mx', phone: '(832) 555-4419', companyName: 'Apex Logistics', source: 'Partner', value: 67000, score: 76, followUp: 'Partner channel lead. Coordinate with partner team for joint demo covering procurement and operations modules.' },
+    ];
+  }
+
+  const newLeads: CRMLead[] = [];
+  for (const gl of generatedLeads) {
+    const leadId = `lead-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const newLead: CRMLead = {
+      id: leadId,
+      companyId,
+      firstName: gl.firstName,
+      lastName: gl.lastName,
+      email: gl.email || '',
+      phone: gl.phone || '',
+      companyName: gl.companyName,
+      status: 'New',
+      source: gl.source || 'Website',
+      value: Number(gl.value) || 25000,
+      assignedTo: 'u-acme-sales',
+      aiLeadScore: gl.score ?? 65,
+      aiFollowUpSuggested: gl.followUp || 'New AI-generated lead. Contact to schedule initial discovery call.',
+      createdAt: new Date().toISOString()
+    };
+    await dbInsert(schema.crmLeads, newLead);
+    newLeads.push(newLead);
+  }
+
+  logAudit(companyId, 'system', 'AI Lead Generator', 'LEADS_GENERATED', 'CRM', `AI generated ${newLeads.length} new CRM leads for the pipeline.`);
+
+  res.status(201).json({ leads: newLeads });
+}));
+
 app.post('/api/leads/:id/move', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status, companyId } = req.body;

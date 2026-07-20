@@ -624,6 +624,27 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
+  const handleGenerateLeads = async () => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/leads/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: selectedCompany.id })
+      });
+      const data = await safeJson(res);
+      if (data.leads && Array.isArray(data.leads)) {
+        setLeads([...leads, ...data.leads]);
+      }
+
+      // Reload audits
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await safeJson(logRes));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleMoveLead = async (leadId: string, status: CRMLead['status']) => {
     if (!selectedCompany) return;
     try {
@@ -2770,6 +2791,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               openingBalances={openingBalances}
               onAddEmployee={handleAddEmployee}
               onAddLead={handleAddLead}
+              onGenerateLeads={handleGenerateLeads}
               onMoveLead={handleMoveLead}
               onAssignLead={handleAssignLead}
               onAddComment={handleAddComment}
