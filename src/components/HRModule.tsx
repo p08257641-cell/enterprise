@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { ViewModal } from './moduleViews/shared';
 import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord } from '../types';
-import { isAdminRole, isHRRole, isHRDeptHead } from '../permissions';
+import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole } from '../permissions';
 import { downloadCSV } from '../utils/export';
 import { modalAlert, modalConfirm } from '../utils/modal';
 
@@ -155,8 +155,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isAdmin = isAdminRole(userRole);
   const isHR = isHRRole(userRole);
-  const isDeptHead = isHRDeptHead(userRole);
-  const isHRorAdmin = isAdmin || isHR;
+  const isDeptHead = isDeptHeadRole(userRole);
+  const isHRDeptHeadUser = isHRDeptHead(userRole);
+  const isHRorAdmin = isAdmin || isHR || isHRDeptHeadUser;
   const isEmployee = !isHRorAdmin && !isDeptHead;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
@@ -847,18 +848,19 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
                         const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
                         const isHOD = empDeptRecord?.managerId === selectedUser.id;
+                        const canFinalApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser;
                         
-                        if (isHOD && !isCompanyAdmin && !hasLeavePermission) {
-                          return (
-                            <div className="flex gap-2">
-                              <button onClick={() => onApproveLeave(req.id, 'HOD Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">HOD Approve</button>
-                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
-                            </div>
-                          );
-                        } else if (isCompanyAdmin || hasLeavePermission) {
+                        if (canFinalApprove) {
                           return (
                             <div className="flex gap-2">
                               <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                            </div>
+                          );
+                        } else if (isHOD) {
+                          return (
+                            <div className="flex gap-2">
+                              <button onClick={() => onApproveLeave(req.id, 'HOD Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">HOD Approve</button>
                               <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                             </div>
                           );
@@ -869,7 +871,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       {req.status === 'HOD Approved' && (() => {
                         const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
                         const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
-                        if (isCompanyAdmin || hasLeavePermission) {
+                        const canFinalApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser;
+                        if (canFinalApprove) {
                           return (
                             <div className="flex gap-2">
                               <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
@@ -877,7 +880,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                             </div>
                           );
                         }
-                        return <div className="text-[10px] text-slate-400 italic">Awaiting HR/Admin approval</div>;
+                        return <div className="text-[10px] text-slate-400 italic">Awaiting HR approval</div>;
                       })()}
                       
                       {req.status === 'Approved' && req.approvedBy && (
