@@ -157,7 +157,7 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
     'wf-builder', 'ai-chat', 'ai-insights',
   ],
   'Employee': [
-    'hr-employees', 'hr-attendance', 'hr-leave', 'hr-orgchart', 'hr-performance',
+    'hr-employees', 'hr-attendance', 'hr-leave', 'hr-orgchart', 'hr-performance', 'hr-exit',
     'payroll-slips',
     'hd-tickets', 'hd-sla', 'hd-kb',
     'comm-announcements', 'comm-chat', 'comm-email',

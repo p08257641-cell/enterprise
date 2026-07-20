@@ -1249,3 +1249,24 @@ export interface ManagedDocument {
   uploadedBy?: string;
   createdAt: string;
 }
+
+// --- HR: Exit Management ---
+export interface ExitRequest {
+  id: string;
+  companyId: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  exitType: 'Resignation' | 'Termination' | 'Retirement';
+  lastWorkingDay: string;
+  reason: string;
+  status: 'Pending' | 'HOD Approved' | 'Approved' | 'Rejected';
+  hodApprovedBy?: string;
+  hodApprovedAt?: string;
+  hrApprovedBy?: string;
+  hrApprovedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  notes?: string;
+  createdAt: string;
+}

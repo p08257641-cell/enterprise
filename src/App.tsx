@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -118,6 +118,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [qualityChecks, setQualityChecks] = useState<QualityCheck[]>([]);
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
   const [managedDocuments, setManagedDocuments] = useState<ManagedDocument[]>([]);
+  const [exitRequests, setExitRequests] = useState<ExitRequest[]>([]);
 
   // Navigation states
   const [activeView, setActiveView] = useState('dashboard');
@@ -367,6 +368,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           setManagedDocuments(await safeJson(docRes));
         } catch (e) { console.error('Failed to load Operations & Projects data:', e); }
 
+        // Fetch exit requests
+        try {
+          const exitRes = await fetch('/api/exit-requests');
+          setExitRequests(await safeJson(exitRes));
+        } catch (e) { console.error('Failed to load exit requests:', e); }
+
         // Select default tenant and user role
         if (cData.length > 0) {
           const acme = cData.find((c: any) => c.id === 'c-acme');
@@ -606,6 +613,51 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setOnboardings(onboardings.filter(o => o.id !== id));
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
+    } catch (err) { console.error(err); }
+  };
+
+  // Exit request handlers
+  const handleSubmitExitRequest = async (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => {
+    try {
+      const res = await fetch('/api/exit-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await safeJson(res);
+      setExitRequests([...exitRequests, data]);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleApproveExitRequest = async (id: string, status: string, approverName: string) => {
+    try {
+      const updates: any = { status };
+      if (status === 'HOD Approved') {
+        updates.hodApprovedBy = approverName;
+        updates.hodApprovedAt = new Date().toISOString();
+      } else if (status === 'Approved') {
+        updates.hrApprovedBy = approverName;
+        updates.hrApprovedAt = new Date().toISOString();
+      }
+      const res = await fetch(`/api/exit-requests/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const data = await safeJson(res);
+      setExitRequests(exitRequests.map(e => e.id === id ? data : e));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleRejectExitRequest = async (id: string, rejectedBy: string) => {
+    try {
+      const res = await fetch(`/api/exit-requests/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Rejected', rejectedBy, rejectedAt: new Date().toISOString() }),
+      });
+      const data = await safeJson(res);
+      setExitRequests(exitRequests.map(e => e.id === id ? data : e));
     } catch (err) { console.error(err); }
   };
 
@@ -2983,6 +3035,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onCreateDocument={handleCreateDocument}
               onUpdateDocument={handleUpdateDocument}
               onDeleteDocument={handleDeleteDocument}
+              exitRequests={exitRequests}
+              onSubmitExitRequest={handleSubmitExitRequest}
+              onApproveExitRequest={handleApproveExitRequest}
+              onRejectExitRequest={handleRejectExitRequest}
             />
           )}
           </FadeIn>

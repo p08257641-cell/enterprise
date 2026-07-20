@@ -11,7 +11,7 @@ import {
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
   POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone,
-  Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument
+  Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest
 } from '../../types';
 
 export interface ModuleViewsProps {
@@ -251,6 +251,11 @@ export interface ModuleViewsProps {
   onCreateDocument: (data: { name: string; type: string; size?: string }) => void;
   onUpdateDocument: (id: string, values: any) => void;
   onDeleteDocument: (id: string) => void;
+  // Exit Requests
+  exitRequests: ExitRequest[];
+  onSubmitExitRequest: (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => void;
+  onApproveExitRequest: (id: string, status: string, approverName: string) => void;
+  onRejectExitRequest: (id: string, rejectedBy: string) => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {

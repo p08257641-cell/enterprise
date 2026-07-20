@@ -1131,3 +1131,24 @@ export const managedDocuments = pgTable('managed_documents', {
   uploadedBy: text('uploadedBy'),
   createdAt: text('createdAt'),
 });
+
+// --- Exit Management ---
+export const exitRequests = pgTable('exit_requests', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  employeeId: text('employeeId'),
+  employeeName: text('employeeName'),
+  department: text('department'),
+  exitType: text('exitType'),
+  lastWorkingDay: text('lastWorkingDay'),
+  reason: text('reason'),
+  status: text('status'),
+  hodApprovedBy: text('hodApprovedBy'),
+  hodApprovedAt: text('hodApprovedAt'),
+  hrApprovedBy: text('hrApprovedBy'),
+  hrApprovedAt: text('hrApprovedAt'),
+  rejectedBy: text('rejectedBy'),
+  rejectedAt: text('rejectedAt'),
+  notes: text('notes'),
+  createdAt: text('createdAt'),
+});

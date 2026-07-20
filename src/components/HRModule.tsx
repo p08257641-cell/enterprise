@@ -9,7 +9,7 @@
 
 import React, { useState } from 'react';
 import { ViewModal } from './moduleViews/shared';
-import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord } from '../types';
+import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord, ExitRequest } from '../types';
 import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole } from '../permissions';
 import { downloadCSV } from '../utils/export';
 import { modalAlert, modalConfirm } from '../utils/modal';
@@ -41,6 +41,10 @@ interface HRModuleProps {
   onUpdateEmployee: (id: string, updates: Partial<Employee>) => void;
   onUpdateOKRProgress: (id: string, progress: number, status?: string) => void;
   onNavigateView: (view: string) => void;
+  exitRequests: ExitRequest[];
+  onSubmitExitRequest: (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => void;
+  onApproveExitRequest: (id: string, status: string, approverName: string) => void;
+  onRejectExitRequest: (id: string, rejectedBy: string) => void;
 }
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -151,6 +155,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   leaves, attendance, okrs,
   onAddEmployee, onApproveLeave, onRejectLeave, onAddLeave,
   onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onAddDepartment, onUpdateDepartment, onDeleteDepartment, onboardings, onAddOnboarding, onUpdateOnboarding, onDeleteOnboarding, onUpdateEmployee, onNavigateView,
+  exitRequests, onSubmitExitRequest, onApproveExitRequest, onRejectExitRequest,
 }) => {
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isAdmin = isAdminRole(userRole);
@@ -227,6 +232,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [exitDate, setExitDate] = useState('');
   const [exitReason, setExitReason] = useState('');
   const [exitSuccess, setExitSuccess] = useState(false);
+  // Self-service exit
+  const [selfExitType, setSelfExitType] = useState<'Resignation' | 'Retirement'>('Resignation');
+  const [selfExitDate, setSelfExitDate] = useState('');
+  const [selfExitReason, setSelfExitReason] = useState('');
+  const [selfExitSuccess, setSelfExitSuccess] = useState(false);
+  const companyExitRequests = exitRequests.filter(e => e.companyId === selectedCompany.id);
 
   // OKR / Department / Edit Employee / Vacancy modals
   const [showOkrModal, setShowOkrModal] = useState(false);
@@ -1799,96 +1810,207 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
   // ── VIEW: EXIT MANAGEMENT ──────────────────────────────────────────────────
   if (activeView === 'hr-exit') {
+    const myExitReqs = myEmpRecord ? companyExitRequests.filter(e => e.employeeId === myEmpRecord.id) : [];
+    const managedDeptNames = isHRorAdmin
+      ? null
+      : departments.filter(d => d.managerId === selectedUser.id && d.companyId === selectedCompany.id).map(d => d.name);
+    const deptExitReqs = isHRorAdmin
+      ? companyExitRequests
+      : companyExitRequests.filter(e => managedDeptNames?.includes(e.department));
+    const pendingExits = deptExitReqs.filter(e => e.status === 'Pending');
+    const approvedExits = deptExitReqs.filter(e => e.status === 'Approved');
+    const isEmployeeOnly = !isHRorAdmin && !isDeptHead;
+
     return (
       <div className="space-y-6">
-        <SectionHeader title="Exit Management" subtitle="Process employee separations, clearance and offboarding." />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Offboarded (YTD)" value={onboardings.filter(o => o.companyId === selectedCompany.id && o.status === 'Completed').length} icon="bi bi-door-closed" sub="Processed exits this year" />
-          <StatCard label="Pending Clearance" value={onboardings.filter(o => o.companyId === selectedCompany.id && o.status === 'In Progress').length} icon="bi bi-clipboard-check" sub="Active exit checklists" accent />
-          <StatCard label="Annual Turnover" value={`${localEmployees.length ? Math.round((onboardings.filter(o => o.companyId === selectedCompany.id && o.status === 'Completed').length / localEmployees.length) * 100) : 0}%`} icon="bi bi-graph-down" sub="Based on exit records" color="text-emerald-600" />
+        <SectionHeader title="Exit Management" subtitle="Submit resignation requests, process separations and track clearance." />
+
+        <div className="grid gap-4 sm:grid-cols-4">
+          <StatCard label="Total Requests" value={isEmployeeOnly ? myExitReqs.length : deptExitReqs.length} icon="bi bi-door-open" sub={isEmployeeOnly ? 'My requests' : 'All requests'} />
+          <StatCard label="Pending" value={isEmployeeOnly ? myExitReqs.filter(e => e.status === 'Pending' || e.status === 'HOD Approved').length : pendingExits.length} icon="bi bi-clock-history" sub="Awaiting approval" accent />
+          <StatCard label="Approved" value={isEmployeeOnly ? myExitReqs.filter(e => e.status === 'Approved').length : approvedExits.length} icon="bi bi-check-circle" sub="Processed" color="text-emerald-600" />
+          <StatCard label="Rejected" value={isEmployeeOnly ? myExitReqs.filter(e => e.status === 'Rejected').length : deptExitReqs.filter(e => e.status === 'Rejected').length} icon="bi bi-x-circle" sub="Declined" color="text-rose-600" />
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          {isHRorAdmin && (
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Register Separation</h3>
-              {exitSuccess && (
-                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
-                  <i className="bi bi-check-circle-fill"></i> Separation logged successfully!
-                </div>
-              )}
-              <form className="space-y-4" onSubmit={e => {
-                e.preventDefault();
-                if (!exitEmp || !exitDate) return;
-                onUpdateEmployee(exitEmp, { status: 'Terminated' });
-                setExitSuccess(true);
-                setTimeout(() => { setExitSuccess(false); setExitEmp(''); setExitDate(''); setExitReason(''); }, 3000);
-              }}>
-                <div>
-                  <Label>Employee *</Label>
-                  <Select value={exitEmp} onChange={e => setExitEmp(e.target.value)} required>
-                    <option value="">— Select Employee —</option>
-                    {localEmployees.map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeNumber})</option>
-                    ))}
-                  </Select>
-                </div>
-                <div>
-                  <Label>Exit Type *</Label>
-                  <Select value={exitType} onChange={e => setExitType(e.target.value as typeof exitType)}>
-                    <option value="Resignation">Voluntary Resignation</option>
-                    <option value="Termination">Involuntary Termination</option>
-                    <option value="Retirement">Retirement</option>
-                  </Select>
-                </div>
-                <div><Label>Last Working Day *</Label><Input type="date" value={exitDate} onChange={e => setExitDate(e.target.value)} required /></div>
-                <div><Label>Reason</Label><Input value={exitReason} onChange={e => setExitReason(e.target.value)} placeholder="Career progression, relocation…" /></div>
-                <PrimaryBtn type="submit" icon="bi bi-person-x-fill">Initiate Separation</PrimaryBtn>
-              </form>
-            </div>
-          )}
+        {/* Employee self-service: Submit resignation */}
+        {isEmployeeOnly && myEmpRecord && (
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
+            <h3 className="text-sm font-bold text-slate-900 mb-4">Submit Resignation</h3>
+            {selfExitSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
+                <i className="bi bi-check-circle-fill"></i> Resignation request submitted! Awaiting department head approval.
+              </div>
+            )}
+            <form className="space-y-4" onSubmit={e => {
+              e.preventDefault();
+              if (!selfExitDate) return;
+              onSubmitExitRequest({
+                companyId: selectedCompany.id,
+                employeeId: myEmpRecord.id,
+                employeeName: `${myEmpRecord.firstName} ${myEmpRecord.lastName}`,
+                department: myEmpRecord.department || '',
+                exitType: selfExitType,
+                lastWorkingDay: selfExitDate,
+                reason: selfExitReason,
+              });
+              setSelfExitDate('');
+              setSelfExitReason('');
+              setSelfExitSuccess(true);
+              setTimeout(() => setSelfExitSuccess(false), 3000);
+            }}>
+              <div>
+                <Label>Exit Type *</Label>
+                <Select value={selfExitType} onChange={e => setSelfExitType(e.target.value as typeof selfExitType)}>
+                  <option value="Resignation">Voluntary Resignation</option>
+                  <option value="Retirement">Retirement</option>
+                </Select>
+              </div>
+              <div><Label>Last Working Day *</Label><Input type="date" value={selfExitDate} onChange={e => setSelfExitDate(e.target.value)} required /></div>
+              <div><Label>Reason</Label><Input value={selfExitReason} onChange={e => setSelfExitReason(e.target.value)} placeholder="Career progression, relocation…" /></div>
+              <PrimaryBtn type="submit" icon="bi bi-send">Submit Resignation</PrimaryBtn>
+            </form>
+          </div>
+        )}
 
-          <div className={`${isHRorAdmin ? 'lg:col-span-3' : 'lg:col-span-5'} bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden`}>
-            <div className="px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Separation Log & Clearance</h3>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {[
-                { name: 'Marcus Vance', role: 'Sales Manager', type: 'Resignation', date: '2026-07-31', done: 2, total: 5, status: 'In Progress', i: 0 },
-                { name: 'Jin Li', role: 'Finance Analyst', type: 'Retirement', date: '2026-06-30', done: 5, total: 5, status: 'Cleared', i: 1 },
-              ].map(entry => {
-                const pct = (entry.done / entry.total) * 100;
-                const clearanceTasks = ['IT equipment returned', 'Access revoked', 'Exit interview done', 'Final payslip issued', 'NOC issued'];
-                return (
-                  <div key={entry.name} className="p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar first={entry.name.split(' ')[0]} last={entry.name.split(' ')[1]} index={entry.i} />
-                        <div>
-                          <div className="text-sm font-semibold text-slate-900">{entry.name}</div>
-                          <div className="text-xs text-slate-500">{entry.role} · {entry.type} · Last day: {entry.date}</div>
+        {/* HR/Admin: Register separation */}
+        {isHRorAdmin && (
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
+            <h3 className="text-sm font-bold text-slate-900 mb-4">Register Separation (Involuntary)</h3>
+            {exitSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
+                <i className="bi bi-check-circle-fill"></i> Separation logged successfully!
+              </div>
+            )}
+            <form className="space-y-4" onSubmit={e => {
+              e.preventDefault();
+              if (!exitEmp || !exitDate) return;
+              onSubmitExitRequest({
+                companyId: selectedCompany.id,
+                employeeId: exitEmp,
+                employeeName: localEmployees.find(em => em.id === exitEmp) ? `${localEmployees.find(em => em.id === exitEmp)!.firstName} ${localEmployees.find(em => em.id === exitEmp)!.lastName}` : '',
+                department: localEmployees.find(em => em.id === exitEmp)?.department || '',
+                exitType: exitType,
+                lastWorkingDay: exitDate,
+                reason: exitReason,
+              });
+              setExitSuccess(true);
+              setTimeout(() => { setExitSuccess(false); setExitEmp(''); setExitDate(''); setExitReason(''); }, 3000);
+            }}>
+              <div>
+                <Label>Employee *</Label>
+                <Select value={exitEmp} onChange={e => setExitEmp(e.target.value)} required>
+                  <option value="">— Select Employee —</option>
+                  {localEmployees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName} ({emp.employeeNumber})</option>
+                  ))}
+                </Select>
+              </div>
+              <div>
+                <Label>Exit Type *</Label>
+                <Select value={exitType} onChange={e => setExitType(e.target.value as typeof exitType)}>
+                  <option value="Resignation">Voluntary Resignation</option>
+                  <option value="Termination">Involuntary Termination</option>
+                  <option value="Retirement">Retirement</option>
+                </Select>
+              </div>
+              <div><Label>Last Working Day *</Label><Input type="date" value={exitDate} onChange={e => setExitDate(e.target.value)} required /></div>
+              <div><Label>Reason</Label><Input value={exitReason} onChange={e => setExitReason(e.target.value)} placeholder="Career progression, relocation…" /></div>
+              <PrimaryBtn type="submit" icon="bi bi-person-x-fill">Initiate Separation</PrimaryBtn>
+            </form>
+          </div>
+        )}
+
+        {/* Exit Requests List */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="text-sm font-bold text-slate-900">{isEmployeeOnly ? 'My Exit Requests' : 'Exit Requests'}</h3>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {(isEmployeeOnly ? myExitReqs : deptExitReqs).length === 0 && (
+              <div className="p-10 text-center">
+                <i className="bi bi-inbox text-3xl text-slate-200 block mb-2"></i>
+                <p className="text-sm text-slate-400">No exit requests found.</p>
+              </div>
+            )}
+            {(isEmployeeOnly ? myExitReqs : deptExitReqs).map((req, i) => {
+              const emp = localEmployees.find(e => e.id === req.employeeId);
+              const empName = emp ? `${emp.firstName} ${emp.lastName}` : req.employeeName;
+              const empDept = emp?.department || req.department;
+              return (
+                <div key={req.id} className="p-5 hover:bg-slate-50/30 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} index={i} />
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold text-slate-900">{empName}</span>
+                          <span className="text-xs text-slate-400">· {empDept}</span>
+                          <Badge label={req.exitType} variant="info" />
                         </div>
-                      </div>
-                      <Badge label={entry.status} variant={entry.status === 'Cleared' ? 'success' : 'warning'} />
-                    </div>
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1.5">
-                        <span className="text-slate-500">Clearance Progress</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">{entry.done}/{entry.total} tasks</span>
-                      </div>
-                      <ProgressBar value={pct} color={pct === 100 ? 'bg-emerald-500' : 'bg-amber-500'} />
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {clearanceTasks.map((t, ti) => (
-                        <div key={t} className={`flex items-center gap-1.5 text-xs ${ti < entry.done ? 'text-emerald-700' : 'text-slate-400'}`}>
-                          <i className={`bi bi-${ti < entry.done ? 'check-circle-fill' : 'circle'} text-sm`}></i>{t}
+                        <div className="text-sm text-slate-600 flex items-center gap-2">
+                          <i className="bi bi-calendar3 text-slate-400"></i>
+                          Last day: {req.lastWorkingDay}
                         </div>
-                      ))}
+                        {req.reason && <div className="text-xs text-slate-400 mt-1 italic">"{req.reason}"</div>}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : req.status === 'Rejected' ? 'danger' : 'warning'} />
+
+                      {/* Dept Head: approve/reject Pending requests in their department */}
+                      {req.status === 'Pending' && isDeptHead && !isHRorAdmin && (() => {
+                        const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
+                        const isHOD = empDeptRecord?.managerId === selectedUser.id;
+                        if (isHOD) {
+                          return (
+                            <div className="flex gap-2">
+                              <button onClick={() => onApproveExitRequest(req.id, 'HOD Approved', selectedUser.name)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                              <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* HR: approve/reject HOD Approved requests */}
+                      {req.status === 'HOD Approved' && isHRorAdmin && (
+                        <div className="flex gap-2">
+                          <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
+                          <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                        </div>
+                      )}
+
+                      {/* HR: direct approve/reject for Pending (involuntary terminations) */}
+                      {req.status === 'Pending' && isHRorAdmin && (
+                        <div className="flex gap-2">
+                          <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                          <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                        </div>
+                      )}
+
+                      {req.status === 'Approved' && req.hrApprovedBy && (
+                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <i className="bi bi-check2-circle text-emerald-500"></i>
+                          Approved by <span className="font-semibold text-slate-700">{req.hrApprovedBy}</span>
+                        </div>
+                      )}
+                      {req.status === 'HOD Approved' && req.hodApprovedBy && (
+                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <i className="bi bi-check2-circle text-amber-500"></i>
+                          HOD approved by <span className="font-semibold text-slate-700">{req.hodApprovedBy}</span> · Awaiting HR
+                        </div>
+                      )}
+                      {req.status === 'Rejected' && req.rejectedBy && (
+                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <i className="bi bi-x-circle text-rose-500"></i>
+                          Rejected by <span className="font-semibold text-slate-700">{req.rejectedBy}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

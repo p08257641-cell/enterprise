@@ -3829,6 +3829,48 @@ app.delete('/api/documents/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
+// --- EXIT MANAGEMENT ---
+app.get('/api/exit-requests', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = companyId ? await dbByCompany<any>(schema.exitRequests, companyId as string) : await dbAll<any>(schema.exitRequests);
+  res.json(all);
+}));
+
+app.post('/api/exit-requests', asyncHandler(async (req, res) => {
+  const { companyId, employeeId, employeeName, department, exitType, lastWorkingDay, reason } = req.body;
+  const exitReq = {
+    id: `exit-${Date.now()}`,
+    companyId,
+    employeeId,
+    employeeName,
+    department,
+    exitType: exitType || 'Resignation',
+    lastWorkingDay,
+    reason: reason || '',
+    status: 'Pending',
+    createdAt: new Date().toISOString(),
+  };
+  await dbInsert(schema.exitRequests, exitReq);
+  logAudit(companyId, employeeId, employeeName, 'SUBMIT_EXIT_REQUEST', 'Exit Management', `Submitted ${exitType} request`);
+  res.status(201).json(exitReq);
+}));
+
+app.put('/api/exit-requests/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName, ...values } = req.body;
+  const updated = await dbUpdate(schema.exitRequests, id, values);
+  logAudit(updated.companyId, userId, userName, 'UPDATE_EXIT_REQUEST', 'Exit Management', `Updated exit request status to ${values.status}`);
+  res.json(updated);
+}));
+
+app.delete('/api/exit-requests/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const exitReq = await dbById<any>(schema.exitRequests, id);
+  if (!exitReq) return res.status(404).json({ error: 'Exit request not found' });
+  await dbDelete(schema.exitRequests, id);
+  res.json({ success: true });
+}));
+
 
 // --- GEMINI CO-PILOT ENTERPRISE ENDPOINTS ---
 
