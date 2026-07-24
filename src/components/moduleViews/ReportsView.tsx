@@ -26,11 +26,11 @@ export const ReportsView: React.FC<ModuleViewsProps> = (props) => {
         bankTransactions={bankTransactions}
       />
       <div className="bg-slate-900 rounded-xl p-5 text-white">
-        <div className="flex items-center gap-2 mb-3"><i className="bi bi-robot text-slate-400 text-sm"></i><span className="section-title text-slate-400">AI Business Insight</span></div>
+        <div className="flex items-center gap-2 mb-3"><i className="bi bi-robot text-slate-400 fs-sm"></i><span className="section-title text-slate-400">AI Business Insight</span></div>
         {aiInsight ? (
-          <p className="text-xs text-slate-300 leading-relaxed">{aiInsight}</p>
+          <p className="fs-xs text-slate-300 leading-relaxed">{aiInsight}</p>
         ) : (
-          <p className="text-xs text-slate-400 leading-relaxed">Click below to generate an AI-powered analysis of your business metrics using Gemini.</p>
+          <p className="fs-xs text-slate-400 leading-relaxed">Click below to generate an AI-powered analysis of your business metrics using Gemini.</p>
         )}
         <button onClick={() => {
           setAiLoading(true);
@@ -38,7 +38,7 @@ export const ReportsView: React.FC<ModuleViewsProps> = (props) => {
             setAiInsight(`Based on current metrics, ${selectedCompany.name} is showing strong revenue growth with a healthy net margin. Payroll represents ${((totalPayroll / (revAcc?.balance ?? 1)) * 100).toFixed(0)}% of revenue — within optimal range. Open invoice backlog of ${localInvoices.filter(i => i.status !== 'Paid').length} orders suggests improving collections process. Recommend reviewing Q3 procurement spend to maintain margins above 35%.`);
             setAiLoading(false);
           }, 2000);
-        }} className="mt-4 w-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 py-2 rounded-lg cursor-pointer transition-all">
+        }} className="mt-4 w-full fs-xs fw-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 py-2 rounded-lg cursor-pointer transition-all">
           {aiLoading ? 'Generating…' : '✨ Generate AI Insight'}
         </button>
       </div>

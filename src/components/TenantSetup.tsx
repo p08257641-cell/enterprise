@@ -51,35 +51,35 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
       <div className="w-full max-w-lg rounded-xl border border-slate-200/80 bg-white text-slate-600 p-6 shadow-2xl relative animate-fade-in">
-        <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2 uppercase tracking-wide border-b border-slate-100 pb-3">
-          <i className="bi bi-building text-slate-950 text-sm"></i>
+        <h2 className="fs-sm fw-semibold text-slate-900 flex items-center gap-2 uppercase tracking-wide border-b border-slate-100 pb-3">
+          <i className="bi bi-building text-slate-950 fs-sm"></i>
           Provision Multi-Tenant Organization (Company)
         </h2>
 
-        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+        <p className="fs-xs text-slate-500 mt-2 leading-relaxed">
           Platform-level tenant isolation container. Submitting this form allocates a dedicated database schema container, seeds a basic Operating Cash general ledger account, and provisions structural department blocks.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Corporate Name</label>
+            <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Corporate Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Stark Industries Ltd"
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-hidden focus:border-slate-950 focus:ring-1 focus:ring-slate-950 transition-all font-sans"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 fs-xs text-slate-900 outline-hidden focus:border-slate-950 focus:ring-1 focus:ring-slate-950 transition-all font-sans"
               required
             />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Industry Sector</label>
+              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Industry Sector</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-hidden cursor-pointer focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-hidden cursor-pointer focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
               >
                 <option value="Industrial Equipment">Industrial Equipment</option>
                 <option value="Biopharmaceuticals">Biopharmaceuticals</option>
@@ -89,11 +89,11 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Operating Currency</label>
+              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Operating Currency</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-hidden cursor-pointer focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-hidden cursor-pointer focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
               >
                 <option value="USD">USD ($) - United States Dollar</option>
                 <option value="EUR">EUR (€) - European Euro</option>
@@ -106,11 +106,11 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Time Zone</label>
+              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Time Zone</label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-hidden cursor-pointer focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-hidden cursor-pointer focus:border-slate-950 focus:ring-1 focus:ring-slate-950"
               >
                 <option value="America/New_York">EST - America/New_York</option>
                 <option value="Europe/Paris">CET - Europe/Paris</option>
@@ -120,20 +120,20 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Language</label>
+              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Language</label>
               <input
                 type="text"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
                 placeholder="English / German / French"
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-hidden focus:border-slate-950 focus:ring-1 focus:ring-slate-950 transition-all font-sans"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 fs-xs text-slate-900 outline-hidden focus:border-slate-950 focus:ring-1 focus:ring-slate-950 transition-all font-sans"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">Billing Plan / Subscription tier</label>
-            <div className="mt-1.5 grid gap-2 sm:grid-cols-4 text-xs font-semibold">
+            <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Billing Plan / Subscription tier</label>
+            <div className="mt-1.5 grid gap-2 sm:grid-cols-4 fs-xs fw-semibold">
               {(['Trial', 'Core', 'Premium', 'Enterprise'] as any[]).map(plan => (
                 <button
                   type="button"
@@ -141,7 +141,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
                   onClick={() => setBillingPlan(plan)}
                   className={`rounded-lg border py-2 px-1 transition-all text-center cursor-pointer ${
                     billingPlan === plan 
-                      ? 'border-slate-950 bg-slate-950 text-white font-semibold' 
+                      ? 'border-slate-950 bg-slate-950 text-white fw-semibold' 
                       : 'border-slate-200 bg-slate-50 hover:bg-slate-100/60 text-slate-500'
                   }`}
                 >
@@ -152,7 +152,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
           </div>
 
           {statusMessage && (
-            <div className="text-xs text-emerald-600 font-semibold text-center py-1">
+            <div className="fs-xs text-emerald-600 fw-semibold text-center py-1">
               {statusMessage}
             </div>
           )}
@@ -161,13 +161,13 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg bg-slate-100 hover:bg-slate-200/80 px-4 py-2 text-xs font-semibold text-slate-700 cursor-pointer transition-all"
+              className="rounded-lg bg-slate-100 hover:bg-slate-200/80 px-4 py-2 fs-xs fw-semibold text-slate-700 cursor-pointer transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-slate-900 hover:bg-slate-800 px-4 py-2 text-xs font-semibold text-white cursor-pointer transition-all flex items-center gap-1 shadow-xs"
+              className="rounded-lg bg-slate-900 hover:bg-slate-800 px-4 py-2 fs-xs fw-semibold text-white cursor-pointer transition-all flex items-center gap-1 shadow-xs"
             >
               <i className="bi bi-plus-lg text-[10px]"></i>
               Spawn Tenant Container

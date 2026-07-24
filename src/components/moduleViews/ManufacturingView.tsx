@@ -107,7 +107,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {mfgTabs.map(t => (
           <button key={t.id} onClick={() => { setMfgTab(t.id); onNavigateView(t.id === 'bom' ? 'manufacturing' : `mfg-${t.id}`); }}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${mfgTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
+            className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${mfgTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
             {t.label}
           </button>
         ))}
@@ -134,17 +134,17 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-sans tabular-nums font-bold text-slate-500">{wo.woNumber}</span>
+                      <span className="fs-xs font-sans tabular-nums fw-bold text-slate-500">{wo.woNumber}</span>
                       <Badge label={wo.status} variant={wo.status === 'Completed' ? 'success' : wo.status === 'In Progress' ? 'info' : wo.status === 'On Hold' ? 'danger' : 'warning'} />
                     </div>
-                    <div className="text-sm font-bold text-slate-900 mt-1">{wo.product}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      Qty: <span className="font-sans tabular-nums font-semibold text-slate-700">{(wo.qty || 0).toLocaleString()}</span> · Line: <span className="font-semibold text-slate-700">{wo.line}</span>
+                    <div className="fs-sm fw-bold text-slate-900 mt-1">{wo.product}</div>
+                    <div className="fs-xs text-slate-500 mt-0.5">
+                      Qty: <span className="font-sans tabular-nums fw-semibold text-slate-700">{(wo.qty || 0).toLocaleString()}</span> · Line: <span className="fw-semibold text-slate-700">{wo.line}</span>
                       {wo.dueDate && <> · Due: <span className="font-sans tabular-nums text-slate-600">{wo.dueDate}</span></>}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold font-sans tabular-nums text-slate-900">{wo.completion}%</div>
+                    <div className="fs-2xl fw-bold font-sans tabular-nums text-slate-900">{wo.completion}%</div>
                     <div className="text-[10px] text-slate-400">completion</div>
                   </div>
                 </div>
@@ -153,21 +153,21 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 {isAdmin && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100" onClick={e => e.stopPropagation()}>
-                    {wo.status === 'Scheduled' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="text-[9px] font-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Start</button>}
+                    {wo.status === 'Scheduled' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Start</button>}
                     {wo.status === 'In Progress' && (
                       <>
-                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: Math.min(100, (wo.completion || 0) + 10), status: (wo.completion || 0) + 10 >= 100 ? 'Completed' : 'In Progress' })} className="text-[9px] font-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">+10%</button>
-                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: 100, status: 'Completed' })} className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Complete</button>
-                        <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'On Hold' })} className="text-[9px] font-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">Hold</button>
+                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: Math.min(100, (wo.completion || 0) + 10), status: (wo.completion || 0) + 10 >= 100 ? 'Completed' : 'In Progress' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">+10%</button>
+                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: 100, status: 'Completed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Complete</button>
+                        <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'On Hold' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">Hold</button>
                       </>
                     )}
-                    {wo.status === 'On Hold' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="text-[9px] font-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Resume</button>}
-                    <button onClick={() => onDeleteWorkOrder(wo.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
+                    {wo.status === 'On Hold' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Resume</button>}
+                    <button onClick={() => onDeleteWorkOrder(wo.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
                   </div>
                 )}
               </div>
             ))}
-            {localWOs.length === 0 && <div className="text-center text-xs text-slate-400 py-10 bg-white border border-slate-200 rounded-xl">No work orders yet. Click "New Work Order" to get started.</div>}
+            {localWOs.length === 0 && <div className="text-center fs-xs text-slate-400 py-10 bg-white border border-slate-200 rounded-xl">No work orders yet. Click "New Work Order" to get started.</div>}
           </div>
         </div>
       )}
@@ -186,31 +186,31 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Bill of Materials{activeBomProduct ? ` — ${activeBomProduct}` : ''}</h3>
-              <span className="table-cell-mono font-bold text-slate-900">Total Cost: ${bomTotal.toFixed(2)}</span>
+              <span className="table-cell-mono fw-bold text-slate-900">Total Cost: ${bomTotal.toFixed(2)}</span>
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: '#' }, { label: 'Component' }, { label: 'Product' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Unit Cost', right: true }, { label: 'Line Total', right: true }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
               <tbody className="divide-y divide-slate-100">
                 {filteredBOM.map((b, i) => (
                   <tr key={b.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => bomModal.open(b)}>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{i + 1}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{b.part}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{b.product}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700">{b.qty}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{b.unit}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700 text-right">${(b.cost || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${((b.qty || 0) * (b.cost || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{i + 1}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{b.part}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{b.product}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700">{b.qty}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{b.unit}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">${(b.cost || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${((b.qty || 0) * (b.cost || 0)).toFixed(2)}</td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => onDeleteBOMItem(b.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                        <button onClick={() => onDeleteBOMItem(b.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                       </td>
                     )}
                   </tr>
                 ))}
                 {filteredBOM.length > 0 && (
                   <tr className="bg-slate-50 border-t-2 border-slate-200">
-                    <td colSpan={isAdmin ? 7 : 6} className="px-4 py-3 table-cell font-bold text-slate-700 text-right">Total Material Cost</td>
-                    <td className="px-4 py-3 table-cell-mono font-bold text-slate-900 text-right">${bomTotal.toFixed(2)}</td>
+                    <td colSpan={isAdmin ? 7 : 6} className="px-4 py-3 table-cell fw-bold text-slate-700 text-right">Total Material Cost</td>
+                    <td className="px-4 py-3 table-cell-mono fw-bold text-slate-900 text-right">${bomTotal.toFixed(2)}</td>
                   </tr>
                 )}
                 {filteredBOM.length === 0 && <EmptyRow cols={isAdmin ? 8 : 7} message="No BOM items found." />}
@@ -240,15 +240,15 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                   <Badge label={q.result} variant={q.result === 'Passed' ? 'success' : q.result === 'Failed' ? 'danger' : 'warning'} />
                   {isAdmin && (
                     <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Passed' })} className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Pass</button>}
-                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Failed' })} className="text-[9px] font-bold px-2 py-1 rounded bg-rose-500 text-white hover:bg-rose-600 cursor-pointer">Fail</button>}
-                      <button onClick={() => onDeleteQualityCheck(q.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Passed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Pass</button>}
+                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Failed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-rose-500 text-white hover:bg-rose-600 cursor-pointer">Fail</button>}
+                      <button onClick={() => onDeleteQualityCheck(q.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                     </div>
                   )}
                 </div>
               </div>
             ))}
-            {localQC.length === 0 && <div className="text-center text-xs text-slate-400 py-10 bg-white border border-slate-200 rounded-xl">No quality checks logged yet.</div>}
+            {localQC.length === 0 && <div className="text-center fs-xs text-slate-400 py-10 bg-white border border-slate-200 rounded-xl">No quality checks logged yet.</div>}
           </div>
         </div>
       )}
@@ -261,14 +261,14 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
-                    <i className="bi bi-gear text-white text-xs"></i>
+                    <i className="bi bi-gear text-white fs-xs"></i>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">New Work Order</h3>
+                  <h3 className="fs-sm fw-bold text-slate-900">New Work Order</h3>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Initiate a new production run or assembly job.</p>
               </div>
               <button type="button" onClick={() => { setShowWOModal(false); setSelectedWoInvId(''); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x text-xl"></i>
+                <i className="bi bi-x fs-xl"></i>
               </button>
             </div>
 
@@ -291,12 +291,12 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => { setShowWOModal(false); setSelectedWoInvId(''); }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => { setShowWOModal(false); setSelectedWoInvId(''); }} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
               <button type="button" onClick={() => {
                 if (!woProduct.trim()) return;
                 onCreateWorkOrder({ product: woProduct, qty: Number(woQty), line: woLine, dueDate: woDue });
                 setShowWOModal(false); setSelectedWoInvId('');
-              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Work Order</button>
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Work Order</button>
             </div>
           </div>
         </div>
@@ -308,14 +308,14 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <i className="bi bi-boxes text-blue-600 text-xs"></i>
+                    <i className="bi bi-boxes text-blue-600 fs-xs"></i>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">Add BOM Item</h3>
+                  <h3 className="fs-sm fw-bold text-slate-900">Add BOM Item</h3>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Add a component or raw material to this product bill of materials.</p>
               </div>
               <button type="button" onClick={() => { setShowBOMModal(false); setSelectedBomProductInvId(''); setSelectedBomPartInvId(''); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x text-xl"></i>
+                <i className="bi bi-x fs-xl"></i>
               </button>
             </div>
 
@@ -349,12 +349,12 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => { setShowBOMModal(false); setSelectedBomProductInvId(''); setSelectedBomPartInvId(''); }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => { setShowBOMModal(false); setSelectedBomProductInvId(''); setSelectedBomPartInvId(''); }} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
               <button type="button" onClick={() => {
                 if (!bomProduct.trim() || !bomPart.trim()) return;
                 onCreateBOMItem({ product: bomProduct, part: bomPart, qty: Number(bomQty), unit: bomUnit, cost: Number(bomCost) });
                 setShowBOMModal(false); setSelectedBomProductInvId(''); setSelectedBomPartInvId('');
-              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Add Item</button>
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Add Item</button>
             </div>
           </div>
         </div>
@@ -366,14 +366,14 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                    <i className="bi bi-clipboard-check text-emerald-600 text-xs"></i>
+                    <i className="bi bi-clipboard-check text-emerald-600 fs-xs"></i>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">Log Quality Check</h3>
+                  <h3 className="fs-sm fw-bold text-slate-900">Log Quality Check</h3>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Perform a quality inspection on manufactured goods.</p>
               </div>
               <button type="button" onClick={() => setShowQCModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x text-xl"></i>
+                <i className="bi bi-x fs-xl"></i>
               </button>
             </div>
 
@@ -387,12 +387,12 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => setShowQCModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => setShowQCModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
               <button type="button" onClick={() => {
                 if (!qcCheck.trim()) return;
                 onCreateQualityCheck({ check: qcCheck, result: qcResult, inspector: qcInspector, notes: qcNotes });
                 setShowQCModal(false);
-              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Log Check</button>
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Log Check</button>
             </div>
           </div>
         </div>
@@ -409,7 +409,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Completion', value: `${woModal.selected.completion}%` },
               { label: 'Due Date', value: woModal.selected.dueDate || '—' },
             ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
+              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value fw-semibold text-slate-900">{f.value}</div></div>
             ))}
           </div>
         </ViewModal>
@@ -425,7 +425,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Unit Cost', value: `$${(bomModal.selected.cost || 0).toFixed(2)}` },
               { label: 'Line Total', value: `$${((bomModal.selected.qty || 0) * (bomModal.selected.cost || 0)).toFixed(2)}` },
             ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
+              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value fw-semibold text-slate-900">{f.value}</div></div>
             ))}
           </div>
         </ViewModal>
@@ -440,7 +440,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Date', value: qcModal.selected.date },
               { label: 'Notes', value: qcModal.selected.notes || '—' },
             ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
+              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value fw-semibold text-slate-900">{f.value}</div></div>
             ))}
           </div>
         </ViewModal>

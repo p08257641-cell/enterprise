@@ -40,6 +40,11 @@ export const HRView: React.FC<ModuleViewsProps> = (props) => {
       onApproveExitRequest={onApproveExitRequest}
       onRejectExitRequest={onRejectExitRequest}
       onUpdateCompanySettings={onUpdateCompanySettings}
+      payrollTaxConfig={props.payrollTaxConfig}
+      bankAccountUpdates={props.bankAccountUpdates}
+      onRequestBankAccountUpdate={props.onRequestBankAccountUpdate}
+      onApproveBankAccountUpdate={props.onApproveBankAccountUpdate}
+      onRejectBankAccountUpdate={props.onRejectBankAccountUpdate}
     />
   );
 };

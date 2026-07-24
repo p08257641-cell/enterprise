@@ -119,7 +119,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           { id: 'time' as const, label: 'Time Logs', viewId: 'proj-time' },
           { id: 'resources' as const, label: 'Resources', viewId: 'proj-resources' },
         ].map(t => (
-          <button key={t.id} onClick={() => { setProjTab(t.id); onNavigateView(t.viewId); }} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${projTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => { setProjTab(t.id); onNavigateView(t.viewId); }} className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${projTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
         ))}
       </div>
 
@@ -138,9 +138,9 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                   {isCollapsed ? (
                     <div className="flex flex-col items-center gap-2 h-full">
                       <button onClick={() => setCollapsedCols(prev => { const next = new Set(prev); next.delete(col); return next; })} className="text-slate-400 hover:text-slate-600 cursor-pointer transition-colors" title={`Expand ${col}`}>
-                        <i className="bi bi-chevron-right text-xs"></i>
+                        <i className="bi bi-chevron-right fs-xs"></i>
                       </button>
-                      <span className="text-[10px] font-bold text-slate-600 [writing-mode:vertical-lr] tracking-wider uppercase">{col}</span>
+                      <span className="text-[10px] fw-bold text-slate-600 [writing-mode:vertical-lr] tracking-wider uppercase">{col}</span>
                       <span className="text-[10px] font-sans tabular-nums bg-white border border-slate-200 px-1 py-0.5 rounded text-slate-400">{colTasks.length}</span>
                     </div>
                   ) : (
@@ -162,15 +162,15 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                             onDragEnd={onDragEnd}
                             onClick={() => taskModal.open(task)}
                             className={`bg-white border rounded-lg p-3 shadow-xs transition-all ${draggedTaskId === task.id ? 'opacity-40 scale-95 border-dashed' : 'cursor-grab hover:border-slate-300 hover:shadow-sm active:cursor-grabbing'} border-slate-200`}>
-                            <div className="text-xs font-semibold text-slate-900 mb-2 leading-tight">{task.title}</div>
+                            <div className="fs-xs fw-semibold text-slate-900 mb-2 leading-tight">{task.title}</div>
                             <div className="flex items-center justify-between">
-                              <span className={`data-value-small font-bold border px-1.5 py-0.5 rounded ${priorityColor(task.priority)}`}>{task.priority}</span>
+                              <span className={`data-value-small fw-bold border px-1.5 py-0.5 rounded ${priorityColor(task.priority)}`}>{task.priority}</span>
                               <span className="text-[10px] text-slate-400 font-sans tabular-nums">{task.due || '—'}</span>
                             </div>
                             <div className="text-[10px] text-slate-400 mt-1.5">{task.assigneeName || 'Unassigned'}</div>
                             {isAdmin && (
                               <div className="flex justify-end mt-2 pt-2 border-t border-slate-100">
-                                <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Delete</button>
+                                <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Delete</button>
                               </div>
                             )}
                           </div>
@@ -207,13 +207,13 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               <div className="text-[10px] text-slate-400 mt-1">{m.completion}% complete</div>
               {isAdmin && (
                 <div className="flex gap-1 mt-2 pt-2 border-t border-slate-100">
-                  {m.completion < 100 && <button onClick={(e) => { e.stopPropagation(); onUpdateProjectMilestone(m.id, { completion: Math.min(100, m.completion + 10), status: m.completion + 10 >= 100 ? 'Completed' : 'In Progress' }); }} className="text-[9px] font-semibold px-2 py-1 rounded bg-slate-900 text-white hover:bg-slate-800 cursor-pointer">+10%</button>}
-                  <button onClick={(e) => { e.stopPropagation(); onDeleteProjectMilestone(m.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
+                  {m.completion < 100 && <button onClick={(e) => { e.stopPropagation(); onUpdateProjectMilestone(m.id, { completion: Math.min(100, m.completion + 10), status: m.completion + 10 >= 100 ? 'Completed' : 'In Progress' }); }} className="text-[9px] fw-semibold px-2 py-1 rounded bg-slate-900 text-white hover:bg-slate-800 cursor-pointer">+10%</button>}
+                  <button onClick={(e) => { e.stopPropagation(); onDeleteProjectMilestone(m.id); }} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
                 </div>
               )}
             </div>
           ))}
-          {localMilestones.length === 0 && <div className="text-center text-xs text-slate-400 py-8">No milestones yet.</div>}
+          {localMilestones.length === 0 && <div className="text-center fs-xs text-slate-400 py-8">No milestones yet.</div>}
         </div>
       )}
 
@@ -234,10 +234,10 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                   const billable = [true, true, false, true, true, true, false, true][i];
                   return (
                     <tr key={task.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => timeModal.open({ ...task, hours, billable })}>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{task.assigneeName || 'Unassigned'}</td>
-                      <td className="px-4 py-3 text-xs text-slate-600 max-w-[180px] truncate">{task.title}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{task.due || '—'}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">{hours}h</td>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{task.assigneeName || 'Unassigned'}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-600 max-w-[180px] truncate">{task.title}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{task.due || '—'}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{hours}h</td>
                       <td className="px-4 py-3"><Badge label={billable ? 'Billable' : 'Internal'} variant={billable ? 'success' : 'default'} /></td>
                       <td className="px-4 py-3"><Badge label={task.status} variant={task.status === 'Done' ? 'success' : 'info'} /></td>
                     </tr>
@@ -267,16 +267,16 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                   const empTaskCount = localTasks.filter(t => t.assignee === emp.id || t.assigneeName?.includes(emp.firstName)).length;
                   return (
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => resourceModal.open({ ...emp, util: u, taskCount: empTaskCount })}>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{emp.department}</td>
-                      <td className="px-4 py-3 text-xs text-slate-600">{emp.designation}</td>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-500">{emp.department}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-600">{emp.designation}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${u >= 90 ? 'bg-rose-400' : u >= 70 ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${u}%` }} /></div>
                           <span className="text-[10px] font-sans tabular-nums text-slate-600">{u}%</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700 text-right">{empTaskCount}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{empTaskCount}</td>
                     </tr>
                   );
                 })}
@@ -290,9 +290,9 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
         <ViewModal title={timeModal.selected.title} subtitle={`${timeModal.selected.assigneeName || 'Unassigned'} — Time Log`} onClose={timeModal.close}>
           <div className="space-y-5">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center"><i className="bi bi-clock-fill text-white text-sm"></i></div>
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center"><i className="bi bi-clock-fill text-white fs-sm"></i></div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-slate-900">{timeModal.selected.title}</div>
+                <div className="fs-xs fw-bold text-slate-900">{timeModal.selected.title}</div>
                 <div className="text-[10px] text-slate-500">{timeModal.selected.assigneeName || 'Unassigned'}</div>
               </div>
               <Badge label={timeModal.selected.status} variant={timeModal.selected.status === 'Done' ? 'success' : 'info'} />
@@ -305,9 +305,9 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Due Date', value: timeModal.selected.due || '—', icon: 'bi bi-calendar3' },
               ].map(f => (
                 <div key={f.label} className="bg-white border border-slate-100 rounded-xl p-3 text-center">
-                  <i className={`${f.icon} text-slate-400 text-xs mb-1 block`}></i>
+                  <i className={`${f.icon} text-slate-400 fs-xs mb-1 block`}></i>
                   <div className="text-[10px] text-slate-500 mb-0.5">{f.label}</div>
-                  <div className="text-sm font-bold text-slate-900">{f.value}</div>
+                  <div className="fs-sm fw-bold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
@@ -319,9 +319,9 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
         <ViewModal title={`${resourceModal.selected.firstName} ${resourceModal.selected.lastName}`} subtitle={resourceModal.selected.designation} onClose={resourceModal.close}>
           <div className="space-y-5">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-white text-xs font-bold">{resourceModal.selected.firstName?.[0]}{resourceModal.selected.lastName?.[0]}</div>
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-white fs-xs fw-bold">{resourceModal.selected.firstName?.[0]}{resourceModal.selected.lastName?.[0]}</div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-slate-900">{resourceModal.selected.firstName} {resourceModal.selected.lastName}</div>
+                <div className="fs-xs fw-bold text-slate-900">{resourceModal.selected.firstName} {resourceModal.selected.lastName}</div>
                 <div className="text-[10px] text-slate-500">{resourceModal.selected.department} · {resourceModal.selected.designation}</div>
               </div>
               <Badge label={resourceModal.selected.status} variant={resourceModal.selected.status === 'Active' ? 'success' : 'default'} />
@@ -333,14 +333,14 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Utilisation', value: `${resourceModal.selected.util}%`, icon: 'bi bi-speedometer2' },
               ].map(f => (
                 <div key={f.label} className="bg-white border border-slate-100 rounded-xl p-3 text-center">
-                  <i className={`${f.icon} text-slate-400 text-xs mb-1 block`}></i>
+                  <i className={`${f.icon} text-slate-400 fs-xs mb-1 block`}></i>
                   <div className="text-[10px] text-slate-500 mb-0.5">{f.label}</div>
-                  <div className="text-sm font-bold text-slate-900">{f.value}</div>
+                  <div className="fs-sm fw-bold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
             <div>
-              <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Utilisation</span><span className="font-bold text-slate-900">{resourceModal.selected.util}%</span></div>
+              <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Utilisation</span><span className="fw-bold text-slate-900">{resourceModal.selected.util}%</span></div>
               <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${resourceModal.selected.util >= 90 ? 'bg-rose-400' : resourceModal.selected.util >= 70 ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${resourceModal.selected.util}%` }} /></div>
               <div className="flex justify-between text-[9px] text-slate-400 mt-1"><span>0%</span><span>100%</span></div>
             </div>
@@ -353,10 +353,10 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           <div className="space-y-5">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
               <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${taskModal.selected.status === 'Done' ? 'bg-emerald-500' : taskModal.selected.status === 'In Progress' ? 'bg-blue-500' : taskModal.selected.status === 'Review' ? 'bg-amber-500' : 'bg-slate-300'}`}>
-                <i className={`${taskModal.selected.status === 'Done' ? 'bi bi-check-lg' : taskModal.selected.status === 'In Progress' ? 'bi bi-arrow-repeat' : taskModal.selected.status === 'Review' ? 'bi bi-eye' : 'bi bi-circle'} text-white text-sm`}></i>
+                <i className={`${taskModal.selected.status === 'Done' ? 'bi bi-check-lg' : taskModal.selected.status === 'In Progress' ? 'bi bi-arrow-repeat' : taskModal.selected.status === 'Review' ? 'bi bi-eye' : 'bi bi-circle'} text-white fs-sm`}></i>
               </div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-slate-900">{taskModal.selected.title}</div>
+                <div className="fs-xs fw-bold text-slate-900">{taskModal.selected.title}</div>
                 <div className="text-[10px] text-slate-500">{taskModal.selected.assigneeName || 'Unassigned'}</div>
               </div>
               <Badge label={taskModal.selected.status} variant={taskModal.selected.status === 'Done' ? 'success' : taskModal.selected.status === 'In Progress' ? 'info' : taskModal.selected.status === 'Review' ? 'warning' : 'default'} />
@@ -370,14 +370,14 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               ].map(f => (
                 <div key={f.label} className={`border rounded-xl p-3 text-center ${f.color}`}>
                   <div className="text-[10px] opacity-60 mb-0.5">{f.label}</div>
-                  <div className="text-xs font-bold">{f.value}</div>
+                  <div className="fs-xs fw-bold">{f.value}</div>
                 </div>
               ))}
             </div>
             {taskModal.selected.description && (
               <div className="bg-white border border-slate-100 rounded-xl p-4">
                 <div className="text-[10px] text-slate-500 mb-1.5">Description</div>
-                <div className="text-xs text-slate-700 leading-relaxed">{taskModal.selected.description}</div>
+                <div className="fs-xs text-slate-700 leading-relaxed">{taskModal.selected.description}</div>
               </div>
             )}
           </div>
@@ -389,10 +389,10 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           <div className="space-y-5">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
               <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${msModal.selected.status === 'Completed' ? 'bg-emerald-500' : msModal.selected.status === 'Overdue' ? 'bg-rose-500' : msModal.selected.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-300'}`}>
-                <i className="bi bi-flag-fill text-white text-sm"></i>
+                <i className="bi bi-flag-fill text-white fs-sm"></i>
               </div>
               <div className="flex-1">
-                <div className="text-xs font-bold text-slate-900">{msModal.selected.name}</div>
+                <div className="fs-xs fw-bold text-slate-900">{msModal.selected.name}</div>
                 <div className="text-[10px] text-slate-500">Due: {msModal.selected.due || '—'}</div>
               </div>
               <Badge label={msModal.selected.status} variant={msModal.selected.status === 'Completed' ? 'success' : msModal.selected.status === 'Overdue' ? 'danger' : msModal.selected.status === 'In Progress' ? 'info' : 'default'} />
@@ -404,14 +404,14 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Created', value: msModal.selected.createdAt ? new Date(msModal.selected.createdAt).toLocaleDateString() : '—', icon: 'bi bi-calendar-plus' },
               ].map(f => (
                 <div key={f.label} className="bg-white border border-slate-100 rounded-xl p-3 text-center">
-                  <i className={`${f.icon} text-slate-400 text-xs mb-1 block`}></i>
+                  <i className={`${f.icon} text-slate-400 fs-xs mb-1 block`}></i>
                   <div className="text-[10px] text-slate-500 mb-0.5">{f.label}</div>
-                  <div className="text-sm font-bold text-slate-900">{f.value}</div>
+                  <div className="fs-sm fw-bold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
             <div>
-              <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Progress</span><span className="font-bold text-slate-900">{msModal.selected.completion}%</span></div>
+              <div className="flex justify-between text-[10px] mb-1.5"><span className="text-slate-500">Progress</span><span className="fw-bold text-slate-900">{msModal.selected.completion}%</span></div>
               <div className="h-3 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${msModal.selected.completion === 100 ? 'bg-emerald-500' : msModal.selected.status === 'Overdue' ? 'bg-rose-400' : 'bg-slate-800'}`} style={{ width: `${msModal.selected.completion}%` }} /></div>
               <div className="flex justify-between text-[9px] text-slate-400 mt-1"><span>0%</span><span>100%</span></div>
             </div>
@@ -428,7 +428,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               <div><Label>Assignee</Label><Select value={newTaskAssignee} onChange={e => setNewTaskAssignee(e.target.value)}><option value="">Unassigned</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
             </div>
             <div><Label>Due Date</Label><Input type="date" value={newTaskDue} onChange={e => setNewTaskDue(e.target.value)} /></div>
-            <div><Label>Description</Label><textarea value={newTaskDesc} onChange={e => setNewTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Optional description" /></div>
+            <div><Label>Description</Label><textarea value={newTaskDesc} onChange={e => setNewTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Optional description" /></div>
             <div className="flex gap-2 pt-2">
               <PrimaryBtn onClick={submitNewTask} disabled={!newTaskTitle.trim()}>Create Task</PrimaryBtn>
               <SecBtn onClick={() => setShowAddTask(false)}>Cancel</SecBtn>

@@ -163,6 +163,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'hr-orgchart', label: 'Org Chart', viewId: 'hr-orgchart', iconClass: 'bi bi-diagram-2' },
             { id: 'hr-exit', label: 'Exit Management', viewId: 'hr-exit', iconClass: 'bi bi-door-closed' },
             { id: 'hr-departments', label: 'Departments', viewId: 'hr-departments', iconClass: 'bi bi-diagram-3' },
+            { id: 'hr-bank-updates', label: 'Bank Account Updates', viewId: 'hr-bank-updates', iconClass: 'bi bi-bank' },
+            { id: 'hr-profile-updates', label: 'Profile Update Requests', viewId: 'hr-profile-updates', iconClass: 'bi bi-person-gear' },
           ]
         },
         {
@@ -253,6 +255,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: 'Communication', label: 'Communication', iconClass: 'bi bi-megaphone', viewId: 'communication',
         },
         {
+          id: 'Voting', label: 'Voting & Polls', iconClass: 'bi bi-check2-square', viewId: 'voting',
+        },
+        {
+          id: 'Gallery', label: 'Image Gallery', iconClass: 'bi bi-images', viewId: 'gallery',
+        },
+        {
           id: 'Intelligence', label: 'Intelligence & Analytics', iconClass: 'bi bi-cpu', viewId: 'reports',
           subMenus: [
             { id: 'wf-builder', label: 'Workflow & Automation', viewId: 'workflow', iconClass: 'bi bi-diagram-3', moduleId: 'Workflow & Automation' },
@@ -303,12 +311,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-6">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{userRole === 'Super Admin' ? '🌐' : selectedCompany.logo}</span>
+            <span className="fs-2xl">{userRole === 'Super Admin' ? '🌐' : selectedCompany.logo}</span>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-900 tracking-tight leading-tight truncate w-32">
+              <span className="fs-sm fw-bold text-slate-900 tracking-tight leading-tight truncate w-32">
                 {userRole === 'Super Admin' ? 'Platform Admin' : selectedCompany.name}
               </span>
-              <span className="text-xs font-medium text-slate-400">
+              <span className="fs-xs fw-medium text-slate-400">
                 {userRole === 'Super Admin' ? 'erp-platform.com' : selectedCompany.domain}
               </span>
             </div>
@@ -318,7 +326,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={onClose} 
               className="lg:hidden p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
-              <i className="bi bi-x-lg text-sm"></i>
+              <i className="bi bi-x-lg fs-sm"></i>
             </button>
           )}
         </div>
@@ -333,7 +341,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           return (
             <div key={group.title}>
-              <div className="px-2 pb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="px-2 pb-2 text-[11px] fw-bold uppercase tracking-widest text-slate-400">
                 {group.title}
               </div>
               <nav className="space-y-0.5">
@@ -351,7 +359,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 const isTopActive = activeView === mod.viewId && !isSubViewActive(mod);
 
                 // Filter submenus based on role permissions
-                let accessibleSubMenus = hasSubMenus 
+                const accessibleSubMenus = hasSubMenus 
                   ? mod.subMenus!.filter(sub => hasSubmenuAccess(sub.id))
                   : [];
 
@@ -361,7 +369,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
 
                 // For non-Super Admin, hide module if not installed
-                if (!isSuperAdmin && !isInstalled) {
+                // Employee always sees HR module for self-service leave/attendance
+                if (!isSuperAdmin && !isInstalled && !(isEmployee && mod.id === 'HR')) {
                   return null;
                 }
 
@@ -378,7 +387,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onSelectView(mod.viewId);
                         }
                       }}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 fs-sm fw-semibold transition-all cursor-pointer ${
                         isTopActive
                           ? 'bg-slate-900 text-white shadow-xs'
                           : expanded
@@ -387,13 +396,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        <i className={`${mod.iconClass} text-sm`}></i>
+                        <i className={`${mod.iconClass} fs-sm`}></i>
                         {mod.label}
                       </span>
                       <span className="flex items-center gap-1.5">
                         {hasSubMenus && accessibleSubMenus.length > 0 && (
                           <i
-                            className={`bi bi-chevron-down text-xs transition-transform duration-200 ${
+                            className={`bi bi-chevron-down fs-xs transition-transform duration-200 ${
                               expanded ? 'rotate-180' : ''
                             }`}
                           ></i>
@@ -410,7 +419,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <button
                             key={sub.id}
                             onClick={() => onSelectView(sub.viewId)}
-                            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 fs-xs fw-medium transition-all cursor-pointer ${
                               activeView === sub.viewId ||
                               (sub.id === 'proj-kanban' && (activeView === 'project' || activeView.startsWith('proj-'))) ||
                               (sub.id === 'proc-pos' && (activeView === 'procurement' || activeView.startsWith('proc-'))) ||
@@ -421,7 +430,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                             }`}
                           >
-                            <i className={`${sub.iconClass} text-sm`}></i>
+                            <i className={`${sub.iconClass} fs-sm`}></i>
                             {isEmployee && employeeSubmenuLabelOverrides[sub.id] ? employeeSubmenuLabelOverrides[sub.id] : sub.label}
                           </button>
                         ))}
@@ -438,17 +447,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* System Admin Panel */}
         {(userRole === 'Company Admin' || userRole === 'CEO' || userRole === 'Super Admin') && (
           <div className="pt-2 border-t border-slate-100">
-            <div className="px-2 pb-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <div className="px-2 pb-2 fs-xs fw-bold uppercase tracking-widest text-slate-400">
               System
             </div>
             <nav className="space-y-1">
               <button
                 onClick={() => onSelectView('apikeys')}
-                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-all cursor-pointer ${
+                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 fs-sm fw-semibold transition-all cursor-pointer ${
                   activeView === 'apikeys' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <i className="bi bi-gear text-sm"></i>
+                <i className="bi bi-gear fs-sm"></i>
                 API Settings & Keys
               </button>
             </nav>

@@ -10,14 +10,15 @@ import {
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
-  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone,
-  Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest
+  POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone,
+  Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest
 } from '../../types';
 
 export interface ModuleViewsProps {
   activeView: string;
   selectedCompany: Company;
   selectedUser: User;
+  users: User[];
   employees: Employee[];
   departments: Department[];
   branches: Branch[];
@@ -109,6 +110,7 @@ export interface ModuleViewsProps {
   onPayBill: (billId: string, amount: number, paymentMethod: string, bankAccountId: string) => void;
   onReceiveCustomerPayment: (payment: any) => void;
   onCreateBankAccount: (ba: any) => void;
+  onUpdateBankAccount: (id: string, updates: Partial<import('../../types').BankAccount>) => void;
   onReconcileBank: (rec: any) => void;
   onCreateFixedAsset: (asset: any) => void;
   onDisposeAsset: (assetId: string, disposalPrice: number) => void;
@@ -150,6 +152,9 @@ export interface ModuleViewsProps {
   // Payroll tax / deduction configuration (DB-backed)
   payrollTaxConfig?: PayrollTaxConfig | null;
   onUpdatePayrollTaxConfig?: (companyId: string, cfg: Partial<PayrollTaxConfig>) => void;
+  // Attendance settings (DB-backed)
+  attendanceSettings?: AttendanceSettings | null;
+  onUpdateAttendanceSettings?: (companyId: string, cfg: Partial<AttendanceSettings>) => void;
   // Super Admin plan assignment
   tenants: Company[];
   onAssignPlan: (companyId: string, moduleIds: string[], billingPlan: Company['billingPlan']) => void;
@@ -198,6 +203,14 @@ export interface ModuleViewsProps {
   // Knowledge Base
   kbArticles: KBArticle[];
   onAddKbArticle: (article: Omit<KBArticle, 'id' | 'views' | 'createdAt'>) => void;
+  bankAccountUpdates?: import('../../types').BankAccountUpdateRequest[];
+  onRequestBankAccountUpdate?: (input: { companyId: string; employeeId: string; employeeName: string; bankName: string; accountName: string; accountNumber: string; sortCode?: string; routingNumber?: string }) => void;
+  onApproveBankAccountUpdate?: (id: string, employeeId: string, newBankAccount: string, approverName: string) => void;
+  onRejectBankAccountUpdate?: (id: string, processedBy: string) => void;
+  profileUpdateRequests?: import('../../types').ProfileUpdateRequest[];
+  onSubmitProfileUpdate?: (input: { companyId: string; employeeId: string; employeeName: string; department: string; field: string; label: string; currentValue: string; newValue: string }) => void;
+  onApproveProfileUpdate?: (id: string) => void;
+  onRejectProfileUpdate?: (id: string, reason?: string) => void;
   // LMS Courses
   lmsCourses: LMSCourse[];
   onAddLmsCourse: (course: Omit<LMSCourse, 'id' | 'enrolled' | 'completion' | 'createdAt'>) => void;
@@ -207,6 +220,20 @@ export interface ModuleViewsProps {
   // Email templates
   emailTemplates: EmailTemplate[];
   onAddEmailTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt'>) => void;
+  // Team chat
+  chatMessages: any[];
+  onSendChatMessage: (message: { companyId: string; threadId: string; senderId: string; senderName: string; message: string }) => void;
+  // Voting / Polls
+  polls: import('../../types').Poll[];
+  pollOptions: import('../../types').PollOption[];
+  pollVotes: import('../../types').PollVote[];
+  onCreatePoll: (poll: { companyId: string; title: string; description: string; category: string; createdBy: string; createdByName: string; anonymous: boolean; endDate: string; options: { label: string; nomineeId?: string; nomineeName?: string }[] }) => void;
+  onClosePoll: (pollId: string) => void;
+  onVotePoll: (pollId: string, optionId: string, voterId: string, voterName: string) => void;
+  // Company Image Gallery
+  companyImages: import('../../types').CompanyImage[];
+  onUploadCompanyImage: (image: { companyId: string; title: string; description: string; category: string; imageData: string; uploadedBy: string; uploadedByName: string }) => void;
+  onDeleteCompanyImage: (imageId: string) => void;
   // Project tasks & milestones
   projectTasks: ProjectTask[];
   projectMilestones: ProjectMilestone[];
@@ -248,7 +275,7 @@ export interface ModuleViewsProps {
   onDeleteMaintenanceTask: (id: string) => void;
   // Documents
   managedDocuments: ManagedDocument[];
-  onCreateDocument: (data: { name: string; type: string; size?: string }) => void;
+  onCreateDocument: (data: { name: string; type: string; size?: string; visibility?: string; sharedWith?: string[] }) => void;
   onUpdateDocument: (id: string, values: any) => void;
   onDeleteDocument: (id: string) => void;
   // Exit Requests
@@ -256,11 +283,12 @@ export interface ModuleViewsProps {
   onSubmitExitRequest: (input: { companyId: string; employeeId: string; employeeName: string; department: string; exitType: string; lastWorkingDay: string; reason: string }) => void;
   onApproveExitRequest: (id: string, status: string, approverName: string) => void;
   onRejectExitRequest: (id: string, rejectedBy: string) => void;
+  // Bank Account Updates
   onUpdateCompanySettings: (companyId: string, updates: Record<string, any>) => void;
 }
 
-export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: {
-  title: string; subtitle?: string; onClose: () => void; size?: 'sm' | 'md' | 'lg' | '2xl' | '3xl'; children: React.ReactNode;
+export const ViewModal = ({ title, subtitle, onClose, size = '2xl', actions, children }: {
+  title: string; subtitle?: string; onClose: () => void; size?: 'sm' | 'md' | 'lg' | '2xl' | '3xl'; actions?: React.ReactNode; children: React.ReactNode;
 }) => {
   const sizeMap = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', '2xl': 'max-w-2xl', '3xl': 'max-w-3xl' };
   return (
@@ -268,10 +296,13 @@ export const ViewModal = ({ title, subtitle, onClose, size = '2xl', children }: 
       <div className={`w-full ${sizeMap[size]} rounded-xl border border-slate-200 bg-white shadow-2xl max-h-[90vh] flex flex-col`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+            <h2 className="fs-sm fw-semibold text-slate-900">{title}</h2>
+            {subtitle && <p className="fs-xs text-slate-500 mt-0.5">{subtitle}</p>}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x-lg text-lg"></i></button>
+          <div className="flex items-center gap-3">
+            {actions && <div>{actions}</div>}
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x-lg fs-lg"></i></button>
+          </div>
         </div>
         <div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">{children}</div>
       </div>
@@ -292,8 +323,8 @@ export function formatModalValue(val: any): React.ReactNode {
   if (val === null || val === undefined || val === '') return <span className="text-slate-300">—</span>;
   if (typeof val === 'boolean') {
     return val
-      ? <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold"><i className="bi bi-check-circle-fill text-xs" />Yes</span>
-      : <span className="inline-flex items-center gap-1 text-slate-400 font-semibold"><i className="bi bi-dash-circle text-xs" />No</span>;
+      ? <span className="inline-flex items-center gap-1 text-emerald-600 fw-semibold"><i className="bi bi-check-circle-fill fs-xs" />Yes</span>
+      : <span className="inline-flex items-center gap-1 text-slate-400 fw-semibold"><i className="bi bi-dash-circle fs-xs" />No</span>;
   }
   if (typeof val === 'number') {
     if (Math.abs(val) >= 1000) return <span className="font-sans tabular-nums">${val.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>;
@@ -311,10 +342,10 @@ export function formatModalValue(val: any): React.ReactNode {
   return s;
 }
 
-export function RowModal<T extends Record<string, any>>({ row, fields, title, subtitle, onClose, size, icon, accentColor }: {
+export function RowModal<T extends Record<string, any>>({ row, fields, title, subtitle, onClose, size, icon, accentColor, actions }: {
   row: T; fields: { label: string; key: string; mono?: boolean; format?: (val: any, row: T) => React.ReactNode; section?: string; icon?: string; full?: boolean }[];
   title: (row: T) => string; subtitle?: (row: T) => string; onClose: () => void; size?: 'sm' | 'md' | 'lg' | '2xl' | '3xl';
-  icon?: string; accentColor?: string;
+  icon?: string; accentColor?: string; actions?: (row: T) => React.ReactNode;
 }) {
   if (!row) return null;
   const accent = accentColor || '#0f172a';
@@ -324,13 +355,13 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
       <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1">
         {f.icon && <i className={`${f.icon} text-[10px]`} />}{f.label}
       </div>
-      <div className={`data-value font-semibold text-slate-900 ${f.mono ? 'font-mono' : ''}`}>
+      <div className={`data-value fw-semibold text-slate-900 ${f.mono ? 'font-mono' : ''}`}>
         {f.format ? f.format(row[f.key], row) : formatModalValue(row[f.key])}
       </div>
     </div>
   );
   return (
-    <ViewModal title={title(row)} subtitle={subtitle?.(row)} onClose={onClose} size={size}>
+    <ViewModal title={title(row)} subtitle={subtitle?.(row)} onClose={onClose} size={size} actions={actions ? actions(row) : undefined}>
       <div
         className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1"
         style={{ background: `${accent}0d`, border: `1px solid ${accent}1f` }}
@@ -339,11 +370,11 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
           className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm"
           style={{ background: accent }}
         >
-          <i className={`${icon || 'bi bi-card-list'} text-lg`} />
+          <i className={`${icon || 'bi bi-card-list'} fs-lg`} />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-bold text-slate-900 truncate">{title(row)}</div>
-          {subtitle?.(row) && <div className="text-xs text-slate-500 truncate">{subtitle(row)}</div>}
+          <div className="fs-sm fw-bold text-slate-900 truncate">{title(row)}</div>
+          {subtitle?.(row) && <div className="fs-xs text-slate-500 truncate">{subtitle(row)}</div>}
         </div>
       </div>
       {sections.length === 1
@@ -365,8 +396,8 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
 export const PageHeader = ({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) => (
   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between pb-5 border-b border-slate-200 mb-6 gap-3">
     <div>
-      <h1 className="text-xl font-bold tracking-tight text-slate-900 page-title">{title}</h1>
-      <p className="text-sm text-slate-500 mt-0.5 page-subtitle">{subtitle}</p>
+      <h1 className="fs-xl fw-bold tracking-tight text-slate-900 page-title">{title}</h1>
+      <p className="fs-sm text-slate-500 mt-0.5 page-subtitle">{subtitle}</p>
     </div>
     {action && <div className="shrink-0">{action}</div>}
   </div>
@@ -379,12 +410,12 @@ export const StatCard = ({ label, value, sub, icon, accent = false, color = '' }
     <div className={`pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${accent ? 'bg-white/10' : 'bg-slate-200/60'}`} />
     <div className="flex items-center justify-between">
       <span className={`stat-label ${accent ? 'text-slate-300' : 'text-slate-500'}`}>{label}</span>
-      <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm ${accent ? 'bg-white/10 text-slate-200' : 'bg-slate-900/5 text-slate-700'}`}>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-xl fs-sm ${accent ? 'bg-white/10 text-slate-200' : 'bg-slate-900/5 text-slate-700'}`}>
         <i className={`${icon} ${color || ''}`}></i>
       </span>
     </div>
-    <div className={`text-3xl font-bold tracking-tight font-sans tabular-nums leading-none ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
-    {sub && <p className={`text-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
+    <div className={`fs-3xl fw-bold tracking-tight font-sans tabular-nums leading-none ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
+    {sub && <p className={`fs-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
   </div>
 );
 
@@ -400,13 +431,13 @@ export const Badge = ({ label, variant = 'default' }: { label: string; variant?:
   return <span className={`inline-flex items-center px-2 py-0.5 rounded badge border ${s[variant]}`}>{label}</span>;
 };
 
-export const Th = ({ children, right = false }: { children: React.ReactNode; right?: boolean; key?: React.Key }) => (
-  <th className={`px-4 py-3 section-title text-slate-400 ${right ? 'text-right' : ''}`}>{children}</th>
+export const Th = ({ children, right = false, colSpan }: { children: React.ReactNode; right?: boolean; colSpan?: number; key?: React.Key }) => (
+  <th colSpan={colSpan} className={`px-4 py-3 section-title text-slate-400 ${right ? 'text-right' : ''}`}>{children}</th>
 );
 
-export const TableHead = ({ cols }: { cols: { label: string; right?: boolean }[] }) => (
+export const TableHead = ({ cols }: { cols: { label: string; right?: boolean; colSpan?: number }[] }) => (
   <thead className="bg-slate-50/60 border-b border-slate-100">
-    <tr>{cols.map(c => <Th key={c.label} right={c.right}>{c.label}</Th>)}</tr>
+    <tr>{cols.map(c => <Th key={c.label} right={c.right} colSpan={c.colSpan}>{c.label}</Th>)}</tr>
   </thead>
 );
 
@@ -415,13 +446,13 @@ export const EmptyRow = ({ cols, message }: { cols: number; message: string }) =
 );
 
 export const PrimaryBtn = ({ onClick, icon, children, type = 'button', disabled }: { onClick?: () => void; icon?: string; children: React.ReactNode; type?: 'button' | 'submit' | 'reset'; disabled?: boolean }) => (
-  <button type={type} onClick={onClick} disabled={disabled} className={`flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold btn px-4 py-2 rounded-lg transition-all shadow-xs ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-    {icon && <i className={`${icon} text-xs`}></i>}{children}
+  <button type={type} onClick={onClick} disabled={disabled} className={`flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white fw-semibold btn px-4 py-2 rounded-lg transition-all shadow-xs ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+    {icon && <i className={`${icon} fs-xs`}></i>}{children}
   </button>
 );
 
 export const SecBtn = ({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) => (
-  <button onClick={onClick} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold btn px-4 py-2 rounded-lg transition-all cursor-pointer">
+  <button onClick={onClick} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold btn px-4 py-2 rounded-lg transition-all cursor-pointer">
     {children}
   </button>
 );

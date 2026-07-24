@@ -114,7 +114,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="data-value-small text-slate-500">{company.plan} · {company.users} users</div>
                   </div>
                   <div className="text-right">
-                    <div className="table-cell-mono font-bold text-slate-900">${company.mrr.toLocaleString()}/mo</div>
+                    <div className="table-cell-mono fw-bold text-slate-900">${company.mrr.toLocaleString()}/mo</div>
                     <Badge label={company.status} variant={company.status === 'Active' ? 'success' : 'danger'} />
                   </div>
                 </div>
@@ -383,8 +383,8 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             {/* Plan Builder */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 tracking-tight">Configured Plans</h2>
-                <p className="text-sm text-slate-500">Build a plan by selecting modules — the price is the sum of module list prices. Assign it to a tenant.</p>
+                <h2 className="fs-lg fw-bold text-slate-900 tracking-tight">Configured Plans</h2>
+                <p className="fs-sm text-slate-500">Build a plan by selecting modules — the price is the sum of module list prices. Assign it to a tenant.</p>
               </div>
               <PrimaryBtn icon="bi bi-plus-lg" onClick={openPlanModal}>Add Plan</PrimaryBtn>
             </div>
@@ -401,15 +401,15 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                     const price = planPriceForModules(t.activeModules);
                     return (
                       <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => billingModal.open({ ...t, monthlyPrice: planPriceForModules(t.activeModules) })}>
-                        <td className="px-5 py-3 text-xs font-semibold text-slate-900">{t.name}</td>
+                        <td className="px-5 py-3 fs-xs fw-semibold text-slate-900">{t.name}</td>
                         <td className="px-5 py-3">
                           <Badge
                             label={t.billingPlan}
                             variant={t.billingPlan === 'Enterprise' ? 'info' : t.billingPlan === 'Premium' ? 'success' : t.billingPlan === 'Trial' ? 'warning' : 'default'}
                           />
                         </td>
-                        <td className="px-5 py-3 text-xs font-sans tabular-nums text-slate-700">{t.activeModules.length}</td>
-                        <td className="px-5 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900">${price.toLocaleString()}</td>
+                        <td className="px-5 py-3 fs-xs font-sans tabular-nums text-slate-700">{t.activeModules.length}</td>
+                        <td className="px-5 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900">${price.toLocaleString()}</td>
                       </tr>
                     );
                   })}
@@ -422,24 +422,24 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
               className="rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white text-xs font-semibold border border-white/20">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white fs-xs fw-semibold border border-white/20">
                     <i className="bi bi-stars"></i> Enterprise Suite
                   </span>
                 </div>
-                <h2 className="text-xl font-bold text-white tracking-tight mb-1">One Platform. Four Suites. Infinite Possibilities.</h2>
-                <p className="text-sm text-slate-400">Mix and match modules across People, Finance, Commerce and Intelligence to build the exact ERP your business needs.</p>
+                <h2 className="fs-xl fw-bold text-white tracking-tight mb-1">One Platform. Four Suites. Infinite Possibilities.</h2>
+                <p className="fs-sm text-slate-400">Mix and match modules across People, Finance, Commerce and Intelligence to build the exact ERP your business needs.</p>
               </div>
               <div className="flex gap-3 flex-shrink-0">
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
-                  <div className="text-lg font-bold text-white tabular-nums">4</div>
+                  <div className="fs-lg fw-bold text-white tabular-nums">4</div>
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">Suites</div>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
-                  <div className="text-lg font-bold text-white tabular-nums">{totalModules}</div>
+                  <div className="fs-lg fw-bold text-white tabular-nums">{totalModules}</div>
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">Modules</div>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
-                  <div className="text-lg font-bold text-white tabular-nums">{platformCompanies.length}</div>
+                  <div className="fs-lg fw-bold text-white tabular-nums">{platformCompanies.length}</div>
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider">Tenants</div>
                 </div>
               </div>
@@ -452,14 +452,14 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                 <div className={`bg-gradient-to-r ${suite.headerGrad} px-6 py-5`}>
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-semibold uppercase tracking-widest border border-white/30 mb-2">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] fw-semibold uppercase tracking-widest border border-white/30 mb-2">
                         {suite.suiteTag}
                       </span>
-                      <h3 className="text-lg font-bold text-white tracking-tight">{suite.suiteName}</h3>
-                      <p className="text-sm text-white/70 mt-1 max-w-xl">{suite.suiteDesc}</p>
+                      <h3 className="fs-lg fw-bold text-white tracking-tight">{suite.suiteName}</h3>
+                      <p className="fs-sm text-white/70 mt-1 max-w-xl">{suite.suiteDesc}</p>
                     </div>
                     <div className="text-right flex-shrink-0 ml-4">
-                      <div className="text-2xl font-bold text-white tabular-nums">{suite.modules.length}</div>
+                      <div className="fs-2xl fw-bold text-white tabular-nums">{suite.modules.length}</div>
                       <div className="text-[10px] text-white/60 uppercase tracking-wider">Module{suite.modules.length > 1 ? 's' : ''}</div>
                     </div>
                   </div>
@@ -477,20 +477,20 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                       >
                         {/* Module Top */}
                         <div className="p-4 flex items-center gap-3">
-                          <div className={`h-10 w-10 rounded-xl ${suite.iconBg} text-white flex items-center justify-center text-base flex-shrink-0`}>
+                          <div className={`h-10 w-10 rounded-xl ${suite.iconBg} text-white flex items-center justify-center fs-base flex-shrink-0`}>
                             <i className={mod.icon}></i>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-slate-900 text-sm leading-tight">{mod.name}</div>
+                            <div className="fw-semibold text-slate-900 fs-sm leading-tight">{mod.name}</div>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border ${suite.badgeCls}`}>
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] fw-bold uppercase tracking-wide border ${suite.badgeCls}`}>
                                 {mod.tag}
                               </span>
                               <span className="text-[10px] text-slate-400 tabular-nums">{mod.tenants} tenants</span>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="text-sm font-bold text-slate-900 tabular-nums">{mod.price}</div>
+                            <div className="fs-sm fw-bold text-slate-900 tabular-nums">{mod.price}</div>
                             <div className="text-[9px] text-slate-400">per company</div>
                           </div>
                         </div>
@@ -503,10 +503,10 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="grid grid-cols-1 gap-1.5">
                             {mod.features.map((f) => (
                               <div key={f} className="flex items-start gap-2">
-                                <i className={`bi bi-check-lg mt-0.5 flex-shrink-0 text-xs font-bold`}
+                                <i className={`bi bi-check-lg mt-0.5 flex-shrink-0 fs-xs fw-bold`}
                                   style={{ color: suite.iconBg.replace('bg-', '').includes('violet') ? '#7c3aed' : suite.iconBg.includes('emerald') ? '#059669' : suite.iconBg.includes('amber') ? '#d97706' : '#2563eb' }}>
                                 </i>
-                                <span className="text-xs text-slate-600 leading-snug">{f}</span>
+                                <span className="fs-xs text-slate-600 leading-snug">{f}</span>
                               </div>
                             ))}
                           </div>
@@ -516,7 +516,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                         <div className="px-4 pb-4">
                           {mod.deps && (
                             <div className="flex items-center gap-1.5 mt-2 p-2 bg-slate-100 rounded-lg">
-                              <i className="bi bi-link-45deg text-slate-400 text-xs"></i>
+                              <i className="bi bi-link-45deg text-slate-400 fs-xs"></i>
                               <span className="text-[10px] text-slate-500">{mod.deps}</span>
                             </div>
                           )}
@@ -532,7 +532,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                                 ></div>
                               </div>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500 tabular-nums">{Math.round((mod.tenants / platformCompanies.length) * 100)}% deployed</span>
+                            <span className="text-[10px] fw-bold text-slate-500 tabular-nums">{Math.round((mod.tenants / platformCompanies.length) * 100)}% deployed</span>
                           </div>
                         </div>
                       </div>
@@ -546,8 +546,8 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-4 flex items-start gap-3">
               <i className="bi bi-info-circle text-slate-400 mt-0.5"></i>
               <div>
-                <div className="text-xs font-semibold text-slate-700 mb-0.5">Flexible Modular Pricing</div>
-                <p className="text-xs text-slate-500">Each suite module is independently licensable. Tenants can subscribe to individual modules or bundle full suites for a discounted rate. All modules share a unified data layer — no double entry, no silos.</p>
+                <div className="fs-xs fw-semibold text-slate-700 mb-0.5">Flexible Modular Pricing</div>
+                <p className="fs-xs text-slate-500">Each suite module is independently licensable. Tenants can subscribe to individual modules or bundle full suites for a discounted rate. All modules share a unified data layer — no double entry, no silos.</p>
               </div>
             </div>
 
@@ -555,8 +555,8 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
                 <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl max-h-[85vh] flex flex-col">
                   <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                      <i className="bi bi-box-seam text-slate-800 text-xs"></i> Add Subscription Plan
+                    <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                      <i className="bi bi-box-seam text-slate-800 fs-xs"></i> Add Subscription Plan
                     </h2>
                     <button onClick={() => setPlanModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                       <i className="bi bi-x-lg"></i>
@@ -590,7 +590,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                                     onClick={() => togglePlanModule(m.id)}
                                     className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left transition-all cursor-pointer ${checked ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'}`}
                                   >
-                                    <span className="text-xs font-medium">{m.name}</span>
+                                    <span className="fs-xs fw-medium">{m.name}</span>
                                     <span className={`text-[11px] font-sans tabular-nums ${checked ? 'text-slate-300' : 'text-slate-400'}`}>${m.price}</span>
                                   </button>
                                 );
@@ -614,7 +614,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
                     <div>
                       <div className="text-[10px] uppercase tracking-wider text-slate-400">Monthly Total</div>
-                      <div className="text-xl font-bold text-slate-900 font-sans tabular-nums">${planTotal.toLocaleString()}</div>
+                      <div className="fs-xl fw-bold text-slate-900 font-sans tabular-nums">${planTotal.toLocaleString()}</div>
                     </div>
                     <div className="flex gap-2">
                       <SecBtn onClick={() => setPlanModalOpen(false)}>Cancel</SecBtn>

@@ -48,7 +48,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
       <PageHeader title="Inventory & Stock Control" subtitle="Monitor stock levels, manage warehouses, process adjustments and set reorder alerts." />
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {invTabs.map(t => (
-          <button key={t.id} onClick={() => setInvTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${invTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => setInvTab(t.id)} className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${invTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
         ))}
       </div>
       {invTab !== 'transfers' && invTab !== 'valuation' && (
@@ -71,13 +71,13 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                 const isLow = item.stockLevel <= item.minStockLevel;
                 return (
                   <tr key={item.id} className={`hover:bg-slate-50/40 transition-colors cursor-pointer ${isLow ? 'bg-rose-50/20' : ''}`} onClick={() => stockModal.open(item)}>
-                    <td className="px-4 py-3 data-value-small font-sans tabular-nums font-bold text-slate-500">{item.sku}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{item.name}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{item.category}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{item.warehouse}</td>
-                    <td className={`px-4 py-3 text-xs font-sans tabular-nums font-bold text-right ${isLow ? 'text-rose-600' : 'text-slate-900'}`}>{item.stockLevel}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400 text-right">{item.minStockLevel}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700 text-right">${item.unitPrice.toFixed(2)}</td>
+                    <td className="px-4 py-3 data-value-small font-sans tabular-nums fw-bold text-slate-500">{item.sku}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{item.name}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{item.category}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{item.warehouse}</td>
+                    <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right ${isLow ? 'text-rose-600' : 'text-slate-900'}`}>{item.stockLevel}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400 text-right">{item.minStockLevel}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">${item.unitPrice.toFixed(2)}</td>
                     <td className="px-4 py-3"><Badge label={isLow ? 'Low Stock' : 'OK'} variant={isLow ? 'danger' : 'success'} /></td>
                   </tr>
                 );
@@ -111,10 +111,10 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             const val = items.reduce((s, i) => s + i.stockLevel * i.unitPrice, 0);
             return (
               <div key={wh} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-                <div className="flex items-center gap-2 mb-3"><i className="bi bi-building text-slate-400"></i><span className="text-sm font-bold text-slate-900">{wh}</span></div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">SKUs</div><div className="font-sans tabular-nums font-bold text-slate-900 mt-0.5">{items.length}</div></div>
-                  <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">Valuation</div><div className="font-sans tabular-nums font-bold text-slate-900 mt-0.5">${val.toLocaleString()}</div></div>
+                <div className="flex items-center gap-2 mb-3"><i className="bi bi-building text-slate-400"></i><span className="fs-sm fw-bold text-slate-900">{wh}</span></div>
+                <div className="grid grid-cols-2 gap-3 fs-xs">
+                  <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">SKUs</div><div className="font-sans tabular-nums fw-bold text-slate-900 mt-0.5">{items.length}</div></div>
+                  <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">Valuation</div><div className="font-sans tabular-nums fw-bold text-slate-900 mt-0.5">${val.toLocaleString()}</div></div>
                 </div>
               </div>
             );
@@ -138,11 +138,11 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {transfers.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => transferModal.open(t)}>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{t.id}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{t.item}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{t.from}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{t.to}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">{t.qty}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{t.id}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.item}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{t.from}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{t.to}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{t.qty}</td>
                     <td className="px-4 py-3"><Badge label={t.status} variant={t.status === 'Completed' ? 'success' : 'info'} /></td>
                   </tr>
                 ))}
@@ -158,14 +158,14 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <i className="bi bi-arrow-left-right text-blue-600 text-xs"></i>
+                    <i className="bi bi-arrow-left-right text-blue-600 fs-xs"></i>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">New Stock Transfer</h3>
+                  <h3 className="fs-sm fw-bold text-slate-900">New Stock Transfer</h3>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Transfer stock items between warehouse locations or stores.</p>
               </div>
               <button type="button" onClick={() => setShowTransferModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x text-xl"></i>
+                <i className="bi bi-x fs-xl"></i>
               </button>
             </div>
 
@@ -179,13 +179,13 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => setShowTransferModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => setShowTransferModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
               <button type="button" onClick={() => {
                 if (!trfItem) return void modalAlert('Select an item', { variant: 'warning' });
                 const item = localStock.find(i => i.id === trfItem);
                 setTransfers(prev => [{ id: `TRF-${1005 + prev.length}`, item: item?.name ?? trfItem, from: trfFrom, to: trfTo, qty: Number(trfQty) || 0, status: 'In Transit' }, ...prev]);
                 setShowTransferModal(false);
-              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Transfer</button>
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Transfer</button>
             </div>
           </div>
         </div>
@@ -205,11 +205,11 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                 {localStock.map(item => (
                   <tr key={item.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => stockModal.open(item)}>
                     <td className="px-4 py-3 data-value-small font-sans tabular-nums text-slate-500">{item.sku}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{item.name}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700 text-right">{item.stockLevel.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${item.unitPrice.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">${(item.stockLevel * item.unitPrice).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{item.warehouse}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{item.name}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{item.stockLevel.toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${item.unitPrice.toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${(item.stockLevel * item.unitPrice).toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{item.warehouse}</td>
                   </tr>
                 ))}
               </tbody>

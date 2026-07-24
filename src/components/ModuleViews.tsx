@@ -25,6 +25,8 @@ import { VisitorView } from './moduleViews/VisitorView';
 import { LMSView } from './moduleViews/LMSView';
 import { ComplianceView } from './moduleViews/ComplianceView';
 import { CommunicationView } from './moduleViews/CommunicationView';
+import { VotingView } from './moduleViews/VotingView';
+import { GalleryView } from './moduleViews/GalleryView';
 import { ReportsView } from './moduleViews/ReportsView';
 import { SuperAdminView } from './moduleViews/SuperAdminView';
 import { ApiKeysView } from './moduleViews/ApiKeysView';
@@ -52,11 +54,13 @@ export const ModuleViews: React.FC<ModuleViewsProps> = (props) => {
   if (activeView === 'lms' || activeView.startsWith('lms-')) return <LMSView {...props} />;
   if (activeView === 'compliance' || activeView.startsWith('comp-')) return <ComplianceView {...props} />;
   if (activeView === 'communication' || activeView.startsWith('comm-')) return <CommunicationView {...props} />;
+  if (activeView === 'voting' || activeView.startsWith('vote-')) return <VotingView {...props} />;
+  if (activeView === 'gallery') return <GalleryView {...props} />;
   if (activeView === 'reports' || activeView.startsWith('reports-')) return <ReportsView {...props} />;
   if (activeView === 'superadmin') return <SuperAdminView {...props} />;
   if (activeView === 'apikeys') return <ApiKeysView {...props} />;
 
   return (
-    <p className="text-sm text-slate-400">The view <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-xs">{activeView}</code> is not registered.</p>
+    <p className="fs-sm text-slate-400">The view <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded fs-xs">{activeView}</code> is not registered.</p>
   );
 };

@@ -7,12 +7,13 @@
  * Employees: self-service portal (own records, leave, attendance, OKRs)
  */
 
-import React, { useState } from 'react';
-import { ViewModal } from './moduleViews/shared';
+import React, { useState, useEffect } from 'react';
+import { ViewModal, TableHead, EmptyRow } from './moduleViews/shared';
 import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord, ExitRequest } from '../types';
 import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole } from '../permissions';
 import { downloadCSV } from '../utils/export';
 import { modalAlert, modalConfirm } from '../utils/modal';
+import { OrgChart } from './OrgChart';
 
 interface HRModuleProps {
   activeView: string;
@@ -46,6 +47,16 @@ interface HRModuleProps {
   onApproveExitRequest: (id: string, status: string, approverName: string) => void;
   onRejectExitRequest: (id: string, rejectedBy: string) => void;
   onUpdateCompanySettings: (companyId: string, updates: Record<string, any>) => void;
+  payrollTaxConfig?: import('../types').PayrollTaxConfig;
+  bankAccountUpdates?: import('../types').BankAccountUpdateRequest[];
+  onRequestBankAccountUpdate?: (input: { companyId: string; employeeId: string; employeeName: string; bankName: string; accountName: string; accountNumber: string; sortCode?: string; routingNumber?: string }) => void;
+  onApproveBankAccountUpdate?: (id: string, employeeId: string, newBankAccount: string, approverName: string) => void;
+  onRejectBankAccountUpdate?: (id: string, rejectedBy: string) => void;
+  profileUpdateRequests?: import('../types').ProfileUpdateRequest[];
+  onApproveProfileUpdate?: (id: string) => void;
+  onRejectProfileUpdate?: (id: string, reason?: string) => void;
+  attendanceSettings?: import('../types').AttendanceSettings | null;
+  onUpdateAttendanceSettings?: (companyId: string, cfg: Partial<import('../types').AttendanceSettings>) => void;
 }
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -63,7 +74,7 @@ const Badge = ({ label, variant = 'default' }: {
     default: 'bg-slate-50 text-slate-600 border-slate-200',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${s[variant]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] fw-semibold border ${s[variant]}`}>
       {label}
     </span>
   );
@@ -74,46 +85,46 @@ const StatCard = ({ label, value, sub, icon, accent = false, color = '' }: {
 }) => (
   <div className={`rounded-xl border p-5 flex flex-col gap-2 shadow-xs hover:shadow-sm transition-all ${accent ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'}`}>
     <div className="flex items-center justify-between">
-      <span className={`text-xs font-semibold uppercase tracking-wider ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
-      <i className={`${icon} text-sm ${accent ? 'text-slate-500' : 'text-slate-300'}`}></i>
+      <span className={`fs-xs fw-semibold uppercase tracking-wider ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
+      <i className={`${icon} fs-sm ${accent ? 'text-slate-500' : 'text-slate-300'}`}></i>
     </div>
-    <div className={`text-2xl font-bold tracking-tight tabular-nums ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
-    {sub && <p className={`text-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
+    <div className={`fs-2xl fw-bold tracking-tight tabular-nums ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
+    {sub && <p className={`fs-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
   </div>
 );
 
 const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) => (
   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 pb-4 border-b border-slate-100 gap-3">
     <div>
-      <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
-      {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
+      <h2 className="fs-xl fw-bold text-slate-900 tracking-tight">{title}</h2>
+      {subtitle && <p className="fs-sm text-slate-500 mt-0.5">{subtitle}</p>}
     </div>
     {action && <div className="shrink-0">{action}</div>}
   </div>
 );
 
 const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 ${props.className ?? ''}`} />
+  <input {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-sm text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 ${props.className ?? ''}`} />
 );
 
 const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => (
-  <select {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 ${props.className ?? ''}`} />
+  <select {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 ${props.className ?? ''}`} />
 );
 
 const Label = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-xs font-semibold text-slate-700 mb-1.5">{children}</label>
+  <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">{children}</label>
 );
 
 const PrimaryBtn = ({ onClick, icon, children, type = 'button' }: {
   onClick?: () => void; icon?: string; children: React.ReactNode; type?: 'button' | 'submit';
 }) => (
-  <button type={type} onClick={onClick} className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-all cursor-pointer shadow-xs">
-    {icon && <i className={`${icon} text-xs`}></i>}{children}
+  <button type={type} onClick={onClick} className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white fw-semibold fs-xs px-4 py-2 rounded-lg transition-all cursor-pointer shadow-xs">
+    {icon && <i className={`${icon} fs-xs`}></i>}{children}
   </button>
 );
 
 const SecBtn = ({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) => (
-  <button type="button" onClick={onClick} className="flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg transition-all cursor-pointer">
+  <button type="button" onClick={onClick} className="flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-4 py-2 rounded-lg transition-all cursor-pointer">
     {children}
   </button>
 );
@@ -131,9 +142,9 @@ const AVATAR_COLORS = [
 const Avatar = ({ first, last, index = 0, size = 'md' }: {
   first: string; last: string; index?: number; size?: 'sm' | 'md' | 'lg';
 }) => {
-  const sizeClass = size === 'sm' ? 'h-7 w-7 text-xs' : size === 'lg' ? 'h-12 w-12 text-base' : 'h-9 w-9 text-sm';
+  const sizeClass = size === 'sm' ? 'h-7 w-7 fs-xs' : size === 'lg' ? 'h-12 w-12 fs-base' : 'h-9 w-9 fs-sm';
   return (
-    <div className={`${sizeClass} rounded-full bg-gradient-to-br ${AVATAR_COLORS[index % AVATAR_COLORS.length]} flex items-center justify-center font-bold text-white shrink-0`}>
+    <div className={`${sizeClass} rounded-full bg-gradient-to-br ${AVATAR_COLORS[index % AVATAR_COLORS.length]} flex items-center justify-center fw-bold text-white shrink-0`}>
       {first[0]}{last[0]}
     </div>
   );
@@ -157,6 +168,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
   onAddEmployee, onApproveLeave, onRejectLeave, onAddLeave,
   onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onAddDepartment, onUpdateDepartment, onDeleteDepartment, onboardings, onAddOnboarding, onUpdateOnboarding, onDeleteOnboarding, onUpdateEmployee, onNavigateView,
   exitRequests, onSubmitExitRequest, onApproveExitRequest, onRejectExitRequest, onUpdateCompanySettings,
+  payrollTaxConfig, bankAccountUpdates, onRequestBankAccountUpdate, onApproveBankAccountUpdate, onRejectBankAccountUpdate,
+  profileUpdateRequests, onApproveProfileUpdate, onRejectProfileUpdate,
+  attendanceSettings, onUpdateAttendanceSettings
 }) => {
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isAdmin = isAdminRole(userRole);
@@ -173,16 +187,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const hasHRModule = selectedCompany.activeModules.includes('HR');
 
   // Advanced HR views require HR module subscription
-  const advancedHRViews = ['hr-attendance', 'hr-leave', 'hr-recruitment', 'hr-onboarding', 'hr-performance', 'hr-exit'];
+  // Employee self-service leave is always available regardless of HR module subscription
+  const advancedHRViews = ['hr-attendance', 'hr-recruitment', 'hr-onboarding', 'hr-performance', 'hr-exit'];
   if (!hasHRModule && advancedHRViews.includes(activeView)) {
     return (
       <div className="space-y-6">
         <SectionHeader title="HR Module Required" subtitle="This feature requires an HR module subscription." />
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-          <i className="bi bi-exclamation-triangle text-amber-500 text-3xl mb-3 block"></i>
-          <h3 className="text-sm font-semibold text-amber-800 mb-2">HR Module Not Available</h3>
-          <p className="text-xs text-amber-600 mb-4">Your company has not subscribed to the HR module. Contact your administrator to enable HR features.</p>
-          <p className="text-xs text-slate-500">Basic employee directory is available without HR subscription.</p>
+          <i className="bi bi-exclamation-triangle text-amber-500 fs-3xl mb-3 block"></i>
+          <h3 className="fs-sm fw-semibold text-amber-800 mb-2">HR Module Not Available</h3>
+          <p className="fs-xs text-amber-600 mb-4">Your company has not subscribed to the HR module. Contact your administrator to enable HR features.</p>
+          <p className="fs-xs text-slate-500">Basic employee directory is available without HR subscription.</p>
         </div>
       </div>
     );
@@ -209,6 +224,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [hrType, setHrType] = useState('Full-time');
   const [hrStartDate, setHrStartDate] = useState('');
   const [hireSuccess, setHireSuccess] = useState<string | null>(null);
+  const [hrTaxes, setHrTaxes] = useState<string[]>([]);
+  const [hrBenefits, setHrBenefits] = useState<string[]>([]);
+  const [hrBankName, setHrBankName] = useState('');
+  const [hrAccountName, setHrAccountName] = useState('');
+  const [hrAccountNumber, setHrAccountNumber] = useState('');
+  const [hrSortCode, setHrSortCode] = useState('');
 
   // Leave
   const [leaveType, setLeaveType] = useState('Annual Leave');
@@ -255,6 +276,40 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [terminateEmp, setTerminateEmp] = useState<Employee | null>(null);
   const [terminateReason, setTerminateReason] = useState('');
   const [terminateType, setTerminateType] = useState<'Termination' | 'End of Contract' | 'Layoff' | 'Misconduct'>('Termination');
+  // Attendance filters & settings
+  const [attDateFilter, setAttDateFilter] = useState(() => new Date().toISOString().split('T')[0]);
+  const [attStatusFilter, setAttStatusFilter] = useState<'All' | 'Present' | 'Late' | 'On Leave' | 'Absent'>('All');
+  const [showAttSettings, setShowAttSettings] = useState(false);
+  const [attSettings, setAttSettings] = useState({
+    workStartTime: '09:00',
+    graceMinutes: 10,
+    lateThresholdMinutes: 15,
+    penaltyType: 'warning' as 'warning' | 'deduction' | 'suspension' | 'custom',
+    deductionType: 'percentage' as 'percentage' | 'fixed',
+    deductionValue: 5,
+    maxWarnings: 3,
+    customPenalty: '',
+    escalateAfterWarnings: true,
+    departmentId: '' as string,
+  });
+
+  // Sync attendance settings from DB when loaded
+  useEffect(() => {
+    if (attendanceSettings) {
+      setAttSettings({
+        workStartTime: attendanceSettings.workStartTime ?? '09:00',
+        graceMinutes: attendanceSettings.graceMinutes ?? 10,
+        lateThresholdMinutes: attendanceSettings.lateThresholdMinutes ?? 15,
+        penaltyType: (attendanceSettings.penaltyType as any) ?? 'warning',
+        deductionType: (attendanceSettings.deductionType as any) ?? 'percentage',
+        deductionValue: attendanceSettings.deductionValue ?? 5,
+        maxWarnings: attendanceSettings.maxWarnings ?? 3,
+        customPenalty: attendanceSettings.customPenalty ?? '',
+        escalateAfterWarnings: attendanceSettings.escalateAfterWarnings ?? true,
+        departmentId: (attendanceSettings as any).departmentId ?? '',
+      });
+    }
+  }, [attendanceSettings]);
   const [editFirst, setEditFirst] = useState(''); const [editLast, setEditLast] = useState('');
   const [editDept, setEditDept] = useState(''); const [editDesignation, setEditDesignation] = useState(''); const [editBranch, setEditBranch] = useState(''); const [editSalary, setEditSalary] = useState('');
   const [showVacancyModal, setShowVacancyModal] = useState(false);
@@ -323,17 +378,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
             {/* Profile Header */}
             <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }} className="rounded-xl px-6 py-6 -mx-1">
               <div className="flex items-start gap-5">
-                <div className="h-16 w-16 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center text-2xl font-bold text-white shrink-0">
+                <div className="h-16 w-16 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center fs-2xl fw-bold text-white shrink-0">
                   {selectedEmp.firstName[0]}{selectedEmp.lastName[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-xl font-bold text-white tracking-tight">{selectedEmp.firstName} {selectedEmp.lastName}</h1>
-                  <p className="text-slate-400 mt-0.5 text-sm">{selectedEmp.designation} · {selectedEmp.department}</p>
+                  <h1 className="fs-xl fw-bold text-white tracking-tight">{selectedEmp.firstName} {selectedEmp.lastName}</h1>
+                  <p className="text-slate-400 mt-0.5 fs-sm">{selectedEmp.designation} · {selectedEmp.department}</p>
                   <div className="flex items-center gap-3 mt-3">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 fs-xs fw-semibold text-white">
                       <i className="bi bi-person-badge"></i> {selectedEmp.employeeNumber}
                     </span>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full fs-xs fw-semibold border ${
                       selectedEmp.status === 'Active' ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300' : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
                     }`}>
                       <span className="h-1.5 w-1.5 rounded-full bg-current mr-1.5 animate-pulse"></span>
@@ -343,8 +398,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 </div>
                 {isHRorAdmin && (
                   <div className="text-right shrink-0">
-                    <div className="text-2xl font-bold text-white tabular-nums">${(selectedEmp.salary || 0).toLocaleString()}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Monthly Gross</div>
+                    <div className="fs-2xl fw-bold text-white tabular-nums">${(selectedEmp.salary || 0).toLocaleString()}</div>
+                    <div className="fs-xs text-slate-400 mt-0.5">Monthly Gross</div>
                   </div>
                 )}
               </div>
@@ -359,8 +414,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 { icon: 'bi bi-diagram-3', label: selectedEmp.department },
               ].map((item) => (
                 <div key={item.label} className="bg-slate-50 rounded-lg px-3 py-2 flex items-center gap-2">
-                  <i className={`${item.icon} text-slate-400 text-sm`}></i>
-                  <span className="text-xs text-slate-700 truncate">{item.label}</span>
+                  <i className={`${item.icon} text-slate-400 fs-sm`}></i>
+                  <span className="fs-xs text-slate-700 truncate">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -381,14 +436,14 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       { label: 'Joined', value: selectedEmp.joiningDate, mono: true },
                     ].map(item => (
                       <div key={item.label} className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">{item.label}</span>
-                        <span className={`text-xs font-semibold text-slate-900 ${item.mono ? 'font-mono' : ''}`}>{item.value}</span>
+                        <span className="fs-xs text-slate-500">{item.label}</span>
+                        <span className={`fs-xs fw-semibold text-slate-900 ${item.mono ? 'font-mono' : ''}`}>{item.value}</span>
                       </div>
                     ))}
                     {isHRorAdmin && (
                       <div className="flex items-center justify-between pt-2 border-t border-slate-200 mt-2">
-                        <span className="text-xs text-slate-500">Monthly Salary</span>
-                        <span className="text-xs font-bold text-slate-900 font-mono">${(selectedEmp.salary || 0).toLocaleString()}</span>
+                        <span className="fs-xs text-slate-500">Monthly Salary</span>
+                        <span className="fs-xs fw-bold text-slate-900 font-mono">${(selectedEmp.salary || 0).toLocaleString()}</span>
                       </div>
                     )}
                   </div>
@@ -403,9 +458,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         { type: 'Casual Leave', used: 1, total: 5, color: 'bg-violet-500' },
                       ].map(lb => (
                         <div key={lb.type}>
-                          <div className="flex justify-between text-xs mb-1">
+                          <div className="flex justify-between fs-xs mb-1">
                             <span className="text-slate-600">{lb.type}</span>
-                            <span className="font-semibold text-slate-800 tabular-nums">{lb.total - lb.used} / {lb.total}</span>
+                            <span className="fw-semibold text-slate-800 tabular-nums">{lb.total - lb.used} / {lb.total}</span>
                           </div>
                           <ProgressBar value={(lb.used / lb.total) * 100} color={lb.color} />
                         </div>
@@ -429,7 +484,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           { label: 'Rate', value: '95.5%', color: 'text-blue-600', bg: 'bg-blue-100' },
                         ].map(s => (
                           <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
-                            <div className={`text-lg font-bold tabular-nums ${s.color}`}>{s.value}</div>
+                            <div className={`fs-lg fw-bold tabular-nums ${s.color}`}>{s.value}</div>
                             <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
                           </div>
                         ))}
@@ -445,12 +500,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         ].map((okr, i) => (
                           <div key={i}>
                             <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-xs font-medium text-slate-800">{okr.title}</span>
+                              <span className="fs-xs fw-medium text-slate-800">{okr.title}</span>
                               <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : 'warning'} />
                             </div>
                             <div className="flex items-center gap-3">
                               <div className="flex-1"><ProgressBar value={okr.progress} color={okr.progress >= 70 ? 'bg-emerald-500' : 'bg-amber-500'} /></div>
-                              <span className="text-xs font-bold text-slate-700 tabular-nums w-8 text-right">{okr.progress}%</span>
+                              <span className="fs-xs fw-bold text-slate-700 tabular-nums w-8 text-right">{okr.progress}%</span>
                             </div>
                           </div>
                         ))}
@@ -462,17 +517,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         <PrimaryBtn icon="bi bi-pencil" onClick={() => { setEditEmp(selectedEmp); setEditFirst(selectedEmp.firstName); setEditLast(selectedEmp.lastName); setEditDept(selectedEmp.department); setEditDesignation(selectedEmp.designation); setEditBranch(selectedEmp.branch); setEditSalary(String(selectedEmp.salary)); }}>Edit Employee</PrimaryBtn>
                         <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('payroll'); }}>View Payslips</SecBtn>
                         <SecBtn onClick={() => { setSelectedEmp(null); onNavigateView('comm-compose'); }}>Send Message</SecBtn>
-                        <button onClick={() => setTerminateEmp(selectedEmp)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 cursor-pointer transition-all shadow-xs"><i className="bi bi-x-octagon"></i>Terminate</button>
+                        <button onClick={() => setTerminateEmp(selectedEmp)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg fs-xs fw-semibold border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 cursor-pointer transition-all shadow-xs"><i className="bi bi-x-octagon"></i>Terminate</button>
                       </div>
                     )}
                   </>
                 ) : (
                   <div className="bg-slate-50 rounded-xl p-6 border border-slate-200/60 flex flex-col items-center justify-center text-center gap-3 h-full min-h-[250px]">
-                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-lg">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 fs-lg">
                       <i className="bi bi-shield-lock"></i>
                     </div>
-                    <h4 className="text-sm font-bold text-slate-800">Privacy Notice</h4>
-                    <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
+                    <h4 className="fs-sm fw-bold text-slate-800">Privacy Notice</h4>
+                    <p className="fs-xs text-slate-500 max-w-sm leading-relaxed">
                       Leave balances, attendance history, and performance OKRs of colleagues are confidential and only accessible by HR Managers, Administrators, or the employees themselves.
                     </p>
                   </div>
@@ -515,10 +570,10 @@ export const HRModule: React.FC<HRModuleProps> = ({
           <ViewModal title={`Terminate — ${terminateEmp.firstName} ${terminateEmp.lastName}`} onClose={() => { setTerminateEmp(null); setTerminateReason(''); }} size="md">
             <div className="space-y-4">
               <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
-                <i className="bi bi-exclamation-triangle-fill text-rose-500 text-lg mt-0.5"></i>
+                <i className="bi bi-exclamation-triangle-fill text-rose-500 fs-lg mt-0.5"></i>
                 <div>
-                  <p className="text-sm font-bold text-rose-800">This action will terminate the employee's contract.</p>
-                  <p className="text-xs text-rose-600 mt-1">Employee <span className="font-semibold">{terminateEmp.firstName} {terminateEmp.lastName}</span> ({terminateEmp.employeeNumber}) will be marked as <span className="font-semibold">Terminated</span> and removed from active payroll.</p>
+                  <p className="fs-sm fw-bold text-rose-800">This action will terminate the employee's contract.</p>
+                  <p className="fs-xs text-rose-600 mt-1">Employee <span className="fw-semibold">{terminateEmp.firstName} {terminateEmp.lastName}</span> ({terminateEmp.employeeNumber}) will be marked as <span className="fw-semibold">Terminated</span> and removed from active payroll.</p>
                 </div>
               </div>
               <div>
@@ -532,7 +587,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               </div>
               <div>
                 <Label>Reason / Notes *</Label>
-                <textarea value={terminateReason} onChange={e => setTerminateReason(e.target.value)} rows={3} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Provide reason for termination (will be recorded in employee file)..." required />
+                <textarea value={terminateReason} onChange={e => setTerminateReason(e.target.value)} rows={3} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Provide reason for termination (will be recorded in employee file)..." required />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
@@ -552,7 +607,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 setTerminateEmp(null);
                 setTerminateReason('');
                 setSelectedEmp(null);
-              }} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 cursor-pointer transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed" disabled={!terminateReason.trim()}>
+              }} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg fs-xs fw-semibold bg-rose-600 text-white hover:bg-rose-700 cursor-pointer transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed" disabled={!terminateReason.trim()}>
                 <i className="bi bi-x-octagon"></i>Confirm Termination
               </button>
             </div>
@@ -575,7 +630,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           {/* Toolbar */}
           <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <i className="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <i className="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 fs-sm"></i>
               <Input
                 placeholder="Search name, ID, role, department…"
                 value={search}
@@ -594,8 +649,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <option>Inactive</option>
               </Select>
               {isHRorAdmin && (
-                <button onClick={() => downloadCSV(`employees-${selectedCompany.id}`, ['Name', 'Employee ID', 'Department', 'Designation', 'Branch', 'Salary', 'Status', 'Email'], filtered.map(e => [`${e.firstName} ${e.lastName}`, e.employeeNumber, e.department, e.designation, e.branch, e.salary, e.status, e.email]))} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm px-3 py-2 rounded-lg cursor-pointer transition-all">
-                  <i className="bi bi-download text-xs"></i> Export
+                <button onClick={() => downloadCSV(`employees-${selectedCompany.id}`, ['Name', 'Employee ID', 'Department', 'Designation', 'Branch', 'Salary', 'Status', 'Email'], filtered.map(e => [`${e.firstName} ${e.lastName}`, e.employeeNumber, e.department, e.designation, e.branch, e.salary, e.status, e.email]))} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-sm px-3 py-2 rounded-lg cursor-pointer transition-all">
+                  <i className="bi bi-download fs-xs"></i> Export
                 </button>
               )}
             </div>
@@ -603,7 +658,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
           {/* Results count */}
           <div className="px-5 py-2 bg-slate-50/50 border-b border-slate-100">
-            <span className="text-xs text-slate-500">{filtered.length} employee{filtered.length !== 1 ? 's' : ''} found</span>
+            <span className="fs-xs text-slate-500">{filtered.length} employee{filtered.length !== 1 ? 's' : ''} found</span>
           </div>
 
           {/* Table */}
@@ -630,29 +685,29 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <div className="flex items-center gap-3">
                         <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
                         <div>
-                          <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">{emp.firstName} {emp.lastName}</div>
-                          <div className="text-xs text-slate-400">{emp.email}</div>
+                          <div className="fs-sm fw-semibold text-slate-900 group-hover:text-blue-700 transition-colors">{emp.firstName} {emp.lastName}</div>
+                          <div className="fs-xs text-slate-400">{emp.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">{emp.employeeNumber}</span>
+                      <span className="fs-xs font-mono text-slate-500 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">{emp.employeeNumber}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-slate-700">{emp.department}</span>
+                      <span className="fs-sm text-slate-700">{emp.department}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-slate-600">{emp.designation}</span>
+                      <span className="fs-sm text-slate-600">{emp.designation}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-slate-500 flex items-center gap-1">
-                        <i className="bi bi-geo-alt text-xs text-slate-300"></i>
+                      <span className="fs-sm text-slate-500 flex items-center gap-1">
+                        <i className="bi bi-geo-alt fs-xs text-slate-300"></i>
                         {emp.branch}
                       </span>
                     </td>
                     {isHRorAdmin && (
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-slate-900 font-mono tabular-nums">GHS {emp.salary.toLocaleString()}</span>
+                        <span className="fs-sm fw-semibold text-slate-900 font-mono tabular-nums">GHS {emp.salary.toLocaleString()}</span>
                       </td>
                     )}
                     <td className="px-4 py-3">
@@ -664,11 +719,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         {isHRorAdmin && emp.status !== 'Terminated' && (
-                          <button onClick={(e) => { e.stopPropagation(); setTerminateEmp(emp); }} className="text-xs font-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer" title="Terminate">
+                          <button onClick={(e) => { e.stopPropagation(); setTerminateEmp(emp); }} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer" title="Terminate">
                             <i className="bi bi-x-octagon"></i>
                           </button>
                         )}
-                        <button onClick={() => setSelectedEmp(emp)} className="text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
+                        <button onClick={() => setSelectedEmp(emp)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
                           View <i className="bi bi-arrow-right ml-0.5"></i>
                         </button>
                       </div>
@@ -678,8 +733,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={isHRorAdmin ? 8 : 7} className="text-center py-12">
-                      <i className="bi bi-people text-4xl text-slate-200 block mb-2"></i>
-                      <p className="text-sm text-slate-400">No employees match your search.</p>
+                      <i className="bi bi-people fs-4xl text-slate-200 block mb-2"></i>
+                      <p className="fs-sm text-slate-400">No employees match your search.</p>
                     </td>
                   </tr>
                 )}
@@ -706,9 +761,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
             { stage: 'Offer Sent', count: applicants.filter(a => a.stage === 'Offer Sent').length, icon: 'bi bi-envelope-check', color: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700' },
           ].map(s => (
             <div key={s.stage} className={`${s.color} border rounded-xl p-5`}>
-              <i className={`${s.icon} ${s.text} text-lg block mb-2`}></i>
-              <div className={`text-2xl font-bold tabular-nums ${s.text}`}>{s.count}</div>
-              <div className="text-sm text-slate-600 mt-0.5">{s.stage}</div>
+              <i className={`${s.icon} ${s.text} fs-lg block mb-2`}></i>
+              <div className={`fs-2xl fw-bold tabular-nums ${s.text}`}>{s.count}</div>
+              <div className="fs-sm text-slate-600 mt-0.5">{s.stage}</div>
             </div>
           ))}
         </div>
@@ -717,12 +772,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
           {/* Applicant list */}
           <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Active Applicants</h3>
+              <h3 className="fs-sm fw-bold text-slate-900">Active Applicants</h3>
                 {isHRorAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setVacTitle(''); setVacDept(''); setVacCount('1'); setShowVacancyModal(true); }}>Post Vacancy</PrimaryBtn>}
                 {showVacancyModal && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
                     <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-                      <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Post Vacancy</h2>
+                      <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Post Vacancy</h2>
                       <div className="space-y-4">
                         <div><Label>Job Title *</Label><Input value={vacTitle} onChange={e => setVacTitle(e.target.value)} placeholder="Senior Engineer" /></div>
                         <div className="grid gap-4 sm:grid-cols-2">
@@ -748,12 +803,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div className="flex items-center gap-3">
                     <Avatar first={app.name.split(' ')[0]} last={app.name.split(' ')[1] || 'X'} index={i} />
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">{app.name}</div>
-                      <div className="text-xs text-slate-500">{app.role} · {app.dept}</div>
+                      <div className="fs-sm fw-semibold text-slate-900">{app.name}</div>
+                      <div className="fs-xs text-slate-500">{app.role} · {app.dept}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400">{app.applied}</span>
+                    <span className="fs-xs text-slate-400">{app.applied}</span>
                     <Badge
                       label={app.stage}
                       variant={app.stage === 'Hired' ? 'success' : app.stage === 'Offer Sent' ? 'success' : app.stage === 'Interview' ? 'info' : app.stage === 'Screening' ? 'purple' : 'default'}
@@ -767,18 +822,16 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           const nameParts = app.name.split(' ');
                           const firstName = nameParts[0] || app.name;
                           const lastName = nameParts.slice(1).join(' ') || 'Employee';
-                          onAddEmployee({
-                            companyId: selectedCompany.id,
-                            firstName,
-                            lastName,
-                            email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${selectedCompany.domain || 'company'}.com`,
-                            department: app.dept,
-                            designation: app.role,
-                            branch: 'HQ',
-                            salary: 0,
-                          });
+                          setHrFirst(firstName);
+                          setHrLast(lastName);
+                          setHrEmail(`${firstName.toLowerCase()}.${lastName.toLowerCase()}@${selectedCompany.domain || 'company'}.com`);
+                          setHrDept(app.dept);
+                          setHrRole(app.role);
+                          setTimeout(() => {
+                            document.getElementById('hire')?.scrollIntoView({ behavior: 'smooth' });
+                          }, 100);
                         }
-                      }} className="text-xs font-semibold text-slate-500 hover:text-slate-900 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">
+                      }} className="fs-xs fw-semibold text-slate-500 hover:text-slate-900 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">
                         Move Stage
                       </button>
                     )}
@@ -791,18 +844,29 @@ export const HRModule: React.FC<HRModuleProps> = ({
           {/* Register form */}
           {isHRorAdmin && (
             <div id="hire" className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-xs p-5 scroll-mt-4">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Register New Employee</h3>
+              <h3 className="fs-sm fw-bold text-slate-900 mb-4">Register New Employee</h3>
               {hireSuccess && (
-                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 fs-sm text-emerald-700 fw-semibold">
                   <i className="bi bi-check-circle-fill"></i> {hireSuccess}
                 </div>
               )}
               <form className="space-y-3" onSubmit={e => {
                 e.preventDefault();
                 if (!hrFirst || !hrLast || !hrEmail) return;
-                onAddEmployee({ companyId: selectedCompany.id, firstName: hrFirst, lastName: hrLast, email: hrEmail, department: hrDept, designation: hrRole || 'Staff', branch: hrBranch, salary: Number(hrSalary) });
+                onAddEmployee({
+                  companyId: selectedCompany.id, firstName: hrFirst, lastName: hrLast, email: hrEmail,
+                  department: hrDept, designation: hrRole || 'Staff', branch: hrBranch, salary: Number(hrSalary),
+                  assignedTaxes: hrTaxes, assignedBenefits: hrBenefits,
+                  bankAccount: hrBankName || hrAccountNumber ? JSON.stringify({
+                    bankName: hrBankName,
+                    accountName: hrAccountName,
+                    accountNumber: hrAccountNumber,
+                    sortCode: hrSortCode
+                  }) : undefined
+                });
                 setHireSuccess(`${hrFirst} ${hrLast} registered as ${hrRole || 'Staff'}.`);
-                setHrFirst(''); setHrLast(''); setHrEmail(''); setHrRole('');
+                setHrFirst(''); setHrLast(''); setHrEmail(''); setHrRole(''); setHrTaxes([]); setHrBenefits([]);
+                setHrBankName(''); setHrAccountName(''); setHrAccountNumber(''); setHrSortCode('');
                 setTimeout(() => setHireSuccess(null), 4000);
               }}>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -838,6 +902,64 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div><Label>Start Date</Label><Input type="date" value={hrStartDate} onChange={e => setHrStartDate(e.target.value)} /></div>
                   <div><Label>Monthly Salary (GHS)</Label><Input type="number" value={hrSalary} onChange={e => setHrSalary(e.target.value)} placeholder="6500" /></div>
                 </div>
+
+                {/* Custom Taxes and Benefits Assignment */}
+                {payrollTaxConfig && (payrollTaxConfig.customTaxes?.length || payrollTaxConfig.customBenefits?.length) ? (
+                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100">
+                    {payrollTaxConfig.customTaxes && payrollTaxConfig.customTaxes.length > 0 && (
+                      <div>
+                        <Label>Assign Custom Taxes</Label>
+                        <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
+                          {payrollTaxConfig.customTaxes.map(tax => (
+                            <label key={tax.id} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
+                              <input type="checkbox" checked={hrTaxes.includes(tax.id)} onChange={e => {
+                                if (e.target.checked) setHrTaxes([...hrTaxes, tax.id]);
+                                else setHrTaxes(hrTaxes.filter(id => id !== tax.id));
+                              }} />
+                              {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : `$${tax.value}`})
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {payrollTaxConfig.customBenefits && payrollTaxConfig.customBenefits.length > 0 && (
+                      <div>
+                        <Label>Assign Custom Benefits</Label>
+                        <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
+                          {payrollTaxConfig.customBenefits.map(ben => (
+                            <label key={ben.id} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
+                              <input type="checkbox" checked={hrBenefits.includes(ben.id)} onChange={e => {
+                                if (e.target.checked) setHrBenefits([...hrBenefits, ben.id]);
+                                else setHrBenefits(hrBenefits.filter(id => id !== ben.id));
+                              }} />
+                              {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : `$${ben.value}`})
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100">
+                  <div>
+                    <Label>Bank Name</Label>
+                    <Input value={hrBankName} onChange={e => setHrBankName(e.target.value)} placeholder="e.g. Chase Bank" />
+                  </div>
+                  <div>
+                    <Label>Account Name</Label>
+                    <Input value={hrAccountName} onChange={e => setHrAccountName(e.target.value)} placeholder="e.g. John Doe" />
+                  </div>
+                  <div>
+                    <Label>Account Number</Label>
+                    <Input value={hrAccountNumber} onChange={e => setHrAccountNumber(e.target.value)} placeholder="e.g. 123456789" />
+                  </div>
+                  <div>
+                    <Label>Sort Code / Routing Number</Label>
+                    <Input value={hrSortCode} onChange={e => setHrSortCode(e.target.value)} placeholder="e.g. 12-34-56" />
+                  </div>
+                </div>
+
                 <div className="pt-2">
                   <PrimaryBtn type="submit" icon="bi bi-person-check">Register Employee</PrimaryBtn>
                 </div>
@@ -851,260 +973,269 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
   // ── VIEW: LEAVE ────────────────────────────────────────────────────────────
   if (activeView === 'hr-leave') {
-    // Any user who manages at least one department can see team leaves
-    const userManagedDepts = departments.filter(d => d.managerId === selectedUser.id && d.companyId === selectedCompany.id);
-    const isDeptManager = userManagedDepts.length > 0;
-    const canViewTeamLeaves = isHRorAdmin || isDeptHead || isDeptManager;
-    if (canViewTeamLeaves) {
-      const managedDeptNames = isHRorAdmin 
-        ? null 
-        : userManagedDepts.map(d => d.name);
-      
-      const visibleLeaves = isHRorAdmin 
-        ? companyLeaves 
-        : companyLeaves.filter(l => {
-            const emp = localEmployees.find(e => e.id === l.employeeId);
-            return emp && managedDeptNames?.includes(emp.department);
-          });
-
-      const displayLeaves = leaveFilter === 'All' ? visibleLeaves : visibleLeaves.filter(l => l.status === leaveFilter);
-
-      const pending = visibleLeaves.filter(l => l.status === 'Pending');
-      const approved = visibleLeaves.filter(l => l.status === 'Approved');
-      const todayOnLeave = localEmployees.filter(e => e.status === 'On Leave' && (isHRorAdmin || managedDeptNames?.includes(e.department)));
-      const totalDays = visibleLeaves.filter(l => l.status === 'Approved').reduce((s, l) => s + (l.days || 0), 0);
+    // Employee role always sees self-service leave form
+    if (isEmployee) {
       return (
         <div className="space-y-6">
-          <SectionHeader title="Leave Management" subtitle="Review, approve and track all employee leave requests." />
-          <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Pending" value={pending.length} icon="bi bi-clock-history" sub="Awaiting approval" accent />
-            <StatCard label="Approved (Month)" value={approved.length} icon="bi bi-check-circle" sub="Leave granted" color="text-emerald-600" />
-            <StatCard label="On Leave Today" value={todayOnLeave.length} icon="bi bi-calendar-check" sub="Currently away" />
-            <StatCard label="Total Days Used" value={totalDays} icon="bi bi-calendar-range" sub="Across company" />
+          <SectionHeader title="My Leave" subtitle="Apply for time off and track your leave balance." />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {(() => {
+              const quotas: Record<string, { total: number; color: string; icon: string }> = {
+                'Annual Leave': { total: 25, color: 'from-blue-500 to-blue-700', icon: 'bi bi-sun' },
+                'Sick Leave': { total: 10, color: 'from-rose-500 to-rose-700', icon: 'bi bi-thermometer' },
+                'Casual Leave': { total: 5, color: 'from-violet-500 to-violet-700', icon: 'bi bi-person-heart' },
+              };
+              const approvedByType = myLeaves
+                .filter(l => l.status === 'Approved')
+                .reduce((acc, l) => { acc[l.leaveType] = (acc[l.leaveType] || 0) + (l.days || 1); return acc; }, {} as Record<string, number>);
+              return Object.entries(quotas).map(([type, q]) => {
+                const used = approvedByType[type] || 0;
+                const remaining = Math.max(0, q.total - used);
+                return (
+                  <div key={type} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${q.color} flex items-center justify-center text-white mb-3`}>
+                      <i className={q.icon}></i>
+                    </div>
+                    <div className="fs-sm fw-bold text-slate-900 mb-1">{type}</div>
+                    <div className="fs-2xl fw-bold text-slate-900 tabular-nums mb-2">{remaining} <span className="fs-sm fw-normal text-slate-400">/ {q.total} days left</span></div>
+                    <ProgressBar value={q.total > 0 ? (used / q.total) * 100 : 0} color={`bg-gradient-to-r ${q.color}`} />
+                  </div>
+                );
+              });
+            })()}
+            <StatCard label="Pending" value={myLeaves.filter(l => l.status === 'Pending').length} icon="bi bi-clock" sub="Awaiting approval" accent />
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">Leave Requests</h3>
-              <div className="flex gap-2">
-                {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
-                  <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} className={`text-xs font-semibold border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${leaveFilter === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {visibleLeaves.length === 0 && (
-                <div className="p-10 text-center">
-                  <i className="bi bi-inbox text-3xl text-slate-200 block mb-2"></i>
-                  <p className="text-sm text-slate-400">No leave requests found.</p>
+          <div className="grid gap-6 lg:grid-cols-5">
+            {/* Request form */}
+            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
+              <h3 className="fs-sm fw-bold text-slate-900 mb-4">Request Time Off</h3>
+              {leaveSuccess && (
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 fs-sm text-emerald-700 fw-semibold">
+                  <i className="bi bi-check-circle-fill"></i> Leave request submitted!
                 </div>
               )}
-              {displayLeaves.map((req, i) => {
-                const emp = localEmployees.find(e => e.id === req.employeeId);
-                const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
-                const empDept = emp?.department || '';
-                return (
-                <div key={req.id} className="p-5 hover:bg-slate-50/30 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} index={i} />
+              <form className="space-y-4" onSubmit={e => {
+                e.preventDefault();
+                if (!myEmpRecord) return;
+                const days = leaveEnd && leaveStart
+                  ? Math.max(1, Math.round((new Date(leaveEnd).getTime() - new Date(leaveStart).getTime()) / 86400000) + 1)
+                  : 1;
+                const coveringEmp = localEmployees.find(emp => emp.id === leaveReplacementId);
+                onAddLeave({
+                  employeeId: myEmpRecord.id,
+                  employeeName: `${myEmpRecord.firstName} ${myEmpRecord.lastName}`,
+                  department: myEmpRecord.department,
+                  leaveType,
+                  startDate: leaveStart,
+                  endDate: leaveEnd || leaveStart,
+                  reason: leaveReason,
+                  days,
+                  replacementId: leaveReplacementId || undefined,
+                  replacementName: coveringEmp ? `${coveringEmp.firstName} ${coveringEmp.lastName}` : undefined
+                });
+                setLeaveStart(''); setLeaveEnd(''); setLeaveReason(''); setLeaveReplacementId('');
+                setLeaveSuccess(true);
+                setTimeout(() => setLeaveSuccess(false), 3000);
+              }}>
+                <div>
+                  <Label>Leave Type</Label>
+                  <Select value={leaveType} onChange={e => setLeaveType(e.target.value)}>
+                    <option>Annual Leave</option><option>Sick Leave</option><option>Casual Leave</option>
+                    <option>Unpaid Leave</option><option>Maternity / Paternity</option>
+                  </Select>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div><Label>Start Date *</Label><Input type="date" value={leaveStart} onChange={e => setLeaveStart(e.target.value)} required /></div>
+                  <div><Label>End Date</Label><Input type="date" value={leaveEnd} onChange={e => setLeaveEnd(e.target.value)} /></div>
+                </div>
+                <div>
+                  <Label>Replacement Employee (Covering Officer)</Label>
+                  <Select value={leaveReplacementId} onChange={e => setLeaveReplacementId(e.target.value)}>
+                    <option value="">— Select covering officer —</option>
+                    {localEmployees.filter(emp => emp.id !== myEmpRecord?.id).map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.firstName} {emp.lastName} ({emp.designation} · {emp.department})
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <Label>Reason *</Label>
+                  <Input value={leaveReason} onChange={e => setLeaveReason(e.target.value)} placeholder="Brief reason…" required />
+                </div>
+                <PrimaryBtn type="submit" icon="bi bi-send">Submit Request</PrimaryBtn>
+              </form>
+            </div>
+
+            {/* Leave history */}
+            <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100">
+                <h3 className="fs-sm fw-bold text-slate-900">My Leave History</h3>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {myLeaves.length === 0 && (
+                  <div className="p-10 text-center">
+                    <i className="bi bi-calendar-x fs-3xl text-slate-200 block mb-2"></i>
+                    <p className="fs-sm text-slate-400">No leave requests yet.</p>
+                  </div>
+                )}
+                {myLeaves.map(req => (
+                  <div key={req.id} className="p-4 hover:bg-slate-50/40 transition-colors flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <i className="bi bi-calendar-event"></i>
+                      </div>
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-slate-900">{empName}</span>
-                          <span className="text-xs text-slate-400">· {empDept}</span>
-                          <Badge label={req.leaveType} variant="info" />
+                        <div className="flex items-center gap-2">
+                          <span className="fs-sm fw-semibold text-slate-900">{req.leaveType}</span>
+                          <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : req.status === 'Pending' ? 'warning' : 'danger'} />
                         </div>
-                        <div className="text-sm text-slate-600 flex items-center gap-2">
-                          <i className="bi bi-calendar3 text-slate-400"></i>
-                          {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}
-                          <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full tabular-nums">{req.days || 1} day{(req.days || 1) > 1 ? 's' : ''}</span>
+                        <div className="fs-xs text-slate-500 mt-0.5">
+                          <i className="bi bi-calendar3 mr-1"></i>{req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.reason}
                         </div>
-                        <div className="text-xs text-slate-400 mt-1 italic">"{req.reason}"</div>
                         {req.replacementName && (
-                          <div className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-600 flex items-center gap-1">
-                              <i className="bi bi-arrow-left-right text-[8px]"></i> Covering Officer: {req.replacementName}
-                            </span>
+                          <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                            <i className="bi bi-person-fill text-slate-400"></i>
+                            Covering officer: <span className="fw-semibold text-slate-600">{req.replacementName}</span>
                           </div>
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : (req.status === 'Pending' || req.status === 'HOD Approved') ? 'warning' : 'danger'} />
-                      
-                      {req.status === 'Pending' && (() => {
-                        const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
-                        const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
-                        const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
-                        const isHOD = empDeptRecord?.managerId === selectedUser.id;
-                        const canApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser || isHOD;
-                        
-                        if (canApprove) {
-                          return (
-                            <div className="flex gap-2">
-                              <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
-                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
-                            </div>
-                          );
-                        }
-                        return <div className="text-[10px] text-slate-400 italic">Awaiting approval</div>;
-                      })()}
-
-                      {req.status === 'HOD Approved' && (() => {
-                        const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
-                        const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
-                        const canFinalApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser;
-                        if (canFinalApprove) {
-                          return (
-                            <div className="flex gap-2">
-                              <button onClick={() => onApproveLeave(req.id, 'Approved')} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
-                              <button onClick={() => onRejectLeave(req.id)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
-                            </div>
-                          );
-                        }
-                        return <div className="text-[10px] text-slate-400 italic">Awaiting HR approval</div>;
-                      })()}
-                      
-                      {req.status === 'Approved' && req.approvedBy && (
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                          <i className="bi bi-check2-circle text-emerald-500"></i>
-                          Approved by <span className="font-semibold text-slate-700">{req.approvedBy}</span>
-                        </div>
-                      )}
-                    </div>
                   </div>
-                </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       );
     }
 
-    // Employee self-service leave
+    // Manager / HR leave management view
+    const userManagedDepts = departments.filter(d => d.managerId === selectedUser.id && d.companyId === selectedCompany.id);
+    const isDeptManager = userManagedDepts.length > 0;
+    const managedDeptNames = isHRorAdmin 
+      ? null 
+      : userManagedDepts.map(d => d.name);
+    
+    const visibleLeaves = isHRorAdmin 
+      ? companyLeaves 
+      : companyLeaves.filter(l => {
+          const emp = localEmployees.find(e => e.id === l.employeeId);
+          return emp && managedDeptNames?.includes(emp.department);
+        });
+
+    const displayLeaves = leaveFilter === 'All' ? visibleLeaves : visibleLeaves.filter(l => l.status === leaveFilter);
+
+    const pending = visibleLeaves.filter(l => l.status === 'Pending');
+    const approved = visibleLeaves.filter(l => l.status === 'Approved');
+    const todayOnLeave = localEmployees.filter(e => e.status === 'On Leave' && (isHRorAdmin || managedDeptNames?.includes(e.department)));
+    const totalDays = visibleLeaves.filter(l => l.status === 'Approved').reduce((s, l) => s + (l.days || 0), 0);
     return (
       <div className="space-y-6">
-        <SectionHeader title="My Leave" subtitle="Apply for time off and track your leave balance." />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { type: 'Annual Leave', used: 7, total: 25, color: 'from-blue-500 to-blue-700', icon: 'bi bi-sun' },
-            { type: 'Sick Leave', used: 2, total: 10, color: 'from-rose-500 to-rose-700', icon: 'bi bi-thermometer' },
-            { type: 'Casual Leave', used: 1, total: 5, color: 'from-violet-500 to-violet-700', icon: 'bi bi-person-heart' },
-          ].map(lb => (
-            <div key={lb.type} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${lb.color} flex items-center justify-center text-white mb-3`}>
-                <i className={lb.icon}></i>
-              </div>
-              <div className="text-sm font-bold text-slate-900 mb-1">{lb.type}</div>
-              <div className="text-2xl font-bold text-slate-900 tabular-nums mb-2">{lb.total - lb.used} <span className="text-sm font-normal text-slate-400">/ {lb.total} days left</span></div>
-              <ProgressBar value={(lb.used / lb.total) * 100} color={`bg-gradient-to-r ${lb.color}`} />
-            </div>
-          ))}
-          <StatCard label="Pending" value={myLeaves.filter(l => l.status === 'Pending').length} icon="bi bi-clock" sub="Awaiting approval" accent />
+        <SectionHeader title="Leave Management" subtitle="Review, approve and track all employee leave requests." />
+        <div className="grid gap-4 sm:grid-cols-4">
+          <StatCard label="Pending" value={pending.length} icon="bi bi-clock-history" sub="Awaiting approval" accent />
+          <StatCard label="Approved (Month)" value={approved.length} icon="bi bi-check-circle" sub="Leave granted" color="text-emerald-600" />
+          <StatCard label="On Leave Today" value={todayOnLeave.length} icon="bi bi-calendar-check" sub="Currently away" />
+          <StatCard label="Total Days Used" value={totalDays} icon="bi bi-calendar-range" sub="Across company" />
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          {/* Request form */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Request Time Off</h3>
-            {leaveSuccess && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
-                <i className="bi bi-check-circle-fill"></i> Leave request submitted!
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="fs-sm fw-bold text-slate-900">Leave Requests</h3>
+            <div className="flex gap-2">
+              {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
+                <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} className={`fs-xs fw-semibold border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${leaveFilter === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {visibleLeaves.length === 0 && (
+              <div className="p-10 text-center">
+                <i className="bi bi-inbox fs-3xl text-slate-200 block mb-2"></i>
+                <p className="fs-sm text-slate-400">No leave requests found.</p>
               </div>
             )}
-            <form className="space-y-4" onSubmit={e => {
-              e.preventDefault();
-              if (!myEmpRecord) return;
-              const days = leaveEnd && leaveStart
-                ? Math.max(1, Math.round((new Date(leaveEnd).getTime() - new Date(leaveStart).getTime()) / 86400000) + 1)
-                : 1;
-              const coveringEmp = localEmployees.find(emp => emp.id === leaveReplacementId);
-              onAddLeave({
-                employeeId: myEmpRecord.id,
-                employeeName: `${myEmpRecord.firstName} ${myEmpRecord.lastName}`,
-                department: myEmpRecord.department,
-                leaveType,
-                startDate: leaveStart,
-                endDate: leaveEnd || leaveStart,
-                reason: leaveReason,
-                days,
-                replacementId: leaveReplacementId || undefined,
-                replacementName: coveringEmp ? `${coveringEmp.firstName} ${coveringEmp.lastName}` : undefined
-              });
-              setLeaveStart(''); setLeaveEnd(''); setLeaveReason(''); setLeaveReplacementId('');
-              setLeaveSuccess(true);
-              setTimeout(() => setLeaveSuccess(false), 3000);
-            }}>
-              <div>
-                <Label>Leave Type</Label>
-                <Select value={leaveType} onChange={e => setLeaveType(e.target.value)}>
-                  <option>Annual Leave</option><option>Sick Leave</option><option>Casual Leave</option>
-                  <option>Unpaid Leave</option><option>Maternity / Paternity</option>
-                </Select>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div><Label>Start Date *</Label><Input type="date" value={leaveStart} onChange={e => setLeaveStart(e.target.value)} required /></div>
-                <div><Label>End Date</Label><Input type="date" value={leaveEnd} onChange={e => setLeaveEnd(e.target.value)} /></div>
-              </div>
-              <div>
-                <Label>Replacement Employee (Covering Officer)</Label>
-                <Select value={leaveReplacementId} onChange={e => setLeaveReplacementId(e.target.value)}>
-                  <option value="">— Select covering officer —</option>
-                  {localEmployees.filter(emp => emp.id !== myEmpRecord?.id).map(emp => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.firstName} {emp.lastName} ({emp.designation} · {emp.department})
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <Label>Reason *</Label>
-                <Input value={leaveReason} onChange={e => setLeaveReason(e.target.value)} placeholder="Brief reason…" required />
-              </div>
-              <PrimaryBtn type="submit" icon="bi bi-send">Submit Request</PrimaryBtn>
-            </form>
-          </div>
-
-          {/* Leave history */}
-          <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">My Leave History</h3>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {myLeaves.length === 0 && (
-                <div className="p-10 text-center">
-                  <i className="bi bi-calendar-x text-3xl text-slate-200 block mb-2"></i>
-                  <p className="text-sm text-slate-400">No leave requests yet.</p>
-                </div>
-              )}
-              {myLeaves.map(req => (
-                <div key={req.id} className="p-4 hover:bg-slate-50/40 transition-colors flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                      <i className="bi bi-calendar-event"></i>
-                    </div>
+            {displayLeaves.map((req, i) => {
+              const emp = localEmployees.find(e => e.id === req.employeeId);
+              const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'Employee';
+              const empDept = emp?.department || '';
+              return (
+              <div key={req.id} className="p-5 hover:bg-slate-50/30 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} index={i} />
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-900">{req.leaveType}</span>
-                        <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : req.status === 'Pending' ? 'warning' : 'danger'} />
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="fs-sm fw-semibold text-slate-900">{empName}</span>
+                        <span className="fs-xs text-slate-400">· {empDept}</span>
+                        <Badge label={req.leaveType} variant="info" />
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">
-                        <i className="bi bi-calendar3 mr-1"></i>{req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.reason}
+                      <div className="fs-sm text-slate-600 flex items-center gap-2">
+                        <i className="bi bi-calendar3 text-slate-400"></i>
+                        {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}
+                        <span className="fs-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full tabular-nums">{req.days || 1} day{(req.days || 1) > 1 ? 's' : ''}</span>
                       </div>
+                      <div className="fs-xs text-slate-400 mt-1 italic">"{req.reason}"</div>
                       {req.replacementName && (
-                        <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                          <i className="bi bi-person-fill text-slate-400"></i>
-                          Covering officer: <span className="font-semibold text-slate-600">{req.replacementName}</span>
+                        <div className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] fw-semibold text-slate-600 flex items-center gap-1">
+                            <i className="bi bi-arrow-left-right text-[8px]"></i> Covering Officer: {req.replacementName}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : (req.status === 'Pending' || req.status === 'HOD Approved') ? 'warning' : 'danger'} />
+                    
+                    {req.status === 'Pending' && (() => {
+                      const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
+                      const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
+                      const empDeptRecord = departments.find(d => d.name === empDept && d.companyId === selectedCompany.id);
+                      const isHOD = empDeptRecord?.managerId === selectedUser.id;
+                      const canApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser || isHOD;
+                      
+                      if (canApprove) {
+                        return (
+                          <div className="flex gap-2">
+                            <button onClick={() => onApproveLeave(req.id, 'Approved')} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                            <button onClick={() => onRejectLeave(req.id)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                          </div>
+                        );
+                      }
+                      return <div className="text-[10px] text-slate-400 italic">Awaiting approval</div>;
+                    })()}
+
+                    {req.status === 'HOD Approved' && (() => {
+                      const isCompanyAdmin = selectedUser.activeRole === 'Company Admin';
+                      const hasLeavePermission = selectedUser.permissions.includes('leave_approve') || selectedUser.permissions.includes('admin_all');
+                      const canFinalApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser;
+                      if (canFinalApprove) {
+                        return (
+                          <div className="flex gap-2">
+                            <button onClick={() => onApproveLeave(req.id, 'Approved')} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
+                            <button onClick={() => onRejectLeave(req.id)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                          </div>
+                        );
+                      }
+                      return <div className="text-[10px] text-slate-400 italic">Awaiting HR approval</div>;
+                    })()}
+                    
+                    {req.status === 'Approved' && req.approvedBy && (
+                      <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <i className="bi bi-check2-circle text-emerald-500"></i>
+                        Approved by <span className="fw-semibold text-slate-700">{req.approvedBy}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1116,73 +1247,254 @@ export const HRModule: React.FC<HRModuleProps> = ({
     const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     if (isHRorAdmin) {
+      const filteredAttendance = companyAttendance.filter(a => {
+        if (attDateFilter && a.date !== attDateFilter) return false;
+        if (attStatusFilter !== 'All' && a.status !== attStatusFilter) return false;
+        return true;
+      });
+
+      const todayPresent = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Present').length;
+      const todayLate = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Late').length;
+
       return (
         <div className="space-y-6">
-          <SectionHeader title="Attendance Management" subtitle={`Today — ${today}`} />
+          <SectionHeader title="Attendance Management" subtitle="View all employee attendance records" />
           <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Present Today" value={companyAttendance.filter(a => a.status === 'Present').length} icon="bi bi-person-check-fill" sub="Clocked in" color="text-emerald-600" />
-            <StatCard label="Late Arrivals" value={companyAttendance.filter(a => a.status === 'Late').length} icon="bi bi-clock-history" sub="After 9:00 AM" accent />
+            <StatCard label="Present Today" value={todayPresent} icon="bi bi-person-check-fill" sub="Clocked in" color="text-emerald-600" />
+            <StatCard label="Late Today" value={todayLate} icon="bi bi-clock-history" sub="After 9:00 AM" accent />
             <StatCard label="On Leave" value={onLeave.length} icon="bi bi-calendar-x" sub="Approved absence" />
-            <StatCard label="Attendance Rate" value={`${active.length ? Math.round((companyAttendance.filter(a => a.status === 'Present').length / active.length) * 100) : 0}%`} icon="bi bi-graph-up-arrow" sub="This week" color="text-emerald-600" />
+            <StatCard label="Total Records" value={filteredAttendance.length} icon="bi bi-list-check" sub="Filtered results" />
+          </div>
+
+          {/* Attendance Settings Panel */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <button onClick={() => setShowAttSettings(!showAttSettings)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <i className="bi bi-gear6 text-slate-600"></i>
+                </div>
+                <div className="text-left">
+                  <div className="fs-sm fw-semibold text-slate-900">Attendance Settings</div>
+                  <div className="fs-xs text-slate-400">Configure late penalties, grace periods and escalation rules</div>
+                </div>
+              </div>
+              <i className={`bi bi-chevron-${showAttSettings ? 'up' : 'down'} text-slate-400`}></i>
+            </button>
+
+            {showAttSettings && (
+              <div className="px-5 pb-5 border-t border-slate-100 pt-5 space-y-5">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <Label>Apply To</Label>
+                    <Select value={attSettings.departmentId} onChange={e => setAttSettings({ ...attSettings, departmentId: e.target.value })}>
+                      <option value="">All Departments</option>
+                      {[...new Set(localEmployees.map(e => e.department))].map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </Select>
+                    <div className="fs-xs text-slate-400 mt-1">Leave empty to apply to all employees</div>
+                  </div>
+                  <div>
+                    <Label>Work Start Time</Label>
+                    <Input type="time" value={attSettings.workStartTime} onChange={e => setAttSettings({ ...attSettings, workStartTime: e.target.value })} />
+                    <div className="fs-xs text-slate-400 mt-1">Expected arrival time for all employees</div>
+                  </div>
+                  <div>
+                    <Label>Grace Period (minutes)</Label>
+                    <Input type="number" value={attSettings.graceMinutes} onChange={e => setAttSettings({ ...attSettings, graceMinutes: Number(e.target.value) })} />
+                    <div className="fs-xs text-slate-400 mt-1">Employees clocking in within this window are marked Present</div>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label>Late Threshold (minutes)</Label>
+                    <Input type="number" value={attSettings.lateThresholdMinutes} onChange={e => setAttSettings({ ...attSettings, lateThresholdMinutes: Number(e.target.value) })} />
+                    <div className="fs-xs text-slate-400 mt-1">After this threshold, the "Late" penalty applies</div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-4">
+                  <Label>Late Penalty Type</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                    {([
+                      { value: 'warning', label: 'Warning Only', icon: 'bi bi-exclamation-triangle', desc: 'Record warning' },
+                      { value: 'deduction', label: 'Pay Deduction', icon: 'bi bi-cash-coin', desc: 'Deduct from salary' },
+                      { value: 'suspension', label: 'Suspension', icon: 'bi bi-person-x', desc: 'Unpaid suspension' },
+                      { value: 'custom', label: 'Custom Rule', icon: 'bi bi-pencil-square', desc: 'Define your own' },
+                    ] as const).map(opt => (
+                      <button key={opt.value} onClick={() => setAttSettings({ ...attSettings, penaltyType: opt.value })}
+                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                          attSettings.penaltyType === opt.value
+                            ? 'border-slate-900 bg-slate-900 text-white'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}>
+                        <i className={`${opt.icon} ${attSettings.penaltyType === opt.value ? 'text-white' : 'text-slate-400'} mb-2 block`}></i>
+                        <div className={`fs-xs fw-semibold ${attSettings.penaltyType === opt.value ? 'text-white' : 'text-slate-900'}`}>{opt.label}</div>
+                        <div className={`text-[10px] mt-0.5 ${attSettings.penaltyType === opt.value ? 'text-slate-300' : 'text-slate-400'}`}>{opt.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {attSettings.penaltyType === 'deduction' && (
+                  <div className="border-t border-slate-100 pt-4 space-y-3">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label>Deduction Type</Label>
+                        <Select value={attSettings.deductionType} onChange={e => setAttSettings({ ...attSettings, deductionType: e.target.value as 'percentage' | 'fixed' })}>
+                          <option value="percentage">Percentage of Salary</option>
+                          <option value="fixed">Fixed Amount</option>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>{attSettings.deductionType === 'percentage' ? 'Deduction %' : 'Deduction Amount'}</Label>
+                        <Input type="number" value={attSettings.deductionValue} onChange={e => setAttSettings({ ...attSettings, deductionValue: Number(e.target.value) })} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {attSettings.penaltyType === 'custom' && (
+                  <div className="border-t border-slate-100 pt-4">
+                    <Label>Custom Penalty Description</Label>
+                    <textarea value={attSettings.customPenalty} onChange={e => setAttSettings({ ...attSettings, customPenalty: e.target.value })}
+                      rows={3} placeholder="e.g. Mandatory overtime on weekends, written apology letter..."
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" />
+                  </div>
+                )}
+
+                <div className="border-t border-slate-100 pt-4">
+                  <Label>Escalation Rules</Label>
+                  <div className="grid gap-4 sm:grid-cols-2 mt-2">
+                    <div>
+                      <Label>Warnings Before Escalation</Label>
+                      <Input type="number" value={attSettings.maxWarnings} onChange={e => setAttSettings({ ...attSettings, maxWarnings: Number(e.target.value) })} />
+                      <div className="fs-xs text-slate-400 mt-1">After this many warnings, penalty escalates automatically</div>
+                    </div>
+                    <div className="flex items-center gap-3 pt-6">
+                      <button onClick={() => setAttSettings({ ...attSettings, escalateAfterWarnings: !attSettings.escalateAfterWarnings })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                          attSettings.escalateAfterWarnings ? 'bg-slate-900' : 'bg-slate-200'
+                        }`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          attSettings.escalateAfterWarnings ? 'translate-x-6' : 'translate-x-1'
+                        }`}></span>
+                      </button>
+                      <div>
+                        <div className="fs-xs fw-semibold text-slate-700">Auto-escalate penalties</div>
+                        <div className="text-[10px] text-slate-400">Automatically escalate after max warnings</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <SecBtn onClick={() => setShowAttSettings(false)}>Cancel</SecBtn>
+                  <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                    if (onUpdateAttendanceSettings) {
+                      onUpdateAttendanceSettings(selectedCompany.id, attSettings);
+                    }
+                    setShowAttSettings(false);
+                  }}>Save Settings</PrimaryBtn>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Today's Attendance Log</h3>
-              <div className="flex gap-2">
-                <button onClick={() => downloadCSV(`attendance-${selectedCompany.id}-${new Date().toISOString().split('T')[0]}`, ['Employee', 'Employee ID', 'Date', 'Check In', 'Check Out', 'Location', 'Status'], companyAttendance.map(a => {
+            <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-100 gap-3">
+              <h3 className="fs-sm fw-bold text-slate-900">Attendance Log</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <input type="date" value={attDateFilter} onChange={e => setAttDateFilter(e.target.value)}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 fs-xs text-slate-700 focus:border-slate-400 focus:outline-none" />
+                </div>
+                <div className="flex items-center gap-1.5 bg-slate-100/80 rounded-full px-1.5 py-1">
+                  {([
+                    { label: 'All', icon: 'bi-grid-3x3-gap', color: 'slate', count: filteredAttendance.length },
+                    { label: 'Present', icon: 'bi-check-circle-fill', color: 'emerald', count: companyAttendance.filter(a => a.status === 'Present').length },
+                    { label: 'Late', icon: 'bi-clock-fill', color: 'amber', count: companyAttendance.filter(a => a.status === 'Late').length },
+                    { label: 'On Leave', icon: 'bi-calendar-x-fill', color: 'blue', count: companyAttendance.filter(a => a.status === 'On Leave').length },
+                    { label: 'Absent', icon: 'bi-x-circle-fill', color: 'rose', count: companyAttendance.filter(a => a.status === 'Absent').length },
+                  ] as const).map(item => (
+                    <button key={item.label} onClick={() => setAttStatusFilter(item.label)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full fs-xs fw-semibold transition-all cursor-pointer ${
+                        attStatusFilter === item.label
+                          ? item.color === 'emerald' ? 'bg-emerald-500 text-white shadow-sm'
+                            : item.color === 'amber' ? 'bg-amber-500 text-white shadow-sm'
+                            : item.color === 'blue' ? 'bg-blue-500 text-white shadow-sm'
+                            : item.color === 'rose' ? 'bg-rose-500 text-white shadow-sm'
+                            : 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                      }`}>
+                      <i className={`bi ${item.icon} text-[10px]`}></i>
+                      <span className="hidden sm:inline">{item.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                        attStatusFilter === item.label ? 'bg-white/20' : 'bg-slate-200/60'
+                      }`}>{item.count}</span>
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => downloadCSV(`attendance-${selectedCompany.id}-${attDateFilter}`, ['Employee', 'Employee ID', 'Date', 'Check In', 'Check Out', 'Location', 'Status'], filteredAttendance.map(a => {
                   const emp = localEmployees.find(e => e.id === a.employeeId);
                   return [`${emp?.firstName || ''} ${emp?.lastName || ''}`, emp?.employeeNumber || '', a.date, a.checkIn || '', a.checkOut || '', a.locationType || '', a.status];
-                }))} className="text-sm font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all flex items-center gap-1.5">
-                  <i className="bi bi-download text-xs"></i> Export
+                }))} className="fs-sm fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all flex items-center gap-1.5">
+                  <i className="bi bi-download fs-xs"></i> Export
                 </button>
-                <PrimaryBtn icon="bi bi-person-check">Mark Attendance</PrimaryBtn>
               </div>
             </div>
             <table className="w-full text-left">
               <thead className="bg-slate-50/60 border-b border-slate-100">
                 <tr>
-                  {['Employee', 'Check In', 'Check Out', 'Hours', 'Mode', 'Status'].map(col => (
+                  {['Employee', 'Date', 'Check In', 'Check Out', 'Hours', 'Mode', 'Status'].map(col => (
                     <th key={col} className="px-4 py-3 section-title text-slate-400">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {localEmployees.slice(0, 8).map((emp, i) => {
-                  const statuses = ['Present', 'Present', 'Late', 'Present', 'On Leave', 'Present', 'Present', 'Present'];
-                  const checkIns = ['08:55 AM', '09:02 AM', '09:47 AM', '08:59 AM', '—', '09:10 AM', '08:43 AM', '09:05 AM'];
-                  const modes = ['Office', 'Remote', 'Office', 'GPS', 'Leave', 'Office', 'Remote', 'Office'];
-                  const hours = ['7h 5m', '6h 58m', '6h 13m', '7h 1m', '—', '6h 50m', '7h 17m', '6h 55m'];
-                  const st = statuses[i] || 'Present';
-                  const mode = modes[i] || 'Office';
-                  return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
-                          <div>
-                            <div className="text-sm font-semibold text-slate-900">{emp.firstName} {emp.lastName}</div>
-                            <div className="text-xs text-slate-400">{emp.department}</div>
+                {filteredAttendance.length === 0 ? (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center fs-sm text-slate-400">No attendance records found for the selected filters.</td></tr>
+                ) : (
+                  filteredAttendance.map((a, i) => {
+                    const emp = localEmployees.find(e => e.id === a.employeeId);
+                    if (!emp) return null;
+                    const hrs = a.checkIn && a.checkOut ? (() => {
+                      const inTime = new Date(`2000-01-01 ${a.checkIn}`);
+                      const outTime = new Date(`2000-01-01 ${a.checkOut}`);
+                      const diff = (outTime.getTime() - inTime.getTime()) / 36e5;
+                      return `${Math.floor(diff)}h ${Math.round((diff % 1) * 60)}m`;
+                    })() : '—';
+                    return (
+                      <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
+                            <div>
+                              <div className="fs-sm fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</div>
+                              <div className="fs-xs text-slate-400">{emp.department}</div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-sm font-mono text-slate-700">{checkIns[i]}</td>
-                      <td className="px-4 py-3.5 text-sm font-mono text-slate-400">—</td>
-                      <td className="px-4 py-3.5 text-sm font-mono text-slate-600">{hours[i]}</td>
-                      <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                          mode === 'Remote' ? 'text-blue-600' : mode === 'GPS' ? 'text-emerald-600' : mode === 'Leave' ? 'text-slate-400' : 'text-slate-600'
-                        }`}>
-                          <i className={`bi bi-${mode === 'Remote' ? 'laptop' : mode === 'GPS' ? 'geo-alt' : mode === 'Leave' ? 'calendar-x' : 'building'}`}></i>
-                          {mode}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <Badge label={st} variant={st === 'Present' ? 'success' : st === 'Late' ? 'warning' : st === 'On Leave' ? 'info' : 'danger'} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="px-4 py-3.5 fs-xs text-slate-600">{a.date}</td>
+                        <td className="px-4 py-3.5 fs-sm font-mono text-slate-700">{a.checkIn || '—'}</td>
+                        <td className="px-4 py-3.5 fs-sm font-mono text-slate-400">{a.checkOut || '—'}</td>
+                        <td className="px-4 py-3.5 fs-sm font-mono text-slate-600">{hrs}</td>
+                        <td className="px-4 py-3.5">
+                          <span className={`inline-flex items-center gap-1.5 fs-xs fw-medium ${
+                            a.locationType === 'Remote' ? 'text-blue-600' : a.locationType === 'GPS' ? 'text-emerald-600' : 'text-slate-600'
+                          }`}>
+                            <i className={`bi bi-${a.locationType === 'Remote' ? 'laptop' : a.locationType === 'GPS' ? 'geo-alt' : 'building'}`}></i>
+                            {a.locationType || 'Office'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <Badge label={a.status} variant={a.status === 'Present' ? 'success' : a.status === 'Late' ? 'warning' : a.status === 'On Leave' ? 'info' : 'danger'} />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -1211,8 +1523,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 flex items-center justify-between">
           <div>
             <div className="section-title text-slate-500 mb-1">Today's Status</div>
-            <div className="text-2xl font-bold text-slate-900">{isClockedOut ? 'Shift Complete' : isClockedIn ? 'Clocked In' : 'Not Clocked In'}</div>
-            <div className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
+            <div className="fs-2xl fw-bold text-slate-900">{isClockedOut ? 'Shift Complete' : isClockedIn ? 'Clocked In' : 'Not Clocked In'}</div>
+            <div className="fs-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
               {isClockedIn ? (
                 <><i className="bi bi-clock text-emerald-500"></i> {myAttToday!.checkIn} · {myAttToday!.locationType || 'Office'}</>
               ) : (
@@ -1222,12 +1534,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
           </div>
           <div className="flex gap-3">
             <div className="text-center px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-              <div className="text-lg font-bold text-emerald-700 tabular-nums">{myAttToday?.checkIn || '—'}</div>
-              <div className="text-xs text-emerald-600">Check In</div>
+              <div className="fs-lg fw-bold text-emerald-700 tabular-nums">{myAttToday?.checkIn || '—'}</div>
+              <div className="fs-xs text-emerald-600">Check In</div>
             </div>
             <div className="text-center px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl">
-              <div className="text-lg font-bold text-slate-400 tabular-nums">{myAttToday?.checkOut || '—'}</div>
-              <div className="text-xs text-slate-400">Check Out</div>
+              <div className="fs-lg fw-bold text-slate-400 tabular-nums">{myAttToday?.checkOut || '—'}</div>
+              <div className="fs-xs text-slate-400">Check Out</div>
             </div>
           </div>
           {!isClockedIn ? (
@@ -1235,7 +1547,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           ) : !isClockedOut ? (
             <PrimaryBtn onClick={() => onClockOut()} icon="bi bi-box-arrow-right">Clock Out</PrimaryBtn>
           ) : (
-            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-lg"><i className="bi bi-check-circle-fill mr-1"></i>Done for today</span>
+            <span className="fs-xs fw-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-lg"><i className="bi bi-check-circle-fill mr-1"></i>Done for today</span>
           )}
         </div>
           );
@@ -1244,7 +1556,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {/* Weekly view */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">This Week</h3>
+            <h3 className="fs-sm fw-bold text-slate-900">This Week</h3>
           </div>
           <table className="w-full text-left">
             <thead className="bg-slate-50/60 border-b border-slate-100">
@@ -1255,30 +1567,48 @@ export const HRModule: React.FC<HRModuleProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {[
-                { day: 'Monday, Jul 7', cin: '08:52 AM', cout: '05:30 PM', hrs: '8h 38m', mode: 'Office', status: 'Present' },
-                { day: 'Tuesday, Jul 8', cin: '09:01 AM', cout: '05:45 PM', hrs: '8h 44m', mode: 'Remote', status: 'Present' },
-                { day: 'Wednesday, Jul 9', cin: '09:35 AM', cout: '06:10 PM', hrs: '8h 35m', mode: 'Office', status: 'Late' },
-                { day: 'Thursday, Jul 10', cin: '08:55 AM', cout: '—', hrs: '—', mode: 'Office', status: 'Present' },
-                { day: 'Friday, Jul 11', cin: '—', cout: '—', hrs: '—', mode: '—', status: 'Upcoming' },
-              ].map(row => (
-                <tr key={row.day} className="hover:bg-slate-50/40 transition-colors">
-                  <td className="px-4 py-3 text-sm font-semibold text-slate-900">{row.day}</td>
-                  <td className="px-4 py-3 text-sm font-mono text-slate-700">{row.cin}</td>
-                  <td className="px-4 py-3 text-sm font-mono text-slate-400">{row.cout}</td>
-                  <td className="px-4 py-3 text-sm font-mono text-slate-600">{row.hrs}</td>
-                  <td className="px-4 py-3">
-                    {row.mode !== '—' ? (
-                      <span className={`text-xs font-medium flex items-center gap-1 ${row.mode === 'Remote' ? 'text-blue-600' : 'text-slate-600'}`}>
-                        <i className={`bi bi-${row.mode === 'Remote' ? 'laptop' : 'building'}`}></i>{row.mode}
-                      </span>
-                    ) : <span className="text-slate-300 text-xs">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge label={row.status} variant={row.status === 'Present' ? 'success' : row.status === 'Late' ? 'warning' : 'default'} />
-                  </td>
-                </tr>
-              ))}
+              {(() => {
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+                const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+                return weekDays.map((day, i) => {
+                  const date = new Date(startOfWeek);
+                  date.setDate(startOfWeek.getDate() + i);
+                  const dateStr = date.toISOString().split('T')[0];
+                  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                  const label = `${dayNames[date.getDay()]}, ${monthNames[date.getMonth()]} ${date.getDate()}`;
+                  const att = myEmpRecord ? companyAttendance.find(a => a.employeeId === myEmpRecord.id && a.date === dateStr) : null;
+                  let hrs = '—';
+                  if (att?.checkIn && att?.checkOut) {
+                    const parseTime = (t: string) => { const [time, period] = t.split(' '); let [h, m] = time.split(':').map(Number); if (period === 'PM' && h !== 12) h += 12; if (period === 'AM' && h === 12) h = 0; return h * 60 + m; };
+                    const diff = parseTime(att.checkOut) - parseTime(att.checkIn);
+                    hrs = diff > 0 ? `${Math.floor(diff / 60)}h ${diff % 60}m` : '—';
+                  }
+                  const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                  const isFuture = date > today;
+                  const status = att?.status || (isFuture ? 'Upcoming' : isPast ? 'Absent' : 'Pending');
+                  return (
+                    <tr key={label} className="hover:bg-slate-50/40 transition-colors">
+                      <td className="px-4 py-3 fs-sm fw-semibold text-slate-900">{label}</td>
+                      <td className="px-4 py-3 fs-sm font-mono text-slate-700">{att?.checkIn || '—'}</td>
+                      <td className="px-4 py-3 fs-sm font-mono text-slate-400">{att?.checkOut || '—'}</td>
+                      <td className="px-4 py-3 fs-sm font-mono text-slate-600">{hrs}</td>
+                      <td className="px-4 py-3">
+                        {att?.locationType ? (
+                          <span className={`fs-xs fw-medium flex items-center gap-1 ${att.locationType === 'Remote' ? 'text-blue-600' : 'text-slate-600'}`}>
+                            <i className={`bi bi-${att.locationType === 'Remote' ? 'laptop' : 'building'}`}></i>{att.locationType}
+                          </span>
+                        ) : <span className="text-slate-300 fs-xs">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge label={status} variant={status === 'Present' ? 'success' : status === 'Late' ? 'warning' : status === 'Upcoming' ? 'default' : 'danger'} />
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
             </tbody>
           </table>
         </div>
@@ -1302,7 +1632,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {showOnboardingModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
             <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Onboarding Record</h2>
+              <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Onboarding Record</h2>
               <div className="space-y-4">
                 <div><Label>Employee</Label><Select value={onbEmpId} onChange={e => { const emp = localEmployees.find(e2 => e2.id === e.target.value); setOnbEmpId(e.target.value); if (emp) { setOnbDept(emp.department); setOnbRole(emp.designation); } }}><option value="">— Select employee —</option>{localEmployees.map(e2 => <option key={e2.id} value={e2.id}>{e2.firstName} {e2.lastName}</option>)}</Select></div>
                 <div><Label>Department</Label><Input value={onbDept} onChange={e => setOnbDept(e.target.value)} placeholder="Engineering" /></div>
@@ -1326,7 +1656,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {editOnbModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
             <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Edit Onboarding — {editOnbModal.employeeName}</h2>
+              <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Edit Onboarding — {editOnbModal.employeeName}</h2>
               <div className="space-y-4">
                 <div><Label>Phase</Label><Select value={editOnbPhase} onChange={e => setEditOnbPhase(e.target.value)}><option>Pre-boarding</option><option>Week 1</option><option>Week 2</option><option>Month 1</option></Select></div>
                 <div><Label>Status</Label><Select value={editOnbStatus} onChange={e => setEditOnbStatus(e.target.value as 'In Progress' | 'Completed' | 'Pending')}><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Pending">Pending</option></Select></div>
@@ -1351,7 +1681,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
             {companyOnb.length === 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-sm text-slate-400">No onboarding records yet. Click "New Onboarding" to get started.</div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center fs-sm text-slate-400">No onboarding records yet. Click "New Onboarding" to get started.</div>
             )}
             {companyOnb.map((o, idx) => {
               const pct = o.tasks.length > 0 ? Math.round((o.completedTasks.length / o.tasks.length) * 100) : 0;
@@ -1362,12 +1692,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     <div className="flex items-center gap-3">
                       <Avatar first={o.employeeName.split(' ')[0]} last={o.employeeName.split(' ')[1] || ''} index={idx} />
                       <div>
-                        <div className="text-sm font-semibold text-slate-900">{o.employeeName}</div>
-                        <div className="text-xs text-slate-500">{o.role} · {o.department} · Day {daysSinceStart}</div>
+                        <div className="fs-sm fw-semibold text-slate-900">{o.employeeName}</div>
+                        <div className="fs-xs text-slate-500">{o.role} · {o.department} · Day {daysSinceStart}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-slate-900 tabular-nums">{pct}%</div>
+                      <div className="fs-lg fw-bold text-slate-900 tabular-nums">{pct}%</div>
                       <Badge label={`${o.completedTasks.length}/${o.tasks.length} tasks`} variant={o.completedTasks.length === o.tasks.length ? 'success' : o.status === 'Pending' ? 'warning' : 'info'} />
                     </div>
                   </div>
@@ -1378,12 +1708,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     {o.tasks.map((task, ti) => {
                       const done = o.completedTasks.includes(task);
                       return (
-                        <div key={task} className={`flex items-center gap-2 text-xs ${done ? 'text-slate-700' : 'text-slate-400'}`}>
+                        <div key={task} className={`flex items-center gap-2 fs-xs ${done ? 'text-slate-700' : 'text-slate-400'}`}>
                           <button onClick={() => {
                             const newCompleted = done ? o.completedTasks.filter(t => t !== task) : [...o.completedTasks, task];
                             onUpdateOnboarding(o.id, { completedTasks: newCompleted, status: newCompleted.length === o.tasks.length ? 'Completed' : 'In Progress' });
                           }} className="cursor-pointer">
-                            <i className={`bi bi-${done ? 'check-circle-fill text-emerald-500' : 'circle text-slate-200'} text-sm`}></i>
+                            <i className={`bi bi-${done ? 'check-circle-fill text-emerald-500' : 'circle text-slate-200'} fs-sm`}></i>
                           </button>
                           {task}
                         </div>
@@ -1391,8 +1721,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     })}
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-200 flex gap-2">
-                    <button onClick={() => { setEditOnbModal(o); setEditOnbPhase(o.phase); setEditOnbTasks(o.tasks.join(', ')); setEditOnbStatus(o.status); }} className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Edit</button>
-                    <button onClick={async () => { if (await modalConfirm(`Delete onboarding for ${o.employeeName}?`, { variant: 'danger' })) onDeleteOnboarding(o.id); }} className="text-xs font-semibold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors">Delete</button>
+                    <button onClick={() => { setEditOnbModal(o); setEditOnbPhase(o.phase); setEditOnbTasks(o.tasks.join(', ')); setEditOnbStatus(o.status); }} className="fs-xs fw-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Edit</button>
+                    <button onClick={async () => { if (await modalConfirm(`Delete onboarding for ${o.employeeName}?`, { variant: 'danger' })) onDeleteOnboarding(o.id); }} className="fs-xs fw-semibold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors">Delete</button>
                   </div>
                 </div>
               );
@@ -1400,7 +1730,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Onboarding Checklist Template</h3>
+            <h3 className="fs-sm fw-bold text-slate-900 mb-4">Onboarding Checklist Template</h3>
             <div className="space-y-2">
               {[
                 { phase: 'Pre-Day 1', tasks: ['Offer letter', 'Background check', 'Equipment request'] },
@@ -1412,7 +1742,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div className="px-3 py-2 bg-slate-50 section-title text-slate-600">{phase.phase}</div>
                   <div className="px-3 py-2 space-y-1">
                     {phase.tasks.map(t => (
-                      <div key={t} className="flex items-center gap-2 text-xs text-slate-600">
+                      <div key={t} className="flex items-center gap-2 fs-xs text-slate-600">
                         <i className="bi bi-check2 text-emerald-500"></i>{t}
                       </div>
                     ))}
@@ -1439,7 +1769,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           {showOkrModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
               <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-                <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New OKR</h2>
+                <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New OKR</h2>
                 <div className="space-y-4">
                   <div>
                     <Label>Assign to Employee *</Label>
@@ -1475,8 +1805,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <i className="bi bi-hourglass-split text-amber-600"></i>
               </div>
               <div className="flex-1">
-                <div className="text-sm font-bold text-amber-800">{awaitingReview.length} OKR{awaitingReview.length !== 1 ? 's' : ''} Awaiting Your Review</div>
-                <div className="text-xs text-amber-600">Employees have marked these objectives as complete. Please review and approve or decline below.</div>
+                <div className="fs-sm fw-bold text-amber-800">{awaitingReview.length} OKR{awaitingReview.length !== 1 ? 's' : ''} Awaiting Your Review</div>
+                <div className="fs-xs text-amber-600">Employees have marked these objectives as complete. Please review and approve or decline below.</div>
               </div>
             </div>
           )}
@@ -1490,9 +1820,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">Performance Objectives — Q3 2026</h3>
+              <h3 className="fs-sm fw-bold text-slate-900">Performance Objectives — Q3 2026</h3>
               <div className="flex gap-2">
-                <Select className="w-40 text-xs py-1.5">
+                <Select className="w-40 fs-xs py-1.5">
                   <option>All Departments</option>
                   {['Engineering', 'Finance', 'HR', 'Sales', 'Operations'].map(d => <option key={d}>{d}</option>)}
                 </Select>
@@ -1501,8 +1831,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <div className="divide-y divide-slate-100">
               {companyOkrs.length === 0 && (
                 <div className="p-10 text-center">
-                  <i className="bi bi-bullseye text-3xl text-slate-200 block mb-2"></i>
-                  <p className="text-sm text-slate-400">No OKRs created yet.</p>
+                  <i className="bi bi-bullseye fs-3xl text-slate-200 block mb-2"></i>
+                  <p className="fs-sm text-slate-400">No OKRs created yet.</p>
                 </div>
               )}
               {companyOkrs.map((okr, i) => {
@@ -1514,38 +1844,38 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <div className="flex items-center gap-3">
                         <Avatar first={okr.employeeName.split(' ')[0]} last={okr.employeeName.split(' ')[1] || 'X'} index={i} size="sm" />
                         <div>
-                          <div className="text-sm font-semibold text-slate-900">{okr.employeeName}</div>
-                          <div className="text-xs text-slate-500">{okr.department}</div>
+                          <div className="fs-sm fw-semibold text-slate-900">{okr.employeeName}</div>
+                          <div className="fs-xs text-slate-500">{okr.department}</div>
                         </div>
                       </div>
                       <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : okr.status === 'Completed' ? 'info' : 'warning'} />
                     </div>
-                    <div className="text-sm text-slate-700 mb-1">{okr.title}</div>
-                    <div className="text-xs text-slate-500 mb-2 flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</div>
+                    <div className="fs-sm text-slate-700 mb-1">{okr.title}</div>
+                    <div className="fs-xs text-slate-500 mb-2 flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</div>
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
                         <ProgressBar value={p} color={isAwaitingReview ? 'bg-amber-500' : p >= 90 ? 'bg-blue-500' : p >= 70 ? 'bg-emerald-500' : p >= 40 ? 'bg-amber-500' : 'bg-rose-500'} />
                       </div>
-                      <span className="text-xs font-bold tabular-nums text-slate-700 w-8 text-right">{p}%</span>
+                      <span className="fs-xs fw-bold tabular-nums text-slate-700 w-8 text-right">{p}%</span>
                     </div>
 
                     {/* Approve / Decline actions for Awaiting Review OKRs */}
                     {isAwaitingReview && (
                       <div className="mt-4 pt-3 border-t border-amber-200/60 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-amber-700">
+                        <div className="flex items-center gap-2 fs-xs text-amber-700">
                           <i className="bi bi-hourglass-split"></i>
-                          <span className="font-medium">Employee marked this as complete — awaiting your review</span>
+                          <span className="fw-medium">Employee marked this as complete — awaiting your review</span>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => onUpdateOKRProgress(okr.id, 95, 'On Track')}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                            className="fs-xs fw-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
                             <i className="bi bi-x-circle"></i> Decline
                           </button>
                           <button
                             onClick={() => onUpdateOKRProgress(okr.id, 100, 'Completed')}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+                            className="fs-xs fw-semibold px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
                             <i className="bi bi-check-circle"></i> Approve Completion
                           </button>
@@ -1590,12 +1920,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <circle cx="40" cy="40" r="34" fill="none" stroke={avgProgress >= 70 ? '#10b981' : avgProgress >= 40 ? '#f59e0b' : '#f43f5e'} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${(avgProgress / 100) * 213.6} 213.6`} />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-slate-900 tabular-nums">{avgProgress}%</span>
+                <span className="fs-lg fw-bold text-slate-900 tabular-nums">{avgProgress}%</span>
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-slate-900 mb-1">Quarter Progress Summary</h3>
-              <p className="text-xs text-slate-500 mb-3">Your average OKR completion across {myOkrs.length} objective{myOkrs.length !== 1 ? 's' : ''} this quarter.</p>
+              <h3 className="fs-sm fw-bold text-slate-900 mb-1">Quarter Progress Summary</h3>
+              <p className="fs-xs text-slate-500 mb-3">Your average OKR completion across {myOkrs.length} objective{myOkrs.length !== 1 ? 's' : ''} this quarter.</p>
               <div className="flex gap-4">
                 {[
                   { label: 'Completed', count: myCompleted.length, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -1603,15 +1933,15 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   { label: 'At Risk', count: myAtRisk.length, color: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map(s => (
                   <div key={s.label} className={`${s.bg} rounded-lg px-3 py-1.5 flex items-center gap-1.5`}>
-                    <span className={`text-sm font-bold tabular-nums ${s.color}`}>{s.count}</span>
+                    <span className={`fs-sm fw-bold tabular-nums ${s.color}`}>{s.count}</span>
                     <span className="text-[10px] text-slate-500">{s.label}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div className="shrink-0 text-right hidden sm:block">
-              <div className="text-xs text-slate-400 mb-1">Quarter Deadline</div>
-              <div className="text-sm font-bold text-slate-800">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); })()}</div>
+              <div className="fs-xs text-slate-400 mb-1">Quarter Deadline</div>
+              <div className="fs-sm fw-bold text-slate-800">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); })()}</div>
               <div className="text-[10px] text-slate-400 mt-0.5">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); const diff = Math.ceil((end.getTime() - now.getTime()) / 86400000); return `${diff} days remaining`; })()}</div>
             </div>
           </div>
@@ -1621,9 +1951,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
         <div className="space-y-4">
           {myOkrs.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-10 text-center">
-              <i className="bi bi-bullseye text-3xl text-slate-200 block mb-2"></i>
-              <p className="text-sm text-slate-400">No OKRs assigned to you yet.</p>
-              <p className="text-xs text-slate-300 mt-1">Your manager or HR will create objectives for you.</p>
+              <i className="bi bi-bullseye fs-3xl text-slate-200 block mb-2"></i>
+              <p className="fs-sm text-slate-400">No OKRs assigned to you yet.</p>
+              <p className="fs-xs text-slate-300 mt-1">Your manager or HR will create objectives for you.</p>
             </div>
           )}
           {myOkrs.map((okr) => {
@@ -1640,18 +1970,18 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-slate-900">{okr.title}</span>
+                        <span className="fs-sm fw-bold text-slate-900">{okr.title}</span>
                         <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : okr.status === 'Completed' ? 'info' : 'warning'} />
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-2">
+                      <div className="fs-xs text-slate-500 flex items-center gap-2">
                         <span className="flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</span>
                         <span className="text-slate-300">·</span>
                         <span className="flex items-center gap-1"><i className="bi bi-calendar3 text-slate-400 text-[10px]"></i>{okr.period}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-4">
-                      <div className={`text-lg font-bold tabular-nums ${progressTextColor}`}>{okr.progress}%</div>
-                      <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'} text-slate-400 text-xs transition-transform`}></i>
+                      <div className={`fs-lg fw-bold tabular-nums ${progressTextColor}`}>{okr.progress}%</div>
+                      <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'} text-slate-400 fs-xs transition-transform`}></i>
                     </div>
                   </div>
                   <ProgressBar value={okr.progress} color={progressColor} />
@@ -1664,7 +1994,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       {/* Left: Details */}
                       <div className="space-y-4">
                         <div>
-                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Objective Details</h4>
+                          <h4 className="fs-xs fw-bold text-slate-500 uppercase tracking-wider mb-2">Objective Details</h4>
                           <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5">
                             {[
                               { label: 'Objective', value: okr.title, icon: 'bi bi-bullseye' },
@@ -1674,10 +2004,10 @@ export const HRModule: React.FC<HRModuleProps> = ({
                               { label: 'Status', value: okr.status, icon: 'bi bi-flag' },
                             ].map(item => (
                               <div key={item.label} className="flex items-start gap-2">
-                                <i className={`${item.icon} text-slate-400 text-xs mt-0.5`}></i>
+                                <i className={`${item.icon} text-slate-400 fs-xs mt-0.5`}></i>
                                 <div>
-                                  <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{item.label}</div>
-                                  <div className="text-xs text-slate-800 font-medium">{item.value}</div>
+                                  <div className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">{item.label}</div>
+                                  <div className="fs-xs text-slate-800 fw-medium">{item.value}</div>
                                 </div>
                               </div>
                             ))}
@@ -1686,7 +2016,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
                         {/* Progress milestones */}
                         <div>
-                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Progress Milestones</h4>
+                          <h4 className="fs-xs fw-bold text-slate-500 uppercase tracking-wider mb-2">Progress Milestones</h4>
                           <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
                             {[
                               { pct: 25, label: 'Planning & Discovery', reached: okr.progress >= 25 },
@@ -1695,11 +2025,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
                               { pct: 100, label: 'Completed', reached: okr.progress >= 100 },
                             ].map(ms => (
                               <div key={ms.pct} className="flex items-center gap-3">
-                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${ms.reached ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${ms.reached ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
                                   {ms.reached ? <i className="bi bi-check"></i> : ms.pct}
                                 </div>
                                 <div className="flex-1">
-                                  <div className={`text-xs font-medium ${ms.reached ? 'text-slate-800' : 'text-slate-400'}`}>{ms.label}</div>
+                                  <div className={`fs-xs fw-medium ${ms.reached ? 'text-slate-800' : 'text-slate-400'}`}>{ms.label}</div>
                                 </div>
                                 <span className={`text-[10px] font-mono tabular-nums ${ms.reached ? 'text-emerald-600' : 'text-slate-300'}`}>{ms.pct}%</span>
                               </div>
@@ -1711,11 +2041,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       {/* Right: Update progress */}
                       <div className="space-y-4">
                         <div>
-                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Update Progress</h4>
+                          <h4 className="fs-xs fw-bold text-slate-500 uppercase tracking-wider mb-2">Update Progress</h4>
                           <div className="bg-white rounded-xl border border-slate-200 p-4">
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-xs text-slate-600">Drag slider or enter value:</span>
-                              <span className={`text-lg font-bold tabular-nums ${progressTextColor}`}>{progressSlider}%</span>
+                              <span className="fs-xs text-slate-600">Drag slider or enter value:</span>
+                              <span className={`fs-lg fw-bold tabular-nums ${progressTextColor}`}>{progressSlider}%</span>
                             </div>
                             <input
                               type="range"
@@ -1739,7 +2069,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
                         {/* Quick actions */}
                         <div>
-                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quick Actions</h4>
+                          <h4 className="fs-xs fw-bold text-slate-500 uppercase tracking-wider mb-2">Quick Actions</h4>
                           <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
                             {[
                               { label: 'Mark as On Track', pct: null, status: 'On Track', icon: 'bi bi-check-circle', color: 'text-emerald-600 hover:bg-emerald-50', disabled: okr.status === 'On Track' },
@@ -1755,7 +2085,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                                   }
                                   setExpandedOkr(null);
                                 }}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer border border-transparent ${act.disabled ? 'text-slate-300 bg-slate-50 cursor-not-allowed' : act.color}`}
+                                className={`w-full text-left px-3 py-2 rounded-lg fs-xs fw-semibold flex items-center gap-2 transition-colors cursor-pointer border border-transparent ${act.disabled ? 'text-slate-300 bg-slate-50 cursor-not-allowed' : act.color}`}
                               >
                                 <i className={act.icon}></i> {act.label}
                               </button>
@@ -1776,110 +2106,31 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
   // ── VIEW: ORG CHART ────────────────────────────────────────────────────────
   if (activeView === 'hr-orgchart') {
-    const companyDepts = departments.filter(d => d.companyId === selectedCompany.id);
-    const deptColors = [
-      { color: 'bg-blue-50 border-blue-200', text: 'text-blue-700' },
-      { color: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700' },
-      { color: 'bg-amber-50 border-amber-200', text: 'text-amber-700' },
-      { color: 'bg-violet-50 border-violet-200', text: 'text-violet-700' },
-      { color: 'bg-rose-50 border-rose-200', text: 'text-rose-700' },
-      { color: 'bg-sky-50 border-sky-200', text: 'text-sky-700' },
-    ];
-    const deptIcons: Record<string, string> = { Engineering: '🔧', Finance: '💰', Sales: '📈', HR: '👥', Operations: '⚙️', IT: '💻' };
-    const deptMap = new Map(companyDepts.map(d => [d.id, d]));
-    const cycleMembers = new Set<string>();
-    for (const d of companyDepts) {
-      const visited: string[] = [];
-      let cur: typeof companyDepts[0] | undefined = d;
-      while (cur) {
-        const idx = visited.indexOf(cur.id);
-        if (idx !== -1) {
-          for (let i = idx; i < visited.length; i++) cycleMembers.add(visited[i]);
-          break;
-        }
-        visited.push(cur.id);
-        cur = cur.parentId ? deptMap.get(cur.parentId) : undefined;
-      }
-    }
-    const roots = companyDepts.filter(d => !d.parentId || cycleMembers.has(d.parentId));
-    const getChildren = (parentId: string) => companyDepts.filter(d => d.parentId === parentId && !cycleMembers.has(d.id));
-    const colorIdx = (d: typeof companyDepts[0]) => companyDepts.indexOf(d) % deptColors.length;
-
-    const OrgNode: React.FC<{ dept: typeof companyDepts[0]; colorI: number }> = ({ dept, colorI }) => {
-      const dc = deptColors[colorI % deptColors.length];
-      const icon = deptIcons[dept.name] || '🏢';
-      const count = localEmployees.filter(e => e.department === dept.name).length;
-      const children = getChildren(dept.id);
-      return (
-        <div className="flex flex-col items-center">
-          <div className={`${dc.color} border rounded-xl p-4 w-44 text-center hover:shadow-md transition-all group`}>
-            <div className="text-xl mb-1">{icon}</div>
-            <div className={`text-xs font-bold ${dc.text}`}>{dept.name}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{(() => { const mgr = dept.managerId ? employees.find(e => e.id === dept.managerId) : null; return mgr ? `${mgr.firstName} ${mgr.lastName}` : 'Unassigned'; })()}</div>
-            <div className="text-xs font-bold text-slate-700 tabular-nums mt-1">{count} staff</div>
-            {isHRorAdmin && (
-              <div className="mt-2 flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditDeptModal(dept); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="text-[10px] bg-white border border-slate-300 text-slate-700 rounded px-2 py-0.5 hover:bg-slate-50 transition-colors">Edit</button>
-                <button onClick={async () => { if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id); }} className="text-[10px] bg-white border border-rose-300 text-rose-700 rounded px-2 py-0.5 hover:bg-rose-50 transition-colors">Delete</button>
-              </div>
-            )}
-          </div>
-          {children.length > 0 && <div className="w-px h-5 bg-slate-300"></div>}
-          {children.length > 0 && (
-            <div className="flex items-start gap-6">
-              {children.map((child, ci) => (
-                <div key={child.id} className="flex flex-col items-center">
-                  <div className="w-px h-5 bg-slate-300"></div>
-                  <OrgNode dept={child} colorI={colorI + ci + 1} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    };
-
     return (
       <div className="space-y-6">
         <SectionHeader title="Organisation Chart" subtitle={`${selectedCompany.name} · Reporting structure`} />
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-8 overflow-x-auto">
-          <div className="flex flex-col items-center min-w-[600px]">
-            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }} className="rounded-2xl px-8 py-4 text-center shadow-lg mb-6">
-              <div className="text-white font-bold text-sm">Company CEO</div>
-              <div className="text-slate-400 text-xs mt-0.5">Managing Director</div>
-            </div>
-            {roots.length > 0 ? (
-              <div className="flex items-start gap-8 mt-0">
-                {roots.map((dept, i) => (
-                  <OrgNode key={dept.id} dept={dept} colorI={i} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-slate-400 py-8 mt-4">No departments yet. Add one in the Department Directory tab.</div>
-            )}
-          </div>
-        </div>
+        <OrgChart employees={employees} departments={departments} companyId={selectedCompany.id} />
         {editDeptModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">Edit Department</h3>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Department Name</label>
-              <input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3" />
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Manager (employee)</label>
-              <select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3">
+              <h3 className="fs-sm fw-bold text-slate-800 mb-4">Edit Department</h3>
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Department Name</label>
+              <input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-3" />
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Manager (employee)</label>
+              <select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-3">
                 <option value="">Unassigned</option>
                 {localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
               </select>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Budget</label>
-              <input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3" />
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Reports To</label>
-              <select value={editDeptParent} onChange={e => setEditDeptParent(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-4">
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Budget</label>
+              <input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-3" />
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Reports To</label>
+              <select value={editDeptParent} onChange={e => setEditDeptParent(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-4">
                 <option value="">Top Level (no parent)</option>
                 {departments.filter(d => d.companyId === selectedCompany.id && d.id !== editDeptModal?.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
               <div className="flex gap-2">
-                <button onClick={() => { onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined }); setEditDeptModal(null); }} className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-semibold hover:bg-blue-700 transition-colors">Save</button>
-                <button onClick={() => setEditDeptModal(null)} className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 text-sm font-semibold hover:bg-slate-200 transition-colors">Cancel</button>
+                <button onClick={() => { onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined }); setEditDeptModal(null); }} className="flex-1 bg-blue-600 text-white rounded-lg py-2 fs-sm fw-semibold hover:bg-blue-700 transition-colors">Save</button>
+                <button onClick={() => setEditDeptModal(null)} className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 fs-sm fw-semibold hover:bg-slate-200 transition-colors">Cancel</button>
               </div>
             </div>
           </div>
@@ -1920,9 +2171,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {isHRorAdmin && (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-slate-900">Notice Period Setting</h3>
+              <h3 className="fs-sm fw-bold text-slate-900">Notice Period Setting</h3>
               {!editingNotice && (
-                <button onClick={() => { setEditingNotice(true); setNoticeInput(String(noticeDays)); }} className="text-xs font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all">
+                <button onClick={() => { setEditingNotice(true); setNoticeInput(String(noticeDays)); }} className="fs-xs fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all">
                   <i className="bi bi-pencil mr-1"></i> Edit
                 </button>
               )}
@@ -1931,14 +2182,14 @@ export const HRModule: React.FC<HRModuleProps> = ({
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Label>Notice Period (days)</Label>
-                  <input type="number" min="1" max="365" value={noticeInput} onChange={e => setNoticeInput(e.target.value)} className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none" />
-                  <span className="text-xs text-slate-500">days</span>
+                  <input type="number" min="1" max="365" value={noticeInput} onChange={e => setNoticeInput(e.target.value)} className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 fs-sm text-slate-900 focus:border-slate-400 focus:outline-none" />
+                  <span className="fs-xs text-slate-500">days</span>
                 </div>
                 <PrimaryBtn onClick={() => { const v = parseInt(noticeInput); if (v > 0) { onUpdateCompanySettings(selectedCompany.id, { noticePeriodDays: v }); setEditingNotice(false); } }}>Save</PrimaryBtn>
                 <SecBtn onClick={() => setEditingNotice(false)}>Cancel</SecBtn>
               </div>
             ) : (
-              <p className="text-sm text-slate-600">Employees must serve <span className="font-bold text-slate-900">{noticeDays} days</span> notice before their last working day. Minimum last working day for new requests: <span className="font-semibold text-slate-900">{minLastDay}</span>.</p>
+              <p className="fs-sm text-slate-600">Employees must serve <span className="fw-bold text-slate-900">{noticeDays} days</span> notice before their last working day. Minimum last working day for new requests: <span className="fw-semibold text-slate-900">{minLastDay}</span>.</p>
             )}
           </div>
         )}
@@ -1946,12 +2197,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {/* Employee self-service: Submit resignation */}
         {isEmployeeOnly && myEmpRecord && (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Submit Resignation</h3>
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700">
-              <i className="bi bi-info-circle mr-1"></i> Company notice period is <span className="font-bold">{noticeDays} days</span>. Your last working day must be on or after <span className="font-bold">{minLastDay}</span>.
+            <h3 className="fs-sm fw-bold text-slate-900 mb-4">Submit Resignation</h3>
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl fs-xs text-blue-700">
+              <i className="bi bi-info-circle mr-1"></i> Company notice period is <span className="fw-bold">{noticeDays} days</span>. Your last working day must be on or after <span className="fw-bold">{minLastDay}</span>.
             </div>
             {selfExitSuccess && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 fs-sm text-emerald-700 fw-semibold">
                 <i className="bi bi-check-circle-fill"></i> Resignation request submitted! Awaiting department head approval.
               </div>
             )}
@@ -1989,9 +2240,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {/* HR/Admin: Register separation */}
         {isHRorAdmin && (
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Register Separation (Involuntary)</h3>
+            <h3 className="fs-sm fw-bold text-slate-900 mb-4">Register Separation (Involuntary)</h3>
             {exitSuccess && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-sm text-emerald-700 font-semibold">
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 fs-sm text-emerald-700 fw-semibold">
                 <i className="bi bi-check-circle-fill"></i> Separation logged successfully!
               </div>
             )}
@@ -2037,13 +2288,13 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {/* Exit Requests List */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">{isEmployeeOnly ? 'My Exit Requests' : 'Exit Requests'}</h3>
+            <h3 className="fs-sm fw-bold text-slate-900">{isEmployeeOnly ? 'My Exit Requests' : 'Exit Requests'}</h3>
           </div>
           <div className="divide-y divide-slate-100">
             {(isEmployeeOnly ? myExitReqs : deptExitReqs).length === 0 && (
               <div className="p-10 text-center">
-                <i className="bi bi-inbox text-3xl text-slate-200 block mb-2"></i>
-                <p className="text-sm text-slate-400">No exit requests found.</p>
+                <i className="bi bi-inbox fs-3xl text-slate-200 block mb-2"></i>
+                <p className="fs-sm text-slate-400">No exit requests found.</p>
               </div>
             )}
             {(isEmployeeOnly ? myExitReqs : deptExitReqs).map((req, i) => {
@@ -2057,15 +2308,15 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} index={i} />
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-slate-900">{empName}</span>
-                          <span className="text-xs text-slate-400">· {empDept}</span>
+                          <span className="fs-sm fw-semibold text-slate-900">{empName}</span>
+                          <span className="fs-xs text-slate-400">· {empDept}</span>
                           <Badge label={req.exitType} variant="info" />
                         </div>
-                        <div className="text-sm text-slate-600 flex items-center gap-2">
+                        <div className="fs-sm text-slate-600 flex items-center gap-2">
                           <i className="bi bi-calendar3 text-slate-400"></i>
                           Last day: {req.lastWorkingDay}
                         </div>
-                        {req.reason && <div className="text-xs text-slate-400 mt-1 italic">"{req.reason}"</div>}
+                        {req.reason && <div className="fs-xs text-slate-400 mt-1 italic">"{req.reason}"</div>}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -2078,8 +2329,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         if (isHOD) {
                           return (
                             <div className="flex gap-2">
-                              <button onClick={() => onApproveExitRequest(req.id, 'HOD Approved', selectedUser.name)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
-                              <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                              <button onClick={() => onApproveExitRequest(req.id, 'HOD Approved', selectedUser.name)} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                              <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                             </div>
                           );
                         }
@@ -2089,35 +2340,35 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       {/* HR: approve/reject HOD Approved requests */}
                       {req.status === 'HOD Approved' && isHRorAdmin && (
                         <div className="flex gap-2">
-                          <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
-                          <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                          <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
+                          <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                         </div>
                       )}
 
                       {/* HR: direct approve/reject for Pending (involuntary terminations) */}
                       {req.status === 'Pending' && isHRorAdmin && (
                         <div className="flex gap-2">
-                          <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
-                          <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
+                          <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
+                          <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                         </div>
                       )}
 
                       {req.status === 'Approved' && req.hrApprovedBy && (
                         <div className="text-[10px] text-slate-500 flex items-center gap-1">
                           <i className="bi bi-check2-circle text-emerald-500"></i>
-                          Approved by <span className="font-semibold text-slate-700">{req.hrApprovedBy}</span>
+                          Approved by <span className="fw-semibold text-slate-700">{req.hrApprovedBy}</span>
                         </div>
                       )}
                       {req.status === 'HOD Approved' && req.hodApprovedBy && (
                         <div className="text-[10px] text-slate-500 flex items-center gap-1">
                           <i className="bi bi-check2-circle text-amber-500"></i>
-                          HOD approved by <span className="font-semibold text-slate-700">{req.hodApprovedBy}</span> · Awaiting HR
+                          HOD approved by <span className="fw-semibold text-slate-700">{req.hodApprovedBy}</span> · Awaiting HR
                         </div>
                       )}
                       {req.status === 'Rejected' && req.rejectedBy && (
                         <div className="text-[10px] text-slate-500 flex items-center gap-1">
                           <i className="bi bi-x-circle text-rose-500"></i>
-                          Rejected by <span className="font-semibold text-slate-700">{req.rejectedBy}</span>
+                          Rejected by <span className="fw-semibold text-slate-700">{req.rejectedBy}</span>
                         </div>
                       )}
                     </div>
@@ -2156,7 +2407,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {showDeptModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
             <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Add Department</h2>
+              <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Add Department</h2>
               <div className="space-y-4">
                 <div><Label>Department Name *</Label><Input value={deptName} onChange={e => setDeptName(e.target.value)} placeholder="Operations" /></div>
                 <div><Label>Manager</Label><Select value={deptManager} onChange={e => setDeptManager(e.target.value)}><option value="">— Select manager —</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
@@ -2176,24 +2427,24 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {editDeptModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
-              <h3 className="text-sm font-bold text-slate-800 mb-4">Edit Department</h3>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Department Name</label>
-              <input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3" />
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Manager (employee)</label>
-              <select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3">
+              <h3 className="fs-sm fw-bold text-slate-800 mb-4">Edit Department</h3>
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Department Name</label>
+              <input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-3" />
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Manager (employee)</label>
+              <select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-3">
                 <option value="">Unassigned</option>
                 {localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
               </select>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Budget</label>
-              <input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-3" />
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Reports To</label>
-              <select value={editDeptParent} onChange={e => setEditDeptParent(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm mb-4">
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Budget</label>
+              <input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-3" />
+              <label className="fs-xs fw-semibold text-slate-600 mb-1 block">Reports To</label>
+              <select value={editDeptParent} onChange={e => setEditDeptParent(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 fs-sm mb-4">
                 <option value="">Top Level (no parent)</option>
                 {departments.filter(d => d.companyId === selectedCompany.id && d.id !== editDeptModal?.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
               <div className="flex gap-2">
-                <button onClick={() => { onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined }); setEditDeptModal(null); }} className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-semibold hover:bg-blue-700 transition-colors">Save</button>
-                <button onClick={() => setEditDeptModal(null)} className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 text-sm font-semibold hover:bg-slate-200 transition-colors">Cancel</button>
+                <button onClick={() => { onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined }); setEditDeptModal(null); }} className="flex-1 bg-blue-600 text-white rounded-lg py-2 fs-sm fw-semibold hover:bg-blue-700 transition-colors">Save</button>
+                <button onClick={() => setEditDeptModal(null)} className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 fs-sm fw-semibold hover:bg-slate-200 transition-colors">Cancel</button>
               </div>
             </div>
           </div>
@@ -2212,27 +2463,259 @@ export const HRModule: React.FC<HRModuleProps> = ({
             return (
               <div key={dept.id} className={`border rounded-2xl p-5 hover:shadow-md transition-all cursor-default ${color}`}>
                 <div className="flex items-start justify-between mb-3">
-                  <div className="text-3xl">{icon}</div>
-                  <span className="text-lg font-bold tabular-nums text-slate-700">{count}</span>
+                  <div className="fs-3xl">{icon}</div>
+                  <span className="fs-lg fw-bold tabular-nums text-slate-700">{count}</span>
                 </div>
-                <div className="text-sm font-bold text-slate-900 mb-0.5">{dept.name}</div>
-                <div className="text-xs text-slate-500 mb-3">{managerName ? managerName.firstName + ' ' + managerName.lastName : 'Unassigned'}</div>
-                <div className="space-y-1 text-xs text-slate-500">
+                <div className="fs-sm fw-bold text-slate-900 mb-0.5">{dept.name}</div>
+                <div className="fs-xs text-slate-500 mb-3">{managerName ? managerName.firstName + ' ' + managerName.lastName : 'Unassigned'}</div>
+                <div className="space-y-1 fs-xs text-slate-500">
                   <div className="flex items-center gap-1.5"><i className="bi bi-cash text-slate-400"></i>GHS {dept.budget.toLocaleString()}</div>
                 </div>
                 {isHRorAdmin && (
                   <div className="mt-3 pt-3 border-t border-slate-200 flex gap-2">
-                    <button onClick={() => { setEditDeptModal(dept); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Edit</button>
-                    <button onClick={async () => { if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id); }} className="text-xs font-semibold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors">Delete</button>
+                    <button onClick={() => { setEditDeptModal(dept); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="fs-xs fw-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Edit</button>
+                    <button onClick={async () => { if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id); }} className="fs-xs fw-semibold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors">Delete</button>
                   </div>
                 )}
               </div>
             );
           })}
           {companyDepts.length === 0 && (
-            <div className="col-span-full text-center text-sm text-slate-400 py-8">No departments yet. Click "Add Department" to create one.</div>
+            <div className="col-span-full text-center fs-sm text-slate-400 py-8">No departments yet. Click "Add Department" to create one.</div>
           )}
         </div>
+      </div>
+    );
+  }
+
+  // ── VIEW: BANK ACCOUNT UPDATES ─────────────────────────────────────────────
+  if (activeView === 'hr-bank-updates') {
+    const companyUpdates = bankAccountUpdates?.filter(u => u.companyId === selectedCompany.id) || [];
+    const pendingUpdates = companyUpdates.filter(u => u.status === 'Pending');
+    const approvedUpdates = companyUpdates.filter(u => u.status === 'Approved');
+    const rejectedUpdates = companyUpdates.filter(u => u.status === 'Rejected');
+
+    if (!isHRorAdmin) {
+      return (
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-xs border border-slate-200">
+          <i className="bi bi-shield-lock text-4xl text-slate-300 mb-4"></i>
+          <h3 className="fs-lg fw-semibold text-slate-800 mb-2">Access Denied</h3>
+          <p className="text-slate-500 fs-sm text-center max-w-md">You do not have permission to view bank account updates. This is restricted to HR and Administrators.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <SectionHeader title="Bank Account Updates" subtitle="Review and approve employee bank account change requests" />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard label="Pending Requests" value={pendingUpdates.length.toString()} icon="bi bi-clock-history" sub="Needs review" />
+          <StatCard label="Approved (This Month)" value={approvedUpdates.length.toString()} icon="bi bi-check-circle" sub="Processed" />
+          <StatCard label="Rejected" value={rejectedUpdates.length.toString()} icon="bi bi-x-circle" sub="Action taken" />
+        </div>
+
+        <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="fs-base fw-semibold text-slate-800">Pending Approvals</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <TableHead cols={[{label: 'Employee'}, {label: 'Requested On'}, {label: 'New Bank Details'}, {label: 'Status'}, {label: 'Actions'}]} />
+              <tbody>
+                {pendingUpdates.length === 0 ? <EmptyRow cols={5} message="No pending bank account updates" /> : pendingUpdates.map(req => (
+                  <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 fs-sm fw-semibold">
+                          {req.employeeName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="fs-sm fw-medium text-slate-800">{req.employeeName}</div>
+                          <div className="text-[11px] text-slate-500">EMP-{req.employeeId.slice(0, 4)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-5 text-slate-600 fs-sm">
+                      {new Date(req.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 px-5 text-slate-600 fs-sm">
+                      <div><span className="fw-medium">Bank:</span> {req.bankName}</div>
+                      <div><span className="fw-medium">Acct:</span> {req.accountNumber}</div>
+                      <div><span className="fw-medium">Name:</span> {req.accountName}</div>
+                      {req.sortCode && <div><span className="fw-medium">Sort/Routing:</span> {req.sortCode}</div>}
+                    </td>
+                    <td className="py-3 px-5">
+                      <Badge label="Pending" variant="warning" />
+                    </td>
+                    <td className="py-3 px-5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => onApproveBankAccountUpdate && onApproveBankAccountUpdate(req.id, req.employeeId, JSON.stringify({ bankName: req.bankName, accountName: req.accountName, accountNumber: req.accountNumber, sortCode: req.sortCode, routingNumber: req.routingNumber }), selectedUser.name)}
+                          className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg fs-xs fw-semibold transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => onRejectBankAccountUpdate && onRejectBankAccountUpdate(req.id, selectedUser.name)}
+                          className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg fs-xs fw-semibold transition-colors"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="fs-base fw-semibold text-slate-800">Recent History</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <TableHead cols={[{label: 'Employee'}, {label: 'Bank Details'}, {label: 'Status'}, {label: 'Processed By'}, {label: 'Date'}]} />
+              <tbody>
+                {[...approvedUpdates, ...rejectedUpdates].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0,10).map(req => (
+                  <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 fs-sm fw-semibold">
+                          {req.employeeName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="fs-sm fw-medium text-slate-800">{req.employeeName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-5 text-slate-600 fs-sm">
+                      {req.bankName} - {req.accountNumber.slice(-4).padStart(req.accountNumber.length, '*')}
+                    </td>
+                    <td className="py-3 px-5">
+                      <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : 'danger'} />
+                    </td>
+                    <td className="py-3 px-5 text-slate-600 fs-sm">
+                      {req.processedBy || 'System'}
+                    </td>
+                    <td className="py-3 px-5 text-slate-600 fs-sm">
+                      {new Date(req.updatedAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+                {[...approvedUpdates, ...rejectedUpdates].length === 0 && (
+                  <EmptyRow cols={5} message="No recent bank account updates history" />
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── VIEW: PROFILE UPDATE REQUESTS ────────────────────────────────────────
+  if (activeView === 'hr-profile-updates') {
+    const companyRequests = profileUpdateRequests?.filter(r => r.companyId === selectedCompany.id) || [];
+    const pendingRequests = companyRequests.filter(r => r.status === 'Pending');
+    const processedRequests = companyRequests.filter(r => r.status !== 'Pending');
+
+    if (!isHRorAdmin) {
+      return (
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-xs border border-slate-200">
+          <i className="bi bi-shield-lock text-4xl text-slate-300 mb-4"></i>
+          <h3 className="fs-lg fw-semibold text-slate-800 mb-2">Access Denied</h3>
+          <p className="text-slate-500 fs-sm text-center max-w-md">You do not have permission to view profile update requests.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <SectionHeader title="Profile Update Requests" subtitle="Review and approve employee profile change requests" />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard label="Pending" value={pendingRequests.length.toString()} icon="bi bi-clock-history" sub="Needs review" />
+          <StatCard label="Approved" value={companyRequests.filter(r => r.status === 'Approved').length.toString()} icon="bi bi-check-circle" sub="Applied" />
+          <StatCard label="Rejected" value={companyRequests.filter(r => r.status === 'Rejected').length.toString()} icon="bi bi-x-circle" sub="Declined" />
+        </div>
+
+        {/* Pending Requests */}
+        <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="fs-base fw-semibold text-slate-800">Pending Approvals</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <TableHead cols={[{label: 'Employee'}, {label: 'Field'}, {label: 'Current Value'}, {label: 'Requested Value'}, {label: 'Date'}, {label: 'Actions'}]} />
+              <tbody>
+                {pendingRequests.length === 0 ? <EmptyRow cols={6} message="No pending profile update requests" /> : pendingRequests.map(req => (
+                  <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 fs-sm fw-semibold">
+                          {req.employeeName.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="fs-sm fw-medium text-slate-800">{req.employeeName}</div>
+                          <div className="text-[11px] text-slate-500">{req.department}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-5 text-slate-600 fs-sm fw-medium">{req.label}</td>
+                    <td className="py-3 px-5 text-slate-500 fs-sm">{req.currentValue || <span className="italic text-slate-300">empty</span>}</td>
+                    <td className="py-3 px-5 text-slate-800 fs-sm fw-semibold">{req.newValue}</td>
+                    <td className="py-3 px-5 text-slate-500 fs-sm">{new Date(req.requestedAt).toLocaleDateString()}</td>
+                    <td className="py-3 px-5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => onApproveProfileUpdate?.(req.id)}
+                          className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg fs-xs fw-semibold transition-colors cursor-pointer"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => onRejectProfileUpdate?.(req.id)}
+                          className="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg fs-xs fw-semibold transition-colors cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Processed History */}
+        {processedRequests.length > 0 && (
+          <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <h3 className="fs-base fw-semibold text-slate-800">History</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <TableHead cols={[{label: 'Employee'}, {label: 'Field'}, {label: 'Change'}, {label: 'Status'}, {label: 'Processed By'}, {label: 'Date'}]} />
+                <tbody>
+                  {processedRequests.sort((a, b) => new Date(b.processedAt || b.requestedAt).getTime() - new Date(a.processedAt || a.requestedAt).getTime()).slice(0, 20).map(req => (
+                    <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-5 fs-sm text-slate-800">{req.employeeName}</td>
+                      <td className="py-3 px-5 fs-sm text-slate-600 fw-medium">{req.label}</td>
+                      <td className="py-3 px-5 fs-sm text-slate-500">{req.currentValue || '—'} → {req.newValue}</td>
+                      <td className="py-3 px-5"><Badge label={req.status} variant={req.status === 'Approved' ? 'success' : 'danger'} /></td>
+                      <td className="py-3 px-5 fs-sm text-slate-500">{req.processedBy || '—'}</td>
+                      <td className="py-3 px-5 fs-sm text-slate-500">{req.processedAt ? new Date(req.processedAt).toLocaleDateString() : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2291,31 +2774,81 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
   };
 
   const handlePrint = () => {
-    const logoHtml = selectedCompany.companyLogo ? `<div style="text-align:center;margin-bottom:20px;"><img src="${selectedCompany.companyLogo}" style="max-height:80px;max-width:200px;" alt="Company Logo" /></div>` : '';
-    const sigHtml = selectedCompany.companySignature ? `<div style="margin-top:30px;"><img src="${selectedCompany.companySignature}" style="max-height:60px;" alt="Signature" /></div>` : `<div style="margin-top:40px;">_________________________</div>`;
-    const html = `<!DOCTYPE html><html><head><title>${letterType} Letter</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.8;color:#1e293b;}h2{text-align:center;font-size:14px;color:#64748b;margin-bottom:30px;letter-spacing:1px;}</style></head><body>${logoHtml}<h2>${letterType.toUpperCase()} LETTER</h2><pre style="white-space:pre-wrap;font-family:inherit;">${letterContent}</pre>${sigHtml}<div style="margin-top:20px;font-size:11px;color:#94a3b8;text-align:center;">${companyName} | ${companyAddr}</div></body></html>`;
+    const logoHtml = selectedCompany.companyLogo
+      ? `<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #0f172a;"><img src="${selectedCompany.companyLogo}" style="height:56px;object-fit:contain;" alt="Logo" /><div><div style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">${companyName}</div><div style="font-size:10px;color:#94a3b8;margin-top:1px;">${companyAddr || ''}</div></div></div>`
+      : `<div style="margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #0f172a;"><div style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">${companyName}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">${companyAddr || ''}</div></div>`;
+    const sigHtml = selectedCompany.companySignature
+      ? `<div style="margin-top:48px;display:flex;justify-content:flex-end;"><div style="text-align:center;"><img src="${selectedCompany.companySignature}" style="height:60px;object-fit:contain;" alt="Signature" /><div style="width:200px;border-top:1.5px solid #cbd5e1;margin-top:4px;padding-top:6px;"><div style="font-size:10px;color:#64748b;font-weight:600;">${selectedUser.name}</div><div style="font-size:9px;color:#94a3b8;">Human Resources</div></div></div></div>`
+      : `<div style="margin-top:48px;display:flex;justify-content:flex-end;"><div style="text-align:center;min-width:200px;"><div style="font-family:'Georgia','Times New Roman',serif;font-size:22px;color:#0f172a;font-style:italic;padding-bottom:6px;border-bottom:1.5px solid #cbd5e1;margin-bottom:6px;">${selectedUser.name}</div><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Human Resources</div><div style="font-size:9px;color:#94a3b8;margin-top:3px;">${companyName}</div></div></div>`;
+
+    const letterHtml = letterContent
+      .replace(/\n\n/g, '</p><p style="margin:12px 0;">')
+      .replace(/\n/g, '<br/>');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${letterType} Letter</title><style>
+      @page { margin: 20mm 22mm; size: A4; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Georgia', 'Times New Roman', serif; max-width: 680px; margin: 0 auto; padding: 40px; line-height: 1.85; color: #1e293b; font-size: 13px; }
+      .letter-title { text-align: center; font-size: 12px; font-weight: 700; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; }
+      .letter-body p { margin: 12px 0; }
+      .letter-body ul { margin: 12px 0 12px 20px; }
+      .letter-body li { margin: 4px 0; }
+      .letter-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; font-family: -apple-system, sans-serif; }
+      @media print { body { padding: 0; } }
+    </style></head><body>
+      ${logoHtml}
+      <div class="letter-title">${letterType.toUpperCase()} LETTER</div>
+      <div class="letter-body"><p style="margin:12px 0;">${letterHtml}</p></div>
+      ${sigHtml}
+      <div class="letter-footer">
+        <div>${companyName}</div>
+        <div>Confidential — ${today}</div>
+      </div>
+    </body></html>`;
     const win = window.open('', '_blank');
-    if (win) { win.document.write(html); win.document.close(); win.print(); }
+    if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 350); }
   };
 
   const handleDownload = () => {
-    const logoText = selectedCompany.companyLogo ? `[Company Logo: ${selectedCompany.companyLogo}]\n` : '';
-    const sigText = selectedCompany.companySignature ? `\n\n[Signature: ${selectedCompany.companySignature}]\n` : '\n\n_________________________\n';
-    const full = `${logoText}${letterContent}${sigText}\n${companyName} | ${companyAddr}`;
-    const blob = new Blob([full], { type: 'text/plain' });
+    const letterHtml = letterContent
+      .replace(/\n\n/g, '</p><p style="margin:12px 0;">')
+      .replace(/\n/g, '<br/>');
+
+    const logoHtml = selectedCompany.companyLogo
+      ? `<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #0f172a;"><img src="${selectedCompany.companyLogo}" style="height:56px;object-fit:contain;" alt="Logo" /><div><div style="font-size:18px;font-weight:800;color:#0f172a;">${companyName}</div><div style="font-size:10px;color:#94a3b8;">${companyAddr || ''}</div></div></div>`
+      : `<div style="margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #0f172a;"><div style="font-size:22px;font-weight:800;color:#0f172a;">${companyName}</div></div>`;
+
+    const sigHtml = selectedCompany.companySignature
+      ? `<div style="margin-top:48px;"><img src="${selectedCompany.companySignature}" style="height:56px;" alt="Signature" /><div style="width:200px;border-top:1.5px solid #cbd5e1;margin-top:4px;padding-top:6px;font-size:10px;color:#64748b;">${selectedUser.name}<br/>Human Resources</div></div>`
+      : `<div style="margin-top:48px;"><div style="width:200px;border-top:1.5px solid #cbd5e1;padding-top:6px;font-size:10px;color:#64748b;">${selectedUser.name}<br/>Human Resources<br/>${companyName}</div></div>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${letterType} Letter</title><style>
+      @page { margin: 20mm 22mm; size: A4; }
+      body { font-family: 'Georgia', serif; max-width: 680px; margin: 0 auto; padding: 40px; line-height: 1.85; color: #1e293b; font-size: 13px; }
+      .letter-title { text-align: center; font-size: 12px; font-weight: 700; color: #64748b; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; }
+    </style></head><body>
+      ${logoHtml}
+      <div class="letter-title">${letterType.toUpperCase()} LETTER</div>
+      <div><p style="margin:12px 0;">${letterHtml}</p></div>
+      ${sigHtml}
+    </body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `${letterType}_letter_${selectedEmp ? selectedEmp.lastName : 'employee'}_${today}.txt`; a.click();
+    a.href = url;
+    a.download = `${letterType}_letter_${selectedEmp ? selectedEmp.lastName : 'employee'}_${today}.html`;
+    a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
       <div className="flex items-center gap-2 mb-1">
-        <i className="bi bi-file-earmark-text text-lg text-slate-700"></i>
-        <h3 className="text-sm font-bold text-slate-900">Official Letters</h3>
+        <i className="bi bi-file-earmark-text fs-lg text-slate-700"></i>
+        <h3 className="fs-sm fw-bold text-slate-900">Official Letters</h3>
       </div>
-      <p className="text-xs text-slate-500 mb-4">Generate, edit, and print official HR documents using company letterhead.</p>
+      <p className="fs-xs text-slate-500 mb-4">Generate, edit, and print official HR documents using company letterhead.</p>
 
       <div className="grid gap-4 sm:grid-cols-3 mb-4">
         {([
@@ -2324,8 +2857,8 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
           { key: 'confirmation', label: 'Confirmation Letter', icon: 'bi bi-patch-check', desc: 'Post-probation confirmation' },
         ] as const).map(lt => (
           <button key={lt.key} onClick={() => { setLetterType(lt.key); setShowPreview(false); setLetterContent(''); }} className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${letterType === lt.key ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'}`}>
-            <i className={`${lt.icon} text-lg mb-2 block ${letterType === lt.key ? 'text-white' : 'text-slate-500'}`}></i>
-            <div className="text-xs font-bold">{lt.label}</div>
+            <i className={`${lt.icon} fs-lg mb-2 block ${letterType === lt.key ? 'text-white' : 'text-slate-500'}`}></i>
+            <div className="fs-xs fw-bold">{lt.label}</div>
             <div className={`text-[10px] mt-0.5 ${letterType === lt.key ? 'text-slate-300' : 'text-slate-400'}`}>{lt.desc}</div>
           </button>
         ))}
@@ -2341,17 +2874,17 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
             ))}
           </Select>
         </div>
-        <button onClick={handleGenerate} disabled={!selectedEmpId} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-all ${selectedEmpId ? 'bg-slate-900 text-white hover:bg-slate-700 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}><i className="bi bi-file-earmark-text"></i>Generate Letter</button>
+        <button onClick={handleGenerate} disabled={!selectedEmpId} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg fs-xs fw-semibold shadow-xs transition-all ${selectedEmpId ? 'bg-slate-900 text-white hover:bg-slate-700 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}><i className="bi bi-file-earmark-text"></i>Generate Letter</button>
       </div>
 
       {showPreview && letterContent && (
         <div className="border border-slate-200 rounded-xl overflow-hidden">
           <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Letter Preview</span>
+            <span className="fs-xs fw-bold text-slate-700 uppercase tracking-wide">Letter Preview</span>
             <div className="flex gap-2">
-              <button onClick={() => setShowPreview(false)} className="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer px-2 py-1 rounded hover:bg-slate-200 transition-all"><i className="bi bi-x-lg mr-1"></i>Close</button>
-              <button onClick={handlePrint} className="text-xs font-semibold text-white bg-slate-900 hover:bg-slate-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-printer mr-1"></i>Print / PDF</button>
-              <button onClick={handleDownload} className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-download mr-1"></i>Download</button>
+              <button onClick={() => setShowPreview(false)} className="fs-xs fw-semibold text-slate-500 hover:text-slate-700 cursor-pointer px-2 py-1 rounded hover:bg-slate-200 transition-all"><i className="bi bi-x-lg mr-1"></i>Close</button>
+              <button onClick={handlePrint} className="fs-xs fw-semibold text-white bg-slate-900 hover:bg-slate-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-printer mr-1"></i>Print / PDF</button>
+              <button onClick={handleDownload} className="fs-xs fw-semibold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-download mr-1"></i>Download</button>
             </div>
           </div>
           <div className="p-6 bg-white">
@@ -2360,12 +2893,12 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
                 <img src={selectedCompany.companyLogo} alt="Logo" className="h-16 mx-auto object-contain" />
               </div>
             )}
-            <h2 className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{letterType} Letter</h2>
+            <h2 className="text-center fs-xs fw-bold text-slate-400 uppercase tracking-widest mb-4">{letterType} Letter</h2>
             <textarea
               value={letterContent}
               onChange={e => setLetterContent(e.target.value)}
               rows={20}
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 font-mono leading-relaxed focus:border-slate-400 focus:outline-none resize-y"
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 fs-sm text-slate-900 font-mono leading-relaxed focus:border-slate-400 focus:outline-none resize-y"
               style={{ minHeight: '300px' }}
             />
             {selectedCompany.companySignature && (
@@ -2375,7 +2908,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
             )}
           </div>
           <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center gap-2">
-            <i className="bi bi-info-circle text-xs text-slate-400"></i>
+            <i className="bi bi-info-circle fs-xs text-slate-400"></i>
             <span className="text-[10px] text-slate-500">Edit the content above before printing. Changes will reflect in the printed/downloaded letter.</span>
           </div>
         </div>

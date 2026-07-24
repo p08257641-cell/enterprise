@@ -29,13 +29,13 @@ const StatCard = ({ label, value, sub, icon, trend, trendUp }: {
 }) => (
   <div className="bg-white border border-slate-200/80 rounded-xl p-5 flex flex-col gap-2 shadow-xs hover:shadow-sm transition-all">
     <div className="flex items-center justify-between">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>
-      <i className={`${icon} text-sm text-slate-300`}></i>
+      <span className="fs-xs fw-semibold uppercase tracking-wider text-slate-500">{label}</span>
+      <i className={`${icon} fs-sm text-slate-300`}></i>
     </div>
-    <div className="text-2xl font-bold tracking-tight tabular-nums text-slate-900">{value}</div>
-    {sub && <p className="text-xs leading-snug text-slate-500">{sub}</p>}
+    <div className="fs-2xl fw-bold tracking-tight tabular-nums text-slate-900">{value}</div>
+    {sub && <p className="fs-xs leading-snug text-slate-500">{sub}</p>}
     {trend && (
-      <div className={`text-xs font-semibold ${trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
+      <div className={`fs-xs fw-semibold ${trendUp ? 'text-emerald-600' : 'text-rose-600'}`}>
         <i className={`bi bi-arrow-${trendUp ? 'up' : 'down'} mr-1`}></i>{trend}
       </div>
     )}
@@ -44,11 +44,11 @@ const StatCard = ({ label, value, sub, icon, trend, trendUp }: {
 
 const ChartBar: React.FC<{ label: string; value: number; maxValue: number; color?: string }> = ({ label, value, maxValue, color = 'bg-slate-800' }) => (
   <div className="flex items-center gap-3">
-    <span className="text-xs text-slate-500 w-24 truncate">{label}</span>
+    <span className="fs-xs text-slate-500 w-24 truncate">{label}</span>
     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
       <div className={`h-full rounded-full ${color}`} style={{ width: `${(value / maxValue) * 100}%` }} />
     </div>
-    <span className="text-xs font-semibold text-slate-700 w-16 text-right tabular-nums">{value.toLocaleString()}</span>
+    <span className="fs-xs fw-semibold text-slate-700 w-16 text-right tabular-nums">{value.toLocaleString()}</span>
   </div>
 );
 
@@ -113,8 +113,8 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       {/* Header */}
       <div className="flex items-start justify-between pb-4 border-b border-slate-200">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Reports & Analytics</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Cross-module business intelligence and insights.</p>
+          <h1 className="fs-xl fw-bold tracking-tight text-slate-900">Reports & Analytics</h1>
+          <p className="fs-sm text-slate-500 mt-0.5">Cross-module business intelligence and insights.</p>
         </div>
         <button onClick={() => {
           let headers: string[] = [];
@@ -138,8 +138,8 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             rows = deptBreakdown.map(d => [d.dept, d.headcount, d.payroll]);
           }
           downloadCSV(`report-${activeCategory}-${selectedCompany.id}`, headers, rows);
-        }} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer transition-all">
-          <i className="bi bi-download text-xs"></i> Export Report
+        }} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-4 py-2 rounded-lg cursor-pointer transition-all">
+          <i className="bi bi-download fs-xs"></i> Export Report
         </button>
       </div>
 
@@ -149,7 +149,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md fs-xs fw-semibold transition-all cursor-pointer ${
               activeCategory === cat.id
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-700'
@@ -173,32 +173,32 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Revenue vs Expenses */}
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Revenue vs Expenses</h3>
+              <h3 className="fs-sm fw-bold text-slate-900 mb-4">Revenue vs Expenses</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <i className="bi bi-arrow-up-right text-emerald-600"></i>
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">Revenue</div>
-                      <div className="text-xs text-slate-500">From invoices</div>
+                      <div className="fs-sm fw-semibold text-slate-900">Revenue</div>
+                      <div className="fs-xs text-slate-500">From invoices</div>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-emerald-700 tabular-nums">${totalRevenue.toLocaleString()}</span>
+                  <span className="fs-lg fw-bold text-emerald-700 tabular-nums">${totalRevenue.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-rose-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <i className="bi bi-arrow-down-right text-rose-600"></i>
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">Expenses</div>
-                      <div className="text-xs text-slate-500">Payroll + Other</div>
+                      <div className="fs-sm fw-semibold text-slate-900">Expenses</div>
+                      <div className="fs-xs text-slate-500">Payroll + Other</div>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-rose-700 tabular-nums">${(totalPayroll + totalExpenses).toLocaleString()}</span>
+                  <span className="fs-lg fw-bold text-rose-700 tabular-nums">${(totalPayroll + totalExpenses).toLocaleString()}</span>
                 </div>
                 <div className="pt-3 border-t border-slate-100">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-slate-900">Net Income</span>
-                    <span className={`text-lg font-bold tabular-nums ${totalRevenue - totalPayroll - totalExpenses >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <span className="fs-sm fw-semibold text-slate-900">Net Income</span>
+                    <span className={`fs-lg fw-bold tabular-nums ${totalRevenue - totalPayroll - totalExpenses >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       ${(totalRevenue - totalPayroll - totalExpenses).toLocaleString()}
                     </span>
                   </div>
@@ -208,20 +208,20 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
 
             {/* Department Breakdown */}
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Department Breakdown</h3>
+              <h3 className="fs-sm fw-bold text-slate-900 mb-4">Department Breakdown</h3>
               <div className="space-y-3">
                 {deptBreakdown.slice(0, 6).map(d => (
                   <div key={d.dept} className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="font-medium text-slate-700">{d.dept}</span>
+                      <div className="flex justify-between fs-xs mb-1">
+                        <span className="fw-medium text-slate-700">{d.dept}</span>
                         <span className="text-slate-500">{d.headcount} employees</span>
                       </div>
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div className="h-full bg-slate-800 rounded-full" style={{ width: `${companyEmployees.length ? (d.headcount / companyEmployees.length) * 100 : 0}%` }} />
                       </div>
                     </div>
-                    <span className="ml-4 text-xs font-semibold text-slate-600 tabular-nums w-20 text-right">${d.payroll.toLocaleString()}</span>
+                    <span className="ml-4 fs-xs fw-semibold text-slate-600 tabular-nums w-20 text-right">${d.payroll.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -230,7 +230,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
 
           {/* Sales Pipeline */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Sales Pipeline</h3>
+            <h3 className="fs-sm fw-bold text-slate-900 mb-4">Sales Pipeline</h3>
             <div className="space-y-3">
               {pipelineData.map(p => (
                 <ChartBar key={p.stage} label={p.stage} value={p.count} maxValue={maxPipelineCount} color={
@@ -255,25 +255,25 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Invoice Summary</h3>
+              <h3 className="fs-sm fw-bold text-slate-900">Invoice Summary</h3>
             </div>
             <table className="w-full text-left">
               <thead className="bg-slate-50/60">
                 <tr>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Invoice</th>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Customer</th>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Amount</th>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Invoice</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Customer</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Amount</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {companyInvoices.slice(0, 10).map(inv => (
                   <tr key={inv.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => repInvModal.open(inv)}>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-600">{inv.id}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{inv.customerName}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900 tabular-nums">${inv.total.toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-mono text-slate-600">{inv.id}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{inv.customerName}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900 tabular-nums">${inv.total.toLocaleString()}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full fs-xs fw-semibold ${
                         inv.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' :
                         inv.status === 'Draft' ? 'bg-amber-50 text-amber-700' :
                         'bg-slate-100 text-slate-600'
@@ -298,15 +298,15 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Headcount by Department</h3>
+            <h3 className="fs-sm fw-bold text-slate-900 mb-4">Headcount by Department</h3>
             <div className="space-y-3">
               {deptBreakdown.map(d => (
                 <div key={d.dept} className="flex items-center gap-4">
-                  <span className="text-xs text-slate-500 w-32 truncate">{d.dept}</span>
+                  <span className="fs-xs text-slate-500 w-32 truncate">{d.dept}</span>
                   <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full bg-slate-800 rounded-full" style={{ width: `${(d.headcount / companyEmployees.length) * 100}%` }} />
                   </div>
-                  <span className="text-xs font-bold text-slate-700 w-8 text-right">{d.headcount}</span>
+                  <span className="fs-xs fw-bold text-slate-700 w-8 text-right">{d.headcount}</span>
                 </div>
               ))}
             </div>
@@ -325,24 +325,24 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Recent Tickets</h3>
+              <h3 className="fs-sm fw-bold text-slate-900">Recent Tickets</h3>
             </div>
             <table className="w-full text-left">
               <thead className="bg-slate-50/60">
                 <tr>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Ticket</th>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Subject</th>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Status</th>
-                  <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Priority</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Ticket</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Subject</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Status</th>
+                  <th className="px-4 py-3 fs-xs fw-bold uppercase tracking-wider text-slate-400">Priority</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {companyTickets.slice(0, 10).map(ticket => (
                   <tr key={ticket.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => repTicketModal.open(ticket)}>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-600">{ticket.id}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{ticket.subject}</td>
+                    <td className="px-4 py-3 fs-xs font-mono text-slate-600">{ticket.id}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{ticket.subject}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full fs-xs fw-semibold ${
                         ticket.status === 'Open' ? 'bg-blue-50 text-blue-700' :
                         ticket.status === 'In Progress' ? 'bg-amber-50 text-amber-700' :
                         ticket.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700' :
@@ -350,7 +350,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                       }`}>{ticket.status}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full fs-xs fw-semibold ${
                         ticket.priority === 'High' || ticket.priority === 'Critical' ? 'bg-rose-50 text-rose-700' :
                         ticket.priority === 'Medium' ? 'bg-amber-50 text-amber-700' :
                         'bg-slate-100 text-slate-600'
@@ -376,38 +376,38 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Expense Breakdown</h3>
+              <h3 className="fs-sm fw-bold text-slate-900 mb-4">Expense Breakdown</h3>
               <div className="space-y-3">
                 {[
                   { category: 'Payroll', amount: totalPayroll, color: 'bg-slate-800' },
                   { category: 'Operating', amount: totalExpenses, color: 'bg-slate-400' },
                 ].map(e => (
                   <div key={e.category} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-20">{e.category}</span>
+                    <span className="fs-xs text-slate-500 w-20">{e.category}</span>
                     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${e.color}`} style={{ width: `${(totalPayroll + totalExpenses) ? (e.amount / (totalPayroll + totalExpenses)) * 100 : 0}%` }} />
                     </div>
-                    <span className="text-xs font-semibold text-slate-700 w-20 text-right tabular-nums">${e.amount.toLocaleString()}</span>
+                    <span className="fs-xs fw-semibold text-slate-700 w-20 text-right tabular-nums">${e.amount.toLocaleString()}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Cash Flow Summary</h3>
+              <h3 className="fs-sm fw-bold text-slate-900 mb-4">Cash Flow Summary</h3>
               <div className="space-y-4">
                 <div className="p-3 bg-emerald-50 rounded-lg">
-                  <div className="text-xs text-emerald-600 mb-1">Inflows</div>
-                  <div className="text-lg font-bold text-emerald-700 tabular-nums">${totalRevenue.toLocaleString()}</div>
+                  <div className="fs-xs text-emerald-600 mb-1">Inflows</div>
+                  <div className="fs-lg fw-bold text-emerald-700 tabular-nums">${totalRevenue.toLocaleString()}</div>
                 </div>
                 <div className="p-3 bg-rose-50 rounded-lg">
-                  <div className="text-xs text-rose-600 mb-1">Outflows</div>
-                  <div className="text-lg font-bold text-rose-700 tabular-nums">${(totalPayroll + totalExpenses).toLocaleString()}</div>
+                  <div className="fs-xs text-rose-600 mb-1">Outflows</div>
+                  <div className="fs-lg fw-bold text-rose-700 tabular-nums">${(totalPayroll + totalExpenses).toLocaleString()}</div>
                 </div>
                 <div className="pt-3 border-t border-slate-100">
                   <div className="flex justify-between">
-                    <span className="text-sm font-semibold text-slate-900">Net Cash Flow</span>
-                    <span className={`text-lg font-bold tabular-nums ${totalRevenue - totalPayroll - totalExpenses >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <span className="fs-sm fw-semibold text-slate-900">Net Cash Flow</span>
+                    <span className={`fs-lg fw-bold tabular-nums ${totalRevenue - totalPayroll - totalExpenses >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       ${(totalRevenue - totalPayroll - totalExpenses).toLocaleString()}
                     </span>
                   </div>

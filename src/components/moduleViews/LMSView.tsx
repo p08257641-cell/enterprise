@@ -27,18 +27,14 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const progressModal = useRowModal<{ emp: typeof localEmployees[0]; course: { title: string; category: string; level: string; duration: string }; prog: number }>();
-  const quizQuestions = [
-    { id: 'q1', q: 'What does ISO stand for?', options: ['International Standards Org', 'Internal Safety Operations', 'International Organization for Standardization', 'Industrial Safety Order'], correct: 'International Organization for Standardization' },
-    { id: 'q2', q: 'OSHA stands for:', options: ['Occupational Safety & Health Administration', 'Office Safety Hazard Assessment', 'Operational Standards & Health Act', 'None of the above'], correct: 'Occupational Safety & Health Administration' },
-    { id: 'q3', q: 'A corrective action is required when:', options: ['A product is shipped', 'A non-conformance is detected', 'A new employee is hired', 'Payroll is processed'], correct: 'A non-conformance is detected' },
-  ];
+  const quizQuestions: { id: string; q: string; options: string[]; correct: string; courseName?: string }[] = [];
 
   return (
     <div>
       <PageHeader title="Learning Management System" subtitle="Course library, employee training progress, quizzes and certification issuance." />
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {lmsTabs.map(t => (
-          <button key={t.id} onClick={() => setLmsTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${lmsTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => setLmsTab(t.id)} className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${lmsTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
         ))}
       </div>
       {lmsTab === 'courses' && (
@@ -48,15 +44,15 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
             {lmsCourses.map(c => (
               <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all">
                 <div className="flex items-start justify-between mb-3">
-                  <div><div className="text-sm font-bold text-slate-900">{c.title}</div><div className="data-value text-slate-500 mt-0.5">{c.category} · {c.level} · {c.duration}</div></div>
+                  <div><div className="fs-sm fw-bold text-slate-900">{c.title}</div><div className="data-value text-slate-500 mt-0.5">{c.category} · {c.level} · {c.duration}</div></div>
                   <Badge label={c.category} variant="info" />
                 </div>
                 <div className="mb-2 flex justify-between data-value text-slate-500"><span>{c.enrolled} enrolled</span><span>{c.completion}% avg completion</span></div>
                 <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${c.completion}%` }} /></div>
-                <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full text-xs font-semibold border border-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-all">Start Course</button>
+                <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full fs-xs fw-semibold border border-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-all">Start Course</button>
               </div>
             ))}
-            {lmsCourses.length === 0 && <div className="sm:col-span-2 text-center text-xs text-slate-400 py-8">No courses available yet.</div>}
+            {lmsCourses.length === 0 && <div className="sm:col-span-2 text-center fs-xs text-slate-400 py-8">No courses available yet.</div>}
           </div>
         </div>
       )}
@@ -64,23 +60,23 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
         <div className="max-w-xl">
           {quizScore !== null ? (
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-8 text-center">
-              <div className={`text-4xl font-bold font-sans tabular-nums mb-2 ${quizScore >= 2 ? 'text-emerald-600' : 'text-rose-600'}`}>{quizScore}/{quizQuestions.length}</div>
-              <div className="text-sm font-bold text-slate-900 mb-1">{quizScore >= 2 ? '🎉 Passed!' : '❌ Not Passed'}</div>
-              <p className="text-xs text-slate-500 mb-5">{quizScore >= 2 ? 'Certificate will be generated and added to your profile.' : 'Review the course material and try again.'}</p>
-              <button onClick={() => { setQuizScore(null); setQuizAnswers({}); }} className="text-xs font-semibold bg-slate-900 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Retake Quiz</button>
+              <div className={`fs-4xl fw-bold font-sans tabular-nums mb-2 ${quizScore >= 2 ? 'text-emerald-600' : 'text-rose-600'}`}>{quizScore}/{quizQuestions.length}</div>
+              <div className="fs-sm fw-bold text-slate-900 mb-1">{quizScore >= 2 ? '🎉 Passed!' : '❌ Not Passed'}</div>
+              <p className="fs-xs text-slate-500 mb-5">{quizScore >= 2 ? 'Certificate will be generated and added to your profile.' : 'Review the course material and try again.'}</p>
+              <button onClick={() => { setQuizScore(null); setQuizAnswers({}); }} className="fs-xs fw-semibold bg-slate-900 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Retake Quiz</button>
             </div>
-          ) : (
+          ) : quizQuestions.length > 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6">
-              <h3 className="section-title text-slate-500 mb-5">ISO 9001 Quality Management — Quiz</h3>
+              <h3 className="section-title text-slate-500 mb-5">{quizQuestions[0]?.courseName || 'Course'} — Quiz</h3>
               <div className="space-y-6">
                 {quizQuestions.map((q, qi) => (
                   <div key={q.id}>
-                    <div className="text-xs font-semibold text-slate-900 mb-3">{qi + 1}. {q.q}</div>
+                    <div className="fs-xs fw-semibold text-slate-900 mb-3">{qi + 1}. {q.q}</div>
                     <div className="space-y-2">
                       {q.options.map(opt => (
                         <label key={opt} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${quizAnswers[q.id] === opt ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300'}`}>
                           <input type="radio" name={q.id} value={opt} onChange={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt }))} className="shrink-0" />
-                          <span className="text-xs text-slate-700">{opt}</span>
+                          <span className="fs-xs text-slate-700">{opt}</span>
                         </label>
                       ))}
                     </div>
@@ -92,6 +88,12 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
                 }}>Submit Quiz</PrimaryBtn>
               </div>
             </div>
+          ) : (
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-8 text-center">
+              <i className="bi bi-question-circle text-slate-300 fs-3xl mb-3 block"></i>
+              <div className="fs-sm fw-bold text-slate-900 mb-1">No Quiz Available</div>
+              <p className="fs-xs text-slate-500">Quizzes will appear here once a course with a quiz is added.</p>
+            </div>
           )}
         </div>
       )}
@@ -100,18 +102,21 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Employee' }, { label: 'Course' }, { label: 'Progress', right: true }, { label: 'Status' }]} />
             <tbody className="divide-y divide-slate-100">
-              {localEmployees.slice(0, 6).map((emp, i) => {
-                const course = lmsCourses[i % (lmsCourses.length || 1)] || { title: 'No course', category: 'General', level: 'Beginner', duration: '--' };
-                const prog = [100, 65, 30, 80, 45, 100][i] || 50;
-                return (
-                  <tr key={emp.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => progressModal.open({ emp, course, prog })}>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{course.title}</td>
-                    <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${prog}%` }} /></div><span className="text-[10px] font-sans tabular-nums text-slate-500 w-8">{prog}%</span></div></td>
-                    <td className="px-4 py-3"><Badge label={prog === 100 ? 'Completed' : 'In Progress'} variant={prog === 100 ? 'success' : 'info'} /></td>
-                  </tr>
-                );
-              })}
+              {lmsCourses.length === 0 ? (
+                <tr><td colSpan={4} className="px-4 py-10 text-center fs-xs text-slate-400">No courses available. Add courses to track employee progress.</td></tr>
+              ) : (
+                localEmployees.slice(0, 6).map((emp, i) => {
+                  const course = lmsCourses[i % lmsCourses.length] || { title: 'No course', category: 'General', level: 'Beginner', duration: '--' };
+                  return (
+                    <tr key={emp.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => progressModal.open({ emp, course, prog: 0 })}>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-600">{course.title}</td>
+                      <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: '0%' }} /></div><span className="text-[10px] font-sans tabular-nums text-slate-500 w-8">0%</span></div></td>
+                      <td className="px-4 py-3"><Badge label="Not Started" variant="default" /></td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -129,11 +134,11 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Progress', value: `${progressModal.selected.prog}%` },
               { label: 'Status', value: progressModal.selected.prog === 100 ? 'Completed' : 'In Progress' },
             ].map(f => (
-              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value font-semibold text-slate-900">{f.value}</div></div>
+              <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value fw-semibold text-slate-900">{f.value}</div></div>
             ))}
           </div>
           <div>
-            <div className="flex justify-between text-xs mb-1.5"><span className="text-slate-500">Completion</span><span className="font-bold text-slate-900">{progressModal.selected.prog}%</span></div>
+            <div className="flex justify-between fs-xs mb-1.5"><span className="text-slate-500">Completion</span><span className="fw-bold text-slate-900">{progressModal.selected.prog}%</span></div>
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${progressModal.selected.prog}%` }} /></div>
           </div>
         </ViewModal>
@@ -161,8 +166,8 @@ const AddCourseForm: React.FC<{ selectedCompany: { id: string }, onAddLmsCourse:
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="w-full sm:w-auto text-[11px] font-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
-        <i className="bi bi-plus-lg text-xs"></i> Add Course
+      <button onClick={() => setOpen(true)} className="w-full sm:w-auto text-[11px] fw-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
+        <i className="bi bi-plus-lg fs-xs"></i> Add Course
       </button>
     );
   }
@@ -171,8 +176,8 @@ const AddCourseForm: React.FC<{ selectedCompany: { id: string }, onAddLmsCourse:
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in" onClick={() => setOpen(false)}>
       <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Add LMS Course</h3>
-          <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600"><i className="bi bi-x-lg text-sm"></i></button>
+          <h3 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide">Add LMS Course</h3>
+          <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600"><i className="bi bi-x-lg fs-sm"></i></button>
         </div>
         <div className="space-y-3 p-5">
           <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Course title" /></div>

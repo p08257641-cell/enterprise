@@ -70,6 +70,26 @@ export interface Employee {
   status: 'Active' | 'On Leave' | 'Suspended' | 'Terminated';
   joiningDate: string;
   salary: number;
+  assignedTaxes?: string[];
+  assignedBenefits?: string[];
+  bankAccount?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  maritalStatus?: string;
+  nationality?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  employmentType?: string;
+  workLocation?: string;
+  managerId?: string;
+  bio?: string;
 }
 
 export interface AttendanceRecord {
@@ -139,12 +159,15 @@ export interface PayslipRecord {
   net: number;
   status: 'Paid' | 'Processing';
   baseSalary: number;
-  overtimePay: number;
-  allowances: number;
-  tax: number;
-  socialSec: number;
-  medicare: number;
-  healthIns: number;
+  customTaxesTotal?: number;
+  customBenefitsTotal?: number;
+  overtimePay?: number;
+  allowances?: number;
+  tax?: number;
+  socialSec?: number;
+  medicare?: number;
+  healthIns?: number;
+  breakdown?: { name: string; amount: number; type: 'Tax' | 'Benefit' }[];
 }
 
 export interface PayrollGroup {
@@ -310,13 +333,60 @@ export interface TicketReply {
 export interface PayrollTaxConfig {
   id: string;
   companyId: string;
-  incomeTaxRate: number;
-  socialSecurityRate: number;
-  medicareRate: number;
-  allowances: number;
-  healthInsurance: number;
-  overtimeRate: number;
+  customTaxes?: { id: string; name: string; type: 'Percentage' | 'Fixed'; value: number; }[];
+  customBenefits?: { id: string; name: string; type: 'Percentage' | 'Fixed'; value: number; }[];
   updatedAt: string;
+}
+
+export interface AttendanceSettings {
+  id: string;
+  companyId: string;
+  departmentId?: string;
+  workStartTime: string;
+  graceMinutes: number;
+  lateThresholdMinutes: number;
+  penaltyType: 'warning' | 'deduction' | 'suspension' | 'custom';
+  deductionType: 'percentage' | 'fixed';
+  deductionValue: number;
+  maxWarnings: number;
+  customPenalty: string;
+  escalateAfterWarnings: boolean;
+  updatedAt: string;
+}
+
+export interface BankAccountUpdateRequest {
+  id: string;
+  companyId: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  sortCode?: string;
+  routingNumber?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  requestedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  processedBy?: string;
+}
+
+export interface ProfileUpdateRequest {
+  id: string;
+  companyId: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  field: string;
+  label: string;
+  currentValue: string;
+  newValue: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  requestedAt: string;
+  processedAt?: string;
+  processedBy?: string;
+  rejectionReason?: string;
 }
 
 export interface KBArticle {
@@ -938,6 +1008,14 @@ export interface DepreciationEntry {
   createdAt: string;
 }
 
+export interface BudgetItem {
+  id: string;
+  category: string;
+  department: string;
+  amount: number;
+  notes: string;
+}
+
 export interface Budget {
   id: string;
   companyId: string;
@@ -952,6 +1030,7 @@ export interface Budget {
   variancePercent: number;
   period: string;
   status: 'Draft' | 'Approved' | 'Active';
+  items: BudgetItem[];
   createdBy: string;
   createdAt: string;
 }
@@ -1250,6 +1329,9 @@ export interface ManagedDocument {
   status: 'Draft' | 'Pending Signature' | 'Signed' | 'Approved' | 'Archived';
   date: string;
   uploadedBy?: string;
+  uploadedByName?: string;
+  visibility?: 'everyone' | 'only_me' | 'specific';
+  sharedWith?: string[];
   createdAt: string;
 }
 
@@ -1271,5 +1353,55 @@ export interface ExitRequest {
   rejectedBy?: string;
   rejectedAt?: string;
   notes?: string;
+  createdAt: string;
+}
+
+// --- Voting / Polls ---
+export interface Poll {
+  id: string;
+  companyId: string;
+  title: string;
+  description: string;
+  category: string;
+  createdBy: string;
+  createdByName: string;
+  status: 'Active' | 'Closed' | 'Draft';
+  anonymous: boolean;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+export interface PollOption {
+  id: string;
+  pollId: string;
+  companyId: string;
+  label: string;
+  nomineeId?: string;
+  nomineeName?: string;
+  position: number;
+  voteCount: number;
+}
+
+export interface PollVote {
+  id: string;
+  pollId: string;
+  optionId: string;
+  companyId: string;
+  voterId: string;
+  voterName: string;
+  createdAt: string;
+}
+
+// --- Company Image Gallery ---
+export interface CompanyImage {
+  id: string;
+  companyId: string;
+  title: string;
+  description: string;
+  category: string;
+  imageData?: string;
+  uploadedBy: string;
+  uploadedByName: string;
   createdAt: string;
 }

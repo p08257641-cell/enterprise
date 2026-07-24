@@ -139,11 +139,11 @@ const [deptParent, setDeptParent] = useState('');
               <TableHead cols={[{ label: 'Branch Name' }, { label: 'Location' }, { label: 'Type' }, { label: 'Employees' }, { label: 'Status' }]} />
               <tbody className="divide-y divide-slate-100">
                 {localBranches.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-xs text-slate-400">No branches yet. Click “Add Branch” to create one.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-6 text-center fs-xs text-slate-400">No branches yet. Click “Add Branch” to create one.</td></tr>
                 )}
                 {localBranches.map(b => (
                   <tr key={b.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => branchModal.open(b)}>
-                    <td className="px-4 py-3.5"><div className="data-value font-semibold text-slate-900">{b.name}</div></td>
+                    <td className="px-4 py-3.5"><div className="data-value fw-semibold text-slate-900">{b.name}</div></td>
                     <td className="px-4 py-3.5 data-value text-slate-500">{b.location}</td>
                     <td className="px-4 py-3.5"><Badge label={b.isMain ? 'Main HQ' : 'Regional'} /></td>
                     <td className="px-4 py-3.5 data-value font-sans tabular-nums text-slate-700">{localEmployees.filter(e => e.branch === b.name).length}</td>
@@ -165,7 +165,7 @@ const [deptParent, setDeptParent] = useState('');
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">Department Structure</h3>
+                    <h3 className="fs-sm fw-bold text-slate-900">Department Structure</h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">Configure reporting hierarchy and department assignments.</p>
                   </div>
                   {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setDeptName(''); setDeptManager(''); setDeptParent(''); setShowDeptModal(true); }}>Add Department</PrimaryBtn>}
@@ -181,7 +181,7 @@ const [deptParent, setDeptParent] = useState('');
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full shrink-0 ${!dept.parentId ? 'bg-slate-900' : 'bg-slate-300'}`}></div>
-                              <span className="text-xs font-semibold text-slate-900">{dept.name}</span>
+                              <span className="fs-xs fw-semibold text-slate-900">{dept.name}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3.5">
@@ -189,7 +189,7 @@ const [deptParent, setDeptParent] = useState('');
                               <select
                                 value={dept.parentId || ''}
                                 onChange={(e) => onUpdateDepartment(dept.id, { parentId: e.target.value || undefined })}
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 min-w-[130px]"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] fw-medium text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 min-w-[130px]"
                               >
                                 <option value="">— Root (Top Level)</option>
                                 {companyDepts.filter(d => d.id !== dept.id).map(d => (
@@ -197,16 +197,16 @@ const [deptParent, setDeptParent] = useState('');
                                 ))}
                               </select>
                             ) : (
-                              <span className="text-xs text-slate-500">{parentName || '— Root'}</span>
+                              <span className="fs-xs text-slate-500">{parentName || '— Root'}</span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 text-xs font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
-                          <td className="px-4 py-3.5 text-xs font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
-                          <td className="px-4 py-3.5 text-xs text-slate-600">
+                          <td className="px-4 py-3.5 fs-xs font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
+                          <td className="px-4 py-3.5 fs-xs font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
+                          <td className="px-4 py-3.5 fs-xs text-slate-600">
                             {manager ? `${manager.firstName} ${manager.lastName}` : '—'}
                           </td>
                           <td className="px-4 py-3.5 text-right" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
-                            {isAdmin && <button onClick={e => { e.stopPropagation(); setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); }} className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
+                            {isAdmin && <button onClick={e => { e.stopPropagation(); setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); }} className="text-[11px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
                           </td>
                         </tr>
                       );
@@ -223,14 +223,14 @@ const [deptParent, setDeptParent] = useState('');
                       <div>
                         <div className="flex items-center gap-2 mb-0.5">
                           <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                            <i className="bi bi-building text-blue-600 text-xs"></i>
+                            <i className="bi bi-building text-blue-600 fs-xs"></i>
                           </div>
-                          <h3 className="text-sm font-bold text-slate-900">Add Branch</h3>
+                          <h3 className="fs-sm fw-bold text-slate-900">Add Branch</h3>
                         </div>
                         <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new company location, office or facility.</p>
                       </div>
                       <button type="button" onClick={() => setShowBranchModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                        <i className="bi bi-x text-xl"></i>
+                        <i className="bi bi-x fs-xl"></i>
                       </button>
                     </div>
                     <div className="p-6 space-y-4">
@@ -241,12 +241,12 @@ const [deptParent, setDeptParent] = useState('');
                       </div>
                     </div>
                     <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                      <button type="button" onClick={() => setShowBranchModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                      <button type="button" onClick={() => setShowBranchModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                       <button type="button" onClick={() => {
                         if (!branchName) return void modalAlert('Branch name required', { variant: 'warning' });
                         onAddBranch({ companyId: selectedCompany.id, name: branchName, location: branchLocation, isMain: branchType === 'Main HQ' });
                         setShowBranchModal(false); setBranchName('');
-                      }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Branch</button>
+                      }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Branch</button>
                     </div>
                   </div>
                 </div>
@@ -260,14 +260,14 @@ const [deptParent, setDeptParent] = useState('');
                       <div>
                         <div className="flex items-center gap-2 mb-0.5">
                           <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
-                            <i className="bi bi-diagram-3 text-violet-600 text-xs"></i>
+                            <i className="bi bi-diagram-3 text-violet-600 fs-xs"></i>
                           </div>
-                          <h3 className="text-sm font-bold text-slate-900">Add Department</h3>
+                          <h3 className="fs-sm fw-bold text-slate-900">Add Department</h3>
                         </div>
                         <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new organisational unit within this company.</p>
                       </div>
                       <button type="button" onClick={() => setShowDeptModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                        <i className="bi bi-x text-xl"></i>
+                        <i className="bi bi-x fs-xl"></i>
                       </button>
                     </div>
                     <div className="p-6 space-y-4">
@@ -276,12 +276,12 @@ const [deptParent, setDeptParent] = useState('');
                       <div><Label>Reports To</Label><Select value={deptParent} onChange={e => setDeptParent(e.target.value)}><option value="">Top Level (no parent)</option>{companyDepts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></div>
                     </div>
                     <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                      <button type="button" onClick={() => setShowDeptModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                      <button type="button" onClick={() => setShowDeptModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                       <button type="button" onClick={() => {
                         if (!deptName) return void modalAlert('Department name required', { variant: 'warning' });
                         onAddDepartment({ companyId: selectedCompany.id, name: deptName, managerId: '', budget: 0, parentId: deptParent || undefined });
                         setShowDeptModal(false); setDeptName('');
-                      }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Department</button>
+                      }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Department</button>
                     </div>
                   </div>
                 </div>
@@ -295,14 +295,14 @@ const [deptParent, setDeptParent] = useState('');
                       <div>
                         <div className="flex items-center gap-2 mb-0.5">
                           <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
-                            <i className="bi bi-pencil text-violet-600 text-xs"></i>
+                            <i className="bi bi-pencil text-violet-600 fs-xs"></i>
                           </div>
-                          <h3 className="text-sm font-bold text-slate-900">Edit Department</h3>
+                          <h3 className="fs-sm fw-bold text-slate-900">Edit Department</h3>
                         </div>
                         <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Update this department's name, manager, and budget.</p>
                       </div>
                       <button type="button" onClick={() => setEditDeptModal(null)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                        <i className="bi bi-x text-xl"></i>
+                        <i className="bi bi-x fs-xl"></i>
                       </button>
                     </div>
                     <div className="p-6 space-y-4">
@@ -311,12 +311,12 @@ const [deptParent, setDeptParent] = useState('');
                       <div><Label>Budget</Label><Input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} /></div>
                     </div>
                     <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                      <button type="button" onClick={() => setEditDeptModal(null)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                      <button type="button" onClick={() => setEditDeptModal(null)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                       <button type="button" onClick={() => {
                         if (!editDeptName) return void modalAlert('Department name required', { variant: 'warning' });
                         onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget) });
                         setEditDeptModal(null);
-                      }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Changes</button>
+                      }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Changes</button>
                     </div>
                   </div>
                 </div>
@@ -336,7 +336,7 @@ const [deptParent, setDeptParent] = useState('');
                   </button>
                 </div>
                 {inviteSuccess && (
-                  <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 font-semibold">
+                  <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg fs-xs text-emerald-700 fw-semibold">
                     User invited successfully!
                   </div>
                 )}
@@ -422,7 +422,7 @@ const [deptParent, setDeptParent] = useState('');
                           return true;
                         })
                         .map(role => (
-                          <label key={role} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                          <label key={role} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={inviteRoles.includes(role)}
@@ -473,8 +473,8 @@ const [deptParent, setDeptParent] = useState('');
                           <div><div className="table-cell-semibold text-slate-900">{emp.firstName} {emp.lastName}</div><div className="data-value-small text-slate-400">{emp.email}</div></div>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-slate-600">{emp.designation}</td>
-                      <td className="px-4 py-3.5 text-xs text-slate-500">{emp.designation}</td>
+                      <td className="px-4 py-3.5 fs-xs text-slate-600">{emp.designation}</td>
+                      <td className="px-4 py-3.5 fs-xs text-slate-500">{emp.designation}</td>
                       <td className="px-4 py-3.5 table-cell text-slate-600">{emp.department}</td>
                       <td className="px-4 py-3.5"><Badge label={emp.status} variant={emp.status === 'Active' ? 'success' : 'warning'} /></td>
                       <td className="px-4 py-3.5 table-cell-mono text-slate-400">{emp.joiningDate}</td>
@@ -490,15 +490,15 @@ const [deptParent, setDeptParent] = useState('');
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Role Management & Permissions</h3>
+                <h3 className="fs-sm fw-bold text-slate-900">Role Management & Permissions</h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">Manage job definitions, modify raw permissions, and create custom security roles.</p>
               </div>
               {isAdmin && (
                 <button
                   onClick={() => handleOpenRoleModal(null)}
-                  className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-3.5 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"
+                  className="flex items-center gap-1.5 bg-slate-900 text-white fw-semibold fs-xs px-3.5 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"
                 >
-                  <i className="bi bi-plus-lg text-xs"></i> Add Role
+                  <i className="bi bi-plus-lg fs-xs"></i> Add Role
                 </button>
               )}
             </div>
@@ -507,10 +507,10 @@ const [deptParent, setDeptParent] = useState('');
                 <div key={r.id} className="p-5 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                      <i className="bi bi-shield-lock text-slate-500 text-sm"></i>
+                      <i className="bi bi-shield-lock text-slate-500 fs-sm"></i>
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-slate-900">{r.name}</div>
+                      <div className="fs-sm fw-bold text-slate-900">{r.name}</div>
                       <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">{r.permissions}</div>
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {r.rawPermissions.map(p => (
@@ -524,7 +524,7 @@ const [deptParent, setDeptParent] = useState('');
                     {isAdmin && (
                       <button
                         onClick={() => handleOpenRoleModal(r)}
-                        className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all"
+                        className="text-[11px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all"
                       >
                         Edit Role
                       </button>
@@ -540,9 +540,9 @@ const [deptParent, setDeptParent] = useState('');
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-white"><i className="bi bi-diagram-3 text-sm"></i></div>
+                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-white"><i className="bi bi-diagram-3 fs-sm"></i></div>
                 <div>
-                  <div className="text-sm font-bold text-slate-900">Approval Workflow Configuration</div>
+                  <div className="fs-sm fw-bold text-slate-900">Approval Workflow Configuration</div>
                   <div className="text-[11px] text-slate-500">Define who approves requests for each module. Select multiple roles as needed.</div>
                 </div>
               </div>
@@ -551,13 +551,13 @@ const [deptParent, setDeptParent] = useState('');
                   setApprovalSaveSuccess(true);
                   setTimeout(() => setApprovalSaveSuccess(false), 3000);
                 }}
-                className="flex items-center gap-1.5 bg-slate-900 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"
+                className="flex items-center gap-1.5 bg-slate-900 text-white fw-semibold fs-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"
               >
-                <i className="bi bi-check2 text-xs"></i> Save Policies
+                <i className="bi bi-check2 fs-xs"></i> Save Policies
               </button>
             </div>
             {approvalSaveSuccess && (
-              <div className="mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs text-emerald-700 font-semibold">
+              <div className="mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 fs-xs text-emerald-700 fw-semibold">
                 <i className="bi bi-check-circle-fill"></i> Approval policies saved successfully.
               </div>
             )}
@@ -605,10 +605,10 @@ const [deptParent, setDeptParent] = useState('');
                   <div key={module} className="px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
                     <div className="flex items-start gap-3 min-w-0 max-w-md">
                       <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                        <i className={`${icons[module] || 'bi bi-gear'} text-slate-500 text-sm`}></i>
+                        <i className={`${icons[module] || 'bi bi-gear'} text-slate-500 fs-sm`}></i>
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-slate-900">{module}</div>
+                        <div className="fs-sm fw-semibold text-slate-900">{module}</div>
                         <div className="text-[11px] text-slate-400 leading-normal mt-0.5">{descriptions[module]}</div>
                       </div>
                     </div>
@@ -621,12 +621,12 @@ const [deptParent, setDeptParent] = useState('');
                             key={roleOption}
                             type="button"
                             onClick={() => toggleRole(roleOption)}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all border cursor-pointer select-none ${isSelected
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] fw-semibold transition-all border cursor-pointer select-none ${isSelected
                               ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
                               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                               }`}
                           >
-                            {isSelected && <i className="bi bi-check text-xs"></i>}
+                            {isSelected && <i className="bi bi-check fs-xs"></i>}
                             {roleOption}
                           </button>
                         );
@@ -650,10 +650,10 @@ const [deptParent, setDeptParent] = useState('');
             {/* Company Identity: Logo & Signature */}
             <div>
               <h3 className="section-title text-slate-900 mb-4">Company Identity</h3>
-              <p className="text-xs text-slate-500 mb-4">Upload your company logo and authorized signature. These will appear on official letters and documents generated by HR.</p>
+              <p className="fs-xs text-slate-500 mb-4">Upload your company logo and authorized signature. These will appear on official letters and documents generated by HR.</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-                  <h4 className="text-sm font-bold text-slate-900 mb-3">Company Logo</h4>
+                  <h4 className="fs-sm fw-bold text-slate-900 mb-3">Company Logo</h4>
                   {selectedCompany.companyLogo ? (
                     <div className="mb-3">
                       <div className="h-24 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
@@ -662,13 +662,13 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                   ) : (
                     <div className="mb-3 h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
-                      <div className="text-center"><i className="bi bi-image text-2xl text-slate-300"></i><p className="text-[10px] text-slate-400 mt-1">No logo uploaded</p></div>
+                      <div className="text-center"><i className="bi bi-image fs-2xl text-slate-300"></i><p className="text-[10px] text-slate-400 mt-1">No logo uploaded</p></div>
                     </div>
                   )}
                   <p className="text-[10px] text-slate-500 mb-2">Paste an image URL or upload a file:</p>
                   <div className="space-y-2">
-                    <input type="text" placeholder="https://example.com/logo.png" defaultValue={selectedCompany.companyLogo || ''} id="logoUrl" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
-                    <input type="file" accept="image/*" id="logoFile" className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 file:cursor-pointer" onChange={e => {
+                    <input type="text" placeholder="https://example.com/logo.png" defaultValue={selectedCompany.companyLogo || ''} id="logoUrl" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
+                    <input type="file" accept="image/*" id="logoFile" className="w-full fs-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:fs-xs file:fw-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 file:cursor-pointer" onChange={e => {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       const reader = new FileReader();
@@ -684,7 +684,7 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
-                  <h4 className="text-sm font-bold text-slate-900 mb-3">Authorized Signature</h4>
+                  <h4 className="fs-sm fw-bold text-slate-900 mb-3">Authorized Signature</h4>
                   {selectedCompany.companySignature ? (
                     <div className="mb-3">
                       <div className="h-24 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
@@ -693,13 +693,13 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                   ) : (
                     <div className="mb-3 h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
-                      <div className="text-center"><i className="bi bi-pen text-2xl text-slate-300"></i><p className="text-[10px] text-slate-400 mt-1">No signature uploaded</p></div>
+                      <div className="text-center"><i className="bi bi-pen fs-2xl text-slate-300"></i><p className="text-[10px] text-slate-400 mt-1">No signature uploaded</p></div>
                     </div>
                   )}
                   <p className="text-[10px] text-slate-500 mb-2">Paste an image URL or upload a file:</p>
                   <div className="space-y-2">
-                    <input type="text" placeholder="https://example.com/signature.png" defaultValue={selectedCompany.companySignature || ''} id="sigUrl" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
-                    <input type="file" accept="image/*" id="sigFile" className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 file:cursor-pointer" onChange={e => {
+                    <input type="text" placeholder="https://example.com/signature.png" defaultValue={selectedCompany.companySignature || ''} id="sigUrl" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
+                    <input type="file" accept="image/*" id="sigFile" className="w-full fs-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:fs-xs file:fw-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 file:cursor-pointer" onChange={e => {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       const reader = new FileReader();
@@ -731,7 +731,7 @@ const [deptParent, setDeptParent] = useState('');
                 ].map(s => (
                   <div key={s.title} className="bg-white border border-slate-200 rounded-xl p-5 flex items-start justify-between shadow-xs">
                     <div className="flex items-start gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0"><i className={`${s.icon} text-slate-500 text-sm`}></i></div>
+                      <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0"><i className={`${s.icon} text-slate-500 fs-sm`}></i></div>
                       <div><div className="table-cell-semibold text-slate-900">{s.title}</div><div className="data-value text-slate-500 mt-0.5 leading-snug">{s.desc}</div></div>
                     </div>
                     <div className={`relative h-5 w-9 rounded-full cursor-pointer transition-colors shrink-0 ml-3 mt-0.5 ${s.active ? 'bg-slate-900' : 'bg-slate-200'}`}>
@@ -751,10 +751,10 @@ const [deptParent, setDeptParent] = useState('');
               <form onSubmit={handleSaveRole}>
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">{editingRole ? 'Edit Permissions' : 'Create Custom Role'}</h3>
+                    <h3 className="fs-sm fw-bold text-slate-900">{editingRole ? 'Edit Permissions' : 'Create Custom Role'}</h3>
                     <p className="text-[10px] text-slate-500 mt-0.5">Assign access scopes and customize permission groups.</p>
                   </div>
-                  <button type="button" onClick={() => setShowRoleModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><i className="bi bi-x text-xl"></i></button>
+                  <button type="button" onClick={() => setShowRoleModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><i className="bi bi-x fs-xl"></i></button>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -774,7 +774,7 @@ const [deptParent, setDeptParent] = useState('');
                       value={roleFormDesc}
                       onChange={e => setRoleFormDesc(e.target.value)}
                       rows={2}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300"
                       placeholder="Describe what scope of work users in this role perform..."
                     />
                   </div>
@@ -817,7 +817,7 @@ const [deptParent, setDeptParent] = useState('');
                               className="mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900/50"
                             />
                             <div>
-                              <div className="text-[11px] font-bold">{perm.label}</div>
+                              <div className="text-[11px] fw-bold">{perm.label}</div>
                               <div className="text-[9px] text-slate-400 mt-0.5 leading-normal">{perm.desc}</div>
                             </div>
                           </label>
@@ -828,8 +828,8 @@ const [deptParent, setDeptParent] = useState('');
                 </div>
 
                 <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                  <button type="button" onClick={() => setShowRoleModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
-                  <button type="submit" className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Role Settings</button>
+                  <button type="button" onClick={() => setShowRoleModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                  <button type="submit" className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Role Settings</button>
                 </div>
               </form>
             </div>
@@ -871,11 +871,11 @@ const [deptParent, setDeptParent] = useState('');
               className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm"
               style={{ background: '#2563eb' }}
             >
-              <i className="bi bi-person-badge text-lg" />
+              <i className="bi bi-person-badge fs-lg" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{userModal.selected.firstName} {userModal.selected.lastName}</div>
-              <div className="text-xs text-slate-500 truncate">{userModal.selected.designation}</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{userModal.selected.firstName} {userModal.selected.lastName}</div>
+              <div className="fs-xs text-slate-500 truncate">{userModal.selected.designation}</div>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -890,7 +890,7 @@ const [deptParent, setDeptParent] = useState('');
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
           </div>

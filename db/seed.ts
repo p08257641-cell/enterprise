@@ -24,10 +24,12 @@ const INITIAL_LEAVES = [
   { id: 'lr-3', companyId: 'c-acme', employeeId: 'emp-5', leaveType: 'Annual', startDate: '2026-07-10', endDate: '2026-07-18', reason: 'Moving to new apartment near factory', status: 'Approved', days: 6 },
 ];
 const INITIAL_ATTENDANCE = [
-  { id: 'att-1', companyId: 'c-acme', employeeId: 'emp-1', date: '2026-07-13', checkIn: '08:55 AM', status: 'Present', locationType: 'Office' },
-  { id: 'att-2', companyId: 'c-acme', employeeId: 'emp-2', date: '2026-07-13', checkIn: '09:02 AM', status: 'Late', locationType: 'Remote' },
-  { id: 'att-3', companyId: 'c-acme', employeeId: 'emp-3', date: '2026-07-13', checkIn: '08:43 AM', status: 'Present', locationType: 'Office' },
-  { id: 'att-4', companyId: 'c-acme', employeeId: 'emp-4', date: '2026-07-13', checkIn: '09:10 AM', status: 'Present', locationType: 'Office' },
+  { id: 'att-1', companyId: 'c-acme', employeeId: 'emp-1', date: '2026-07-20', checkIn: '08:55 AM', checkOut: '05:30 PM', status: 'Present', locationType: 'Office' },
+  { id: 'att-2', companyId: 'c-acme', employeeId: 'emp-2', date: '2026-07-20', checkIn: '09:02 AM', checkOut: '05:45 PM', status: 'Late', locationType: 'Remote' },
+  { id: 'att-3', companyId: 'c-acme', employeeId: 'emp-1', date: '2026-07-21', checkIn: '08:43 AM', checkOut: '05:20 PM', status: 'Present', locationType: 'Office' },
+  { id: 'att-4', companyId: 'c-acme', employeeId: 'emp-2', date: '2026-07-21', checkIn: '09:10 AM', checkOut: '06:00 PM', status: 'Late', locationType: 'Office' },
+  { id: 'att-5', companyId: 'c-acme', employeeId: 'emp-1', date: '2026-07-22', checkIn: '08:50 AM', checkOut: '05:35 PM', status: 'Present', locationType: 'Office' },
+  { id: 'att-6', companyId: 'c-acme', employeeId: 'emp-2', date: '2026-07-22', checkIn: '08:58 AM', checkOut: '05:25 PM', status: 'Present', locationType: 'Remote' },
 ];
 const INITIAL_OKRS = [
   { id: 'okr-1', companyId: 'c-acme', employeeId: 'emp-1', employeeName: 'Alex Mercer', department: 'Operations', title: 'Optimize operations pipeline capacity by 15%', keyResult: 'Increase daily output to 12k units.', progress: 60, status: 'On Track', period: 'Q3 2026' },
@@ -129,7 +131,12 @@ async function seed() {
   await db.insert(schema.users).values(INITIAL_USERS);
   await db.insert(schema.departments).values(INITIAL_DEPARTMENTS);
   await db.insert(schema.branches).values(INITIAL_BRANCHES);
-  await db.insert(schema.employees).values(INITIAL_EMPLOYEES);
+  await db.insert(schema.employees).values(INITIAL_EMPLOYEES.map(emp => ({
+    ...emp,
+    assignedTaxes: emp.assignedTaxes ? JSON.stringify(emp.assignedTaxes) : null,
+    assignedBenefits: emp.assignedBenefits ? JSON.stringify(emp.assignedBenefits) : null,
+    bankAccount: emp.bankAccount ? (typeof emp.bankAccount === 'string' ? emp.bankAccount : JSON.stringify(emp.bankAccount)) : null
+  } as any)));
   await db.insert(schema.leaves).values(INITIAL_LEAVES);
   await db.insert(schema.attendance).values(INITIAL_ATTENDANCE);
   await db.insert(schema.okrs).values(INITIAL_OKRS);

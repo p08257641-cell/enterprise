@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -14,19 +14,21 @@ import { ModuleViews } from './components/ModuleViews';
 import { TenantSetup } from './components/TenantSetup';
 import { FadeIn, Skeleton } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { useAuth } from './contexts/AuthContext';
 // No lucide-react imports needed
 import { modalAlert, toast } from './utils/modal';
 
 const safeJson = async (res: Response): Promise<any> => {
   try {
     const text = await res.text();
-    return text ? JSON.parse(text) : {};
+    return text ? JSON.parse(text) : [];
   } catch (e) {
-    return {};
+    return [];
   }
 };
 
 export default function App() {
+  const { token, isLoading: authLoading } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -50,6 +52,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [announcements, setAnnouncements] = useState<CommunicationAnnouncement[]>([]);
   const [workflowTriggers, setWorkflowTriggers] = useState<WorkflowTrigger[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [polls, setPolls] = useState<Poll[]>([]);
+  const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
+  const [pollVotes, setPollVotes] = useState<PollVote[]>([]);
+  const [companyImages, setCompanyImages] = useState<CompanyImage[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
   const [workflows, setWorkflows] = useState<ERPWorkflow[]>([]);
@@ -60,6 +67,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [okrs, setOkrs] = useState<OKRRecord[]>([]);
   const [payslips, setPayslips] = useState<PayslipRecord[]>([]);
   const [payrollTaxConfig, setPayrollTaxConfig] = useState<PayrollTaxConfig | null>(null);
+  const [attendanceSettings, setAttendanceSettings] = useState<AttendanceSettings | null>(null);
   const [payrollGroups, setPayrollGroups] = useState<PayrollGroup[]>([]);
   const [salaryBands, setSalaryBands] = useState<SalaryBand[]>([]);
 
@@ -119,6 +127,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>([]);
   const [managedDocuments, setManagedDocuments] = useState<ManagedDocument[]>([]);
   const [exitRequests, setExitRequests] = useState<ExitRequest[]>([]);
+  const [bankAccountUpdates, setBankAccountUpdates] = useState<BankAccountUpdateRequest[]>([]);
+  const [profileUpdateRequests, setProfileUpdateRequests] = useState<import('./types').ProfileUpdateRequest[]>([]);
 
   // Navigation states
   const [activeView, setActiveView] = useState('dashboard');
@@ -131,11 +141,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   // Licensing Matrice config panel modal state inside tenant settings
   const [showLicensingPanel, setShowLicensingPanel] = useState(false);
 
-  // Initial Fetch on mount
+  // Initial Fetch on mount (waits for auth to be ready)
   useEffect(() => {
+    if (authLoading || !token) return;
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes] = await Promise.all([
+        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, pollsRes, pollOptsRes, pollVotesRes, imgRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -186,7 +197,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           fetch('/api/lms-courses'),
           fetch('/api/announcements'),
           fetch('/api/workflow-triggers'),
-          fetch('/api/email-templates')
+          fetch('/api/email-templates'),
+          fetch('/api/chat/messages?companyId=c-acme'),
+          fetch('/api/polls?companyId=c-acme'),
+          fetch('/api/poll-options?companyId=c-acme'),
+          fetch('/api/poll-votes?companyId=c-acme'),
+          fetch('/api/company-images?companyId=c-acme')
         ]);
 
         const cData = await safeJson(cRes);
@@ -237,6 +253,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         const annData = await safeJson(annRes);
         const wtData = await safeJson(wtRes);
         const etData = await safeJson(etRes);
+        const chatData = await safeJson(chatRes);
+        const pollsData = await safeJson(pollsRes);
+        const pollOptsData = await safeJson(pollOptsRes);
+        const pollVotesData = await safeJson(pollVotesRes);
+        const imgData = await safeJson(imgRes);
 
         setCompanies(cData);
         setUsers(uData);
@@ -244,8 +265,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setDepartments(dData);
         setBranches(bData);
         setLeads(lData);
-        setGlAccounts(accData.accounts);
-        setInvoices(accData.invoices);
+        setGlAccounts(accData.accounts || []);
+        setInvoices(accData.invoices || []);
         setInventory(invData);
         setTickets(tData);
         setWorkflows(wData);
@@ -279,6 +300,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setAnnouncements(annData);
         setWorkflowTriggers(wtData);
         setEmailTemplates(etData);
+        setChatMessages(chatData);
+        setPolls(pollsData);
+        setPollOptions(pollOptsData);
+        setPollVotes(pollVotesData);
+        setCompanyImages(imgData);
 
         // Fetch CRM activities
         const actRes = await fetch('/api/crm-activities');
@@ -356,7 +382,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
             fetch('/api/bom-items'),
             fetch('/api/quality-checks'),
             fetch('/api/maintenance-tasks'),
-            fetch('/api/documents'),
+            fetch(`/api/documents?companyId=${selectedCompany?.id || ''}&userId=${selectedUser?.id || ''}`),
           ]);
           setVendors(await safeJson(vnRes));
           setPurchaseOrders(await safeJson(poRes));
@@ -374,6 +400,18 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           setExitRequests(await safeJson(exitRes));
         } catch (e) { console.error('Failed to load exit requests:', e); }
 
+        // Fetch bank account updates
+        try {
+          const bauRes = await fetch('/api/bank-account-updates');
+          setBankAccountUpdates(await safeJson(bauRes));
+        } catch (e) { console.error('Failed to load bank account updates:', e); }
+
+        // Fetch profile update requests
+        try {
+          const purRes = await fetch('/api/profile-update-requests');
+          setProfileUpdateRequests(await safeJson(purRes));
+        } catch (e) { console.error('Failed to load profile update requests:', e); }
+
         // Select default tenant and user role
         if (cData.length > 0) {
           const acme = cData.find((c: any) => c.id === 'c-acme');
@@ -387,7 +425,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         }
       }
       loadData();
-    }, []);
+    }, [authLoading, token]);
 
   // Load payroll tax/deduction config for the active company
   useEffect(() => {
@@ -401,6 +439,37 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       } catch (e) { console.error('Failed to load payroll tax config:', e); }
     })();
     return () => { cancelled = true; };
+  }, [selectedCompany]);
+
+  // Load attendance settings for the active company
+  useEffect(() => {
+    if (!selectedCompany) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/attendance-settings?companyId=${selectedCompany.id}`);
+        const cfg = await safeJson(res);
+        if (!cancelled) setAttendanceSettings(cfg || null);
+      } catch (e) { console.error('Failed to load attendance settings:', e); }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedCompany]);
+
+  // Reload chat messages whenever selected company changes
+  useEffect(() => {
+    if (!selectedCompany) return;
+    let cancelled = false;
+    const loadChat = async () => {
+      try {
+        const res = await fetch(`/api/chat/messages?companyId=${selectedCompany.id}`);
+        const data = await safeJson(res);
+        if (!cancelled && Array.isArray(data)) setChatMessages(data);
+      } catch (e) { console.error('Failed to load chat messages:', e); }
+    };
+    loadChat();
+    // Poll every 5 seconds to surface messages sent by other users
+    const interval = setInterval(loadChat, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [selectedCompany]);
 
   // Update states whenever selected company is switched to maintain full tenant isolation
@@ -442,7 +511,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAuditLogs(await safeJson(logRes));
       const accRes = await fetch('/api/accounting');
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
     } catch (err) {
       console.error(err);
     }
@@ -691,6 +760,95 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     } catch (err) { console.error(err); toast('Failed to reject exit request', 'error', 'Error'); }
   };
 
+  const handleRequestBankAccountUpdate = async (input: { companyId: string; employeeId: string; employeeName: string; bankName: string; accountName: string; accountNumber: string; sortCode?: string; routingNumber?: string }) => {
+    try {
+      const res = await fetch('/api/bank-account-updates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await safeJson(res);
+      setBankAccountUpdates([...bankAccountUpdates, data]);
+      toast('Bank account update requested', 'success', 'Submitted');
+    } catch (err) { console.error(err); toast('Failed to submit bank account request', 'error', 'Error'); }
+  };
+
+  const handleApproveBankAccountUpdate = async (id: string, employeeId: string, newBankAccount: string, approverName: string) => {
+    try {
+      // 1. Update the request status
+      const res = await fetch(`/api/bank-account-updates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Approved', userId: selectedUser.id, userName: approverName }),
+      });
+      const data = await safeJson(res);
+      setBankAccountUpdates(bankAccountUpdates.map(e => e.id === id ? data : e));
+      
+      // 2. Update the employee's bank account
+      await handleUpdateEmployee(employeeId, { bankAccount: newBankAccount });
+      
+      toast(`Bank account request approved`, 'success', 'Approved');
+    } catch (err) { console.error(err); toast('Failed to approve request', 'error', 'Error'); }
+  };
+
+  const handleRejectBankAccountUpdate = async (id: string, rejectorName: string) => {
+    try {
+      const res = await fetch(`/api/bank-account-updates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Rejected', userId: selectedUser.id, userName: rejectorName }),
+      });
+      const data = await safeJson(res);
+      setBankAccountUpdates(bankAccountUpdates.map(e => e.id === id ? data : e));
+      toast('Bank account update rejected', 'info', 'Rejected');
+    } catch (err) { console.error(err); toast('Failed to reject request', 'error', 'Error'); }
+  };
+
+  const handleSubmitProfileUpdate = async (input: { companyId: string; employeeId: string; employeeName: string; department: string; field: string; label: string; currentValue: string; newValue: string }) => {
+    try {
+      const res = await fetch('/api/profile-update-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await safeJson(res);
+      setProfileUpdateRequests([...profileUpdateRequests, data]);
+      toast('Profile update submitted for HR approval', 'success', 'Submitted');
+    } catch (err) { console.error(err); toast('Failed to submit profile update', 'error', 'Error'); }
+  };
+
+  const handleApproveProfileUpdate = async (id: string) => {
+    try {
+      const res = await fetch(`/api/profile-update-requests/${id}/approve`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ processedBy: selectedUser.name }),
+      });
+      const data = await safeJson(res);
+      setProfileUpdateRequests(profileUpdateRequests.map(r => r.id === id ? data : r));
+      // Refresh employees to reflect the change
+      try {
+        const empRes = await fetch(`/api/employees?companyId=${selectedCompany.id}`);
+        const empData = await safeJson(empRes);
+        setEmployees(empData);
+      } catch (_) {}
+      toast('Profile update approved and applied', 'success', 'Approved');
+    } catch (err) { console.error(err); toast('Failed to approve profile update', 'error', 'Error'); }
+  };
+
+  const handleRejectProfileUpdate = async (id: string, reason?: string) => {
+    try {
+      const res = await fetch(`/api/profile-update-requests/${id}/reject`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ processedBy: selectedUser.name, rejectionReason: reason }),
+      });
+      const data = await safeJson(res);
+      setProfileUpdateRequests(profileUpdateRequests.map(r => r.id === id ? data : r));
+      toast('Profile update rejected', 'info', 'Rejected');
+    } catch (err) { console.error(err); toast('Failed to reject profile update', 'error', 'Error'); }
+  };
+
   const handleAddLead = async (leadInput: Omit<CRMLead, 'id' | 'status' | 'aiLeadScore' | 'aiFollowUpSuggested' | 'createdAt'>) => {
     try {
       const res = await fetch('/api/leads', {
@@ -759,7 +917,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       ]);
       setAuditLogs(await safeJson(logRes));
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
     } catch (err) {
       console.error(err);
       toast('Failed to move lead', 'error', 'Error');
@@ -784,7 +942,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       ]);
       setAuditLogs(await safeJson(logRes));
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
     } catch (err) {
       console.error(err);
       toast('Failed to create invoice', 'error', 'Error');
@@ -810,7 +968,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       ]);
       setAuditLogs(await safeJson(logRes));
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
     } catch (err) {
       console.error(err);
     }
@@ -927,8 +1085,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
   const handleClockAttendance = async (action: 'in' | 'out', locationType?: string) => {
     if (!selectedUser || !selectedCompany) return;
-    const emp = employees.find(e => e.email === selectedUser.email);
-    if (!emp) return;
+    const companyEmployees = employees.filter(e => e.companyId === selectedCompany.id);
+    const emp = companyEmployees.find(e => e.email === selectedUser.email) || companyEmployees.find(e => `${e.firstName} ${e.lastName}` === selectedUser.name) || companyEmployees[0];
+    if (!emp) {
+      toast('No employee record found for your account. Please contact HR.', 'error', 'Clock In Failed');
+      return;
+    }
     
     try {
       await fetch('/api/attendance/clock', {
@@ -1019,7 +1181,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       ]);
       setPayslips(await safeJson(pRes));
       const accData = await safeJson(aRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
@@ -1197,6 +1359,23 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
+  const handleUpdateAttendanceSettings = async (companyId: string, cfg: Partial<AttendanceSettings>) => {
+    try {
+      const res = await fetch('/api/attendance-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, ...cfg })
+      });
+      const updated = await safeJson(res);
+      setAttendanceSettings(updated);
+
+      const logRes = await fetch('/api/audit-logs');
+      setAuditLogs(await safeJson(logRes));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleAddKbArticle = async (article: Omit<KBArticle, 'id' | 'views' | 'createdAt'>) => {
     try {
       const res = await fetch('/api/kb-articles', {
@@ -1240,6 +1419,93 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAnnouncements([created, ...announcements]);
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSendChatMessage = async (message: { companyId: string; threadId: string; senderId: string; senderName: string; message: string }) => {
+    try {
+      const res = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(message)
+      });
+      const created = await safeJson(res);
+      setChatMessages(prev => [...prev, created]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreatePoll = async (poll: { companyId: string; title: string; description: string; category: string; createdBy: string; createdByName: string; anonymous: boolean; endDate: string; options: { label: string; nomineeId?: string; nomineeName?: string }[] }) => {
+    try {
+      const res = await fetch('/api/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(poll)
+      });
+      const created = await safeJson(res);
+      setPolls(prev => [created, ...prev]);
+      // Fetch updated options
+      const optsRes = await fetch(`/api/poll-options?companyId=${poll.companyId}`);
+      setPollOptions(await safeJson(optsRes));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleClosePoll = async (pollId: string) => {
+    try {
+      await fetch(`/api/polls/${pollId}/close`, { method: 'POST' });
+      setPolls(prev => prev.map(p => p.id === pollId ? { ...p, status: 'Closed' as const } : p));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleVotePoll = async (pollId: string, optionId: string, voterId: string, voterName: string) => {
+    try {
+      const res = await fetch(`/api/polls/${pollId}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ optionId, voterId, voterName })
+      });
+      if (res.ok) {
+        const vote = await safeJson(res);
+        setPollVotes(prev => [...prev, vote]);
+        // Update option vote count locally
+        setPollOptions(prev => prev.map(o => o.id === optionId ? { ...o, voteCount: o.voteCount + 1 } : o));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUploadCompanyImage = async (image: { companyId: string; title: string; description: string; category: string; imageData: string; uploadedBy: string; uploadedByName: string }) => {
+    try {
+      const res = await fetch('/api/company-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(image),
+      });
+      if (res.ok) {
+        const saved = await safeJson(res);
+        setCompanyImages(prev => [{ ...image, id: saved.id, createdAt: saved.createdAt } as CompanyImage, ...prev]);
+        toast('Image uploaded successfully', 'success', 'Gallery');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteCompanyImage = async (imageId: string) => {
+    try {
+      const res = await fetch(`/api/company-images/${imageId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setCompanyImages(prev => prev.filter(i => i.id !== imageId));
+        toast('Image deleted', 'success', 'Gallery');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -1814,7 +2080,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       // Reload GL accounts to reflect balance changes
       const accRes = await fetch('/api/accounting');
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
@@ -1856,7 +2122,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       // Reload GL accounts to reflect reversed balances
       const accRes = await fetch('/api/accounting');
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
@@ -1901,7 +2167,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         fetch('/api/journal-entries')
       ]);
       const accData = await safeJson(accRes);
-      setGlAccounts(accData.accounts);
+      setGlAccounts(accData.accounts || []);
       setJournalEntries(await safeJson(jeRes));
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
@@ -2016,7 +2282,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       // Reload invoices and bank
       const [invRes, baRes] = await Promise.all([fetch('/api/accounting'), fetch('/api/bank-accounts')]);
       const accData = await safeJson(invRes);
-      setInvoices(accData.invoices);
+      setInvoices(accData.invoices || []);
       setBankAccounts(await safeJson(baRes));
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
@@ -2169,6 +2435,19 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       });
       const newBA = await safeJson(res);
       setBankAccounts([...bankAccounts, newBA]);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateBankAccount = async (id: string, updates: Partial<import('./types').BankAccount>) => {
+    if (!selectedCompany || !selectedUser) return;
+    try {
+      const res = await fetch(`/api/bank-accounts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const updated = await safeJson(res);
+      setBankAccounts(bankAccounts.map(b => b.id === id ? updated : b));
     } catch (err) { console.error(err); }
   };
 
@@ -2844,14 +3123,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           {selectedUser.activeRole === 'Super Admin' && activeView === 'dashboard' && (
             <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
-                <span className="text-xs font-semibold text-slate-900 uppercase tracking-wider block">Global Platform Controls Active</span>
-                <p className="text-xs text-slate-500 mt-0.5">As platform Super Admin, you can provision completely new corporate tenants, manage billing structures, or login as company admins.</p>
+                <span className="fs-xs fw-semibold text-slate-900 uppercase tracking-wider block">Global Platform Controls Active</span>
+                <p className="fs-xs text-slate-500 mt-0.5">As platform Super Admin, you can provision completely new corporate tenants, manage billing structures, or login as company admins.</p>
               </div>
               <button
                 onClick={() => setShowTenantSetup(true)}
-                className="bg-slate-900 hover:bg-slate-850 text-white font-semibold text-xs px-4 py-2 rounded transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                className="bg-slate-900 hover:bg-slate-850 text-white fw-semibold fs-xs px-4 py-2 rounded transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <i className="bi bi-plus-lg text-xs"></i>
+                <i className="bi bi-plus-lg fs-xs"></i>
                 Spawn Tenant Organization
               </button>
             </div>
@@ -2861,12 +3140,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           {selectedUser.activeRole === 'Company Admin' && activeView === 'dashboard' && (
             <div className="mb-6 rounded-lg border border-slate-200 bg-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs">
               <div>
-                <span className="text-xs font-semibold text-slate-900 uppercase tracking-wider block">Modular SaaS Subscription Center</span>
-                <p className="text-xs text-slate-500 mt-0.5">Configure active business modules, install feature packs, or upgrade licensing tiers.</p>
+                <span className="fs-xs fw-semibold text-slate-900 uppercase tracking-wider block">Modular SaaS Subscription Center</span>
+                <p className="fs-xs text-slate-500 mt-0.5">Configure active business modules, install feature packs, or upgrade licensing tiers.</p>
               </div>
               <button
                 onClick={() => setShowLicensingPanel(true)}
-                className="bg-slate-900 hover:bg-slate-850 text-white font-semibold text-xs px-4 py-2 rounded transition-all cursor-pointer whitespace-nowrap"
+                className="bg-slate-900 hover:bg-slate-850 text-white fw-semibold fs-xs px-4 py-2 rounded transition-all cursor-pointer whitespace-nowrap"
               >
                 Licensing Panel
               </button>
@@ -2882,6 +3161,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               employees={employees}
               leads={leads}
               glAccounts={glAccounts}
+              bankAccountUpdates={bankAccountUpdates}
+              profileUpdateRequests={profileUpdateRequests}
+              onSubmitProfileUpdate={handleSubmitProfileUpdate}
               invoices={invoices}
               inventory={inventory}
               tickets={tickets}
@@ -2901,6 +3183,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onApproveBill={handleApproveBill}
               onApproveJournalEntry={handleApproveJournalEntry}
               onPayInvoice={handlePayInvoice}
+              onRequestBankAccountUpdate={handleRequestBankAccountUpdate}
               onAdjustStock={handleAdjustStock}
               onNavigateView={setActiveView}
             />
@@ -2923,7 +3206,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onNavigateView={setActiveView}
               selectedCompany={selectedCompany}
               selectedUser={selectedUser}
+              users={users}
               employees={employees}
+              bankAccountUpdates={bankAccountUpdates}
+              onRequestBankAccountUpdate={handleRequestBankAccountUpdate}
+              onApproveBankAccountUpdate={handleApproveBankAccountUpdate}
+              onRejectBankAccountUpdate={handleRejectBankAccountUpdate}
+              profileUpdateRequests={profileUpdateRequests}
+              onSubmitProfileUpdate={handleSubmitProfileUpdate}
+              onApproveProfileUpdate={handleApproveProfileUpdate}
+              onRejectProfileUpdate={handleRejectProfileUpdate}
               departments={departments}
               branches={branches}
               leads={leads}
@@ -2983,6 +3275,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onRunPayroll={handleRunPayroll}
               payrollTaxConfig={payrollTaxConfig}
               onUpdatePayrollTaxConfig={handleUpdatePayrollTaxConfig}
+              attendanceSettings={attendanceSettings}
+              onUpdateAttendanceSettings={handleUpdateAttendanceSettings}
               onCreatePayrollGroup={handleCreatePayrollGroup}
               onDeletePayrollGroup={handleDeletePayrollGroup}
               onCreateSalaryBand={handleCreateSalaryBand}
@@ -3014,6 +3308,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onPayBill={handlePayBill}
               onReceiveCustomerPayment={handleReceiveCustomerPayment}
               onCreateBankAccount={handleCreateBankAccount}
+              onUpdateBankAccount={handleUpdateBankAccount}
               onReconcileBank={handleReconcileBank}
               onCreateFixedAsset={handleCreateFixedAsset}
               onDisposeAsset={handleDisposeAsset}
@@ -3096,6 +3391,17 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onAddAnnouncement={handleAddAnnouncement}
               emailTemplates={emailTemplates}
               onAddEmailTemplate={handleAddEmailTemplate}
+              chatMessages={chatMessages}
+              onSendChatMessage={handleSendChatMessage}
+              polls={polls}
+              pollOptions={pollOptions}
+              pollVotes={pollVotes}
+              onCreatePoll={handleCreatePoll}
+              onClosePoll={handleClosePoll}
+              onVotePoll={handleVotePoll}
+              companyImages={companyImages}
+              onUploadCompanyImage={handleUploadCompanyImage}
+              onDeleteCompanyImage={handleDeleteCompanyImage}
               projectTasks={projectTasks}
               projectMilestones={projectMilestones}
               onCreateProjectTask={handleCreateProjectTask}
@@ -3159,14 +3465,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       {showLicensingPanel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 flex items-center gap-1.5">
-              <i className="bi bi-cpu text-slate-800 text-xs"></i>
+            <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 flex items-center gap-1.5">
+              <i className="bi bi-cpu text-slate-800 fs-xs"></i>
               SaaS Module Licensing & Feature Packs: {selectedCompany.name}
             </h2>
 
             <div className="mt-4 space-y-4">
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Business Modules (SaaS Core)</span>
+                <span className="text-[10px] fw-bold uppercase text-slate-400 tracking-wider">Business Modules (SaaS Core)</span>
                 <p className="text-[11px] text-slate-400">Companies subscribe to modules individually. Toggling here instantly updates the sidebar context.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {[
@@ -3188,12 +3494,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
                     }
                   ].map(group => (
                     <div key={group.title} className="border border-slate-100 rounded-lg p-3 bg-slate-50/50">
-                      <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider block mb-2">{group.title}</span>
+                      <span className="text-[10px] fw-bold uppercase text-slate-500 tracking-wider block mb-2">{group.title}</span>
                       <div className="space-y-1.5">
                         {group.modules.map(mod => {
                           const isInstalled = selectedCompany.activeModules.includes(mod);
                           return (
-                            <label key={mod} className="flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer">
+                            <label key={mod} className="flex items-center gap-2 fs-xs fw-semibold text-slate-700 hover:text-slate-900 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={isInstalled}
@@ -3219,7 +3525,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               </div>
 
               <div>
-                <span className="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Premium Feature Packs</span>
+                <span className="text-[10px] fw-semibold uppercase text-slate-400 tracking-wider">Premium Feature Packs</span>
                 <p className="text-[11px] text-slate-400">Unlock high-density add-ons, geofencing coordinates, and machine-learning scoring algorithms.</p>
                 <div className="mt-2 space-y-2">
                   {[
@@ -3230,7 +3536,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
                   ].map(feat => {
                     const isUnlocked = selectedCompany.premiumFeatures.includes(feat.id);
                     return (
-                      <label key={feat.id} className="flex items-center justify-between border border-slate-200 p-2.5 rounded hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700">
+                      <label key={feat.id} className="flex items-center justify-between border border-slate-200 p-2.5 rounded hover:bg-slate-50 cursor-pointer fs-xs fw-semibold text-slate-700">
                         <span className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -3248,7 +3554,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
                           />
                           {feat.label}
                         </span>
-                        <span className="text-[9px] bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Premium</span>
+                        <span className="text-[9px] bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold tracking-wide">Premium</span>
                       </label>
                     );
                   })}
@@ -3259,7 +3565,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
             <div className="flex justify-end pt-5 border-t border-slate-150 mt-5">
               <button
                 onClick={() => setShowLicensingPanel(false)}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2 rounded cursor-pointer transition-all"
+                className="bg-slate-900 hover:bg-slate-800 text-white fw-semibold fs-xs px-4 py-2 rounded cursor-pointer transition-all"
               >
                 Save & Close
               </button>

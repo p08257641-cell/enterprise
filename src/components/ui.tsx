@@ -39,11 +39,11 @@ export const EmptyState: React.FC<{
   className?: string;
 }> = ({ icon = 'bi bi-inbox', title, subtitle, action, className = '' }) => (
   <div className={`flex flex-col items-center justify-center text-center py-16 px-6 ${className}`}>
-    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 text-2xl">
+    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 fs-2xl">
       <i className={icon}></i>
     </div>
-    <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-    {subtitle && <p className="mt-1 max-w-xs text-xs leading-relaxed text-slate-500">{subtitle}</p>}
+    <h3 className="fs-sm fw-semibold text-slate-900">{title}</h3>
+    {subtitle && <p className="mt-1 max-w-xs fs-xs leading-relaxed text-slate-500">{subtitle}</p>}
     {action && <div className="mt-4">{action}</div>}
   </div>
 );

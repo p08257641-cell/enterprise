@@ -15,7 +15,7 @@ export const INITIAL_COMPANIES: Company[] = [
     currency: 'USD',
     timezone: 'America/New_York',
     language: 'English',
-    activeModules: ['Administration', 'HR', 'Payroll', 'Accounting', 'CRM', 'Inventory', 'POS', 'Sales', 'Procurement', 'Manufacturing', 'Project Management', 'AI Assistant', 'Reports & Analytics', 'Workflow & Automation', 'Communication', 'Compliance', 'Learning Management (LMS)', 'Document Management', 'Visitor Management', 'Asset Management', 'Help Desk'],
+    activeModules: ['Administration', 'HR', 'Payroll', 'Accounting', 'CRM', 'Inventory', 'POS', 'Sales', 'Procurement', 'Manufacturing', 'Project Management', 'AI Assistant', 'Reports & Analytics', 'Workflow & Automation', 'Communication', 'Voting', 'Compliance', 'Learning Management (LMS)', 'Document Management', 'Visitor Management', 'Asset Management', 'Help Desk'],
     premiumFeatures: ['GPS Attendance', 'AI Lead Scoring', 'Financial Forecasting', 'Auto Reordering'],
     billingPlan: 'Enterprise',
     billingStatus: 'Active',
@@ -74,8 +74,8 @@ export const INITIAL_USERS: User[] = [
     name: 'Alex Mercer',
     email: 'alex.mercer@acme-mfg.com',
     role: 'Company Admin',
-    roles: ['Company Admin', 'Employee'],
-    activeRole: 'Company Admin',
+    roles: ['Company Admin', 'Employee', 'Help Desk Admin'],
+    activeRole: 'Help Desk Admin',
     department: 'Operations',
     branch: 'New York HQ',
     avatar: '👨‍💼',
@@ -1513,11 +1513,11 @@ export const INITIAL_DEPRECIATION_ENTRIES: DepreciationEntry[] = [
 ];
 
 export const INITIAL_BUDGETS: Budget[] = [
-  { id: 'bud-1', companyId: 'c-acme', name: 'FY2026 Manufacturing Revenue', fiscalYear: '2026', glAccountId: 'gl-4010', accountCode: '4010', accountName: 'Manufacturing Revenue', budgetAmount: 600000, actualAmount: 420000, variance: -180000, variancePercent: -30, period: 'Q3 2026', status: 'Active', createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
-  { id: 'bud-2', companyId: 'c-acme', name: 'FY2026 COGS', fiscalYear: '2026', glAccountId: 'gl-5010', accountCode: '5010', accountName: 'Cost of Goods Sold', budgetAmount: 250000, actualAmount: 180000, variance: 70000, variancePercent: 28, period: 'Q3 2026', status: 'Active', createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
-  { id: 'bud-3', companyId: 'c-acme', name: 'FY2026 Payroll', fiscalYear: '2026', glAccountId: 'gl-5020', accountCode: '5020', accountName: 'Employee Payroll Expense', budgetAmount: 200000, actualAmount: 135000, variance: 65000, variancePercent: 32.5, period: 'Q3 2026', status: 'Active', createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
-  { id: 'bud-4', companyId: 'c-acme', name: 'FY2026 SaaS & IT', fiscalYear: '2026', glAccountId: 'gl-5030', accountCode: '5030', accountName: 'SaaS Software & IT Expenses', budgetAmount: 60000, actualAmount: 36000, variance: 24000, variancePercent: 40, period: 'Q3 2026', status: 'Active', createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
-  { id: 'bud-5', companyId: 'c-acme', name: 'FY2026 Operating Expenses', fiscalYear: '2026', glAccountId: 'gl-5040', accountCode: '5040', accountName: 'Office Rent & Utilities', budgetAmount: 96000, actualAmount: 72000, variance: 24000, variancePercent: 25, period: 'Q3 2026', status: 'Active', createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
+  { id: 'bud-1', companyId: 'c-acme', name: 'FY2026 Manufacturing Revenue', fiscalYear: '2026', glAccountId: 'gl-4010', accountCode: '4010', accountName: 'Manufacturing Revenue', budgetAmount: 600000, actualAmount: 420000, variance: -180000, variancePercent: -30, period: 'Q3 2026', status: 'Active', items: [], createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
+  { id: 'bud-2', companyId: 'c-acme', name: 'FY2026 COGS', fiscalYear: '2026', glAccountId: 'gl-5010', accountCode: '5010', accountName: 'Cost of Goods Sold', budgetAmount: 250000, actualAmount: 180000, variance: 70000, variancePercent: 28, period: 'Q3 2026', status: 'Active', items: [], createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
+  { id: 'bud-3', companyId: 'c-acme', name: 'FY2026 Payroll', fiscalYear: '2026', glAccountId: 'gl-5020', accountCode: '5020', accountName: 'Employee Payroll Expense', budgetAmount: 200000, actualAmount: 135000, variance: 65000, variancePercent: 32.5, period: 'Q3 2026', status: 'Active', items: [], createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
+  { id: 'bud-4', companyId: 'c-acme', name: 'FY2026 SaaS & IT', fiscalYear: '2026', glAccountId: 'gl-5030', accountCode: '5030', accountName: 'SaaS Software & IT Expenses', budgetAmount: 60000, actualAmount: 36000, variance: 24000, variancePercent: 40, period: 'Q3 2026', status: 'Active', items: [], createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
+  { id: 'bud-5', companyId: 'c-acme', name: 'FY2026 Operating Expenses', fiscalYear: '2026', glAccountId: 'gl-5040', accountCode: '5040', accountName: 'Office Rent & Utilities', budgetAmount: 96000, actualAmount: 72000, variance: 24000, variancePercent: 25, period: 'Q3 2026', status: 'Active', items: [], createdBy: 'u-acme-finance', createdAt: '2026-01-10T08:00:00Z' },
 ];
 
 export const INITIAL_COST_CENTERS: CostCenter[] = [

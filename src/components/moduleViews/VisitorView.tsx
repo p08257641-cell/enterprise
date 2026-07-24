@@ -32,7 +32,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
       <PageHeader title="Visitor Management" subtitle="Check in guests, log visits, print badges and manage building access." />
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {visTabs.map(t => (
-          <button key={t.id} onClick={() => setVisTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${visTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => setVisTab(t.id)} className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${visTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
         ))}
       </div>
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
@@ -45,8 +45,8 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
           <h3 className="section-title text-slate-500 mb-5">Check-In Visitor</h3>
           {visBadge && (
             <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-              <i className="bi bi-person-badge text-emerald-600 text-2xl block mb-1"></i>
-              <div className="text-xs font-bold text-emerald-800">Badge Printed: {visBadge}</div>
+              <i className="bi bi-person-badge text-emerald-600 fs-2xl block mb-1"></i>
+              <div className="fs-xs fw-bold text-emerald-800">Badge Printed: {visBadge}</div>
             </div>
           )}
           <div className="space-y-4">
@@ -75,7 +75,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
             {visitors.map(v => (
               <div key={v.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/40">
                 <div>
-                  <div className="text-xs font-bold text-slate-900">{v.name} <span className="text-slate-400 font-normal">· {v.company}</span></div>
+                  <div className="fs-xs fw-bold text-slate-900">{v.name} <span className="text-slate-400 fw-normal">· {v.company}</span></div>
                   <div className="data-value text-slate-500 mt-0.5">Host: {v.host} · In: {v.checkIn}{v.checkOut ? ` · Out: ${v.checkOut}` : ''}</div>
                 </div>
                 <Badge label={v.status} variant={v.status === 'Inside' ? 'success' : 'default'} />
@@ -90,9 +90,9 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
           <div className="grid gap-3 p-4 sm:grid-cols-2">
             {visitors.map(v => (
               <div key={v.id} className="border border-slate-200 rounded-xl p-4 flex items-center gap-3">
-                <i className="bi bi-person-badge text-slate-400 text-xl"></i>
+                <i className="bi bi-person-badge text-slate-400 fs-xl"></i>
                 <div>
-                  <div className="text-xs font-bold text-slate-900">{v.name}</div>
+                  <div className="fs-xs fw-bold text-slate-900">{v.name}</div>
                   <div className="data-value text-slate-500">{v.company} · Host: {v.host}</div>
                   <div className="text-[10px] font-sans tabular-nums text-slate-400 mt-0.5">{v.id} · {v.status}</div>
                 </div>

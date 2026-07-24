@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ModuleViewsProps, PageHeader, Badge, TableHead, PrimaryBtn, SecBtn, StatCard, useRowModal, RowModal, ViewModal } from './shared';
+import { ModuleViewsProps, PageHeader, Badge, TableHead, PrimaryBtn, SecBtn, StatCard, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 
 export const POSView: React.FC<ModuleViewsProps> = (props) => {
   const {
-    activeView, selectedCompany,
+    activeView, selectedCompany, selectedUser, employees,
     posProducts, posCustomers, posSales, posCategories, posTerminals, posShifts, posDiscounts, posReturns, posDailyReports,
-    onCreatePOSSale, onAddPOSProduct, onAddPOSCustomer
+    onCreatePOSSale, onAddPOSProduct, onAddPOSCustomer, onCreatePOSShift, onClosePOSShift
   } = props;
 
   const tab: 'terminal' | 'products' | 'customers' | 'shifts' | 'sales' | 'discounts' | 'returns' | 'reports' | 'sessions' =
@@ -58,6 +58,12 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
   const [custEmail, setCustEmail] = useState('');
   const [custPhone, setCustPhone] = useState('');
   const [custTier, setCustTier] = useState('Standard');
+
+  // Open Shift Modal states
+  const [showOpenShiftModal, setShowOpenShiftModal] = useState(false);
+  const [shiftTerminalId, setShiftTerminalId] = useState('');
+  const [shiftOpeningBalance, setShiftOpeningBalance] = useState('0');
+  const [shiftNotes, setShiftNotes] = useState('');
 
   const addToCart = (p: { id: string; name: string; unitPrice: number }) => {
     setCart(prev => {
@@ -124,6 +130,31 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
     setShowAddCustomerModal(false);
   };
 
+  const handleOpenShift = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shiftTerminalId) return;
+    onCreatePOSShift({
+      companyId: selectedCompany.id,
+      terminalId: shiftTerminalId,
+      employeeId: selectedUser?.id || '',
+      employeeName: selectedUser?.name || '',
+      startTime: new Date().toISOString(),
+      openingBalance: Number(shiftOpeningBalance) || 0,
+      cashSales: 0,
+      cardSales: 0,
+      digitalWalletSales: 0,
+      storeCreditSales: 0,
+      totalSales: 0,
+      refunds: 0,
+      status: 'Open',
+      notes: shiftNotes,
+    });
+    setShiftTerminalId('');
+    setShiftOpeningBalance('0');
+    setShiftNotes('');
+    setShowOpenShiftModal(false);
+  };
+
   const pageTitle: Record<string, string> = {
     terminal: 'POS Terminal', products: 'Products', customers: 'Customers', shifts: 'Shifts',
     sales: 'Sales History', discounts: 'Discounts', returns: 'Returns', reports: 'Reports', sessions: 'POS Sessions',
@@ -152,23 +183,26 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
         {tab === 'customers' && (
           <PrimaryBtn onClick={() => setShowAddCustomerModal(true)} icon="bi bi-person-plus">Register Customer</PrimaryBtn>
         )}
+        {tab === 'shifts' && (
+          <PrimaryBtn onClick={() => setShowOpenShiftModal(true)} icon="bi bi-plus-lg">Open Shift</PrimaryBtn>
+        )}
       </div>
 
       {tab === 'terminal' && (
         receipt ? (
           <div className="bg-white border border-dashed border-slate-300 rounded-2xl shadow-xs max-w-sm mx-auto p-6 text-center">
-            <i className="bi bi-receipt text-3xl text-slate-300 block mb-2"></i>
-            <div className="text-sm font-bold text-slate-900">{selectedCompany.name}</div>
+            <i className="bi bi-receipt fs-3xl text-slate-300 block mb-2"></i>
+            <div className="fs-sm fw-bold text-slate-900">{selectedCompany.name}</div>
             <div className="text-[10px] text-slate-400 mt-1">{receipt.ts}</div>
             <div className="border-y border-dashed border-slate-200 py-3 my-3 space-y-1">
               {cart.map(i => (
-                <div key={i.id} className="flex justify-between text-xs"><span>{i.name} x{i.qty}</span><span className="font-mono font-semibold">${(i.price * i.qty).toFixed(2)}</span></div>
+                <div key={i.id} className="flex justify-between fs-xs"><span>{i.name} x{i.qty}</span><span className="font-mono fw-semibold">${(i.price * i.qty).toFixed(2)}</span></div>
               ))}
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-xs text-rose-600"><span>Discount ({discount}%)</span><span>-${(subtotal * discount / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between fs-xs text-rose-600"><span>Discount ({discount}%)</span><span>-${(subtotal * discount / 100).toFixed(2)}</span></div>
             )}
-            <div className="flex justify-between text-sm font-bold text-slate-900 mt-2"><span>TOTAL</span><span>${receipt.total.toFixed(2)}</span></div>
+            <div className="flex justify-between fs-sm fw-bold text-slate-900 mt-2"><span>TOTAL</span><span>${receipt.total.toFixed(2)}</span></div>
             <div className="text-[10px] text-slate-400 mt-3">Ref: {receipt.ref}</div>
             <PrimaryBtn onClick={() => { setReceipt(null); setCart([]); setDiscount(0); }}>New Transaction</PrimaryBtn>
           </div>
@@ -177,25 +211,25 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <div className="grid gap-3 grid-cols-3">
               {localProducts.filter(p => p.isActive !== false).map(p => (
                 <button key={p.id} onClick={() => addToCart(p)} className="bg-white border border-slate-200 rounded-xl p-3.5 text-left hover:shadow-md transition-all cursor-pointer">
-                  <div className="text-xs font-bold text-slate-900">{p.name}</div>
+                  <div className="fs-xs fw-bold text-slate-900">{p.name}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">{p.category}</div>
-                  <div className="text-sm font-bold text-slate-900 mt-2">${p.unitPrice.toFixed(2)}</div>
+                  <div className="fs-sm fw-bold text-slate-900 mt-2">${p.unitPrice.toFixed(2)}</div>
                 </button>
               ))}
-              {localProducts.length === 0 && <div className="col-span-3 text-xs text-slate-400 text-center py-8">No products configured.</div>}
+              {localProducts.length === 0 && <div className="col-span-3 fs-xs text-slate-400 text-center py-8">No products configured.</div>}
             </div>
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-100">
                 <div className="section-title text-slate-500">Current Order</div>
               </div>
               <div className="p-4 min-h-[160px]">
-                {cart.length === 0 && <div className="text-xs text-slate-400 text-center py-7">Tap products to add them.</div>}
+                {cart.length === 0 && <div className="fs-xs text-slate-400 text-center py-7">Tap products to add them.</div>}
                 {cart.map(i => (
-                  <div key={i.id} className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-semibold text-slate-900 truncate flex-1 mr-2">{i.name}</span>
+                  <div key={i.id} className="flex items-center justify-between fs-xs mb-2">
+                    <span className="fw-semibold text-slate-900 truncate flex-1 mr-2">{i.name}</span>
                     <div className="flex items-center gap-1 shrink-0">
                       <button onClick={() => updateQty(i.id, -1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"><i className="bi bi-dash text-[10px]"></i></button>
-                      <span className="w-6 text-center font-semibold text-slate-900 tabular-nums">{i.qty}</span>
+                      <span className="w-6 text-center fw-semibold text-slate-900 tabular-nums">{i.qty}</span>
                       <button onClick={() => updateQty(i.id, 1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"><i className="bi bi-plus text-[10px]"></i></button>
                       <button onClick={() => removeFromCart(i.id)} className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 cursor-pointer ml-1"><i className="bi bi-x text-[10px]"></i></button>
                     </div>
@@ -204,12 +238,12 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                 ))}
               </div>
               <div className="px-4 py-3 border-t border-slate-100 space-y-2">
-                <div className="flex justify-between text-xs"><span className="text-slate-500">Subtotal</span><span className="font-bold text-slate-900">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between fs-xs"><span className="text-slate-500">Subtotal</span><span className="fw-bold text-slate-900">${subtotal.toFixed(2)}</span></div>
+                <div className="flex justify-between items-center fs-xs">
                   <span className="text-slate-500">Discount %</span>
-                  <input type="number" value={discount} onChange={e => setDiscount(Number(e.target.value))} className="w-16 text-right border border-slate-200 rounded-lg px-2 py-1 text-xs" />
+                  <input type="number" value={discount} onChange={e => setDiscount(Number(e.target.value))} className="w-16 text-right border border-slate-200 rounded-lg px-2 py-1 fs-xs" />
                 </div>
-                <div className="flex justify-between text-sm font-bold border-t border-slate-100 pt-2"><span>Total</span><span>${total.toFixed(2)}</span></div>
+                <div className="flex justify-between fs-sm fw-bold border-t border-slate-100 pt-2"><span>Total</span><span>${total.toFixed(2)}</span></div>
                 <PrimaryBtn onClick={() => {
                   if (cart.length === 0) return;
                   onCreatePOSSale({
@@ -249,10 +283,10 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                 {localProducts.map(p => (
                   <tr key={p.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => productModal.open(p)}>
                     <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{p.sku}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{p.name}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{p.category}</td>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900 text-right">${p.unitPrice.toFixed(2)}</td>
-                    <td className={`px-4 py-3 text-xs font-mono font-semibold text-right ${p.stockLevel <= p.reorderLevel ? 'text-rose-600' : 'text-slate-900'}`}>{p.stockLevel}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{p.name}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{p.category}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${p.unitPrice.toFixed(2)}</td>
+                    <td className={`px-4 py-3 fs-xs font-mono fw-semibold text-right ${p.stockLevel <= p.reorderLevel ? 'text-rose-600' : 'text-slate-900'}`}>{p.stockLevel}</td>
                   </tr>
                 ))}
               </tbody>
@@ -274,11 +308,11 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localCustomers.map(c => (
                   <tr key={c.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => customerModal.open(c)}>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{c.firstName} {c.lastName}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{c.email}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{c.phone || '—'}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{c.firstName} {c.lastName}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{c.email}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{c.phone || '—'}</td>
                     <td className="px-4 py-3"><Badge label={c.tier || 'Standard'} variant={c.tier === 'Gold' ? 'warning' : c.tier === 'Platinum' ? 'info' : 'default'} /></td>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900 text-right">${(c.totalSpent || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${(c.totalSpent || 0).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -294,10 +328,10 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <tbody className="divide-y divide-slate-100">
               {localTerminals.map(t => (
                   <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => terminalModal.open(t)}>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-900">{t.name}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{t.location || '—'}</td>
+                  <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.name}</td>
+                  <td className="px-4 py-3 fs-xs text-slate-500">{t.location || '—'}</td>
                   <td className="px-4 py-3"><Badge label={t.isActive !== false ? 'Active' : 'Inactive'} variant={t.isActive !== false ? 'success' : 'default'} /></td>
-                  <td className="px-4 py-3 text-xs font-mono text-slate-500">{t.lastSync || '—'}</td>
+                  <td className="px-4 py-3 fs-xs font-mono text-slate-500">{t.lastSync || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -320,10 +354,10 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localSales.slice(0, 5).map(s => (
                   <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => saleModal.open(s)}>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900">{s.saleNumber || s.id}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{s.paymentMethod}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900">{s.saleNumber || s.id}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{s.paymentMethod}</td>
                     <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -346,15 +380,15 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                 {localShifts.map(s => (
                   <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => shiftModal.open(s)}>
                     <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{s.id}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{s.terminalId || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{s.employeeName || '—'}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{s.terminalId || '—'}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{s.employeeName || '—'}</td>
                     <td className="px-4 py-3"><Badge label={s.status} variant={s.status === 'Open' ? 'success' : 'default'} /></td>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{s.startTime ? new Date(s.startTime).toLocaleDateString() : '—'}</td>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{s.endTime ? new Date(s.endTime).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.startTime ? new Date(s.startTime).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.endTime ? new Date(s.endTime).toLocaleDateString() : '—'}</td>
                   </tr>
                 ))}
                 {localShifts.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No shifts recorded</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No shifts recorded</td></tr>
                 )}
               </tbody>
             </table>
@@ -375,16 +409,16 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localSales.map(s => (
                   <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => saleModal.open(s)}>
-                    <td className="px-4 py-3 text-[10px] font-mono font-semibold text-slate-900">{s.saleNumber || s.id}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{s.paymentMethod}</td>
+                    <td className="px-4 py-3 text-[10px] font-mono fw-semibold text-slate-900">{s.saleNumber || s.id}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{s.paymentMethod}</td>
                     <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{s.items?.length || 0}</td>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{s.items?.length || 0}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'}</td>
                   </tr>
                 ))}
                 {localSales.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No sales recorded</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No sales recorded</td></tr>
                 )}
               </tbody>
             </table>
@@ -405,16 +439,16 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localDiscounts.map(d => (
                   <tr key={d.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => discountModal.open(d)}>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{d.name}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{d.type}</td>
-                    <td className="px-4 py-3 text-xs font-mono font-semibold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : `$${d.value}`}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{d.usageCount || 0}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{d.name}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{d.type}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : `$${d.value}`}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{d.usageCount || 0}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
                     <td className="px-4 py-3"><Badge label={d.isActive !== false ? 'Active' : 'Inactive'} variant={d.isActive !== false ? 'success' : 'default'} /></td>
                   </tr>
                 ))}
                 {localDiscounts.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No discounts configured</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No discounts configured</td></tr>
                 )}
               </tbody>
             </table>
@@ -435,16 +469,16 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localReturns.map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => returnModal.open(r)}>
-                    <td className="px-4 py-3 text-[10px] font-mono font-semibold text-slate-900">{r.returnNumber || r.id}</td>
+                    <td className="px-4 py-3 text-[10px] font-mono fw-semibold text-slate-900">{r.returnNumber || r.id}</td>
                     <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{r.originalSaleId || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{r.reason || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{r.refundMethod || '—'}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{r.reason || '—'}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{r.refundMethod || '—'}</td>
                     <td className="px-4 py-3"><Badge label={r.refundStatus || 'Pending'} variant={r.refundStatus === 'Processed' ? 'success' : 'warning'} /></td>
-                    <td className="px-4 py-3 text-xs font-mono text-slate-500 text-right">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
                   </tr>
                 ))}
                 {localReturns.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">No returns recorded</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No returns recorded</td></tr>
                 )}
               </tbody>
             </table>
@@ -458,12 +492,12 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           <form onSubmit={handleProductSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">SKU *</label>
-                <input type="text" value={prodSku} onChange={e => setProdSku(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="SKU-8080" required />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">SKU *</label>
+                <input type="text" value={prodSku} onChange={e => setProdSku(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="SKU-8080" required />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
-                <select value={prodCat} onChange={e => setProdCat(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950">
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Category *</label>
+                <select value={prodCat} onChange={e => setProdCat(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950">
                   <option value="Beverages">Beverages</option>
                   <option value="Bakery">Bakery</option>
                   <option value="Electronics">Electronics</option>
@@ -474,21 +508,21 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Product Name *</label>
-              <input type="text" value={prodName} onChange={e => setProdName(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Product Name" required />
+              <label className="block fs-xs fw-semibold text-slate-700 mb-1">Product Name *</label>
+              <input type="text" value={prodName} onChange={e => setProdName(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Product Name" required />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Unit Price ($) *</label>
-                <input type="number" step="0.01" value={prodPrice} onChange={e => setProdPrice(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="9.99" required />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Unit Price ($) *</label>
+                <input type="number" step="0.01" value={prodPrice} onChange={e => setProdPrice(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="9.99" required />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Stock Level</label>
-                <input type="number" value={prodStock} onChange={e => setProdStock(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Stock Level</label>
+                <input type="number" value={prodStock} onChange={e => setProdStock(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Reorder Level</label>
-                <input type="number" value={prodReorder} onChange={e => setProdReorder(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Reorder Level</label>
+                <input type="number" value={prodReorder} onChange={e => setProdReorder(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
@@ -505,26 +539,26 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           <form onSubmit={handleCustomerSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">First Name *</label>
-                <input type="text" value={custFirst} onChange={e => setCustFirst(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Jane" required />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">First Name *</label>
+                <input type="text" value={custFirst} onChange={e => setCustFirst(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Jane" required />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Last Name *</label>
-                <input type="text" value={custLast} onChange={e => setCustLast(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Doe" required />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Last Name *</label>
+                <input type="text" value={custLast} onChange={e => setCustLast(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="Doe" required />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Email *</label>
-              <input type="email" value={custEmail} onChange={e => setCustEmail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="jane.doe@email.com" required />
+              <label className="block fs-xs fw-semibold text-slate-700 mb-1">Email *</label>
+              <input type="email" value={custEmail} onChange={e => setCustEmail(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="jane.doe@email.com" required />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
-                <input type="text" value={custPhone} onChange={e => setCustPhone(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950" placeholder="+1 555-0199" />
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Phone</label>
+                <input type="text" value={custPhone} onChange={e => setCustPhone(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="+1 555-0199" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Tier *</label>
-                <select value={custTier} onChange={e => setCustTier(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none focus:border-slate-950">
+                <label className="block fs-xs fw-semibold text-slate-700 mb-1">Tier *</label>
+                <select value={custTier} onChange={e => setCustTier(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950">
                   <option value="Standard">Standard</option>
                   <option value="Gold">Gold</option>
                   <option value="Platinum">Platinum</option>
@@ -534,6 +568,35 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
               <SecBtn onClick={() => setShowAddCustomerModal(false)}>Cancel</SecBtn>
               <PrimaryBtn type="submit" icon="bi bi-check-lg">Register Customer</PrimaryBtn>
+            </div>
+          </form>
+        </ViewModal>
+      )}
+
+      {showOpenShiftModal && (
+        <ViewModal title="Open Shift" subtitle="Start a new cashier shift" onClose={() => setShowOpenShiftModal(false)} size="md">
+          <form onSubmit={handleOpenShift} className="space-y-4">
+            <div>
+              <label className="block fs-xs fw-semibold text-slate-700 mb-1">Terminal *</label>
+              <select value={shiftTerminalId} onChange={e => setShiftTerminalId(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" required>
+                <option value="">Select a terminal</option>
+                {localTerminals.map(t => (
+                  <option key={t.id} value={t.id}>{t.name || t.id}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block fs-xs fw-semibold text-slate-700 mb-1">Opening Balance</label>
+              <input type="number" value={shiftOpeningBalance} onChange={e => setShiftOpeningBalance(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950" placeholder="0.00" min="0" step="0.01" />
+              <div className="fs-xs text-slate-400 mt-1">Cash amount in the till at shift start</div>
+            </div>
+            <div>
+              <label className="block fs-xs fw-semibold text-slate-700 mb-1">Notes</label>
+              <textarea value={shiftNotes} onChange={e => setShiftNotes(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 outline-none focus:border-slate-950 resize-none" placeholder="Optional notes" />
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <SecBtn onClick={() => setShowOpenShiftModal(false)}>Cancel</SecBtn>
+              <PrimaryBtn type="submit" icon="bi bi-play-fill">Open Shift</PrimaryBtn>
             </div>
           </form>
         </ViewModal>

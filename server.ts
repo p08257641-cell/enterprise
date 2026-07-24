@@ -3,13 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import helmet from 'helmet';
+import cors from 'cors';
 import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate } from './src/types';
 import * as schema from './db/schema';
-import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb } from './db/repo';
+import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb, dbByCompanyPaginated, dbAllPaginated } from './db/repo';
+import { pool } from './db';
+import { logger, logRequest, logError } from './server/lib/logger';
+import { signToken, hashPassword, comparePassword } from './server/lib/auth';
+import { authenticate, requireRole, enforceTenantIsolation } from './server/middleware/auth';
+import { globalLimiter, authLimiter, aiLimiter } from './server/middleware/rateLimit';
+import { validate, LoginSchema, CreateTicketSchema, CreateLeadSchema, CreateExpenseSchema, CreateBillSchema, JournalEntrySchema } from './server/lib/validators';
 
 // In-memory data store for live session (being migrated to PostgreSQL per-entity)
 let aiInstance: GoogleGenAI | null = null;
@@ -105,10 +113,10 @@ async function evaluateWorkflows(
         `Workflow "${wf.name}" executed via "${eventName}" event. Steps: ${executedActions.join(' → ')}`
       );
 
-      console.log(`[WORKFLOW ENGINE] Executed "${wf.name}" (${blocks.length} blocks) for event "${eventName}"`);
+      logger.info(`[WORKFLOW ENGINE] Executed "${wf.name}" (${blocks.length} blocks) for event "${eventName}"`);
     }
   } catch (err) {
-    console.error('[WORKFLOW ENGINE] Error during workflow evaluation:', err);
+    logError('[WORKFLOW ENGINE] Error during workflow evaluation:', err);
   }
 }
 
@@ -120,9 +128,137 @@ const asyncHandler = (fn: (req: express.Request, res: express.Response, next: ex
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+// Security middleware
+const isProd = process.env.NODE_ENV === 'production';
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", ...(isProd ? [] : ["'unsafe-eval'"])],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+      frameSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
+      baseUri: ["'self'"],
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: isProd ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
+
+app.use(cors({
+  origin: isProd
+    ? (process.env.ALLOWED_ORIGINS?.split(',') || ['https://erp-platform.com'])
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+}));
+
+// Rate limiting
+app.use(globalLimiter);
+
+// Request logging
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    if (req.path.startsWith('/api')) {
+      logRequest(req.method, req.path, res.statusCode, Date.now() - start);
+    }
+  });
+  next();
+});
 
 // --- ERP API ROUTES ---
+
+// Auth routes (public)
+app.post('/api/auth/login', authLimiter, asyncHandler(async (req, res) => {
+  const result = LoginSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid email or password format' });
+  }
+  const { email, password } = result.data;
+  const allUsers = await dbAll<any>(schema.users);
+  const user = allUsers.find(u => u.email === email);
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+  if (user.passwordHash) {
+    const valid = await comparePassword(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  const token = signToken({
+    userId: user.id,
+    companyId: user.companyId,
+    role: user.role,
+    roles: user.roles || [],
+    permissions: user.permissions || [],
+  });
+
+  logAudit(user.companyId, user.id, user.name, 'LOGIN', 'Auth', `User ${user.name} logged in`);
+  res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.companyId } });
+}));
+
+app.post('/api/auth/register', authLimiter, asyncHandler(async (req, res) => {
+  const { email, password, name, companyId, role } = req.body;
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: 'Email, password, and name are required' });
+  }
+  const allUsers = await dbAll<any>(schema.users);
+  if (allUsers.find(u => u.email === email)) {
+    return res.status(409).json({ error: 'Email already registered' });
+  }
+  const passwordHash = await hashPassword(password);
+  const newUser = await dbInsert<any>(schema.users, {
+    id: `u-${Date.now()}`,
+    companyId: companyId || 'c-default',
+    name,
+    email,
+    passwordHash,
+    role: role || 'Employee',
+    roles: [],
+    activeRole: role || 'Employee',
+    department: '',
+    branch: '',
+    permissions: [],
+    status: 'Active',
+  });
+  const token = signToken({
+    userId: newUser.id,
+    companyId: newUser.companyId,
+    role: newUser.role,
+    roles: newUser.roles || [],
+    permissions: newUser.permissions || [],
+  });
+  res.status(201).json({ token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, companyId: newUser.companyId } });
+}));
+
+// Dev-only endpoint: auto-login token (before auth middleware)
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/dev-token', asyncHandler(async (req, res) => {
+    const allUsers = await dbAll<any>(schema.users);
+    const devUser = allUsers.find(u => u.role === 'HR Manager') || allUsers[0];
+    if (!devUser) return res.status(404).json({ error: 'No users in DB' });
+    const token = signToken({
+      userId: devUser.id,
+      companyId: devUser.companyId,
+      role: devUser.role,
+      roles: devUser.roles || [],
+      permissions: devUser.permissions || [],
+    });
+    res.json({ token, user: { id: devUser.id, name: devUser.name, email: devUser.email, role: devUser.role, companyId: devUser.companyId } });
+  }));
+}
+
+// Apply auth to all subsequent /api routes
+app.use('/api', authenticate);
 
 // 1. Tenants (Companies)
 app.get('/api/companies', asyncHandler(async (req, res) => {
@@ -317,10 +453,16 @@ app.post('/api/branches', asyncHandler(async (req, res) => {
 
 // 3. HR & Employees
 app.get('/api/employees', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.employees, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.employees, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = await dbAll<any>(schema.employees);
   res.json(companyId ? all.filter((e: any) => e.companyId === companyId) : all);
-    }));
+}));
 
 app.post('/api/employees', asyncHandler(async (req, res) => {
   const { companyId, firstName, lastName, email, department, designation, branch, salary } = req.body;
@@ -348,7 +490,7 @@ app.post('/api/employees', asyncHandler(async (req, res) => {
   // AUTOMATION TRIGGER 1: Employee Created Automation Flow
   const generatedEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@acme-mfg.com`;
   logAudit(companyId, 'u-acme-hr', 'Elena Rostova', 'EMPLOYEE_CREATE', 'HR', `Created employee ${firstName} ${lastName}. Auto-generated Employee Number: ${empNumber}, Assigning to Dept: ${department}`);
-  console.log(`[ERP AUTOMATION TRIGGERED] Welcome email sent to ${email} (redirected to ${generatedEmail})`);
+  logger.info(`[ERP AUTOMATION TRIGGERED] Welcome email sent to ${email} (redirected to ${generatedEmail})`);
 
   // Fire workflow engine asynchronously (non-blocking)
   setImmediate(() => evaluateWorkflows(companyId, 'Employee Registered', { employeeId: empId, department, salary: Number(salary) }));
@@ -404,12 +546,18 @@ app.put('/api/employees/:id', asyncHandler(async (req, res) => {
 
 // 3.1 HR Leaves
 app.get('/api/leaves', asyncHandler(async (req, res) => {
-  const { companyId, employeeId } = req.query;
+  const { companyId, employeeId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.leaves, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.leaves, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   let all = await dbAll<any>(schema.leaves);
   if (companyId) all = all.filter((l: any) => l.companyId === companyId);
   if (employeeId) all = all.filter((l: any) => l.employeeId === employeeId);
   res.json(all);
-    }));
+}));
 
 app.post('/api/leaves', asyncHandler(async (req, res) => {
   const { companyId, employeeId, employeeName, department, leaveType, startDate, endDate, reason, days, replacementId, replacementName } = req.body;
@@ -476,11 +624,17 @@ app.post('/api/leaves/:id/decline', asyncHandler(async (req, res) => {
 
 // 3.2 HR Attendance
 app.get('/api/attendance', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.attendance, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.attendance, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   let all = await dbAll<any>(schema.attendance);
   if (companyId) all = all.filter((a: any) => a.companyId === companyId);
   res.json(all);
-    }));
+}));
 
 app.post('/api/attendance/clock', asyncHandler(async (req, res) => {
   const { companyId, employeeId, employeeName, department, action, locationType } = req.body;
@@ -492,17 +646,54 @@ app.post('/api/attendance/clock', asyncHandler(async (req, res) => {
     const all = await dbAll<any>(schema.attendance);
     let record = all.find((a: any) => a.employeeId === employeeId && a.date === todayStr);
     if (!record) {
+      // Determine status based on attendance settings
+      let status = 'Present';
+      try {
+        const settingsRows = await dbByCompany<any>(schema.attendanceSettings, companyId);
+        // Try department-specific settings first, fall back to company-wide (departmentId null)
+        const deptSettings = settingsRows.find((s: any) => s.departmentId === department);
+        const settings = deptSettings || settingsRows.find((s: any) => !s.departmentId) || settingsRows[0];
+        if (settings) {
+          const workStart = settings.workStartTime || '09:00';
+          const grace = settings.graceMinutes ?? 10;
+          const lateThreshold = settings.lateThresholdMinutes ?? 15;
+
+          // Parse clock-in time and work start time to minutes since midnight
+          const parseToMinutes = (t: string) => {
+            const [time, period] = t.split(' ');
+            let [h, m] = time.split(':').map(Number);
+            if (period === 'PM' && h !== 12) h += 12;
+            if (period === 'AM' && h === 12) h = 0;
+            return h * 60 + m;
+          };
+          const clockInMin = parseToMinutes(timeStr);
+          const [wsH, wsM] = workStart.split(':').map(Number);
+          const workStartMin = wsH * 60 + wsM;
+          const diff = clockInMin - workStartMin;
+
+          if (diff <= grace) {
+            status = 'Present';
+          } else if (diff <= grace + lateThreshold) {
+            status = 'Late';
+          } else {
+            status = 'Absent';
+          }
+        }
+      } catch (e) {
+        // Settings lookup failed, default to Present
+      }
+
       record = {
         id: `att-${Date.now()}`,
         companyId,
         employeeId,
         date: todayStr,
         checkIn: timeStr,
-        status: 'Present',
+        status,
         locationType: locationType || 'Office'
       };
       await dbInsert(schema.attendance, record);
-      logAudit(companyId, employeeId, employeeName, 'ATTENDANCE_IN', 'HR', `Clocked in today at ${timeStr} via ${locationType}`);
+      logAudit(companyId, employeeId, employeeName, 'ATTENDANCE_IN', 'HR', `Clocked in today at ${timeStr} via ${locationType} [${status}]`);
     }
     res.json(record);
   } else {
@@ -672,6 +863,16 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
       net,
       status: 'Paid',
       baseSalary,
+      customTaxesTotal: deductions,
+      customBenefitsTotal: overtimePay + allowances,
+      breakdown: [
+        { name: 'Income Tax', amount: tax, type: 'Tax' },
+        { name: 'Social Security', amount: socialSec, type: 'Tax' },
+        { name: 'Medicare', amount: medicare, type: 'Tax' },
+        { name: 'Health Insurance', amount: healthIns, type: 'Tax' },
+        { name: 'Allowances', amount: allowances, type: 'Benefit' },
+        { name: 'Overtime Pay', amount: overtimePay, type: 'Benefit' }
+      ],
       overtimePay,
       allowances,
       tax,
@@ -731,6 +932,55 @@ app.put('/api/payroll-tax-config', asyncHandler(async (req, res) => {
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'PAYROLL_TAX_CONFIG', 'Payroll', `Updated payroll tax/deduction rates for ${companyId}.`);
   res.json(result);
     }));
+
+// 3.4.1b Attendance Settings (DB-backed, company-specific)
+const DEFAULT_ATTENDANCE_SETTINGS = {
+  workStartTime: '09:00',
+  graceMinutes: 10,
+  lateThresholdMinutes: 15,
+  penaltyType: 'warning',
+  deductionType: 'percentage',
+  deductionValue: 5,
+  maxWarnings: 3,
+  customPenalty: '',
+  escalateAfterWarnings: true,
+};
+
+app.get('/api/attendance-settings', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const rows = await dbByCompany<any>(schema.attendanceSettings, companyId as string);
+  res.json(rows[0] || null);
+}));
+
+app.put('/api/attendance-settings', asyncHandler(async (req, res) => {
+  const { companyId, departmentId, workStartTime, graceMinutes, lateThresholdMinutes, penaltyType, deductionType, deductionValue, maxWarnings, customPenalty, escalateAfterWarnings } = req.body;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const existing = await dbByCompany<any>(schema.attendanceSettings, companyId);
+  const values: any = {
+    workStartTime: workStartTime ?? '09:00',
+    graceMinutes: Number(graceMinutes ?? DEFAULT_ATTENDANCE_SETTINGS.graceMinutes),
+    lateThresholdMinutes: Number(lateThresholdMinutes ?? DEFAULT_ATTENDANCE_SETTINGS.lateThresholdMinutes),
+    penaltyType: penaltyType ?? DEFAULT_ATTENDANCE_SETTINGS.penaltyType,
+    deductionType: deductionType ?? DEFAULT_ATTENDANCE_SETTINGS.deductionType,
+    deductionValue: Number(deductionValue ?? DEFAULT_ATTENDANCE_SETTINGS.deductionValue),
+    maxWarnings: Number(maxWarnings ?? DEFAULT_ATTENDANCE_SETTINGS.maxWarnings),
+    customPenalty: customPenalty ?? DEFAULT_ATTENDANCE_SETTINGS.customPenalty,
+    escalateAfterWarnings: escalateAfterWarnings ? 1 : 0,
+    departmentId: departmentId || null,
+    updatedAt: new Date().toISOString(),
+  };
+  let result;
+  // For department-specific settings, find by companyId + departmentId
+  const match = existing.find((s: any) => (s.departmentId || null) === (departmentId || null));
+  if (match) {
+    result = await dbUpdate(schema.attendanceSettings, match.id, values);
+  } else {
+    result = await dbInsert(schema.attendanceSettings, { id: `att-${Date.now()}`, companyId, ...values });
+  }
+  logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'ATTENDANCE_SETTINGS', 'HR', `Updated attendance settings for ${companyId}${departmentId ? ` (${departmentId})` : ' (all departments)'}.`);
+  res.json(result);
+}));
 
 // 3.4.2 Knowledge Base articles (DB-backed, company-specific)
 const DEFAULT_KB_ARTICLES = [
@@ -842,7 +1092,195 @@ app.post('/api/announcements', asyncHandler(async (req, res) => {
   const created = await dbInsert(schema.announcements, announcement);
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'ANNOUNCEMENT_CREATE', 'Communication', `Published announcement "${title}".`);
   res.status(201).json(created);
-    }));
+}));
+
+// 3.4.5 Team Chat (DB-backed)
+app.get('/api/chat/messages', asyncHandler(async (req, res) => {
+  const { companyId, threadId } = req.query;
+  if (!companyId) return res.json([]);
+  const all = await dbByCompany<any>(schema.chatMessages, companyId as string);
+  const filtered = threadId ? all.filter(m => m.threadId === threadId) : all;
+  res.json(filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+}));
+
+app.post('/api/chat/messages', asyncHandler(async (req, res) => {
+  const { companyId, threadId, senderId, senderName, message } = req.body;
+  if (!message?.trim()) return res.status(400).json({ error: 'Message is required' });
+  const msg = await dbInsert(schema.chatMessages, {
+    id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    companyId,
+    threadId,
+    senderId,
+    senderName,
+    message: message.trim(),
+    createdAt: new Date().toISOString(),
+  });
+  res.status(201).json(msg);
+}));
+
+// 3.6 Voting / Polls
+app.get('/api/polls', asyncHandler(async (req, res) => {
+  try {
+    const { companyId } = req.query;
+    const all = await dbAll<any>(schema.polls);
+    res.json(companyId ? all.filter((p: any) => p.companyId === companyId) : all);
+  } catch (err: any) {
+    logError('GET /api/polls error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.get('/api/poll-options', asyncHandler(async (req, res) => {
+  try {
+    const { companyId, pollId } = req.query;
+    const all = await dbAll<any>(schema.pollOptions);
+    let filtered = companyId ? all.filter((o: any) => o.companyId === companyId) : all;
+    if (pollId) filtered = filtered.filter((o: any) => o.pollId === pollId);
+    res.json(filtered);
+  } catch (err: any) {
+    logError('GET /api/poll-options error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.get('/api/poll-votes', asyncHandler(async (req, res) => {
+  try {
+    const { companyId, pollId } = req.query;
+    const all = await dbAll<any>(schema.pollVotes);
+    let filtered = companyId ? all.filter((v: any) => v.companyId === companyId) : all;
+    if (pollId) filtered = filtered.filter((v: any) => v.pollId === pollId);
+    res.json(filtered);
+  } catch (err: any) {
+    logError('GET /api/poll-votes error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.post('/api/polls', asyncHandler(async (req, res) => {
+  try {
+    const { companyId, title, description, category, createdBy, createdByName, anonymous, endDate, options } = req.body;
+    if (!title?.trim()) return res.status(400).json({ error: 'Title is required' });
+    const pollId = `poll-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const now = new Date().toISOString();
+    const poll = await dbInsert(schema.polls, {
+      id: pollId, companyId, title: title.trim(), description: description?.trim() || '',
+      category: category || 'General', createdBy, createdByName,
+      status: 'Active', anonymous: !!anonymous,
+      startDate: now, endDate: endDate || '', createdAt: now,
+    });
+    if (Array.isArray(options) && options.length) {
+      const opts = options.map((o: any, i: number) => ({
+        id: `opt-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 4)}`,
+        pollId, companyId, label: o.label, nomineeId: o.nomineeId || '',
+        nomineeName: o.nomineeName || '', position: i, voteCount: 0,
+      }));
+      await dbInsertMany(schema.pollOptions, opts);
+    }
+    res.status(201).json(poll);
+  } catch (err: any) {
+    logError('POST /api/polls error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.post('/api/polls/:id/close', asyncHandler(async (req, res) => {
+  try {
+    const updated = await dbUpdate(schema.polls, req.params.id, { status: 'Closed' });
+    res.json(updated);
+  } catch (err: any) {
+    logError('POST /api/polls/:id/close error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.post('/api/polls/:id/vote', asyncHandler(async (req, res) => {
+  try {
+    const { optionId, voterId, voterName } = req.body;
+    const poll = await dbById<any>(schema.polls, req.params.id);
+    if (!poll) return res.status(404).json({ error: 'Poll not found' });
+    if (poll.status !== 'Active') return res.status(400).json({ error: 'Poll is not active' });
+    const existingVotes = await dbAll<any>(schema.pollVotes);
+    const alreadyVoted = existingVotes.find((v: any) => v.pollId === req.params.id && v.voterId === voterId);
+    if (alreadyVoted) return res.status(400).json({ error: 'You have already voted' });
+    const vote = await dbInsert(schema.pollVotes, {
+      id: `vote-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      pollId: req.params.id, optionId, companyId: poll.companyId,
+      voterId, voterName, createdAt: new Date().toISOString(),
+    });
+    const allOpts = await dbAll<any>(schema.pollOptions);
+    const opt = allOpts.find((o: any) => o.id === optionId);
+    if (opt) {
+      await dbUpdate(schema.pollOptions, optionId, { voteCount: (opt.voteCount || 0) + 1 });
+    }
+    res.status(201).json(vote);
+  } catch (err: any) {
+    logError('POST /api/polls/:id/vote error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+// 3.7 Company Image Gallery
+app.get('/api/company-images', asyncHandler(async (req, res) => {
+  try {
+    const { companyId } = req.query;
+    const all = await dbAll<any>(schema.companyImages);
+    const filtered = companyId ? all.filter((i: any) => i.companyId === companyId) : all;
+    // Strip imageData from list view for performance
+    const lite = filtered.map(({ imageData, ...rest }: any) => rest);
+    res.json(lite);
+  } catch (err: any) {
+    logError('GET /api/company-images error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.get('/api/company-images/:id', asyncHandler(async (req, res) => {
+  try {
+    const img = await dbById<any>(schema.companyImages, req.params.id);
+    if (!img) return res.status(404).json({ error: 'Image not found' });
+    res.json(img);
+  } catch (err: any) {
+    logError('GET /api/company-images/:id error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.post('/api/company-images', asyncHandler(async (req, res) => {
+  try {
+    const { companyId, title, description, category, imageData, uploadedBy, uploadedByName } = req.body;
+    if (!imageData) return res.status(400).json({ error: 'Image data is required' });
+    if (!title?.trim()) return res.status(400).json({ error: 'Title is required' });
+    const img = await dbInsert(schema.companyImages, {
+      id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      companyId,
+      title: title.trim(),
+      description: description || '',
+      category: category || 'General',
+      imageData,
+      uploadedBy: uploadedBy || '',
+      uploadedByName: uploadedByName || '',
+      createdAt: new Date().toISOString(),
+    });
+    logAudit(companyId, uploadedBy || 'system', uploadedByName || 'System', 'IMAGE_UPLOAD', 'Communication', `Uploaded image "${title}"`);
+    res.status(201).json({ id: img.id, title: img.title, category: img.category, createdAt: img.createdAt });
+  } catch (err: any) {
+    logError('POST /api/company-images error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.delete('/api/company-images/:id', asyncHandler(async (req, res) => {
+  try {
+    const img = await dbById<any>(schema.companyImages, req.params.id);
+    if (!img) return res.status(404).json({ error: 'Image not found' });
+    await dbDelete(schema.companyImages, req.params.id);
+    logAudit(img.companyId, 'system', 'System', 'IMAGE_DELETE', 'Communication', `Deleted image "${img.title}"`);
+    res.json({ success: true });
+  } catch (err: any) {
+    logError('DELETE /api/company-images/:id error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
 
 // 3.5 Payroll Groups
 app.get('/api/payroll-groups', asyncHandler(async (req, res) => {
@@ -851,7 +1289,7 @@ app.get('/api/payroll-groups', asyncHandler(async (req, res) => {
     const all = await dbAll<any>(schema.payrollGroups);
     res.json(companyId ? all.filter((g: any) => g.companyId === companyId) : all);
   } catch (err: any) {
-    console.error('GET /api/payroll-groups error:', err);
+    logError('GET /api/payroll-groups error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
@@ -867,7 +1305,7 @@ app.post('/api/payroll-groups', asyncHandler(async (req, res) => {
     logAudit(companyId, userId, userName, 'CREATE', 'Payroll Groups', `Created payroll group: ${name}`);
     res.json(group);
   } catch (err: any) {
-    console.error('POST /api/payroll-groups error:', err);
+    logError('POST /api/payroll-groups error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
@@ -881,7 +1319,7 @@ app.delete('/api/payroll-groups/:id', asyncHandler(async (req, res) => {
     logAudit(group.companyId, 'system', '', 'DELETE', 'Payroll Groups', `Deleted payroll group: ${group.name}`);
     res.json({ success: true });
   } catch (err: any) {
-    console.error('DELETE /api/payroll-groups/:id error:', err);
+    logError('DELETE /api/payroll-groups/:id error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
@@ -893,7 +1331,7 @@ app.get('/api/salary-bands', asyncHandler(async (req, res) => {
     const all = await dbAll<any>(schema.salaryBands);
     res.json(companyId ? all.filter((b: any) => b.companyId === companyId) : all);
   } catch (err: any) {
-    console.error('GET /api/salary-bands error:', err);
+    logError('GET /api/salary-bands error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
@@ -907,7 +1345,7 @@ app.post('/api/salary-bands', asyncHandler(async (req, res) => {
     logAudit(companyId, userId, userName, 'CREATE', 'Salary Bands', `Created salary band: ${name}`);
     res.json(band);
   } catch (err: any) {
-    console.error('POST /api/salary-bands error:', err);
+    logError('POST /api/salary-bands error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
@@ -920,7 +1358,7 @@ app.put('/api/salary-bands/:id', asyncHandler(async (req, res) => {
     if (!updated) return res.status(404).json({ error: 'Band not found' });
     res.json(updated);
   } catch (err: any) {
-    console.error('PUT /api/salary-bands/:id error:', err);
+    logError('PUT /api/salary-bands/:id error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
@@ -934,23 +1372,29 @@ app.delete('/api/salary-bands/:id', asyncHandler(async (req, res) => {
     logAudit(band.companyId, 'system', '', 'DELETE', 'Salary Bands', `Deleted salary band: ${band.name}`);
     res.json({ success: true });
   } catch (err: any) {
-    console.error('DELETE /api/salary-bands/:id error:', err);
+    logError('DELETE /api/salary-bands/:id error:', err);
     res.status(500).json({ error: err.message });
   }
     }));
 
 // 4. CRM Leads
 app.get('/api/leads', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.crmLeads, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.crmLeads, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = await dbAll<any>(schema.crmLeads);
   res.json(companyId ? all.filter((l: any) => l.companyId === companyId) : all);
-    }));
+}));
 
 app.post('/api/leads', asyncHandler(async (req, res) => {
   const { companyId, firstName, lastName, email, phone, companyName, source, value, assignedTo } = req.body;
   const leadId = `lead-${Date.now()}`;
 
-  let newLead: CRMLead = {
+  const newLead: CRMLead = {
     id: leadId,
     companyId,
     firstName,
@@ -988,14 +1432,14 @@ app.post('/api/leads', asyncHandler(async (req, res) => {
       if (parsed.score !== undefined) newLead.aiLeadScore = parsed.score;
       if (parsed.followUp) newLead.aiFollowUpSuggested = parsed.followUp;
     } catch (err) {
-      console.error("Gemini Lead Scoring failed, using default values:", err);
+      logError("Gemini Lead Scoring failed, using default values:", err);
     }
   }
 
   await dbInsert(schema.crmLeads, newLead);
 
   // AUTOMATION TRIGGER 2: Lead Created CRM automation
-  let autoResults = ["Assigned Account Manager: Samantha Brady", "Drafted standard introductory playbook"];
+  const autoResults = ["Assigned Account Manager: Samantha Brady", "Drafted standard introductory playbook"];
   if (newLead.value > 50000) {
     autoResults.push("HIGH-VALUE DEAL DETECTED: Automatically created critical priority task for Sales Manager");
     autoResults.push("Generated specialized high-volume production pricing prospectus");
@@ -1051,7 +1495,7 @@ Make the leads diverse and realistic. Only return the JSON array, no other text.
         generatedLeads = parsed;
       }
     } catch (err) {
-      console.error('AI lead generation failed, using fallback:', err);
+      logError('AI lead generation failed, using fallback:', err);
     }
   }
 
@@ -1076,8 +1520,13 @@ Make the leads diverse and realistic. Only return the JSON array, no other text.
     ];
     // Filter out existing companies and pick 5 random
     const available = leadPool.filter(l => !existingCompanies.has(l.companyName.toLowerCase()));
-    const shuffled = available.sort(() => Math.random() - 0.5);
-    generatedLeads = shuffled.slice(0, 5);
+    if (available.length === 0) {
+      // All pool companies already exist, return empty
+      generatedLeads = [];
+    } else {
+      const shuffled = available.sort(() => Math.random() - 0.5);
+      generatedLeads = shuffled.slice(0, Math.min(3, shuffled.length));
+    }
   }
 
   const newLeads: CRMLead[] = [];
@@ -1106,6 +1555,14 @@ Make the leads diverse and realistic. Only return the JSON array, no other text.
   logAudit(companyId, 'system', 'AI Lead Generator', 'LEADS_GENERATED', 'CRM', `AI generated ${newLeads.length} new CRM leads for the pipeline.`);
 
   res.status(201).json({ leads: newLeads });
+}));
+
+app.delete('/api/leads/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const lead = await dbById<any>(schema.crmLeads, id);
+  if (!lead) { res.status(404).json({ error: 'Lead not found' }); return; }
+  await dbDelete(schema.crmLeads, id);
+  res.json({ success: true });
 }));
 
 app.post('/api/leads/:id/move', asyncHandler(async (req, res) => {
@@ -1338,11 +1795,18 @@ app.post('/api/crm-emails', asyncHandler(async (req, res) => {
 
 // 5. Accounting & Ledger
 app.get('/api/accounting', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const accounts = companyId ? await dbByCompany<any>(schema.glAccounts, companyId as string) : await dbAll<any>(schema.glAccounts);
+    const invoicesResult = companyId
+      ? await dbByCompanyPaginated(schema.invoices, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.invoices, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json({ accounts, invoices: invoicesResult });
+  }
   const accounts = companyId ? await dbByCompany<any>(schema.glAccounts, companyId as string) : await dbAll<any>(schema.glAccounts);
   const invoicesAll = companyId ? await dbByCompany<any>(schema.invoices, companyId as string) : await dbAll<any>(schema.invoices);
   res.json({ accounts, invoices: invoicesAll });
-    }));
+}));
 
 app.post('/api/invoices', asyncHandler(async (req, res) => {
   const { companyId, customerName, subtotal, tax, dueDate, userId, userName } = req.body;
@@ -1617,10 +2081,16 @@ app.delete('/api/sales-targets/:id', asyncHandler(async (req, res) => {
 
 // 5.1 GL Account CRUD
 app.get('/api/gl-accounts', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.glAccounts, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.glAccounts, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = companyId ? await dbByCompany<any>(schema.glAccounts, companyId as string) : await dbAll<any>(schema.glAccounts);
   res.json(all);
-    }));
+}));
 
 app.post('/api/gl-accounts', asyncHandler(async (req, res) => {
   const { companyId, code, name, type, userId, userName } = req.body;
@@ -1669,10 +2139,16 @@ app.delete('/api/gl-accounts/:id', asyncHandler(async (req, res) => {
 
 // 5.2 Journal Entries
 app.get('/api/journal-entries', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.journalEntries, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.journalEntries, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = companyId ? await dbByCompany<any>(schema.journalEntries, companyId as string) : await dbAll<any>(schema.journalEntries);
   res.json(all);
-    }));
+}));
 
 app.post('/api/journal-entries', asyncHandler(async (req, res) => {
   const { companyId, date, description, reference, lines, createdBy, createdByName } = req.body;
@@ -1770,10 +2246,16 @@ app.post('/api/journal-entries/:id/void', asyncHandler(async (req, res) => {
 
 // 5.3 Expenses (rewritten with persistence + GL posting)
 app.get('/api/expenses', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.expenses, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.expenses, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = companyId ? await dbByCompany<any>(schema.expenses, companyId as string) : await dbAll<any>(schema.expenses);
   res.json(all);
-    }));
+}));
 
 app.post('/api/expenses', asyncHandler(async (req, res) => {
   const { companyId, description, category, department, amount, createdBy, createdByName, userId, userName } = req.body;
@@ -1956,10 +2438,16 @@ app.post('/api/opening-balances', asyncHandler(async (req, res) => {
 
 // --- Accounts Payable (Bills) ---
 app.get('/api/bills', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.bills, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.bills, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = companyId ? await dbByCompany<any>(schema.bills, companyId as string) : await dbAll<any>(schema.bills);
   res.json(all);
-    }));
+}));
 
 app.post('/api/bills', asyncHandler(async (req, res) => {
   const { companyId, vendorName, vendorId, billNumber, invoiceDate, dueDate, description, subtotal, tax, total, createdBy, createdByName } = req.body;
@@ -2063,14 +2551,32 @@ app.post('/api/bank-accounts', asyncHandler(async (req, res) => {
   res.status(201).json(newAccount);
     }));
 
+app.put('/api/bank-accounts/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  const updated = await dbUpdate(schema.bankAccounts, id, updates);
+  if (updated) {
+    logAudit(updated.companyId, 'u-acme-admin', 'Alex Mercer', 'UPDATE_BANK_ACCOUNT', 'Accounting', `Updated bank account ${updated.name}`);
+    res.json(updated);
+  } else {
+    res.status(404).json({ error: 'Bank account not found' });
+  }
+    }));
+
 // --- Bank Transactions ---
 app.get('/api/bank-transactions', asyncHandler(async (req, res) => {
-  const { companyId, bankAccountId } = req.query;
+  const { companyId, bankAccountId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.bankTransactions, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.bankTransactions, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   let all = await dbAll<any>(schema.bankTransactions);
   if (companyId) all = all.filter(t => t.companyId === companyId);
   if (bankAccountId) all = all.filter(t => t.bankAccountId === bankAccountId);
   res.json(all);
-    }));
+}));
 
 app.post('/api/bank-transactions', asyncHandler(async (req, res) => {
   const { companyId, bankAccountId, date, description, type, amount, reference, createdBy } = req.body;
@@ -2207,11 +2713,12 @@ app.get('/api/budgets', asyncHandler(async (req, res) => {
     }));
 
 app.post('/api/budgets', asyncHandler(async (req, res) => {
-  const { companyId, name, fiscalYear, glAccountId, accountCode, accountName, budgetAmount, period, createdBy } = req.body;
+  const { companyId, name, fiscalYear, glAccountId, accountCode, accountName, budgetAmount, period, items, createdBy } = req.body;
   const newBudget: Budget = {
     id: `bud-${Date.now()}`, companyId, name, fiscalYear, glAccountId, accountCode, accountName,
     budgetAmount: Number(budgetAmount), actualAmount: 0, variance: Number(budgetAmount),
-    variancePercent: 100, period, status: 'Draft', createdBy,
+    variancePercent: 100, period, status: 'Draft', items: items || [],
+    createdBy,
     createdAt: new Date().toISOString()
   };
   await dbInsert(schema.budgets, newBudget);
@@ -2661,10 +3168,16 @@ app.get('/api/reports/aging', asyncHandler(async (req, res) => {
 
 // 6. Inventory Items
 app.get('/api/inventory', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.inventory, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.inventory, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = companyId ? await dbByCompany<any>(schema.inventory, companyId as string) : await dbAll<any>(schema.inventory);
   res.json(all);
-    }));
+}));
 
 app.post('/api/inventory/adjust', asyncHandler(async (req, res) => {
   const { id, adjustment, companyId } = req.body;
@@ -2684,7 +3197,7 @@ app.post('/api/inventory/adjust', asyncHandler(async (req, res) => {
   let lowStockAlert = false;
   if (newStock <= item.minStockLevel) {
     lowStockAlert = true;
-    console.log(`[LOW STOCK AUTOMATION TRIGGERED] Creating purchase order request draft with Supplier: ${item.supplier}`);
+    logger.info(`[LOW STOCK AUTOMATION TRIGGERED] Creating purchase order request draft with Supplier: ${item.supplier}`);
     // Fire 'Inventory Low Stock Event' workflow event
     setImmediate(() => evaluateWorkflows(companyId, 'Inventory Low Stock Event', { sku: item.sku, name: item.name, stockLevel: newStock, minStockLevel: item.minStockLevel, supplier: item.supplier }));
   }
@@ -2697,10 +3210,16 @@ app.post('/api/inventory/adjust', asyncHandler(async (req, res) => {
 
 // 7. Support Tickets
 app.get('/api/tickets', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.tickets, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.tickets, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = companyId ? await dbByCompany<any>(schema.tickets, companyId as string) : await dbAll<any>(schema.tickets);
   res.json(all);
-    }));
+}));
 
 app.post('/api/tickets', asyncHandler(async (req, res) => {
   const { companyId, customerName, customerEmail, subject, description, category, priority, department } = req.body;
@@ -2916,13 +3435,19 @@ app.post('/api/pos/categories', asyncHandler(async (req, res) => {
 
 // 2. POS Products
 app.get('/api/pos/products', asyncHandler(async (req, res) => {
-  const { companyId, category, isActive } = req.query;
+  const { companyId, category, isActive, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.posProducts, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.posProducts, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   let all = await dbAll<any>(schema.posProducts);
   if (companyId) all = all.filter(p => p.companyId === companyId);
   if (category) all = all.filter(p => p.category === category);
   if (isActive !== undefined) all = all.filter(p => p.isActive === (isActive === 'true'));
   res.json(all);
-    }));
+}));
 
 app.post('/api/pos/products', asyncHandler(async (req, res) => {
   const { companyId, sku, name, description, category, barcode, unitPrice, costPrice, taxRate, discountPrice, discountStartDate, discountEndDate, image, stockLevel, reorderLevel } = req.body;
@@ -3143,7 +3668,13 @@ app.post('/api/pos/shifts/:id/close', asyncHandler(async (req, res) => {
 
 // 6. POS Sales
 app.get('/api/pos/sales', asyncHandler(async (req, res) => {
-  const { companyId, terminalId, shiftId, startDate, endDate } = req.query;
+  const { companyId, terminalId, shiftId, startDate, endDate, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.posSales, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.posSales, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   let all = await dbAll<any>(schema.posSales);
   if (companyId) all = all.filter(s => s.companyId === companyId);
   if (terminalId) all = all.filter(s => s.terminalId === terminalId);
@@ -3151,7 +3682,7 @@ app.get('/api/pos/sales', asyncHandler(async (req, res) => {
   if (startDate) all = all.filter(s => s.date >= startDate.toString());
   if (endDate) all = all.filter(s => s.date <= endDate.toString());
   res.json(all);
-    }));
+}));
 
 app.post('/api/pos/sales', asyncHandler(async (req, res) => {
   const { companyId, terminalId, shiftId, employeeId, employeeName, customerId, customerName, items, payments, notes } = req.body;
@@ -3609,10 +4140,16 @@ app.delete('/api/project-milestones/:id', asyncHandler(async (req, res) => {
 
 // 10. Audit Logs
 app.get('/api/audit-logs', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
+  const { companyId, page, limit } = req.query;
+  if (page) {
+    const result = companyId
+      ? await dbByCompanyPaginated(schema.auditLogs, companyId as string, { page: Number(page), limit: Number(limit) || 50 })
+      : await dbAllPaginated(schema.auditLogs, { page: Number(page), limit: Number(limit) || 50 });
+    return res.json(result);
+  }
   const all = await dbAll<any>(schema.auditLogs);
   res.json(companyId ? all.filter((l: any) => l.companyId === companyId) : all);
-    }));
+}));
 
 // --- PROCUREMENT ---
 app.get('/api/vendors', asyncHandler(async (req, res) => {
@@ -3832,14 +4369,40 @@ app.delete('/api/maintenance-tasks/:id', asyncHandler(async (req, res) => {
 
 // --- DOCUMENT MANAGEMENT ---
 app.get('/api/documents', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
-  const all = companyId ? await dbByCompany<any>(schema.managedDocuments, companyId as string) : await dbAll<any>(schema.managedDocuments);
+  const { companyId, userId } = req.query;
+  let all = companyId ? await dbByCompany<any>(schema.managedDocuments, companyId as string) : await dbAll<any>(schema.managedDocuments);
+  // Parse sharedWith JSON and filter by visibility
+  all = all.map((d: any) => ({
+    ...d,
+    sharedWith: typeof d.sharedWith === 'string' ? JSON.parse(d.sharedWith || '[]') : (d.sharedWith || []),
+  }));
+  // If userId provided, filter to only visible docs
+  if (userId) {
+    all = all.filter((d: any) =>
+      d.visibility === 'everyone' ||
+      d.uploadedBy === userId ||
+      (Array.isArray(d.sharedWith) && d.sharedWith.includes(userId))
+    );
+  }
   res.json(all);
 }));
 
 app.post('/api/documents', asyncHandler(async (req, res) => {
-  const { companyId, name, type, size, userId, userName } = req.body;
-  const doc = { id: `doc-${Date.now()}`, companyId, name, type, size: size || '0 KB', status: 'Draft', date: new Date().toISOString().split('T')[0], uploadedBy: userId, createdAt: new Date().toISOString() };
+  const { companyId, name, type, size, userId, userName, visibility, sharedWith } = req.body;
+  const doc = {
+    id: `doc-${Date.now()}`,
+    companyId,
+    name,
+    type,
+    size: size || '0 KB',
+    status: 'Draft',
+    date: new Date().toISOString().split('T')[0],
+    uploadedBy: userId,
+    uploadedByName: userName || '',
+    visibility: visibility || 'everyone',
+    sharedWith: JSON.stringify(sharedWith || []),
+    createdAt: new Date().toISOString()
+  };
   await dbInsert(schema.managedDocuments, doc);
   logAudit(companyId, userId, userName, 'UPLOAD_DOCUMENT', 'Documents', `Uploaded document: ${name}`);
   res.status(201).json(doc);
@@ -3847,9 +4410,12 @@ app.post('/api/documents', asyncHandler(async (req, res) => {
 
 app.put('/api/documents/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { userId, userName, ...values } = req.body;
+  const { userId, userName, sharedWith, ...values } = req.body;
+  if (sharedWith !== undefined) {
+    values.sharedWith = JSON.stringify(sharedWith);
+  }
   const updated = await dbUpdate(schema.managedDocuments, id, values);
-  res.json(updated);
+  res.json({ ...updated, sharedWith: typeof updated.sharedWith === 'string' ? JSON.parse(updated.sharedWith || '[]') : (updated.sharedWith || []) });
 }));
 
 app.delete('/api/documents/:id', asyncHandler(async (req, res) => {
@@ -3972,27 +4538,145 @@ app.post('/api/ai/chat', asyncHandler(async (req, res) => {
 
     res.json({ reply: response.text });
   } catch (err: any) {
-    console.error("Gemini API execution error:", err);
+    logError("Gemini API execution error:", err);
     res.status(500).json({ error: "Failed to generate AI insights from model. Error: " + err.message });
   }
     }));
 
 
+// ── Profile Update Requests ───────────────────────────────────────────────
+app.get('/api/profile-update-requests', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = await dbAll<any>(schema.profileUpdateRequests);
+  res.json(companyId ? all.filter((r: any) => r.companyId === companyId) : all);
+}));
+
+app.post('/api/profile-update-requests', asyncHandler(async (req, res) => {
+  const { companyId, employeeId, employeeName, department, field, label, currentValue, newValue } = req.body;
+  const id = `pur-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const request = {
+    id, companyId, employeeId, employeeName, department,
+    field, label, currentValue, newValue,
+    status: 'Pending',
+    requestedAt: new Date().toISOString(),
+  };
+  await dbInsert(schema.profileUpdateRequests, request);
+  await dbInsert(schema.auditLogs, {
+    id: `al-${Date.now()}`, companyId, userId: employeeId, userName: employeeName,
+    action: 'Profile Update Requested', module: 'Employee Profile',
+    details: `${employeeName} requested change: ${label} → ${newValue}`,
+    timestamp: new Date().toISOString(),
+  });
+  res.status(201).json(request);
+}));
+
+app.patch('/api/profile-update-requests/:id/approve', asyncHandler(async (req, res) => {
+  const { processedBy } = req.body;
+  const all = await dbAll<any>(schema.profileUpdateRequests);
+  const request = all.find((r: any) => r.id === req.params.id);
+  if (!request) return res.status(404).json({ error: 'Request not found' });
+
+  const now = new Date().toISOString();
+  const updated = await dbUpdate(schema.profileUpdateRequests, request.id, {
+    status: 'Approved', processedAt: now, processedBy,
+  });
+
+  // Apply the change to the employee record
+  const empAll = await dbAll<any>(schema.employees);
+  const emp = empAll.find((e: any) => e.id === request.employeeId);
+  if (emp) {
+    await dbUpdate(schema.employees, emp.id, { [request.field]: request.newValue });
+  }
+
+  await dbInsert(schema.auditLogs, {
+    id: `al-${Date.now()}`, companyId: request.companyId, userId: processedBy, userName: processedBy,
+    action: 'Profile Update Approved', module: 'Employee Profile',
+    details: `Approved ${request.label} change for ${request.employeeName}: "${request.currentValue}" → "${request.newValue}"`,
+    timestamp: now,
+  });
+  res.json(updated);
+}));
+
+app.patch('/api/profile-update-requests/:id/reject', asyncHandler(async (req, res) => {
+  const { processedBy, rejectionReason } = req.body;
+  const all = await dbAll<any>(schema.profileUpdateRequests);
+  const request = all.find((r: any) => r.id === req.params.id);
+  if (!request) return res.status(404).json({ error: 'Request not found' });
+
+  const now = new Date().toISOString();
+  const updated = await dbUpdate(schema.profileUpdateRequests, request.id, {
+    status: 'Rejected', processedAt: now, processedBy, rejectionReason,
+  });
+
+  await dbInsert(schema.auditLogs, {
+    id: `al-${Date.now()}`, companyId: request.companyId, userId: processedBy, userName: processedBy,
+    action: 'Profile Update Rejected', module: 'Employee Profile',
+    details: `Rejected ${request.label} change for ${request.employeeName}: ${rejectionReason || 'No reason'}`,
+    timestamp: now,
+  });
+  res.json(updated);
+}));
+
 // --- GLOBAL ERROR HANDLER (must be after all routes) ---
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled route error:', err);
+  logError('Unhandled route error:', err);
   if (res.headersSent) return;
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  const isDev = process.env.NODE_ENV !== 'production';
+  res.status(err.status || 500).json({
+    error: isDev ? (err.message || 'Internal server error') : 'Internal server error',
+  });
 });
 
 // Prevent unhandled promise rejections from crashing the process
 process.on('unhandledRejection', (reason: any) => {
-  console.error('Unhandled promise rejection:', reason);
+  logError('Unhandled promise rejection:', reason);
 });
 
 // --- VITE MIDDLEWARE & STATIC ASSET SERVER COEXISTENCE ---
 
+async function runMigrations() {
+  const fs = await import('fs');
+  const { fileURLToPath } = await import('url');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+  const migrationFiles = [
+    'migration_full_schema.sql',
+    'migration_profile_fields.sql',
+    'migration_attendance_settings.sql',
+    'migration_budget_items.sql',
+    'migration_auth.sql',
+    'migration_chat.sql',
+    'migration_voting.sql',
+    'migration_add_voting_to_acme.sql',
+    'migration_gallery.sql',
+    'migration_add_gallery_to_acme.sql',
+    'migration_doc_visibility.sql',
+  ];
+
+  for (const fileName of migrationFiles) {
+    const migrationPath = path.join(__dirname, 'db', fileName);
+    if (!fs.existsSync(migrationPath)) continue;
+
+    const sql = fs.readFileSync(migrationPath, 'utf-8');
+    const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    for (const stmt of statements) {
+      try {
+        await pool.query(stmt);
+      } catch (e: any) {
+        if (e.code === '42710' || e.code === '42P07' || e.code === '42701') {
+          // already exists — skip
+        } else {
+          console.warn(`Migration [${fileName}] warning:`, e.message?.substring(0, 120));
+        }
+      }
+    }
+  }
+  logger.info('✅ DB migrations applied');
+}
+
 async function start() {
+  await runMigrations();
+
   if (process.env.DISABLE_HMR === 'true' || process.env.NODE_ENV === 'production') {
     // Production/Build static asset rendering
     const distPath = path.join(process.cwd(), 'dist');
@@ -4013,7 +4697,7 @@ async function start() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 ERP Full-Stack Server booted and running on http://localhost:${PORT}`);
+    logger.info(`🚀 ERP Full-Stack Server booted and running on http://localhost:${PORT}`);
   });
 }
 

@@ -70,7 +70,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {assetTabs.map(t => (
           <button key={t.id} onClick={() => { setAssetTab(t.id); onNavigateView(t.id === 'register' ? 'asset' : `asset-${t.id}`); }}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${assetTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
+            className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${assetTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
             {t.label}
           </button>
         ))}
@@ -93,16 +93,16 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                 <tbody className="divide-y divide-slate-100">
                   {localAssets.map(a => (
                     <tr key={a.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => assetModal.open(a)}>
-                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{a.assetCode}</td>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{a.name}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{a.category}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{a.location}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${(a.purchasePrice || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{a.assetCode}</td>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{a.name}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-500">{a.category}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-500">{a.location}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${(a.purchasePrice || 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={a.status} variant={a.status === 'Active' ? 'success' : a.status === 'Disposed' ? 'danger' : 'warning'} /></td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           {a.status === 'Active' && (
-                            <button onClick={() => onDisposeAsset(a.id, (a.purchasePrice || 0) * 0.1)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Dispose</button>
+                            <button onClick={() => onDisposeAsset(a.id, (a.purchasePrice || 0) * 0.1)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Dispose</button>
                           )}
                         </td>
                       )}
@@ -159,16 +159,16 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                 <tbody className="divide-y divide-slate-100">
                   {localMaintenance.map(m => (
                     <tr key={m.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => maintModal.open(m)}>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{m.assetName}</td>
-                      <td className="px-4 py-3 text-xs text-slate-600">{m.task}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{m.due}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{m.owner}</td>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{m.assetName}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-600">{m.task}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{m.due}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-500">{m.owner}</td>
                       <td className="px-4 py-3"><Badge label={m.status} variant={(m.status as string) === 'Completed' ? 'success' : new Date(m.due) < new Date() && (m.status as string) !== 'Completed' ? 'danger' : 'info'} /></td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1 justify-end">
-                            {m.status !== 'Completed' && <button onClick={() => onUpdateMaintenanceTask(m.id, { status: 'Completed' })} className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Done</button>}
-                            <button onClick={() => onDeleteMaintenanceTask(m.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                            {m.status !== 'Completed' && <button onClick={() => onUpdateMaintenanceTask(m.id, { status: 'Completed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Done</button>}
+                            <button onClick={() => onDeleteMaintenanceTask(m.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                           </div>
                         </td>
                       )}
@@ -235,13 +235,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {depRows.map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-sans tabular-nums font-bold text-slate-500">{r.assetCode}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{r.name}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${(r.purchasePrice || 0).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{r.usefulLifeYears}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${r.annual.toFixed(0)}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${((r.purchasePrice || 0) - r.netBook).toFixed(0)}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">${r.netBook.toFixed(0)}</td>
+                    <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{r.assetCode}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.name}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${(r.purchasePrice || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{r.usefulLifeYears}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${r.annual.toFixed(0)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${((r.purchasePrice || 0) - r.netBook).toFixed(0)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${r.netBook.toFixed(0)}</td>
                   </tr>
                 ))}
                 {depRows.length === 0 && <EmptyRow cols={7} message="No assets registered. Add assets in the Asset Register tab." />}

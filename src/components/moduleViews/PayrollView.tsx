@@ -4,14 +4,56 @@ import { downloadCSV, downloadPDF, rowsToHtmlTable } from '../../utils/export';
 import { modalConfirm } from '../../utils/modal';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
-import { isAdminRole, isSuperAdminRole, isHRRole } from '../../permissions';
+import { isAdminRole, isSuperAdminRole, isHRRole, isFinanceDeptHead } from '../../permissions';
+
+function payslipPDFBody(slip: { employeeName: string; employeeId: string; department: string; period: string; baseSalary: number; gross: number; deductions: number; net: number; status: string; customBenefitsTotal?: number; breakdown?: { name: string; amount: number; type: string }[] }) {
+  const earnings = slip.breakdown?.filter(b => b.type === 'Benefit') || [];
+  const deductions = slip.breakdown?.filter(b => b.type === 'Deduction') || [];
+  const baseSalary = slip.baseSalary || slip.gross;
+
+  return `
+    <div class="summary-grid">
+      <div class="summary-box"><div class="label">Employee</div><div style="font-size:13px;font-weight:700;color:#0f172a;">${slip.employeeName}</div><div style="font-size:10px;color:#64748b;">${slip.employeeId} · ${slip.department}</div></div>
+      <div class="summary-box"><div class="label">Pay Period</div><div class="value">${slip.period}</div></div>
+      <div class="summary-box"><div class="label">Net Pay</div><div class="value" style="color:#059669;">$${(slip.net || 0).toLocaleString()}</div></div>
+      <div class="summary-box"><div class="label">Status</div><div style="font-size:11px;font-weight:700;color:${slip.status === 'Paid' ? '#059669' : '#d97706'};">${slip.status}</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+      <div>
+        <div class="section-heading">Earnings</div>
+        <table>
+          <thead><tr><th style="background:#059669;">Component</th><th style="background:#059669;text-align:right;">Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Base Salary</td><td class="right">$${baseSalary.toLocaleString()}</td></tr>
+            ${earnings.map(e => `<tr><td>${e.name}</td><td class="right" style="color:#059669;">+$${e.amount.toLocaleString()}</td></tr>`).join('')}
+            <tr class="total-row"><td><strong>Gross Pay</strong></td><td class="right"><strong>$${(slip.gross || 0).toLocaleString()}</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="section-heading">Deductions</div>
+        <table>
+          <thead><tr><th style="background:#dc2626;">Component</th><th style="background:#dc2626;text-align:right;">Amount</th></tr></thead>
+          <tbody>
+            ${deductions.length > 0 ? deductions.map(d => `<tr><td>${d.name}</td><td class="right" style="color:#dc2626;">-$${d.amount.toLocaleString()}</td></tr>`).join('') : '<tr><td colspan="2" style="color:#94a3b8;font-style:italic;">No deductions</td></tr>'}
+            <tr class="total-row"><td><strong>Total Deductions</strong></td><td class="right" style="color:#dc2626;"><strong>-$${(slip.deductions || 0).toLocaleString()}</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:9px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.06em;">Net Pay</div><div style="font-size:22px;font-weight:800;color:#15803d;font-family:monospace;">$${(slip.net || 0).toLocaleString()}</div></div>
+      <div style="text-align:right;"><div style="font-size:9px;color:#166534;">This amount will be credited to your registered bank account.</div><div style="font-size:9px;color:#16a34a;margin-top:2px;">${slip.period}</div></div>
+    </div>
+  `;
+}
 
 export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, payrollGroups, salaryBands, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onCreatePayrollGroup, onDeletePayrollGroup, onCreateSalaryBand, onUpdateSalaryBand, onDeleteSalaryBand, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onNavigateView, payrollTaxConfig, onUpdatePayrollTaxConfig } = props;
 
-  const taxCfg = payrollTaxConfig || {
-    incomeTaxRate: 0.12, socialSecurityRate: 0.062, medicareRate: 0.0145, allowances: 350, healthInsurance: 180, overtimeRate: 0.05,
-  };
+  const taxCfg = payrollTaxConfig || { customTaxes: [], customBenefits: [] };
   const [draftCfg, setDraftCfg] = useState(taxCfg);
   useEffect(() => { setDraftCfg(taxCfg); }, [JSON.stringify(taxCfg)]);
 
@@ -20,7 +62,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const isAdmin = isAdminRole(selectedUser.activeRole);
   const isSuperAdmin = isSuperAdminRole(selectedUser.activeRole);
   const isHR = isHRRole(selectedUser.activeRole);
-  const isHRorAdmin = isAdmin || isHR;
+  const isFinHead = isFinanceDeptHead(selectedUser.activeRole);
+  const isHRorAdmin = isAdmin || isHR || isFinHead;
 
   // payroll tab is derived from activeView (see below inside the payroll block)
   const [payrollStep, setPayrollStep] = useState<'idle' | 'review' | 'done'>('idle');
@@ -64,10 +107,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         <div className="space-y-6">
           <PageHeader title="Payroll & Salary Management" subtitle="Process monthly payroll, manage salary structures, deductions and generate payslips." />
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-            <i className="bi bi-exclamation-triangle text-amber-500 text-3xl mb-3 block"></i>
-            <h3 className="text-sm font-semibold text-amber-800 mb-2">Payroll Module Not Available</h3>
-            <p className="text-xs text-amber-600 mb-4">Your company has not subscribed to the Payroll module. Contact your administrator to enable payroll features.</p>
-            <p className="text-xs text-slate-500">Employee salary data is available in the Employee Directory.</p>
+            <i className="bi bi-exclamation-triangle text-amber-500 fs-3xl mb-3 block"></i>
+            <h3 className="fs-sm fw-semibold text-amber-800 mb-2">Payroll Module Not Available</h3>
+            <p className="fs-xs text-amber-600 mb-4">Your company has not subscribed to the Payroll module. Contact your administrator to enable payroll features.</p>
+            <p className="fs-xs text-slate-500">Employee salary data is available in the Employee Directory.</p>
           </div>
         </div>
       );
@@ -103,7 +146,26 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               {payrollStep === 'idle' && (
                 <div className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div><Label>Payroll Period</Label><Select value={payMonth} onChange={e => setPayMonth(e.target.value)}><option>July 2026</option><option>August 2026</option></Select></div>
+                    <div>
+                      <Label>Payroll Period</Label>
+                      <input 
+                        type="month" 
+                        value={(() => {
+                          try {
+                            const [m, y] = payMonth.split(' ');
+                            const mIdx = new Date(`${m} 1, 2000`).getMonth() + 1;
+                            return `${y}-${mIdx.toString().padStart(2, '0')}`;
+                          } catch(e) { return ""; }
+                        })()} 
+                        onChange={e => {
+                          if (!e.target.value) return;
+                          const [y, m] = e.target.value.split('-');
+                          const d = new Date(parseInt(y), parseInt(m)-1, 1);
+                          setPayMonth(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+                        }}
+                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 fs-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                      />
+                    </div>
                     <div><Label>Salary Structure</Label><Select value={paySalaryStructure} onChange={e => setPaySalaryStructure(e.target.value)}><option>Standard</option><option>Executive</option><option>Contractor</option></Select></div>
                   </div>
                   
@@ -113,15 +175,15 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="flex gap-4 mt-2 mb-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="payrollTarget" checked={payrollTarget === 'all'} onChange={() => setPayrollTarget('all')} className="accent-blue-600" />
-                        <span className="text-xs text-slate-700">All Staff ({localEmployees.length})</span>
+                        <span className="fs-xs text-slate-700">All Staff ({localEmployees.length})</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="payrollTarget" checked={payrollTarget === 'selected'} onChange={() => setPayrollTarget('selected')} className="accent-blue-600" />
-                        <span className="text-xs text-slate-700">Selected Staff</span>
+                        <span className="fs-xs text-slate-700">Selected Staff</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="payrollTarget" checked={payrollTarget === 'group'} onChange={() => setPayrollTarget('group')} className="accent-blue-600" />
-                        <span className="text-xs text-slate-700">By Group</span>
+                        <span className="fs-xs text-slate-700">By Group</span>
                       </label>
                     </div>
                     
@@ -140,7 +202,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                               }}
                               className="accent-blue-600"
                             />
-                            <span className="text-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
+                            <span className="fs-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
                             <span className="text-[10px] text-slate-400 ml-auto">{emp.department}</span>
                           </label>
                         ))}
@@ -162,9 +224,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     )}
                     
                     <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="flex justify-between text-xs">
+                      <div className="flex justify-between fs-xs">
                         <span className="text-slate-600">Employees to process:</span>
-                        <span className="font-semibold text-slate-900">
+                        <span className="fw-semibold text-slate-900">
                           {payrollTarget === 'all' ? localEmployees.length :
                            payrollTarget === 'selected' ? selectedEmployeeIds.size :
                            payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0}
@@ -174,17 +236,17 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex justify-between text-xs mb-2"><span className="text-slate-600">Gross Payroll</span><span className="font-sans tabular-nums font-bold text-slate-900">${totalPayroll.toLocaleString()}</span></div>
-                    <div className="flex justify-between text-xs mb-2"><span className="text-slate-600">Tax Withholding (20%)</span><span className="font-sans tabular-nums text-rose-600">-${(totalPayroll * 0.2).toLocaleString()}</span></div>
+                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Gross Payroll</span><span className="font-sans tabular-nums fw-bold text-slate-900">${totalPayroll.toLocaleString()}</span></div>
+                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Tax Withholding (20%)</span><span className="font-sans tabular-nums text-rose-600">-${(totalPayroll * 0.2).toLocaleString()}</span></div>
                     <div className="flex justify-between table-cell mb-2"><span className="text-slate-600">Benefits / Deductions</span><span className="table-cell-mono text-rose-600">-${(totalPayroll * 0.05).toLocaleString()}</span></div>
-                    <div className="border-t border-slate-200 pt-2 flex justify-between table-cell font-bold"><span className="text-slate-900">Net Payroll Disbursement</span><span className="table-cell-mono text-slate-900">${(totalPayroll * 0.75).toLocaleString()}</span></div>
+                    <div className="border-t border-slate-200 pt-2 flex justify-between table-cell fw-bold"><span className="text-slate-900">Net Payroll Disbursement</span><span className="table-cell-mono text-slate-900">${(totalPayroll * 0.75).toLocaleString()}</span></div>
                   </div>
                   <PrimaryBtn icon="bi bi-play-circle" onClick={() => setPayrollStep('review')}>Review & Process Payroll</PrimaryBtn>
                 </div>
               )}
               {payrollStep === 'review' && (
                 <div className="space-y-4">
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl fs-xs text-amber-800">
                     <strong>Confirm Payroll Run:</strong> {payrollTarget === 'all' ? localEmployees.length : payrollTarget === 'selected' ? selectedEmployeeIds.size : payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0} employees · Period: {payMonth} · Net: ${(totalPayroll * 0.75).toLocaleString()}
                   </div>
                   <div className="flex gap-2">
@@ -201,10 +263,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               )}
               {payrollStep === 'done' && (
                 <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                  <i className="bi bi-check-circle-fill text-emerald-600 text-2xl block mb-2"></i>
-                  <div className="text-sm font-bold text-emerald-800">Payroll Processed Successfully!</div>
-                  <div className="text-xs text-emerald-600 mt-1">{localEmployees.length} payslips generated · {payMonth} · Net ${(totalPayroll * 0.75).toLocaleString()} disbursed</div>
-                  <button onClick={() => setPayrollStep('idle')} className="mt-4 text-xs font-semibold text-emerald-700 underline cursor-pointer">Run New Payroll</button>
+                  <i className="bi bi-check-circle-fill text-emerald-600 fs-2xl block mb-2"></i>
+                  <div className="fs-sm fw-bold text-emerald-800">Payroll Processed Successfully!</div>
+                  <div className="fs-xs text-emerald-600 mt-1">{localEmployees.length} payslips generated · {payMonth} · Net ${(totalPayroll * 0.75).toLocaleString()} disbursed</div>
+                  <button onClick={() => setPayrollStep('idle')} className="mt-4 fs-xs fw-semibold text-emerald-700 underline cursor-pointer">Run New Payroll</button>
                 </div>
               )}
             </div>
@@ -216,8 +278,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               <div className="space-y-3">
                 {salaryBands.filter(b => b.companyId === selectedCompany.id).length === 0 ? (
                   <div className="text-center py-6">
-                    <i className="bi bi-bar-chart-line text-3xl text-slate-200 block mb-2"></i>
-                    <p className="text-sm text-slate-400">No salary bands defined yet</p>
+                    <i className="bi bi-bar-chart-line fs-3xl text-slate-200 block mb-2"></i>
+                    <p className="fs-sm text-slate-400">No salary bands defined yet</p>
                   </div>
                 ) : (
                   salaryBands.filter(b => b.companyId === selectedCompany.id).map(band => (
@@ -228,7 +290,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           <span className="data-value-small font-sans tabular-nums text-slate-400">{band.employeeCount} employees</span>
                           {isHRorAdmin && (
                             <button onClick={async () => { if (await modalConfirm('Delete this salary band?', { variant: 'danger' })) onDeleteSalaryBand(band.id); }} className="text-slate-300 hover:text-red-500 transition-colors">
-                              <i className="bi bi-trash text-xs"></i>
+                              <i className="bi bi-trash fs-xs"></i>
                             </button>
                           )}
                         </div>
@@ -248,14 +310,14 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                          <i className="bi bi-cash-stack text-emerald-600 text-xs"></i>
+                          <i className="bi bi-cash-stack text-emerald-600 fs-xs"></i>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">New Salary Band</h3>
+                        <h3 className="fs-sm fw-bold text-slate-900">New Salary Band</h3>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Define a new compensation scale with minimum and maximum bounds.</p>
                     </div>
                     <button type="button" onClick={() => setShowBandModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                      <i className="bi bi-x text-xl"></i>
+                      <i className="bi bi-x fs-xl"></i>
                     </button>
                   </div>
                   
@@ -270,13 +332,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
 
                   <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                    <button type="button" onClick={() => setShowBandModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => setShowBandModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                     <button type="button" onClick={() => {
                       if (!newBandName || !newBandMin || !newBandMax) return;
                       onCreateSalaryBand(newBandName, Number(newBandMin), Number(newBandMax));
                       setNewBandName(''); setNewBandMin(''); setNewBandMax('');
                       setShowBandModal(false);
-                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Band</button>
+                    }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Band</button>
                   </div>
                 </div>
               </div>
@@ -295,8 +357,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               
               {payrollGroups.filter(g => g.companyId === selectedCompany.id).length === 0 ? (
                 <div className="text-center py-8">
-                  <i className="bi bi-folder text-3xl text-slate-200 block mb-2"></i>
-                  <p className="text-sm text-slate-400 mb-2">No payroll groups yet</p>
+                  <i className="bi bi-folder fs-3xl text-slate-200 block mb-2"></i>
+                  <p className="fs-sm text-slate-400 mb-2">No payroll groups yet</p>
                   <p className="text-[10px] text-slate-400">Create groups to batch process payroll for specific teams or departments.</p>
                 </div>
               ) : (
@@ -305,7 +367,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div key={group.id} className="p-4 border border-slate-100 rounded-lg hover:bg-slate-50/50">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-sm font-semibold text-slate-900">{group.name}</div>
+                          <div className="fs-sm fw-semibold text-slate-900">{group.name}</div>
                           <div className="text-[10px] text-slate-500 mt-0.5">{group.description || 'No description'}</div>
                           <div className="text-[10px] text-slate-400 mt-1">{group.employeeIds.length} employees</div>
                         </div>
@@ -319,7 +381,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                             onClick={async () => {
                               if (await modalConfirm('Delete this group?', { variant: 'danger' })) onDeletePayrollGroup(group.id);
                             }}
-                            className="text-xs text-rose-500 hover:text-rose-700 px-2 py-1"
+                            className="fs-xs text-rose-500 hover:text-rose-700 px-2 py-1"
                           >
                             <i className="bi bi-trash"></i>
                           </button>
@@ -359,9 +421,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                          <i className="bi bi-collection text-blue-600 text-xs"></i>
+                          <i className="bi bi-collection text-blue-600 fs-xs"></i>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">Create Payroll Group</h3>
+                        <h3 className="fs-sm fw-bold text-slate-900">Create Payroll Group</h3>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Batch process payroll by grouping specific employees together.</p>
                     </div>
@@ -371,7 +433,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       setNewGroupDesc('');
                       setGroupEmployeeIds(new Set());
                     }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                      <i className="bi bi-x text-xl"></i>
+                      <i className="bi bi-x fs-xl"></i>
                     </button>
                   </div>
 
@@ -400,7 +462,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                               }}
                               className="accent-blue-600"
                             />
-                            <span className="text-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
+                            <span className="fs-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
                             <span className="text-[10px] text-slate-400 ml-auto">{emp.department}</span>
                           </label>
                         ))}
@@ -414,7 +476,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       setNewGroupName('');
                       setNewGroupDesc('');
                       setGroupEmployeeIds(new Set());
-                    }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    }} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                     <button type="button" onClick={() => {
                       if (newGroupName && groupEmployeeIds.size > 0) {
                         onCreatePayrollGroup(newGroupName, newGroupDesc, Array.from(groupEmployeeIds));
@@ -423,7 +485,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         setNewGroupDesc('');
                         setGroupEmployeeIds(new Set());
                       }
-                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Group</button>
+                    }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Group</button>
                   </div>
                 </div>
               </div>
@@ -449,12 +511,12 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 <tbody className="divide-y divide-slate-100">
                   {payslips.filter(p => p.companyId === selectedCompany.id && p.period === activeSlipsPeriod).map(slip => (
                     <tr key={slip.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => payslipModal.open(slip)}>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{getEmployeeNameById(employees, slip.employeeId) || slip.employeeName}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{slip.department}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-500">{slip.period}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{getEmployeeNameById(employees, slip.employeeId) || slip.employeeName}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-500">{slip.department}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{slip.period}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
                     </tr>
                   ))}
@@ -474,8 +536,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               if (!activeSlip) {
                 return (
                   <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-10 text-center">
-                    <i className="bi bi-receipt-cutoff text-3xl text-slate-200 block mb-2"></i>
-                    <p className="text-sm text-slate-400">No payslips generated for you yet.</p>
+                    <i className="bi bi-receipt-cutoff fs-3xl text-slate-200 block mb-2"></i>
+                    <p className="fs-sm text-slate-400">No payslips generated for you yet.</p>
                   </div>
                 );
               }
@@ -488,40 +550,35 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         <h3 className="section-title text-slate-900">My Payslip — {activeSlip.period}</h3>
                         <p className="data-value-small text-slate-400 mt-0.5">Status: {activeSlip.status}</p>
                       </div>
-                      <PrimaryBtn icon="bi bi-download" onClick={() => downloadPDF(`payslip-${activeSlip.id}`, `Payslip — ${activeSlip.period}`, rowsToHtmlTable(['Component', 'Amount'], [
-                        ['Employee', activeSlip.employeeName],
-                        ['Employee ID', activeSlip.employeeId],
-                        ['Department', activeSlip.department],
-                        ['Period', activeSlip.period],
-                        ['Base Salary', `$${(activeSlip.baseSalary || activeSlip.gross).toLocaleString()}`],
-                        ['Overtime', `$${(activeSlip.overtimePay || 0).toLocaleString()}`],
-                        ['Deductions', `-$${(activeSlip.deductions || 0).toLocaleString()}`],
-                        ['Tax', `-$${(activeSlip.tax || 0).toLocaleString()}`],
-                        ['Net Pay', `$${(activeSlip.net || 0).toLocaleString()}`],
-                        ['Status', activeSlip.status]
-                      ], [1]))}>Download PDF</PrimaryBtn>
+                      <PrimaryBtn icon="bi bi-download" onClick={() => downloadPDF(`payslip-${activeSlip.id}`, `Payslip — ${activeSlip.period}`, payslipPDFBody({
+                        employeeName: activeSlip.employeeName,
+                        employeeId: activeSlip.employeeId,
+                        department: activeSlip.department,
+                        period: activeSlip.period,
+                        baseSalary: activeSlip.baseSalary || activeSlip.gross,
+                        gross: activeSlip.gross,
+                        deductions: activeSlip.deductions || 0,
+                        net: activeSlip.net || 0,
+                        status: activeSlip.status,
+                        customBenefitsTotal: activeSlip.customBenefitsTotal || 0,
+                        breakdown: activeSlip.breakdown,
+                      }), selectedCompany)}>Download PDF</PrimaryBtn>
                     </div>
                     <div className="p-5 space-y-5">
                       {/* Earnings */}
                       <div>
-                        <h4 className="data-value-small font-semibold text-slate-500 uppercase tracking-wider mb-3">Earnings</h4>
+                        <h4 className="data-value-small fw-semibold text-slate-500 uppercase tracking-wider mb-3">Earnings</h4>
                         <div className="space-y-2">
                           <div className="flex justify-between items-center py-1.5">
                             <span className="data-value text-slate-600">Base Salary</span>
                             <span className="data-value font-sans tabular-nums text-slate-900">${(activeSlip.baseSalary || activeSlip.gross).toLocaleString()}</span>
                           </div>
-                          {activeSlip.overtimePay !== undefined && (
-                            <div className="flex justify-between items-center py-1.5">
-                              <span className="data-value text-slate-600">Overtime</span>
-                              <span className="data-value font-sans tabular-nums text-slate-900">${activeSlip.overtimePay.toLocaleString()}</span>
+                          {activeSlip.breakdown?.filter((b: any) => b.type === 'Benefit').map((b: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center py-1.5">
+                              <span className="data-value text-slate-600">{b.name}</span>
+                              <span className="data-value font-sans tabular-nums text-emerald-600">+${b.amount.toLocaleString()}</span>
                             </div>
-                          )}
-                          {activeSlip.allowances !== undefined && (
-                            <div className="flex justify-between items-center py-1.5">
-                              <span className="data-value text-slate-600">Allowances</span>
-                              <span className="data-value font-sans tabular-nums text-slate-900">${activeSlip.allowances.toLocaleString()}</span>
-                            </div>
-                          )}
+                          ))}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                             <span className="table-cell-semibold text-slate-900">Total Gross Earnings</span>
                             <span className="table-cell-semibold font-sans tabular-nums text-slate-900">${activeSlip.gross.toLocaleString()}</span>
@@ -531,30 +588,14 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
 
                       {/* Deductions */}
                       <div>
-                        <h4 className="data-value-small font-semibold text-slate-500 uppercase tracking-wider mb-3">Deductions</h4>
+                        <h4 className="data-value-small fw-semibold text-slate-500 uppercase tracking-wider mb-3">Deductions</h4>
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center py-1.5">
-                            <span className="data-value text-slate-600">Tax Withholding</span>
-                            <span className="data-value font-sans tabular-nums text-rose-600">-${(activeSlip.tax || Math.round(activeSlip.gross * 0.12)).toLocaleString()}</span>
-                          </div>
-                          {activeSlip.socialSec !== undefined && (
-                            <div className="flex justify-between items-center py-1.5">
-                              <span className="data-value text-slate-600">Social Security</span>
-                              <span className="data-value font-sans tabular-nums text-rose-600">-${activeSlip.socialSec.toLocaleString()}</span>
+                          {activeSlip.breakdown?.filter((b: any) => b.type === 'Tax').map((b: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-center py-1.5">
+                              <span className="data-value text-slate-600">{b.name}</span>
+                              <span className="data-value font-sans tabular-nums text-rose-600">-${b.amount.toLocaleString()}</span>
                             </div>
-                          )}
-                          {activeSlip.medicare !== undefined && (
-                            <div className="flex justify-between items-center py-1.5">
-                              <span className="data-value text-slate-600">Medicare</span>
-                              <span className="data-value font-sans tabular-nums text-rose-600">-${activeSlip.medicare.toLocaleString()}</span>
-                            </div>
-                          )}
-                          {activeSlip.healthIns !== undefined && (
-                            <div className="flex justify-between items-center py-1.5">
-                              <span className="data-value text-slate-600">Health Insurance</span>
-                              <span className="data-value font-sans tabular-nums text-rose-600">-${activeSlip.healthIns.toLocaleString()}</span>
-                            </div>
-                          )}
+                          ))}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                             <span className="table-cell-semibold text-slate-900">Total Deductions</span>
                             <span className="table-cell-semibold font-sans tabular-nums text-rose-600">-${activeSlip.deductions.toLocaleString()}</span>
@@ -568,7 +609,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="table-cell-semibold text-emerald-800">Net Pay</div>
                           <div className="data-value-small text-emerald-600">Direct Deposited</div>
                         </div>
-                        <div className="text-2xl font-bold font-sans tabular-nums text-emerald-700">${activeSlip.net.toLocaleString()}</div>
+                        <div className="fs-2xl fw-bold font-sans tabular-nums text-emerald-700">${activeSlip.net.toLocaleString()}</div>
                       </div>
                     </div>
                   </div>
@@ -583,13 +624,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <tbody className="divide-y divide-slate-100">
                         {mySlips.map(slip => (
                           <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors cursor-pointer ${activeSlip.id === slip.id ? 'bg-slate-50' : ''}`} onClick={() => payslipModal.open(slip)}>
-                            <td className="px-4 py-3 text-xs font-semibold text-slate-900">{slip.period}</td>
-                            <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
+                            <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{slip.period}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
                             <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
                             <td className="px-4 py-3 text-right" onClick={() => payslipModal.open(slip)}>
-                              <button onClick={e => { e.stopPropagation(); setSelectedSlipId(slip.id); }} className="text-blue-600 hover:text-blue-800 data-value-small font-semibold cursor-pointer mr-3">View Details</button>
+                              <button onClick={e => { e.stopPropagation(); setSelectedSlipId(slip.id); }} className="text-blue-600 hover:text-blue-800 data-value-small fw-semibold cursor-pointer mr-3">View Details</button>
                             </td>
                           </tr>
                         ))}
@@ -605,21 +646,86 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         {derivedPayrollTab === 'tax' && (
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-3">
-              <StatCard label="Total Tax Withheld" value={`$${(totalPayroll * taxCfg.incomeTaxRate).toLocaleString()}`} icon="bi bi-building-check" sub={`Income tax @ ${(taxCfg.incomeTaxRate * 100).toFixed(1)}%`} color="text-rose-600" />
-              <StatCard label="Social Security" value={`$${(totalPayroll * taxCfg.socialSecurityRate).toLocaleString()}`} icon="bi bi-shield-check" sub={`SS @ ${(taxCfg.socialSecurityRate * 100).toFixed(2)}%`} />
-              <StatCard label="Medicare" value={`$${(totalPayroll * taxCfg.medicareRate).toLocaleString()}`} icon="bi bi-piggy-bank" sub={`Medicare @ ${(taxCfg.medicareRate * 100).toFixed(2)}%`} accent />
+              <StatCard label="Total Base Payroll" value={`$${totalPayroll.toLocaleString()}`} icon="bi bi-cash" color="text-emerald-600" />
             </div>
             {isHRorAdmin && onUpdatePayrollTaxConfig && (
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-                <h3 className="section-title text-slate-900 mb-4">Tax & Deduction Rates (saved to database)</h3>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div><Label>Income Tax %</Label><Input type="number" step="0.1" value={+(taxCfg.incomeTaxRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, incomeTaxRate: Number(e.target.value) / 100 })} /></div>
-                  <div><Label>Social Security %</Label><Input type="number" step="0.1" value={+(taxCfg.socialSecurityRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, socialSecurityRate: Number(e.target.value) / 100 })} /></div>
-                  <div><Label>Medicare %</Label><Input type="number" step="0.1" value={+(taxCfg.medicareRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, medicareRate: Number(e.target.value) / 100 })} /></div>
-                  <div><Label>Fixed Allowance</Label><Input type="number" value={taxCfg.allowances} onChange={e => setDraftCfg({ ...draftCfg, allowances: Number(e.target.value) })} /></div>
-                  <div><Label>Health Insurance</Label><Input type="number" value={taxCfg.healthInsurance} onChange={e => setDraftCfg({ ...draftCfg, healthInsurance: Number(e.target.value) })} /></div>
-                  <div><Label>Overtime %</Label><Input type="number" step="0.1" value={+(taxCfg.overtimeRate * 100).toFixed(2)} onChange={e => setDraftCfg({ ...draftCfg, overtimeRate: Number(e.target.value) / 100 })} /></div>
+                <h3 className="section-title text-slate-900 mb-4">Company Tax & Benefit Definitions</h3>
+
+                {/* Custom Taxes */}
+                <div className="mt-6 border-t border-slate-100 pt-4">
+                  <h4 className="fs-sm fw-semibold text-slate-800 mb-3">Custom Taxes & Deductions</h4>
+                  <div className="space-y-3">
+                    {(draftCfg.customTaxes || []).map((t, idx) => (
+                      <div key={t.id} className="flex gap-3 items-center">
+                        <Input value={t.name} onChange={e => {
+                          const newTaxes = [...(draftCfg.customTaxes || [])];
+                          newTaxes[idx] = { ...newTaxes[idx], name: e.target.value };
+                          setDraftCfg({ ...draftCfg, customTaxes: newTaxes });
+                        }} placeholder="Tax Name" />
+                        <Select value={t.type} onChange={e => {
+                          const newTaxes = [...(draftCfg.customTaxes || [])];
+                          newTaxes[idx] = { ...newTaxes[idx], type: e.target.value as 'Percentage'|'Fixed' };
+                          setDraftCfg({ ...draftCfg, customTaxes: newTaxes });
+                        }}>
+                          <option value="Percentage">Percentage (%)</option>
+                          <option value="Fixed">Fixed Amount ($)</option>
+                        </Select>
+                        <Input type="number" step="0.1" value={t.type === 'Percentage' ? +(t.value * 100).toFixed(2) : t.value} onChange={e => {
+                          const newTaxes = [...(draftCfg.customTaxes || [])];
+                          newTaxes[idx] = { ...newTaxes[idx], value: t.type === 'Percentage' ? Number(e.target.value) / 100 : Number(e.target.value) };
+                          setDraftCfg({ ...draftCfg, customTaxes: newTaxes });
+                        }} />
+                        <button onClick={() => {
+                          const newTaxes = [...(draftCfg.customTaxes || [])];
+                          newTaxes.splice(idx, 1);
+                          setDraftCfg({ ...draftCfg, customTaxes: newTaxes });
+                        }} className="text-rose-500 hover:text-rose-700 p-2"><i className="bi bi-trash" /></button>
+                      </div>
+                    ))}
+                    <button onClick={() => {
+                      setDraftCfg({ ...draftCfg, customTaxes: [...(draftCfg.customTaxes || []), { id: Date.now().toString(), name: '', type: 'Fixed', value: 0 }] });
+                    }} className="text-blue-600 fs-xs fw-semibold hover:underline">+ Add Custom Tax</button>
+                  </div>
                 </div>
+
+                {/* Custom Benefits */}
+                <div className="mt-6 border-t border-slate-100 pt-4">
+                  <h4 className="fs-sm fw-semibold text-slate-800 mb-3">Custom Benefits</h4>
+                  <div className="space-y-3">
+                    {(draftCfg.customBenefits || []).map((b, idx) => (
+                      <div key={b.id} className="flex gap-3 items-center">
+                        <Input value={b.name} onChange={e => {
+                          const newBens = [...(draftCfg.customBenefits || [])];
+                          newBens[idx] = { ...newBens[idx], name: e.target.value };
+                          setDraftCfg({ ...draftCfg, customBenefits: newBens });
+                        }} placeholder="Benefit Name" />
+                        <Select value={b.type} onChange={e => {
+                          const newBens = [...(draftCfg.customBenefits || [])];
+                          newBens[idx] = { ...newBens[idx], type: e.target.value as 'Percentage'|'Fixed' };
+                          setDraftCfg({ ...draftCfg, customBenefits: newBens });
+                        }}>
+                          <option value="Percentage">Percentage (%)</option>
+                          <option value="Fixed">Fixed Amount ($)</option>
+                        </Select>
+                        <Input type="number" step="0.1" value={b.type === 'Percentage' ? +(b.value * 100).toFixed(2) : b.value} onChange={e => {
+                          const newBens = [...(draftCfg.customBenefits || [])];
+                          newBens[idx] = { ...newBens[idx], value: b.type === 'Percentage' ? Number(e.target.value) / 100 : Number(e.target.value) };
+                          setDraftCfg({ ...draftCfg, customBenefits: newBens });
+                        }} />
+                        <button onClick={() => {
+                          const newBens = [...(draftCfg.customBenefits || [])];
+                          newBens.splice(idx, 1);
+                          setDraftCfg({ ...draftCfg, customBenefits: newBens });
+                        }} className="text-rose-500 hover:text-rose-700 p-2"><i className="bi bi-trash" /></button>
+                      </div>
+                    ))}
+                    <button onClick={() => {
+                      setDraftCfg({ ...draftCfg, customBenefits: [...(draftCfg.customBenefits || []), { id: Date.now().toString(), name: '', type: 'Fixed', value: 0 }] });
+                    }} className="text-blue-600 fs-xs fw-semibold hover:underline">+ Add Custom Benefit</button>
+                  </div>
+                </div>
+
                 <div className="flex justify-end mt-4">
                   <PrimaryBtn icon="bi bi-check-lg" onClick={async () => { await onUpdatePayrollTaxConfig!(selectedCompany.id, draftCfg); }}>Save Rates</PrimaryBtn>
                 </div>
@@ -628,23 +734,41 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Tax & Deductions Register</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Employee' }, { label: 'Gross', right: true }, { label: 'Federal Tax', right: true }, { label: 'State Tax', right: true }, { label: 'Social Sec.', right: true }, { label: 'Medicare', right: true }, { label: 'Net', right: true }]} />
+                <TableHead cols={[{ label: 'Employee' }, { label: 'Base', right: true }, { label: 'Taxes', right: true }, { label: 'Benefits', right: true, colSpan: 3 }, { label: 'Net', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localEmployees.slice(0, 8).map(emp => {
-                    const fedTax = Math.round(emp.salary * taxCfg.incomeTaxRate);
-                    const stateTax = Math.round(emp.salary * 0.05);
-                    const ss = Math.round(emp.salary * taxCfg.socialSecurityRate);
-                    const medicare = Math.round(emp.salary * taxCfg.medicareRate);
-                    const net = Math.round(emp.salary - fedTax - stateTax - ss - medicare);
+                    let totalCustomTax = 0;
+                    let totalCustomBenefit = 0;
+                    const assignedTaxes = emp.assignedTaxes ? (typeof emp.assignedTaxes === 'string' ? JSON.parse(emp.assignedTaxes) : emp.assignedTaxes) : [];
+                    const assignedBenefits = emp.assignedBenefits ? (typeof emp.assignedBenefits === 'string' ? JSON.parse(emp.assignedBenefits) : emp.assignedBenefits) : [];
+                    
+                    if (Array.isArray(assignedTaxes)) {
+                      assignedTaxes.forEach((taxId: string) => {
+                        const taxConfig = (taxCfg.customTaxes || []).find((t: any) => t.id === taxId);
+                        if (taxConfig) {
+                          totalCustomTax += taxConfig.type === 'Percentage' ? (emp.salary * (taxConfig.value / 100)) : taxConfig.value;
+                        }
+                      });
+                    }
+
+                    if (Array.isArray(assignedBenefits)) {
+                      assignedBenefits.forEach((benefitId: string) => {
+                        const benefitConfig = (taxCfg.customBenefits || []).find((b: any) => b.id === benefitId);
+                        if (benefitConfig) {
+                          totalCustomBenefit += benefitConfig.type === 'Percentage' ? (emp.salary * (benefitConfig.value / 100)) : benefitConfig.value;
+                        }
+                      });
+                    }
+
+                    const net = Math.round(emp.salary + totalCustomBenefit - totalCustomTax);
+
                     return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => taxModal.open({ ...emp, fedTax, stateTax, ss, medicare, net })}>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-900 text-right">${emp.salary.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-600 text-right">-${fedTax.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-500 text-right">-${stateTax.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-500 text-right">-${ss.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums text-rose-400 text-right">-${medicare.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-emerald-700 text-right">${net.toLocaleString()}</td>
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => taxModal.open({ ...emp, fedTax: 0, stateTax: 0, ss: 0, medicare: 0, net })}>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${emp.salary.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${Math.round(totalCustomTax).toLocaleString()}</td>
+                      <td colSpan={3} className="px-4 py-3 fs-xs font-sans tabular-nums text-emerald-600 text-right">+${Math.round(totalCustomBenefit).toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${net.toLocaleString()}</td>
                     </tr>
                     );
                   })}
@@ -671,13 +795,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     const otRate = Math.round((emp.salary / 160) * 1.5);
                     return (
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => otModal.open({ ...emp, otHours, otRate, otPay: otHours * otRate })}>
-                        <td className="px-4 py-3 text-xs font-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500">{emp.department}</td>
-                        <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700 text-right">160h</td>
-                        <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-900 text-right">{otHours}h</td>
-                        <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600 text-right">${otRate}/hr</td>
-                        <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-emerald-700 text-right">${(otHours * otRate).toLocaleString()}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500">HR Manager</td>
+                        <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
+                        <td className="px-4 py-3 fs-xs text-slate-500">{emp.department}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">160h</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{otHours}h</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${otRate}/hr</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${(otHours * otRate).toLocaleString()}</td>
+                        <td className="px-4 py-3 fs-xs text-slate-500">HR Manager</td>
                       </tr>
                     );
                   })}
@@ -687,12 +811,32 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
           </div>
         )}
       {payslipModal.selected && (
-        <ViewModal title={`Payslip — ${getEmployeeNameById(employees, payslipModal.selected.employeeId) || payslipModal.selected.employeeName}`} subtitle={payslipModal.selected.period} onClose={payslipModal.close}>
+        <ViewModal 
+          title={`Payslip — ${getEmployeeNameById(employees, payslipModal.selected.employeeId) || payslipModal.selected.employeeName}`} 
+          subtitle={payslipModal.selected.period} 
+          onClose={payslipModal.close}
+          actions={
+            <PrimaryBtn icon="bi bi-download" onClick={() => downloadPDF(`payslip-${payslipModal.selected?.id}`, `Payslip — ${payslipModal.selected?.period}`, payslipPDFBody({
+              employeeName: getEmployeeNameById(employees, payslipModal.selected!.employeeId) || payslipModal.selected!.employeeName,
+              employeeId: payslipModal.selected!.employeeId,
+              department: payslipModal.selected!.department,
+              period: payslipModal.selected!.period,
+              baseSalary: payslipModal.selected!.baseSalary || payslipModal.selected!.gross,
+              gross: payslipModal.selected!.gross,
+              deductions: payslipModal.selected!.deductions,
+              net: payslipModal.selected!.net,
+              status: payslipModal.selected!.status,
+              breakdown: payslipModal.selected!.breakdown,
+            }), selectedCompany)}>
+              Download PDF
+            </PrimaryBtn>
+          }
+        >
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#0891b20d', border: '1px solid #0891b21f' }}>
-            <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#0891b2' }}><i className="bi bi-receipt text-lg" /></div>
+            <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#0891b2' }}><i className="bi bi-receipt fs-lg" /></div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{getEmployeeNameById(employees, payslipModal.selected.employeeId) || payslipModal.selected.employeeName}</div>
-              <div className="text-xs text-slate-500 truncate">{payslipModal.selected.period}</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{getEmployeeNameById(employees, payslipModal.selected.employeeId) || payslipModal.selected.employeeName}</div>
+              <div className="fs-xs text-slate-500 truncate">{payslipModal.selected.period}</div>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -706,7 +850,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
           </div>
@@ -715,10 +859,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
       {taxModal.selected && (
         <ViewModal title={`${taxModal.selected.firstName} ${taxModal.selected.lastName}`} subtitle="Tax Breakdown" onClose={taxModal.close}>
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#7c3aed0d', border: '1px solid #7c3aed1f' }}>
-            <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#7c3aed' }}><i className="bi bi-percent text-lg" /></div>
+            <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#7c3aed' }}><i className="bi bi-percent fs-lg" /></div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{taxModal.selected.firstName} {taxModal.selected.lastName}</div>
-              <div className="text-xs text-slate-500 truncate">Tax Breakdown</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{taxModal.selected.firstName} {taxModal.selected.lastName}</div>
+              <div className="fs-xs text-slate-500 truncate">Tax Breakdown</div>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -732,7 +876,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
           </div>
@@ -741,10 +885,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
       {otModal.selected && (
         <ViewModal title={`${otModal.selected.firstName} ${otModal.selected.lastName}`} subtitle="Overtime Report" onClose={otModal.close}>
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#d977060d', border: '1px solid #d977061f' }}>
-            <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#d97706' }}><i className="bi bi-clock-history text-lg" /></div>
+            <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#d97706' }}><i className="bi bi-clock-history fs-lg" /></div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{otModal.selected.firstName} {otModal.selected.lastName}</div>
-              <div className="text-xs text-slate-500 truncate">Overtime Report</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{otModal.selected.firstName} {otModal.selected.lastName}</div>
+              <div className="fs-xs text-slate-500 truncate">Overtime Report</div>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -758,7 +902,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
           </div>

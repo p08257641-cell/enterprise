@@ -108,7 +108,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {procTabs.map(t => (
           <button key={t.id} onClick={() => { setProcTab(t.id); onNavigateView(t.id === 'orders' ? 'procurement' : `proc-${t.id}`); }}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${procTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
+            className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${procTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
             {t.label}
           </button>
         ))}
@@ -130,18 +130,18 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             <tbody className="divide-y divide-slate-100">
               {localPOs.map(o => (
                 <tr key={o.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => poModal.open(o)}>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-700">{o.poNumber}</td>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-900">{o.vendorName}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500 max-w-[160px] truncate">{o.item}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{o.date}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${(o.total || 0).toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{o.poNumber}</td>
+                  <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.vendorName}</td>
+                  <td className="px-4 py-3 fs-xs text-slate-500 max-w-[160px] truncate">{o.item}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{o.date}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(o.total || 0).toLocaleString()}</td>
                   <td className="px-4 py-3"><Badge label={o.status} variant={o.status === 'Approved' || o.status === 'Received' ? 'success' : o.status === 'Cancelled' ? 'danger' : 'warning'} /></td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex gap-1 justify-end">
-                        {o.status === 'Pending' && <button onClick={() => onUpdatePurchaseOrder(o.id, { status: 'Approved' })} className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Approve</button>}
-                        {o.status === 'Approved' && <button onClick={() => onUpdatePurchaseOrder(o.id, { status: 'Received' })} className="text-[9px] font-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">Mark Received</button>}
-                        <button onClick={() => onDeletePurchaseOrder(o.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                        {o.status === 'Pending' && <button onClick={() => onUpdatePurchaseOrder(o.id, { status: 'Approved' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Approve</button>}
+                        {o.status === 'Approved' && <button onClick={() => onUpdatePurchaseOrder(o.id, { status: 'Received' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">Mark Received</button>}
+                        <button onClick={() => onDeletePurchaseOrder(o.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                       </div>
                     </td>
                   )}
@@ -166,7 +166,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               <div key={v.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all cursor-pointer" onClick={() => vendorModal.open(v)}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <div className="text-sm font-bold text-slate-900">{v.name}</div>
+                    <div className="fs-sm fw-bold text-slate-900">{v.name}</div>
                     <div className="data-value text-slate-500 mt-0.5">{v.type} · {v.contact}</div>
                     <div className="data-value-small text-slate-400 mt-0.5">{v.email}</div>
                   </div>
@@ -175,13 +175,13 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex items-center justify-between">
                   <div className="data-value text-slate-500">{v.ordersCount} purchase orders placed</div>
                   {isAdmin && (
-                    <button onClick={e => { e.stopPropagation(); onDeleteVendor(v.id); }} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Remove</button>
+                    <button onClick={e => { e.stopPropagation(); onDeleteVendor(v.id); }} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Remove</button>
                   )}
                 </div>
               </div>
             ))}
             {localVendors.length === 0 && (
-              <div className="col-span-2 py-10 text-center text-xs text-slate-400 bg-white border border-slate-200 rounded-xl">No vendors yet. Add your first vendor to get started.</div>
+              <div className="col-span-2 py-10 text-center fs-xs text-slate-400 bg-white border border-slate-200 rounded-xl">No vendors yet. Add your first vendor to get started.</div>
             )}
           </div>
         </div>
@@ -205,18 +205,18 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localRFQs.map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => rfqModal.open(r)}>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-600">{r.rfqNumber}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-slate-900">{r.item}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-600">{r.vendorsInvited}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{r.sentDate}</td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700">{r.quotesReceived}/{r.vendorsInvited}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{r.rfqNumber}</td>
+                    <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.item}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600">{r.vendorsInvited}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{r.sentDate}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700">{r.quotesReceived}/{r.vendorsInvited}</td>
                     <td className="px-4 py-3"><Badge label={r.status} variant={r.status === 'Awarded' ? 'success' : r.status === 'In Review' ? 'warning' : 'info'} /></td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         <div className="flex gap-1 justify-end">
-                          {r.status === 'Open' && <button onClick={() => onUpdateRFQ(r.id, { status: 'In Review', quotesReceived: r.vendorsInvited })} className="text-[9px] font-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">In Review</button>}
-                          {r.status === 'In Review' && <button onClick={() => onUpdateRFQ(r.id, { status: 'Awarded' })} className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Award</button>}
-                          <button onClick={() => onDeleteRFQ(r.id)} className="text-[9px] font-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                          {r.status === 'Open' && <button onClick={() => onUpdateRFQ(r.id, { status: 'In Review', quotesReceived: r.vendorsInvited })} className="text-[9px] fw-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">In Review</button>}
+                          {r.status === 'In Review' && <button onClick={() => onUpdateRFQ(r.id, { status: 'Awarded' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Award</button>}
+                          <button onClick={() => onDeleteRFQ(r.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                         </div>
                       </td>
                     )}
@@ -257,8 +257,8 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               <div><Label>Unit Price (USD)</Label><Input type="number" value={newUnitPrice} onChange={e => setNewUnitPrice(e.target.value)} /></div>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg flex items-center justify-between">
-              <span className="text-xs text-slate-500">Estimated Total</span>
-              <span className="text-sm font-bold font-sans tabular-nums text-slate-900">${(Number(newQty) * Number(newUnitPrice)).toLocaleString()}</span>
+              <span className="fs-xs text-slate-500">Estimated Total</span>
+              <span className="fs-sm fw-bold font-sans tabular-nums text-slate-900">${(Number(newQty) * Number(newUnitPrice)).toLocaleString()}</span>
             </div>
             <div className="flex gap-2 pt-2">
               <PrimaryBtn onClick={submitPO} disabled={!newItem.trim()}>Submit Purchase Order</PrimaryBtn>
@@ -276,14 +276,14 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <i className="bi bi-building text-blue-600 text-xs"></i>
+                    <i className="bi bi-building text-blue-600 fs-xs"></i>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">Add New Vendor</h3>
+                  <h3 className="fs-sm fw-bold text-slate-900">Add New Vendor</h3>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Register a new supply chain partner or service provider.</p>
               </div>
               <button type="button" onClick={() => setShowVendorModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x text-xl"></i>
+                <i className="bi bi-x fs-xl"></i>
               </button>
             </div>
 
@@ -296,12 +296,12 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => setShowVendorModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => setShowVendorModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
               <button type="button" onClick={() => {
                 if (!vendorName) return;
                 onCreateVendor({ name: vendorName, type: vendorType, contact: vendorContact, email: vendorEmail, rating: Number(vendorRating) || 5 });
                 setShowVendorModal(false);
-              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Add Vendor</button>
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Add Vendor</button>
             </div>
           </div>
         </div>
@@ -313,14 +313,14 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
-                    <i className="bi bi-send text-violet-600 text-xs"></i>
+                    <i className="bi bi-send text-violet-600 fs-xs"></i>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">Send New RFQ</h3>
+                  <h3 className="fs-sm fw-bold text-slate-900">Send New RFQ</h3>
                 </div>
                 <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Request quotes from vendors for specific inventory items.</p>
               </div>
               <button type="button" onClick={() => setShowRfqModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x text-xl"></i>
+                <i className="bi bi-x fs-xl"></i>
               </button>
             </div>
 
@@ -339,12 +339,12 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             </div>
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => setShowRfqModal(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => setShowRfqModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
               <button type="button" onClick={() => {
                 if (!rfqItem) return;
                 onCreateRFQ({ item: rfqItem, vendorsInvited: Number(rfqVendorCount) || 1 });
                 setShowRfqModal(false); setRfqItem(''); setSelectedRfqInvId('');
-              }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Send RFQ</button>
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Send RFQ</button>
             </div>
           </div>
         </div>

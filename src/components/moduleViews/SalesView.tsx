@@ -161,17 +161,17 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               {companyOrders.length === 0 && <EmptyRow cols={8} message="No sales orders yet. Create your first order to get started." />}
               {companyOrders.map(o => (
                 <tr key={o.id} className="hover:bg-slate-50/40 transition-colors">
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-700">{o.orderNumber}</td>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-900">{o.customerName}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{o.orderDate}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${o.total.toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{o.orderNumber}</td>
+                  <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.customerName}</td>
+                  <td className="px-4 py-3 fs-xs text-slate-500">{o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{o.orderDate}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${o.total.toLocaleString()}</td>
                   <td className="px-4 py-3"><Badge label={o.priority} variant={priorityVariant(o.priority)} /></td>
                   <td className="px-4 py-3"><Badge label={o.status} variant={statusVariant(o.status)} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setViewOrder(o)} className="text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
-                      <select value={o.status} onChange={e => onUpdateSalesOrder(o.id, { status: e.target.value as any })} className="text-[10px] font-semibold border border-slate-200 rounded px-2 py-1 bg-white cursor-pointer">
+                      <button onClick={() => setViewOrder(o)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
+                      <select value={o.status} onChange={e => onUpdateSalesOrder(o.id, { status: e.target.value as any })} className="text-[10px] fw-semibold border border-slate-200 rounded px-2 py-1 bg-white cursor-pointer">
                         {['Draft', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Completed', 'Cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
@@ -192,21 +192,21 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               {companyQuotes.length === 0 && <EmptyRow cols={7} message="No quotations yet. Create your first quote to get started." />}
               {companyQuotes.map(q => (
                 <tr key={q.id} className="hover:bg-slate-50/40 transition-colors">
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-bold text-slate-700">{q.quoteNumber}</td>
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-900">{q.customerName}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{q.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{q.validUntil || '—'}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${q.total.toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{q.quoteNumber}</td>
+                  <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{q.customerName}</td>
+                  <td className="px-4 py-3 fs-xs text-slate-500">{q.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{q.validUntil || '—'}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${q.total.toLocaleString()}</td>
                   <td className="px-4 py-3"><Badge label={q.status} variant={statusVariant(q.status)} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setViewQuote(q)} className="text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
-                      {q.status === 'Draft' && <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Sent' })} className="text-xs font-semibold text-blue-500 hover:text-blue-700 cursor-pointer">Send</button>}
+                      <button onClick={() => setViewQuote(q)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
+                      {q.status === 'Draft' && <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Sent' })} className="fs-xs fw-semibold text-blue-500 hover:text-blue-700 cursor-pointer">Send</button>}
                       {q.status === 'Sent' && <>
-                        <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Accepted' })} className="text-xs font-semibold text-emerald-500 hover:text-emerald-700 cursor-pointer">Accept</button>
-                        <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Rejected' })} className="text-xs font-semibold text-rose-500 hover:text-rose-700 cursor-pointer">Reject</button>
+                        <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Accepted' })} className="fs-xs fw-semibold text-emerald-500 hover:text-emerald-700 cursor-pointer">Accept</button>
+                        <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Rejected' })} className="fs-xs fw-semibold text-rose-500 hover:text-rose-700 cursor-pointer">Reject</button>
                       </>}
-                      <button onClick={() => onDeleteSalesQuotation(q.id)} className="text-xs font-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
+                      <button onClick={() => onDeleteSalesQuotation(q.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
                   </td>
                 </tr>
@@ -225,16 +225,16 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               {companyCustomers.length === 0 && <EmptyRow cols={7} message="No customers yet. Add your first customer to get started." />}
               {companyCustomers.map(c => (
                 <tr key={c.id} className="hover:bg-slate-50/40 transition-colors">
-                  <td className="px-4 py-3 text-xs font-semibold text-slate-900">{c.name}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{c.company || '—'}</td>
-                  <td className="px-4 py-3 text-xs text-slate-400">{c.email || '—'}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-700">{c.totalOrders}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${c.totalSpend.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-xs font-sans tabular-nums text-slate-400">{c.lastOrderDate || '—'}</td>
+                  <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{c.name}</td>
+                  <td className="px-4 py-3 fs-xs text-slate-500">{c.company || '—'}</td>
+                  <td className="px-4 py-3 fs-xs text-slate-400">{c.email || '—'}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700">{c.totalOrders}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${c.totalSpend.toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{c.lastOrderDate || '—'}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setViewCust(c)} className="text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
-                      <button onClick={() => onDeleteSalesCustomer(c.id)} className="text-xs font-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
+                      <button onClick={() => setViewCust(c)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
+                      <button onClick={() => onDeleteSalesCustomer(c.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
                   </td>
                 </tr>
@@ -261,20 +261,20 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   const pct = t.targetAmount > 0 ? Math.round((t.actualAmount / t.targetAmount) * 100) : 0;
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-900">{t.repName}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{t.month} {t.year}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${t.targetAmount.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${t.actualAmount.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.repName}</td>
+                      <td className="px-4 py-3 fs-xs text-slate-500">{t.month} {t.year}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${t.targetAmount.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${t.actualAmount.toLocaleString()}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden w-20">
                             <div className={`h-full rounded-full ${pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-400'}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                           </div>
-                          <span className="text-xs text-slate-500">{pct}%</span>
+                          <span className="fs-xs text-slate-500">{pct}%</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => onDeleteSalesTarget(t.id)} className="text-xs font-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
+                        <button onClick={() => onDeleteSalesTarget(t.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                       </td>
                     </tr>
                   );
@@ -289,7 +289,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-cart-plus text-slate-800 mr-1.5"></i> New Sales Order</h2>
+            <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-cart-plus text-slate-800 mr-1.5"></i> New Sales Order</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Customer Name</Label><Input value={form.customerName} onChange={e => setForm({ ...form, customerName: e.target.value })} placeholder="e.g. Acme Corp" /></div>
@@ -298,7 +298,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 </Select></div>
               </div>
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50/50">
-                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider block mb-2">Line Item</span>
+                <span className="text-[10px] fw-bold uppercase text-slate-400 tracking-wider block mb-2">Line Item</span>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2"><Label>Item Name</Label><Input value={form.itemName} onChange={e => setForm({ ...form, itemName: e.target.value })} placeholder="Product or service" /></div>
                   <div><Label>SKU</Label><Input value={form.itemSku} onChange={e => setForm({ ...form, itemSku: e.target.value })} placeholder="Optional" /></div>
@@ -306,7 +306,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="grid grid-cols-3 gap-3 mt-3">
                   <div><Label>Quantity</Label><Input type="number" value={form.itemQty} onChange={e => setForm({ ...form, itemQty: e.target.value })} /></div>
                   <div><Label>Unit Price ($)</Label><Input type="number" value={form.itemPrice} onChange={e => setForm({ ...form, itemPrice: e.target.value })} placeholder="0.00" /></div>
-                  <div><Label>Item Total</Label><div className="text-sm font-bold text-slate-900 mt-1">${((Number(form.itemQty) || 0) * (Number(form.itemPrice) || 0)).toLocaleString()}</div></div>
+                  <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">${((Number(form.itemQty) || 0) * (Number(form.itemPrice) || 0)).toLocaleString()}</div></div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -330,7 +330,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
       {showCustModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-person-plus text-slate-800 mr-1.5"></i> New Customer</h2>
+            <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-person-plus text-slate-800 mr-1.5"></i> New Customer</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Full Name</Label><Input value={custForm.name} onChange={e => setCustForm({ ...custForm, name: e.target.value })} placeholder="e.g. Richard Hendricks" /></div>
@@ -355,7 +355,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
       {showQuoteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-file-earmark-check text-slate-800 mr-1.5"></i> New Quotation</h2>
+            <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-file-earmark-check text-slate-800 mr-1.5"></i> New Quotation</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Customer Name</Label><Input value={quoteForm.customerName} onChange={e => setQuoteForm({ ...quoteForm, customerName: e.target.value })} placeholder="e.g. Acme Corp" /></div>
@@ -363,8 +363,8 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               </div>
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50/50 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Line Items</span>
-                  <button type="button" onClick={() => setQuoteItems([...quoteForm.items, { ...emptyQuoteItem }])} className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1">
+                  <span className="text-[10px] fw-bold uppercase text-slate-400 tracking-wider">Line Items</span>
+                  <button type="button" onClick={() => setQuoteItems([...quoteForm.items, { ...emptyQuoteItem }])} className="text-[11px] fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1">
                     <i className="bi bi-plus-lg text-[10px]"></i> Add Line Item
                   </button>
                 </div>
@@ -373,9 +373,9 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-500">Item {idx + 1}</span>
+                        <span className="fs-xs fw-semibold text-slate-500">Item {idx + 1}</span>
                         {quoteForm.items.length > 1 && (
-                          <button type="button" onClick={() => setQuoteItems(quoteForm.items.filter((_, i) => i !== idx))} className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 cursor-pointer flex items-center gap-1">
+                          <button type="button" onClick={() => setQuoteItems(quoteForm.items.filter((_, i) => i !== idx))} className="text-[11px] fw-semibold text-rose-500 hover:text-rose-700 cursor-pointer flex items-center gap-1">
                             <i className="bi bi-trash text-[10px]"></i> Remove
                           </button>
                         )}
@@ -387,13 +387,13 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="grid grid-cols-3 gap-3 mt-3">
                         <div><Label>Quantity</Label><Input type="number" value={it.itemQty} onChange={e => setQuoteItems(quoteForm.items.map((x, i) => i === idx ? { ...x, itemQty: e.target.value } : x))} /></div>
                         <div><Label>Unit Price ($)</Label><Input type="number" value={it.itemPrice} onChange={e => setQuoteItems(quoteForm.items.map((x, i) => i === idx ? { ...x, itemPrice: e.target.value } : x))} placeholder="0.00" /></div>
-                        <div><Label>Item Total</Label><div className="text-sm font-bold text-slate-900 mt-1">${lineTotal.toLocaleString()}</div></div>
+                        <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">${lineTotal.toLocaleString()}</div></div>
                       </div>
                     </div>
                   );
                 })}
                 <div className="flex justify-end pt-1">
-                  <div className="text-xs font-semibold text-slate-500">Subtotal: <span className="text-slate-900">${(quoteForm.items.reduce((s, it) => s + (Number(it.itemQty) || 0) * (Number(it.itemPrice) || 0), 0)).toLocaleString()}</span></div>
+                  <div className="fs-xs fw-semibold text-slate-500">Subtotal: <span className="text-slate-900">${(quoteForm.items.reduce((s, it) => s + (Number(it.itemQty) || 0) * (Number(it.itemPrice) || 0), 0)).toLocaleString()}</span></div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -413,7 +413,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
       {showTargetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-bullseye text-slate-800 mr-1.5"></i> Set Sales Target</h2>
+            <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-bullseye text-slate-800 mr-1.5"></i> Set Sales Target</h2>
             <div className="space-y-4">
               <div><Label>Sales Rep</Label><Select value={targetForm.repName} onChange={e => setTargetForm({ ...targetForm, repName: e.target.value })}>
                 <option value="">Select rep...</option>
@@ -443,11 +443,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
         <ViewModal title={viewOrder.orderNumber} subtitle={`Order details for ${viewOrder.customerName}`} onClose={() => setViewOrder(null)}>
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#0ea5e90d', border: '1px solid #0ea5e91f' }}>
             <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#0ea5e9' }}>
-              <i className="bi bi-bag-check text-lg" />
+              <i className="bi bi-bag-check fs-lg" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{viewOrder.orderNumber}</div>
-              <div className="text-xs text-slate-500 truncate">{viewOrder.customerName}</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{viewOrder.orderNumber}</div>
+              <div className="fs-xs text-slate-500 truncate">{viewOrder.customerName}</div>
             </div>
           </div>
           <div className="mb-5">
@@ -463,7 +463,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                  <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                  <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
@@ -479,7 +479,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                  <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                  <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
@@ -499,11 +499,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <tbody className="divide-y divide-slate-100">
                     {viewOrder.items.map((item: any, idx: number) => (
                       <tr key={idx} className="hover:bg-slate-50/40">
-                        <td className="px-3 py-2 text-xs text-slate-700">{item.name}</td>
-                        <td className="px-3 py-2 text-xs text-slate-500">{item.sku || '—'}</td>
-                        <td className="px-3 py-2 text-xs text-slate-700 text-right font-sans tabular-nums">{item.quantity}</td>
-                        <td className="px-3 py-2 text-xs text-slate-700 text-right font-sans tabular-nums">${item.unitPrice?.toLocaleString()}</td>
-                        <td className="px-3 py-2 text-xs text-slate-900 text-right font-sans tabular-nums font-semibold">${item.total?.toLocaleString()}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700">{item.name}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-500">{item.sku || '—'}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">{item.quantity}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">${item.unitPrice?.toLocaleString()}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-900 text-right font-sans tabular-nums fw-semibold">${item.total?.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -511,7 +511,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             </div>
           )}
-          {viewOrder.notes && <div><h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#0ea5e9' }} />Notes</h3><p className="text-xs text-slate-700 whitespace-pre-wrap">{viewOrder.notes}</p></div>}
+          {viewOrder.notes && <div><h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#0ea5e9' }} />Notes</h3><p className="fs-xs text-slate-700 whitespace-pre-wrap">{viewOrder.notes}</p></div>}
         </ViewModal>
       )}
 
@@ -520,11 +520,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
         <ViewModal title={viewCust.name} subtitle={viewCust.company || 'No company'} onClose={() => setViewCust(null)} size="lg">
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#6366f10d', border: '1px solid #6366f11f' }}>
             <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#6366f1' }}>
-              <i className="bi bi-people text-lg" />
+              <i className="bi bi-people fs-lg" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{viewCust.name}</div>
-              <div className="text-xs text-slate-500 truncate">{viewCust.company || 'No company'}</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{viewCust.name}</div>
+              <div className="fs-xs text-slate-500 truncate">{viewCust.company || 'No company'}</div>
             </div>
           </div>
           <div className="mb-5">
@@ -540,12 +540,12 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                  <div className="data-value font-semibold text-slate-900">{f.value || '—'}</div>
+                  <div className="data-value fw-semibold text-slate-900">{f.value || '—'}</div>
                 </div>
               ))}
             </div>
           </div>
-          {viewCust.notes && <div><h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#6366f1' }} />Notes</h3><p className="text-xs text-slate-700 whitespace-pre-wrap">{viewCust.notes}</p></div>}
+          {viewCust.notes && <div><h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#6366f1' }} />Notes</h3><p className="fs-xs text-slate-700 whitespace-pre-wrap">{viewCust.notes}</p></div>}
         </ViewModal>
       )}
 
@@ -554,11 +554,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
         <ViewModal title={viewQuote.quoteNumber} subtitle={`Quotation for ${viewQuote.customerName}`} onClose={() => setViewQuote(null)}>
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#8b5cf60d', border: '1px solid #8b5cf61f' }}>
             <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#8b5cf6' }}>
-              <i className="bi bi-file-earmark-check text-lg" />
+              <i className="bi bi-file-earmark-check fs-lg" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">{viewQuote.quoteNumber}</div>
-              <div className="text-xs text-slate-500 truncate">{viewQuote.customerName}</div>
+              <div className="fs-sm fw-bold text-slate-900 truncate">{viewQuote.quoteNumber}</div>
+              <div className="fs-xs text-slate-500 truncate">{viewQuote.customerName}</div>
             </div>
           </div>
           <div className="mb-5">
@@ -572,7 +572,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               ].map((f) => (
                 <div key={f.label} className={`rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5 ${f.full ? 'col-span-2 sm:col-span-3' : ''}`}>
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                  <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                  <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
@@ -587,7 +587,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                  <div className="data-value font-semibold text-slate-900">{f.value}</div>
+                  <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
             </div>
@@ -607,11 +607,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <tbody className="divide-y divide-slate-100">
                     {viewQuote.items.map((item: any, idx: number) => (
                       <tr key={idx} className="hover:bg-slate-50/40">
-                        <td className="px-3 py-2 text-xs text-slate-700">{item.name}</td>
-                        <td className="px-3 py-2 text-xs text-slate-500">{item.sku || '—'}</td>
-                        <td className="px-3 py-2 text-xs text-slate-700 text-right font-sans tabular-nums">{item.quantity}</td>
-                        <td className="px-3 py-2 text-xs text-slate-700 text-right font-sans tabular-nums">${item.unitPrice?.toLocaleString()}</td>
-                        <td className="px-3 py-2 text-xs text-slate-900 text-right font-sans tabular-nums font-semibold">${item.total?.toLocaleString()}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700">{item.name}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-500">{item.sku || '—'}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">{item.quantity}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">${item.unitPrice?.toLocaleString()}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-900 text-right font-sans tabular-nums fw-semibold">${item.total?.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -619,7 +619,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               </div>
             </div>
           )}
-          {viewQuote.notes && <div><h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#8b5cf6' }} />Notes</h3><p className="text-xs text-slate-700 whitespace-pre-wrap">{viewQuote.notes}</p></div>}
+          {viewQuote.notes && <div><h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#8b5cf6' }} />Notes</h3><p className="fs-xs text-slate-700 whitespace-pre-wrap">{viewQuote.notes}</p></div>}
         </ViewModal>
       )}
     </div>

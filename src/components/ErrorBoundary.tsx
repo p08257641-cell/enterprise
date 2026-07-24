@@ -40,8 +40,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.hasError) {
       return (
         <div className="m-8 rounded-xl border border-rose-200 bg-rose-50 p-6 text-rose-800">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-rose-700">Something went wrong</h2>
-          <p className="mt-2 text-xs text-rose-600">This view failed to render. Try switching to another module, or reload the page.</p>
+          <h2 className="fs-sm fw-bold uppercase tracking-widest text-rose-700">Something went wrong</h2>
+          <p className="mt-2 fs-xs text-rose-600">This view failed to render. Try switching to another module, or reload the page.</p>
           {this.state.error && (
             <pre className="mt-3 max-h-48 overflow-auto rounded bg-white/70 p-3 text-[11px] leading-relaxed text-rose-700">
               {this.state.error.message}

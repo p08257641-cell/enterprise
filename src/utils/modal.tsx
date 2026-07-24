@@ -48,15 +48,15 @@ function ModalShell({ variant, title, children, onClose }: { variant: ModalVaria
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex items-start gap-3 px-5 pt-5 pb-3">
-          <div className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-lg ${v.ring}`}>
+          <div className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center fs-lg ${v.ring}`}>
             <i className={v.icon}></i>
           </div>
           <div className="min-w-0 pt-0.5">
-            {title && <h3 className="text-sm font-bold text-slate-900">{title}</h3>}
-            <div className="text-sm text-slate-600 mt-0.5">{children}</div>
+            {title && <h3 className="fs-sm fw-bold text-slate-900">{title}</h3>}
+            <div className="fs-sm text-slate-600 mt-0.5">{children}</div>
           </div>
           <button type="button" onClick={onClose} className="ml-auto h-7 w-7 shrink-0 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-            <i className="bi bi-x text-xl"></i>
+            <i className="bi bi-x fs-xl"></i>
           </button>
         </div>
       </div>
@@ -64,7 +64,7 @@ function ModalShell({ variant, title, children, onClose }: { variant: ModalVaria
   );
 }
 
-const BtnBase = 'flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm cursor-pointer transition-all';
+const BtnBase = 'flex-1 px-4 py-2.5 rounded-lg fw-semibold fs-sm cursor-pointer transition-all';
 const OkBtn = (variant: ModalVariant) => {
   const map: Record<ModalVariant, string> = {
     info: 'bg-slate-900 text-white hover:bg-slate-800',
@@ -124,7 +124,7 @@ export function modalPrompt(message: string, opts: PromptOptions = {}): Promise<
           placeholder={opts.placeholder ?? ''}
           autoFocus
           onKeyDown={e => { if (e.key === 'Enter') done((e.target as HTMLInputElement).value); if (e.key === 'Escape') done(null); }}
-          className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none"
+          className="w-full px-3 py-2 fs-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 outline-none"
         />
         <div className="flex gap-2 mt-4">
           <button className={CancelBtn} onClick={() => done(null)}>{opts.cancelText ?? 'Cancel'}</button>
@@ -180,16 +180,16 @@ function ToastContainer() {
             style={{ pointerEvents: 'auto', animation: 'toastSlideIn 0.3s ease-out' }}
             className={`${s.bg} border ${s.border} rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 min-w-[280px] max-w-[420px]`}
           >
-            <i className={`${s.icon} ${s.ring} text-lg shrink-0`}></i>
+            <i className={`${s.icon} ${s.ring} fs-lg shrink-0`}></i>
             <div className="min-w-0 flex-1">
-              {t.title && <div className="text-xs font-bold text-slate-900">{t.title}</div>}
-              <div className="text-xs text-slate-600 leading-snug">{t.message}</div>
+              {t.title && <div className="fs-xs fw-bold text-slate-900">{t.title}</div>}
+              <div className="fs-xs text-slate-600 leading-snug">{t.message}</div>
             </div>
             <button
               onClick={() => { toasts = toasts.filter(x => x.id !== t.id); scheduleRender(); }}
               className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
             >
-              <i className="bi bi-x text-sm"></i>
+              <i className="bi bi-x fs-sm"></i>
             </button>
           </div>
         );

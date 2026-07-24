@@ -14,10 +14,10 @@ export type Role = string;
 /** Top-level module ids each role may see. */
 export const ROLE_MODULES: Record<string, string[]> = {
   'Super Admin': ['Platform Management'],
-  'Company Admin': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication', 'Learning Management (LMS)'],
-  'CEO': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication', 'Learning Management (LMS)'],
-  'HR Manager': ['HR', 'Payroll', 'Intelligence', 'Learning Management (LMS)', 'Compliance'],
-  'HR Officer': ['HR', 'Payroll', 'Intelligence', 'Learning Management (LMS)', 'Compliance'],
+  'Company Admin': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication', 'Voting', 'Gallery', 'Learning Management (LMS)'],
+  'CEO': ['Administration', 'HR', 'Payroll', 'CRM', 'Accounting', 'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management', 'Compliance', 'Communication', 'Voting', 'Gallery', 'Learning Management (LMS)'],
+  'HR Manager': ['HR', 'Payroll', 'Intelligence', 'Voting', 'Gallery', 'Learning Management (LMS)', 'Compliance'],
+  'HR Officer': ['HR', 'Payroll', 'Intelligence', 'Voting', 'Gallery', 'Learning Management (LMS)', 'Compliance'],
   'Accountant': ['Accounting', 'Intelligence', 'Learning Management (LMS)'],
   'Finance Manager': ['Accounting', 'Administration', 'Intelligence', 'Learning Management (LMS)'],
   'Sales Manager': ['CRM', 'Sales', 'POS', 'Intelligence', 'Learning Management (LMS)'],
@@ -31,7 +31,8 @@ export const ROLE_MODULES: Record<string, string[]> = {
   'Finance Department Head': ['Accounting', 'Payroll', 'Intelligence'],
   'Operations Department Head': ['Operations', 'Intelligence'],
   'IT Department Head': ['Administration', 'Help Desk', 'POS', 'Intelligence'],
-  'Employee': ['HR', 'Payroll', 'Help Desk', 'Compliance', 'Communication', 'Learning Management (LMS)'],
+  'Help Desk Admin': ['Help Desk', 'Intelligence', 'Communication', 'Learning Management (LMS)'],
+  'Employee': ['HR', 'Payroll', 'Help Desk', 'Compliance', 'Communication', 'Voting', 'Gallery', 'Learning Management (LMS)'],
 };
 
 /**
@@ -47,15 +48,15 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
   'CEO': ['*'],
   'HR Manager': [
     'hr-employees', 'hr-attendance', 'hr-leave', 'hr-recruitment', 'hr-onboarding',
-    'hr-performance', 'hr-orgchart', 'hr-exit', 'hr-departments',
-    'payroll-run', 'payroll-slips', 'payroll-tax', 'payroll-overtime',
+    'hr-performance', 'hr-orgchart', 'hr-exit', 'hr-departments', 'hr-bank-updates', 'hr-profile-updates',
+    'payroll-run', 'payroll-slips', 'payroll-groups', 'payroll-tax', 'payroll-overtime',
     'comp-checklists', 'comp-policies', 'comp-incidents',
     'wf-builder', 'ai-chat', 'ai-insights',
   ],
   'HR Officer': [
     'hr-employees', 'hr-attendance', 'hr-leave', 'hr-recruitment', 'hr-onboarding',
-    'hr-performance', 'hr-orgchart', 'hr-departments',
-    'payroll-run', 'payroll-slips', 'payroll-tax', 'payroll-overtime',
+    'hr-performance', 'hr-orgchart', 'hr-departments', 'hr-bank-updates', 'hr-profile-updates',
+    'payroll-run', 'payroll-slips', 'payroll-groups', 'payroll-tax', 'payroll-overtime',
     'comp-checklists', 'comp-policies', 'comp-incidents',
     'wf-builder', 'ai-chat', 'ai-insights',
   ],
@@ -124,8 +125,8 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
   ],
   'HR Department Head': [
     'hr-employees', 'hr-attendance', 'hr-leave', 'hr-recruitment', 'hr-onboarding',
-    'hr-performance', 'hr-orgchart', 'hr-departments', 'hr-exit',
-    'payroll-run', 'payroll-slips', 'payroll-tax', 'payroll-overtime',
+    'hr-performance', 'hr-orgchart', 'hr-departments', 'hr-exit', 'hr-bank-updates', 'hr-profile-updates',
+    'payroll-run', 'payroll-slips', 'payroll-groups', 'payroll-tax', 'payroll-overtime',
     'comp-checklists', 'comp-policies', 'comp-incidents',
     'lms-courses', 'lms-quizzes', 'lms-progress',
     'wf-builder', 'ai-chat', 'ai-insights',
@@ -167,6 +168,11 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
     'doc-locker', 'doc-esign', 'doc-ocr',
     'comp-checklists', 'comp-policies', 'comp-incidents',
   ],
+  'Help Desk Admin': [
+    'hd-tickets', 'hd-sla', 'hd-kb',
+    'comm-announcements', 'comm-chat', 'comm-email',
+    'lms-courses', 'lms-quizzes', 'lms-progress',
+  ],
 };
 
 /** Role-capability helpers (standardised across all views). */
@@ -181,7 +187,9 @@ export const isHRDeptHead = (role?: Role): boolean => role === 'HR Department He
 export const isSalesDeptHead = (role?: Role): boolean => role === 'Sales Department Head';
 export const isFinanceDeptHead = (role?: Role): boolean => role === 'Finance Department Head';
 export const isOpsDeptHead = (role?: Role): boolean => role === 'Operations Department Head';
+export const isAccountantRole = (role?: Role): boolean => role === 'Accountant';
 export const isITDeptHead = (role?: Role): boolean => role === 'IT Department Head';
+export const isHelpDeskAdmin = (role?: Role): boolean => role === 'Help Desk Admin';
 
 /** Does the role have permission for a top-level module? (Subscription is checked separately by the Sidebar.) */
 export const canAccessModule = (role: Role, moduleId: string): boolean => {

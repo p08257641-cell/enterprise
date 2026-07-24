@@ -20,24 +20,24 @@ export const ApiKeysView: React.FC<ModuleViewsProps> = (props) => {
               <div key={k.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <div className="text-xs font-bold text-slate-900">{k.name}</div>
+                    <div className="fs-xs fw-bold text-slate-900">{k.name}</div>
                     <div className="text-[10px] text-slate-400 mt-0.5">Created: {new Date(k.createdAt).toLocaleDateString()} · Expires: {new Date(k.expiresAt).toLocaleDateString()}</div>
                   </div>
                   <Badge label={k.permissions} variant={k.permissions === 'Full Access' ? 'danger' : 'info'} />
                 </div>
                 <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                   <span className="text-[10px] font-mono text-slate-600 flex-1 truncate">{k.key}</span>
-                   <button onClick={() => { navigator.clipboard.writeText(k.key); }} className="text-[10px] font-semibold text-slate-500 hover:text-slate-900 cursor-pointer shrink-0">Copy</button>
+                   <button onClick={() => { navigator.clipboard.writeText(k.key); }} className="text-[10px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer shrink-0">Copy</button>
                 </div>
               </div>
             ))}
             {localAPIKeys.length === 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl p-8 text-center"><p className="text-xs text-slate-400">No API keys generated yet.</p></div>
+              <div className="bg-white border border-slate-200 rounded-xl p-8 text-center"><p className="fs-xs text-slate-400">No API keys generated yet.</p></div>
             )}
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
             <h3 className="section-title text-slate-500 mb-5">Generate New API Key</h3>
-            {keySuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 font-semibold">API key generated!</div>}
+            {keySuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg fs-xs text-emerald-700 fw-semibold">API key generated!</div>}
             <div className="space-y-4">
               <div><Label>Key Name</Label><Input value={keyName} onChange={e => setKeyName(e.target.value)} placeholder="My Integration Key" /></div>
               <div><Label>Permissions</Label><Select value={keyPerms} onChange={e => setKeyPerms(e.target.value as typeof keyPerms)}><option>Read Only</option><option>Full Access</option></Select></div>

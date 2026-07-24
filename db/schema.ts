@@ -75,6 +75,26 @@ export const employees = pgTable('employees', {
   status: text('status'),
   joiningDate: text('joiningDate'),
   salary: real('salary'),
+  assignedTaxes: text('assigned_taxes'),
+  assignedBenefits: text('assigned_benefits'),
+  bankAccount: text('bank_account'),
+  phone: text('phone'),
+  dateOfBirth: text('dateOfBirth'),
+  gender: text('gender'),
+  maritalStatus: text('maritalStatus'),
+  nationality: text('nationality'),
+  address: text('address'),
+  city: text('city'),
+  state: text('state'),
+  country: text('country'),
+  postalCode: text('postalCode'),
+  emergencyContactName: text('emergencyContactName'),
+  emergencyContactPhone: text('emergencyContactPhone'),
+  emergencyContactRelation: text('emergencyContactRelation'),
+  employmentType: text('employmentType'),
+  workLocation: text('workLocation'),
+  managerId: text('managerId'),
+  bio: text('bio'),
 });
 
 export const attendance = pgTable('attendance', {
@@ -144,12 +164,9 @@ export const payslips = pgTable('payslips', {
   net: real('net'),
   status: text('status'),
   baseSalary: real('baseSalary'),
-  overtimePay: real('overtimePay'),
-  allowances: real('allowances'),
-  tax: real('tax'),
-  socialSec: real('socialSec'),
-  medicare: real('medicare'),
-  healthIns: real('healthIns'),
+  customTaxesTotal: real('customTaxesTotal'),
+  customBenefitsTotal: real('customBenefitsTotal'),
+  breakdown: text('breakdown'),
 });
 
 export const payrollGroups = pgTable('payroll_groups', {
@@ -279,12 +296,24 @@ export const inventory = pgTable('inventory', {
 export const payrollTaxConfigs = pgTable('payroll_tax_configs', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),
-  incomeTaxRate: real('income_tax_rate'),
-  socialSecurityRate: real('social_security_rate'),
-  medicareRate: real('medicare_rate'),
-  allowances: real('allowances'),
-  healthInsurance: real('health_insurance'),
-  overtimeRate: real('overtime_rate'),
+  customTaxes: text('custom_taxes'),
+  customBenefits: text('custom_benefits'),
+  updatedAt: text('updated_at'),
+});
+
+export const attendanceSettings = pgTable('attendance_settings', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  departmentId: text('departmentId'),
+  workStartTime: text('workStartTime').default('09:00'),
+  graceMinutes: integer('grace_minutes').default(10),
+  lateThresholdMinutes: integer('late_threshold_minutes').default(15),
+  penaltyType: text('penalty_type').default('warning'),
+  deductionType: text('deduction_type').default('percentage'),
+  deductionValue: integer('deduction_value').default(5),
+  maxWarnings: integer('max_warnings').default(3),
+  customPenalty: text('custom_penalty'),
+  escalateAfterWarnings: integer('escalate_after_warnings').default(1),
   updatedAt: text('updated_at'),
 });
 
@@ -840,6 +869,7 @@ export const budgets = pgTable('budgets', {
   variancePercent: real('variancePercent'),
   period: text('period'),
   status: text('status'),
+  items: jsonb('items').default([]),
   createdBy: text('createdBy'),
   createdAt: text('createdAt'),
 });
@@ -1132,6 +1162,9 @@ export const managedDocuments = pgTable('managed_documents', {
   status: text('status'),
   date: text('date'),
   uploadedBy: text('uploadedBy'),
+  uploadedByName: text('uploadedByName'),
+  visibility: text('visibility'),
+  sharedWith: text('sharedWith'),
   createdAt: text('createdAt'),
 });
 
@@ -1153,5 +1186,92 @@ export const exitRequests = pgTable('exit_requests', {
   rejectedBy: text('rejectedBy'),
   rejectedAt: text('rejectedAt'),
   notes: text('notes'),
+  createdAt: text('createdAt'),
+});
+export const bankAccountUpdates = pgTable('bank_account_updates', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  employeeId: text('employeeId'),
+  employeeName: text('employeeName'),
+  department: text('department'),
+  newBankAccount: text('newBankAccount'),
+  status: text('status'),
+  requestedAt: text('requestedAt'),
+});
+
+export const profileUpdateRequests = pgTable('profile_update_requests', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  employeeId: text('employeeId'),
+  employeeName: text('employeeName'),
+  department: text('department'),
+  field: text('field'),
+  label: text('label'),
+  currentValue: text('currentValue'),
+  newValue: text('newValue'),
+  status: text('status'),
+  requestedAt: text('requestedAt'),
+  processedAt: text('processedAt'),
+  processedBy: text('processedBy'),
+  rejectionReason: text('rejectionReason'),
+});
+
+export const chatMessages = pgTable('chat_messages', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  threadId: text('threadId'),
+  senderId: text('senderId'),
+  senderName: text('senderName'),
+  message: text('message'),
+  createdAt: text('createdAt'),
+});
+
+/* ── Voting / Polls ────────────────────────────────────────────────────── */
+export const polls = pgTable('polls', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  description: text('description'),
+  category: text('category'),
+  createdBy: text('createdBy'),
+  createdByName: text('createdByName'),
+  status: text('status'),
+  anonymous: boolean('anonymous'),
+  startDate: text('startDate'),
+  endDate: text('endDate'),
+  createdAt: text('createdAt'),
+});
+
+export const pollOptions = pgTable('poll_options', {
+  id: text('id').primaryKey(),
+  pollId: text('pollId'),
+  companyId: text('companyId'),
+  label: text('label'),
+  nomineeId: text('nomineeId'),
+  nomineeName: text('nomineeName'),
+  position: integer('position'),
+  voteCount: integer('voteCount'),
+});
+
+export const pollVotes = pgTable('poll_votes', {
+  id: text('id').primaryKey(),
+  pollId: text('pollId'),
+  optionId: text('optionId'),
+  companyId: text('companyId'),
+  voterId: text('voterId'),
+  voterName: text('voterName'),
+  createdAt: text('createdAt'),
+});
+
+/* ── Company Image Gallery ─────────────────────────────────────────────── */
+export const companyImages = pgTable('company_images', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  description: text('description'),
+  category: text('category'),
+  imageData: text('imageData'),
+  uploadedBy: text('uploadedBy'),
+  uploadedByName: text('uploadedByName'),
   createdAt: text('createdAt'),
 });

@@ -140,20 +140,20 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       setGeneratingLeads(false);
                     }}
                     disabled={generatingLeads}
-                    className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                    className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-50"
                   >
-                    <i className={`bi ${generatingLeads ? 'bi-arrow-repeat animate-spin' : 'bi-cpu'} text-xs`}></i>
+                    <i className={`bi ${generatingLeads ? 'bi-arrow-repeat animate-spin' : 'bi-cpu'} fs-xs`}></i>
                     {generatingLeads ? 'Generating...' : 'AI Generate Leads'}
                   </button>
                   <button
                     onClick={() => setAutoGenerate(prev => !prev)}
-                    className={`flex items-center gap-1.5 border font-semibold text-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs ${
+                    className={`flex items-center gap-1.5 border fw-semibold fs-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer shadow-xs ${
                       autoGenerate
                         ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                         : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                     }`}
                   >
-                    <i className={`bi ${autoGenerate ? 'bi-pause-circle' : 'bi-arrow-repeat'} text-xs`}></i>
+                    <i className={`bi ${autoGenerate ? 'bi-pause-circle' : 'bi-arrow-repeat'} fs-xs`}></i>
                     {autoGenerate ? 'Stop Auto-Generate' : 'Auto-Repeat'}
                   </button>
                 </>
@@ -175,11 +175,11 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowLeadForm(false)}>
             <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">New Lead Registration</h3>
-                <button onClick={() => setShowLeadForm(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer"><i className="bi bi-x-lg text-sm"></i></button>
+                <h3 className="fs-sm fw-bold text-slate-900 uppercase tracking-wide">New Lead Registration</h3>
+                <button onClick={() => setShowLeadForm(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer"><i className="bi bi-x-lg fs-sm"></i></button>
               </div>
               <div className="p-6">
-                {leadSuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg table-cell text-emerald-700 font-semibold">Lead added successfully!</div>}
+                {leadSuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg table-cell text-emerald-700 fw-semibold">Lead added successfully!</div>}
                 <form onSubmit={e => {
                   e.preventDefault();
                   if (!crmFirst || !crmLast || !crmCompany) return;
@@ -228,7 +228,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                         <button onClick={() => setEditingStageColor(editingStageColor === stage ? null : stage)} className="h-3 w-3 rounded-full cursor-pointer ring-2 ring-white shadow-sm hover:scale-125 transition-transform" style={{ backgroundColor: stageHeaderColors[stage] }} title={`Change ${stage} color`}></button>
                         {editingStageColor === stage && (
                           <div className="absolute top-5 left-0 z-50 bg-white border border-slate-200 rounded-xl shadow-xl p-3 w-44" onClick={e => e.stopPropagation()}>
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-2">Pick Color</div>
+                            <div className="text-[10px] fw-bold text-slate-500 uppercase tracking-wide mb-2">Pick Color</div>
                             <div className="grid grid-cols-8 gap-1.5 mb-2">
                               {presetColors.map(c => (
                                 <button key={c} onClick={() => setStageHeaderColors(prev => ({ ...prev, [stage]: c }))} className={`h-5 w-5 rounded-full cursor-pointer border-2 transition-all hover:scale-110 ${stageHeaderColors[stage] === c ? 'border-slate-900 ring-1 ring-slate-400' : 'border-white hover:border-slate-300'}`} style={{ backgroundColor: c }}></button>
@@ -238,7 +238,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                               <input type="color" value={stageHeaderColors[stage]} onChange={e => setStageHeaderColors(prev => ({ ...prev, [stage]: e.target.value }))} className="h-6 w-6 rounded cursor-pointer border-0 p-0" />
                               <input type="text" value={stageHeaderColors[stage]} onChange={e => setStageHeaderColors(prev => ({ ...prev, [stage]: e.target.value }))} className="flex-1 text-[10px] font-mono rounded border border-slate-200 px-1.5 py-1" />
                             </div>
-                            <button onClick={() => setEditingStageColor(null)} className="mt-2 w-full text-[10px] font-semibold text-slate-500 hover:text-slate-700 cursor-pointer py-1 rounded hover:bg-slate-50">Done</button>
+                            <button onClick={() => setEditingStageColor(null)} className="mt-2 w-full text-[10px] fw-semibold text-slate-500 hover:text-slate-700 cursor-pointer py-1 rounded hover:bg-slate-50">Done</button>
                           </div>
                         )}
                       </div>
@@ -252,7 +252,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           className="p-1 rounded hover:bg-white/50 text-slate-500 transition-colors cursor-pointer"
                           title={isExpanded ? "Collapse" : "Expand"}
                         >
-                          <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'} text-xs`}></i>
+                          <i className={`bi bi-chevron-${isExpanded ? 'up' : 'down'} fs-xs`}></i>
                         </button>
                       )}
                     </div>
@@ -270,7 +270,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <div className="data-value font-bold text-slate-900 leading-tight">{l.companyName}</div>
+                            <div className="data-value fw-bold text-slate-900 leading-tight">{l.companyName}</div>
                             <div className="data-value-small text-slate-500 mt-0.5">{l.firstName} {l.lastName}</div>
                           </div>
                           <div className="flex gap-1">
@@ -279,28 +279,28 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                               className="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
                               title="Assign to user"
                             >
-                              <i className="bi bi-person-plus text-xs"></i>
+                              <i className="bi bi-person-plus fs-xs"></i>
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); setSelectedLeadForComments(l.id); setShowCommentPanel(true); }}
                               className="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
                               title="Add comment"
                             >
-                              <i className="bi bi-chat-text text-xs"></i>
+                              <i className="bi bi-chat-text fs-xs"></i>
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); setLogActivityLeadId(l.id); setShowLogActivity(true); }}
                               className="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
                               title="Log activity"
                             >
-                              <i className="bi bi-clock-history text-xs"></i>
+                              <i className="bi bi-clock-history fs-xs"></i>
                             </button>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {l.assignedTo && (
                             <div className="flex items-center gap-1.5 bg-slate-50 rounded-full px-2 py-1">
-                              <div className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center avatar-text font-semibold text-slate-600">{resolveUserName(l.assignedTo).charAt(0)}</div>
+                              <div className="h-5 w-5 rounded-full bg-slate-200 flex items-center justify-center avatar-text fw-semibold text-slate-600">{resolveUserName(l.assignedTo).charAt(0)}</div>
                               <span className="data-value-small text-slate-600 truncate max-w-[80px] sm:max-w-[100px]">{resolveUserName(l.assignedTo)}</span>
                             </div>
                           )}
@@ -312,12 +312,12 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           })()}
                         </div>
                         <div className="mt-2 flex items-center justify-between">
-                          <span className="data-value-small font-sans tabular-nums font-semibold text-slate-900">${l.value.toLocaleString()}</span>
+                          <span className="data-value-small font-sans tabular-nums fw-semibold text-slate-900">${l.value.toLocaleString()}</span>
                           {l.aiLeadScore && <span className="data-value-small bg-slate-900 text-white px-1.5 py-0.5 rounded font-sans tabular-nums">{l.aiLeadScore}%</span>}
                         </div>
                         {l.comments && l.comments.length > 0 && (
                           <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-1">
-                            <i className="bi bi-chat-left text-slate-400 text-xs"></i>
+                            <i className="bi bi-chat-left text-slate-400 fs-xs"></i>
                             <span className="data-value-small text-slate-500">{l.comments.length} comments</span>
                           </div>
                         )}
@@ -353,9 +353,9 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
                     <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                      <i className="bi bi-person-check text-blue-600 text-xs"></i>
+                      <i className="bi bi-person-check text-blue-600 fs-xs"></i>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Assign Lead</h3>
+                    <h3 className="fs-sm fw-bold text-slate-900">Assign Lead</h3>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Delegate this lead to an employee or department.</p>
                 </div>
@@ -365,7 +365,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   setAssignedUser('');
                   setAssignedDepartment('');
                 }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                  <i className="bi bi-x text-xl"></i>
+                  <i className="bi bi-x fs-xl"></i>
                 </button>
               </div>
 
@@ -396,7 +396,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   setSelectedLeadForAssign(null);
                   setAssignedUser('');
                   setAssignedDepartment('');
-                }} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                }} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                 <button type="button" onClick={() => {
                   if (selectedLeadForAssign && (assignedUser || assignedDepartment)) {
                     const emp = localEmployees.find(e => e.userId === assignedUser || e.id === assignedUser);
@@ -407,7 +407,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   setSelectedLeadForAssign(null);
                   setAssignedUser('');
                   setAssignedDepartment('');
-                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Assign Lead</button>
+                }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Assign Lead</button>
               </div>
             </div>
           </div>
@@ -421,26 +421,26 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
                     <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
-                      <i className="bi bi-chat-left-text text-amber-600 text-xs"></i>
+                      <i className="bi bi-chat-left-text text-amber-600 fs-xs"></i>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Lead Comments</h3>
+                    <h3 className="fs-sm fw-bold text-slate-900">Lead Comments</h3>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Internal collaboration notes and logs for this lead.</p>
                 </div>
                 <button type="button" onClick={() => setShowCommentPanel(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                  <i className="bi bi-x text-xl"></i>
+                  <i className="bi bi-x fs-xl"></i>
                 </button>
               </div>
 
               <div className="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
                 {localLeads.find(l => l.id === selectedLeadForComments)?.comments?.map(comment => (
                   <div key={comment.id} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
-                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center avatar-text font-semibold text-slate-600">
+                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center avatar-text fw-semibold text-slate-600">
                       {comment.userName.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="data-value font-semibold text-slate-900">{comment.userName}</span>
+                        <span className="data-value fw-semibold text-slate-900">{comment.userName}</span>
                         <span className="data-value-small text-slate-400">{new Date(comment.timestamp).toLocaleString()}</span>
                       </div>
                       <div className="data-value text-slate-700">{comment.content}</div>
@@ -465,7 +465,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                         setNewComment('');
                       }
                     }}
-                    className="px-4 py-2 bg-slate-900 text-white rounded-lg btn font-semibold cursor-pointer hover:bg-slate-800 transition-colors"
+                    className="px-4 py-2 bg-slate-900 text-white rounded-lg btn fw-semibold cursor-pointer hover:bg-slate-800 transition-colors"
                   >
                     Send
                   </button>
@@ -483,14 +483,14 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
                     <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                      <i className="bi bi-telephone text-emerald-600 text-xs"></i>
+                      <i className="bi bi-telephone text-emerald-600 fs-xs"></i>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Log Activity</h3>
+                    <h3 className="fs-sm fw-bold text-slate-900">Log Activity</h3>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Record customer touchpoints, calls, emails, or meetings.</p>
                 </div>
                 <button type="button" onClick={() => setShowLogActivity(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                  <i className="bi bi-x text-xl"></i>
+                  <i className="bi bi-x fs-xl"></i>
                 </button>
               </div>
 
@@ -516,7 +516,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               </div>
 
               <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onClick={() => setShowLogActivity(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => setShowLogActivity(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                 <button type="button" onClick={() => {
                   if (logActivitySubject.trim() && logActivityLeadId) {
                     onLogCrmActivity({
@@ -531,7 +531,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     setLogActivityDesc('');
                     setLogActivityLeadId('');
                   }
-                }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Log Activity</button>
+                }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Log Activity</button>
               </div>
             </div>
           </div>
@@ -548,28 +548,28 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center avatar-text font-bold text-white">{lead.firstName[0]}{lead.lastName[0]}</div>
+                    <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center avatar-text fw-bold text-white">{lead.firstName[0]}{lead.lastName[0]}</div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900">{lead.firstName} {lead.lastName}</h3>
-                      <p className="text-xs text-slate-500">{lead.companyName}</p>
+                      <h3 className="fs-lg fw-bold text-slate-900">{lead.firstName} {lead.lastName}</h3>
+                      <p className="fs-xs text-slate-500">{lead.companyName}</p>
                     </div>
                   </div>
                   <button onClick={() => setSelectedLeadForDetail(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                    <i className="bi bi-x-lg text-lg"></i>
+                    <i className="bi bi-x-lg fs-lg"></i>
                   </button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Email</div>
-                    <div className="data-value font-semibold text-slate-900 truncate">{lead.email || '—'}</div>
+                    <div className="data-value fw-semibold text-slate-900 truncate">{lead.email || '—'}</div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Phone</div>
-                    <div className="data-value font-semibold text-slate-900">{lead.phone || '—'}</div>
+                    <div className="data-value fw-semibold text-slate-900">{lead.phone || '—'}</div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Deal Value</div>
-                    <div className="data-value font-semibold text-slate-900">${lead.value.toLocaleString()}</div>
+                    <div className="data-value fw-semibold text-slate-900">${lead.value.toLocaleString()}</div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Stage</div>
@@ -583,24 +583,24 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Assigned To</div>
-                    <div className="data-value font-semibold text-slate-900">{resolveUserName(lead.assignedTo) || '—'}</div>
+                    <div className="data-value fw-semibold text-slate-900">{resolveUserName(lead.assignedTo) || '—'}</div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">AI Score</div>
-                    <div className="data-value font-semibold text-slate-900">{lead.aiLeadScore ?? '—'}%</div>
+                    <div className="data-value fw-semibold text-slate-900">{lead.aiLeadScore ?? '—'}%</div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Created</div>
-                    <div className="data-value font-semibold text-slate-900">{new Date(lead.createdAt).toLocaleDateString()}</div>
+                    <div className="data-value fw-semibold text-slate-900">{new Date(lead.createdAt).toLocaleDateString()}</div>
                   </div>
                 </div>
                 {lead.aiFollowUpSuggested && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
                     <div className="flex items-center gap-2 mb-2">
                       <i className="bi bi-lightbulb text-blue-600"></i>
-                      <span className="data-value font-semibold text-blue-900">AI Follow-up Suggestion</span>
+                      <span className="data-value fw-semibold text-blue-900">AI Follow-up Suggestion</span>
                     </div>
-                    <p className="text-xs text-blue-700">{lead.aiFollowUpSuggested}</p>
+                    <p className="fs-xs text-blue-700">{lead.aiFollowUpSuggested}</p>
                   </div>
                 )}
                 <div className="mb-5">
@@ -610,21 +610,21 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       {activities.map(act => (
                         <div key={act.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                           <div className="h-7 w-7 rounded-lg bg-slate-200 flex items-center justify-center shrink-0">
-                            <i className={`bi bi-${typeIcons[act.type] || 'circle'} text-slate-600 text-xs`}></i>
+                            <i className={`bi bi-${typeIcons[act.type] || 'circle'} text-slate-600 fs-xs`}></i>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <span className="data-value font-semibold text-slate-900">{act.subject}</span>
+                              <span className="data-value fw-semibold text-slate-900">{act.subject}</span>
                               <span className="data-value-small text-slate-400">{new Date(act.createdAt).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-xs text-slate-600 mt-0.5">{act.description}</p>
+                            <p className="fs-xs text-slate-600 mt-0.5">{act.description}</p>
                             <p className="text-[10px] text-slate-400 mt-0.5">by {resolveUserName(act.performedBy)}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 py-4 text-center">No activities logged yet.</p>
+                    <p className="fs-xs text-slate-400 py-4 text-center">No activities logged yet.</p>
                   )}
                 </div>
                 <div className="mb-5">
@@ -633,19 +633,19 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="space-y-2">
                       {lead.comments.map(c => (
                         <div key={c.id} className="flex gap-3 p-3 bg-slate-50 rounded-lg">
-                          <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center avatar-text font-semibold text-slate-600 shrink-0">{c.userName.charAt(0)}</div>
+                          <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center avatar-text fw-semibold text-slate-600 shrink-0">{c.userName.charAt(0)}</div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="data-value font-semibold text-slate-900">{c.userName}</span>
+                              <span className="data-value fw-semibold text-slate-900">{c.userName}</span>
                               <span className="data-value-small text-slate-400">{new Date(c.timestamp).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-xs text-slate-700 mt-0.5">{c.content}</p>
+                            <p className="fs-xs text-slate-700 mt-0.5">{c.content}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 py-4 text-center">No comments yet.</p>
+                    <p className="fs-xs text-slate-400 py-4 text-center">No comments yet.</p>
                   )}
                 </div>
                 <div className="flex gap-2 pt-2 border-t border-slate-200">
@@ -670,14 +670,14 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   <tr key={l.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => setSelectedLeadForDetail(l.id)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center avatar-text font-bold text-white shrink-0">{l.firstName[0]}{l.lastName[0]}</div>
-                        <div className="text-xs font-semibold text-slate-900">{l.firstName} {l.lastName}</div>
+                        <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center avatar-text fw-bold text-white shrink-0">{l.firstName[0]}{l.lastName[0]}</div>
+                        <div className="fs-xs fw-semibold text-slate-900">{l.firstName} {l.lastName}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{l.companyName}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{l.email}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-600">{l.companyName}</td>
+                    <td className="px-4 py-3 fs-xs text-slate-500">{l.email}</td>
                     <td className="px-4 py-3"><Badge label={l.source} /></td>
-                    <td className="px-4 py-3 text-xs font-sans tabular-nums font-semibold text-slate-900 text-right">${l.value.toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${l.value.toLocaleString()}</td>
                     <td className="px-4 py-3"><Badge label={l.status} variant={l.status === 'Won' ? 'success' : l.status === 'Lost' ? 'danger' : l.status === 'Qualified' ? 'info' : 'default'} /></td>
                   </tr>
                 ))}
@@ -696,7 +696,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               return (
                 <div key={act.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex items-start gap-4 hover:border-slate-300 transition-all">
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[act.type] || 'bg-slate-100 text-slate-600'}`}>
-                    <i className={`bi bi-${typeIcons[act.type] || 'circle'} text-xs`}></i>
+                    <i className={`bi bi-${typeIcons[act.type] || 'circle'} fs-xs`}></i>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
@@ -706,7 +706,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                         {lead && <span className="text-[10px] text-slate-400">{lead.firstName} {lead.lastName}</span>}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-600">{act.description}</p>
+                    <p className="fs-xs text-slate-600">{act.description}</p>
                     <p className="text-[10px] text-slate-400 mt-1">by {resolveUserName(act.performedBy)}</p>
                   </div>
                   <span className="data-value-small font-sans tabular-nums text-slate-400 shrink-0">{new Date(act.createdAt).toLocaleDateString()}</span>
@@ -715,8 +715,8 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
             })}
             {crmActivities.filter(a => a.companyId === selectedCompany.id).length === 0 && (
               <div className="text-center py-12 text-slate-400">
-                <i className="bi bi-calendar2-event text-3xl mb-3 block"></i>
-                <p className="text-sm">No activities logged yet. Use the pipeline cards to log calls, emails, and meetings.</p>
+                <i className="bi bi-calendar2-event fs-3xl mb-3 block"></i>
+                <p className="fs-sm">No activities logged yet. Use the pipeline cards to log calls, emails, and meetings.</p>
               </div>
             )}
           </div>
@@ -735,8 +735,8 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             {crmTasks.filter(t => t.companyId === selectedCompany.id && (taskFilter === 'All' || t.status === taskFilter)).length === 0 ? (
               <div className="text-center py-12 text-slate-400">
-                <i className="bi bi-check2-square text-3xl mb-3 block"></i>
-                <p className="text-sm">No tasks found. Create a task from a pipeline card or contact detail.</p>
+                <i className="bi bi-check2-square fs-3xl mb-3 block"></i>
+                <p className="fs-sm">No tasks found. Create a task from a pipeline card or contact detail.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -747,18 +747,18 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <div key={task.id} className={`bg-white border rounded-xl p-4 shadow-xs flex items-start gap-4 transition-all ${task.status === 'Completed' ? 'opacity-60' : isOverdue ? 'border-rose-200' : 'border-slate-200 hover:border-slate-300'}`}>
                       <button onClick={() => onUpdateCrmTask(task.id, { status: task.status === 'Completed' ? 'Pending' : 'Completed' })} className="mt-0.5 cursor-pointer">
-                        <i className={`bi ${statusIcons[task.status]} text-lg ${task.status === 'Completed' ? 'text-emerald-500' : 'text-slate-300 hover:text-slate-500'}`}></i>
+                        <i className={`bi ${statusIcons[task.status]} fs-lg ${task.status === 'Completed' ? 'text-emerald-500' : 'text-slate-300 hover:text-slate-500'}`}></i>
                       </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`data-value font-semibold ${task.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-900'}`}>{task.title}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${priorityColors[task.priority]}`}>{task.priority}</span>
+                          <span className={`data-value fw-semibold ${task.status === 'Completed' ? 'line-through text-slate-400' : 'text-slate-900'}`}>{task.title}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded fw-semibold ${priorityColors[task.priority]}`}>{task.priority}</span>
                         </div>
-                        <p className="text-xs text-slate-500 mb-1">{task.leadName} — {task.companyName}</p>
-                        {task.description && <p className="text-xs text-slate-400 truncate">{task.description}</p>}
+                        <p className="fs-xs text-slate-500 mb-1">{task.leadName} — {task.companyName}</p>
+                        {task.description && <p className="fs-xs text-slate-400 truncate">{task.description}</p>}
                       </div>
                       <div className="text-right shrink-0">
-                        <div className={`text-[10px] font-semibold ${isOverdue ? 'text-rose-600' : 'text-slate-400'}`}>
+                        <div className={`text-[10px] fw-semibold ${isOverdue ? 'text-rose-600' : 'text-slate-400'}`}>
                           {isOverdue ? 'Overdue' : new Date(task.dueDate).toLocaleDateString()}
                         </div>
                         <div className="text-[10px] text-slate-400 mt-0.5">{task.type}</div>
@@ -775,21 +775,21 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <div className="h-7 w-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center">
-                          <i className="bi bi-check2-square text-white text-xs"></i>
+                          <i className="bi bi-check2-square text-white fs-xs"></i>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">Create Task</h3>
+                        <h3 className="fs-sm fw-bold text-slate-900">Create Task</h3>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Add a new action item or follow-up task to a lead.</p>
                     </div>
                     <button type="button" onClick={() => setShowCreateTask(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                      <i className="bi bi-x text-xl"></i>
+                      <i className="bi bi-x fs-xl"></i>
                     </button>
                   </div>
 
                   <div className="p-6 space-y-4">
                     <div><Label>Lead</Label><Select value={taskLeadId} onChange={e => setTaskLeadId(e.target.value)}><option value="">Select lead...</option>{localLeads.map(l => <option key={l.id} value={l.id}>{l.firstName} {l.lastName} — {l.companyName}</option>)}</Select></div>
                     <div><Label>Title</Label><Input value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="e.g. Follow-up call" required /></div>
-                    <div><Label>Description</Label><textarea value={taskDesc} onChange={e => setTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" /></div>
+                    <div><Label>Description</Label><textarea value={taskDesc} onChange={e => setTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" /></div>
                     <div><Label>Assign To</Label><Select value={taskAssignee} onChange={e => setTaskAssignee(e.target.value)}><option value="">Select employee...</option>{localEmployees.filter(e => e.status === 'Active').map(emp => <option key={emp.id} value={emp.userId || emp.id}>{emp.firstName} {emp.lastName} ({emp.department})</option>)}</Select></div>
                     <div className="grid grid-cols-2 gap-4">
                       <div><Label>Type</Label><Select value={taskType} onChange={e => setTaskType(e.target.value as any)}>{['Follow-up', 'Call', 'Email', 'Meeting', 'Proposal', 'Other'].map(t => <option key={t}>{t}</option>)}</Select></div>
@@ -799,7 +799,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
 
                   <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                    <button type="button" onClick={() => setShowCreateTask(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => setShowCreateTask(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                     <button type="button" onClick={() => {
                       if (taskTitle.trim() && taskLeadId && taskDueDate) {
                         const lead = localLeads.find(l => l.id === taskLeadId);
@@ -824,7 +824,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           setTaskTitle(''); setTaskDesc(''); setTaskLeadId(''); setTaskDueDate(''); setTaskAssignee('');
                         }
                       }
-                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Task</button>
+                    }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Task</button>
                   </div>
                 </div>
               </div>
@@ -840,8 +840,8 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             {crmEmails.filter(e => e.companyId === selectedCompany.id).length === 0 ? (
               <div className="text-center py-12 text-slate-400">
-                <i className="bi bi-envelope text-3xl mb-3 block"></i>
-                <p className="text-sm">No emails sent yet. Send an email to a contact to get started.</p>
+                <i className="bi bi-envelope fs-3xl mb-3 block"></i>
+                <p className="fs-sm">No emails sent yet. Send an email to a contact to get started.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -852,8 +852,8 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <i className="bi bi-envelope-fill text-slate-400 text-xs"></i>
-                            <span className="data-value font-semibold text-slate-900">{email.subject}</span>
+                            <i className="bi bi-envelope-fill text-slate-400 fs-xs"></i>
+                            <span className="data-value fw-semibold text-slate-900">{email.subject}</span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-slate-400">
                             <span>To: {email.to}</span>
@@ -863,7 +863,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                         </div>
                         <span className="data-value-small text-slate-400 shrink-0">{new Date(email.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <p className="text-xs text-slate-600 mt-2 line-clamp-2">{email.body}</p>
+                      <p className="fs-xs text-slate-600 mt-2 line-clamp-2">{email.body}</p>
                     </div>
                   );
                 })}
@@ -876,14 +876,14 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <div className="h-7 w-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-                          <i className="bi bi-envelope text-indigo-600 text-xs"></i>
+                          <i className="bi bi-envelope text-indigo-600 fs-xs"></i>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">Send Email</h3>
+                        <h3 className="fs-sm fw-bold text-slate-900">Send Email</h3>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Compose and send an email directly to a lead.</p>
                     </div>
                     <button type="button" onClick={() => setShowSendEmail(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                      <i className="bi bi-x text-xl"></i>
+                      <i className="bi bi-x fs-xl"></i>
                     </button>
                   </div>
 
@@ -895,11 +895,11 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     }}><option value="">Select contact...</option>{localLeads.map(l => <option key={l.id} value={l.id}>{l.firstName} {l.lastName} — {l.email}</option>)}</Select></div>
                     {emailTo && <div className="text-[10px] text-slate-400">Sending to: {emailTo}</div>}
                     <div><Label>Subject</Label><Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} placeholder="Email subject" required /></div>
-                    <div><Label>Body</Label><textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" placeholder="Write your email..." /></div>
+                    <div><Label>Body</Label><textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" placeholder="Write your email..." /></div>
                   </div>
 
                   <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                    <button type="button" onClick={() => setShowSendEmail(false)} className="text-xs font-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                    <button type="button" onClick={() => setShowSendEmail(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                     <button type="button" onClick={() => {
                       if (emailTo && emailSubject.trim() && emailBody.trim() && emailLeadId) {
                         onSendCrmEmail({
@@ -912,7 +912,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                         setShowSendEmail(false);
                         setEmailTo(''); setEmailSubject(''); setEmailBody(''); setEmailLeadId('');
                       }
-                    }} className="text-xs font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Send Email</button>
+                    }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Send Email</button>
                   </div>
                 </div>
               </div>
@@ -951,7 +951,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           const pct = localLeads.length > 0 ? (count / localLeads.length) * 100 : 0;
                           return (
                             <div key={stage} className="flex items-center gap-3">
-                              <span className="text-xs font-semibold text-slate-700 w-32 shrink-0">{stage}</span>
+                              <span className="fs-xs fw-semibold text-slate-700 w-32 shrink-0">{stage}</span>
                               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: stageHeaderColors[stage] }} /></div>
                               <span className="data-value-small font-sans tabular-nums text-slate-500 w-12 text-right">{count} leads</span>
                             </div>
@@ -964,12 +964,12 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="space-y-3">
                         {sourceCounts.map(({ source, count }) => (
                           <div key={source} className="flex items-center gap-3">
-                            <span className="text-xs font-semibold text-slate-700 w-24 shrink-0">{source}</span>
+                            <span className="fs-xs fw-semibold text-slate-700 w-24 shrink-0">{source}</span>
                             <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full transition-all" style={{ width: `${(count / maxSourceCount) * 100}%` }} /></div>
                             <span className="data-value-small font-sans tabular-nums text-slate-500 w-12 text-right">{count}</span>
                           </div>
                         ))}
-                        {sourceCounts.length === 0 && <p className="text-xs text-slate-400 text-center py-4">No data</p>}
+                        {sourceCounts.length === 0 && <p className="fs-xs text-slate-400 text-center py-4">No data</p>}
                       </div>
                     </div>
                   </div>
