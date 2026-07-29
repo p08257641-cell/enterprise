@@ -448,6 +448,16 @@ export interface ProfileUpdateRequest {
   rejectionReason?: string;
 }
 
+export interface ChatGroup {
+  id: string;
+  companyId: string;
+  name: string;
+  type: string;
+  members: string[];
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface KBArticle {
   id: string;
   companyId: string;

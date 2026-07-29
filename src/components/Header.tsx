@@ -170,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {totalCount > 0 ? `${totalCount} unread` : 'All caught up'}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {totalCount > 0 && (
                     <button
                       onClick={() => { onClearNotifications(); setPanelOpen(false); }}

@@ -402,7 +402,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   {companies.map(c => (
                     <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-5 py-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <span className="fs-xl">{c.logo}</span>
                           <div>
                             <div className="fs-xs fw-semibold text-slate-900">{c.name}</div>
@@ -533,7 +533,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900">{selectedCompany.name} — Control Panel</h1>
             <p className="fs-sm text-slate-500 mt-0.5">Company-wide settings, workforce overview, approvals, module licensing &amp; activity monitoring.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button onClick={() => onNavigateView('admin-settings')} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer">
               <i className="bi bi-gear fs-xs"></i> Settings
             </button>
@@ -580,7 +580,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           {/* Pending Approvals Queue */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
                   <i className="bi bi-hourglass-split text-amber-600 fs-xs"></i>
                 </div>
@@ -665,7 +665,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   { label: 'Pending Expense Claims', value: `${selectedCompany.currency} ${pendingExpenses.reduce((s, e) => s + (e.amount || 0), 0).toLocaleString()}`, icon: 'bi bi-wallet2', color: 'text-violet-600' },
                 ].map(row => (
                   <div key={row.label} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <i className={`${row.icon} ${row.color} fs-sm`}></i>
                       <span className="text-[11px] text-slate-500">{row.label}</span>
                     </div>
@@ -734,7 +734,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <div className="space-y-2">
               {localEmployees.slice(0, 10).map(emp => (
                 <div key={emp.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center fs-xs fw-semibold text-slate-600">
                       {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
                     </div>
@@ -812,7 +812,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           {/* Leave Requests */}
           <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
                   <i className="bi bi-calendar-check text-amber-600 fs-xs"></i>
                 </div>
@@ -1322,7 +1322,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900">Welcome back, {selectedUser.name}!</h1>
             <p className="fs-sm text-slate-500 mt-0.5">{designation} · {department}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button onClick={() => onNavigateView('hr-leave')} className="flex items-center gap-1.5 bg-slate-900 text-white fw-semibold fs-xs px-3.5 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">
               <i className="bi bi-calendar-check fs-xs"></i> Request Leave
             </button>
@@ -1370,7 +1370,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">My Employment Profile</h3>
               <p className="text-[10px] text-slate-400 mt-0.5">Personal details, contact info, and emergency contacts. Changes require HR approval.</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {isProfileEditing && (
                 <button onClick={() => setIsProfileEditing(false)} className="fs-xs fw-semibold text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer">Cancel</button>
               )}
@@ -2049,7 +2049,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {shortcuts.map(sc => (
               <button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 fs-xs fw-semibold transition-all cursor-pointer text-left">
-                <span className="flex items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span>
+                <span className="flex flex-wrap items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span>
                 <i className="bi bi-chevron-right text-[10px] text-slate-400"></i>
               </button>
             ))}

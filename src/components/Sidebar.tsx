@@ -326,7 +326,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside className={`fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white text-slate-600 transition-transform duration-300 lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:flex'}`}>
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {userRole === 'Super Admin' ? (
               <span className="fs-2xl">🌐</span>
             ) : selectedCompany.companyLogo ? (
@@ -417,7 +417,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      <span className="flex items-center gap-2">
+                      <span className="flex flex-wrap items-center gap-2">
                         <i className={`${mod.iconClass} fs-sm`}></i>
                         {mod.label}
                       </span>
@@ -452,7 +452,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                             }`}
                           >
-                            <span className="flex items-center gap-2">
+                            <span className="flex flex-wrap items-center gap-2">
                               <i className={`${sub.iconClass} fs-sm`}></i>
                               {isEmployee && employeeSubmenuLabelOverrides[sub.id] ? employeeSubmenuLabelOverrides[sub.id] : sub.label}
                             </span>

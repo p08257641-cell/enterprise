@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage, CustomRole, ApprovalPolicy, PendingApproval } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage, CustomRole, ApprovalPolicy, PendingApproval, ChatGroup } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -22,7 +22,12 @@ import { modalAlert, toast } from './utils/modal';
 
 const safeJson = async (res: Response): Promise<any> => {
   try {
-    if (!res.ok) return [];
+    if (!res.ok) {
+      if (res.status >= 400) {
+        toast(`Error loading data: ${res.status} ${res.statusText}`, 'error', 'Data Load Error');
+      }
+      return [];
+    }
     const text = await res.text();
     return text ? JSON.parse(text) : [];
   } catch (e) {
@@ -57,6 +62,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatReads, setChatReads] = useState<any[]>([]);
+  const [chatGroups, setChatGroups] = useState<ChatGroup[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
   const [pollVotes, setPollVotes] = useState<PollVote[]>([]);
@@ -153,7 +159,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     if (authLoading || !token) return;
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
+        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -205,14 +211,15 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           fetch('/api/announcements'),
           fetch('/api/workflow-triggers'),
           fetch('/api/email-templates'),
-          fetch('/api/chat/messages?companyId=c-acme'),
-          fetch('/api/polls?companyId=c-acme'),
-          fetch('/api/poll-options?companyId=c-acme'),
-          fetch('/api/poll-votes?companyId=c-acme'),
-          fetch('/api/company-images?companyId=c-acme'),
-          fetch('/api/roles?companyId=c-acme'),
-          fetch('/api/approval-policies?companyId=c-acme'),
-          fetch('/api/pending-approvals?companyId=c-acme')
+          fetch(`/api/chat/messages?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/chat/groups?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/polls?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/poll-options?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/poll-votes?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/company-images?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/roles?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/approval-policies?companyId=${authUser?.companyId || ''}`),
+          fetch(`/api/pending-approvals?companyId=${authUser?.companyId || ''}`)
         ]);
 
         const cData = await safeJson(cRes);
@@ -264,6 +271,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         const wtData = await safeJson(wtRes);
         const etData = await safeJson(etRes);
         const chatData = await safeJson(chatRes);
+        const chatGroupsData = await safeJson(chatGroupsRes);
         const pollsData = await safeJson(pollsRes);
         const pollOptsData = await safeJson(pollOptsRes);
         const pollVotesData = await safeJson(pollVotesRes);
@@ -314,6 +322,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setWorkflowTriggers(wtData);
         setEmailTemplates(etData);
         setChatMessages(chatData);
+        setChatGroups(chatGroupsData);
         setPolls(pollsData);
         setPollOptions(pollOptsData);
         setPollVotes(pollVotesData);
@@ -1512,6 +1521,35 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       setAnnouncements([created, ...announcements]);
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCreateChatGroup = async (group: Omit<ChatGroup, 'id' | 'createdAt' | 'companyId' | 'createdBy'>) => {
+    if (!selectedCompany || !selectedUser) return;
+    try {
+      const res = await fetch('/api/chat/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...group, companyId: selectedCompany.id, createdBy: selectedUser.id })
+      });
+      const created = await safeJson(res);
+      setChatGroups(prev => [...prev, created]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateChatGroupMembers = async (groupId: string, members: string[]) => {
+    try {
+      const res = await fetch(`/api/chat/groups/${groupId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ members })
+      });
+      const updated = await safeJson(res);
+      setChatGroups(prev => prev.map(g => g.id === groupId ? updated : g));
     } catch (err) {
       console.error(err);
     }
@@ -2935,6 +2973,19 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       await refreshAuditLogs();
     } catch (err) { console.error(err); }
   };
+  const handleDeletePolicyDocument = async (id: string) => {
+    try {
+      await fetch(`/api/policy-documents/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      setPolicyDocuments(policyDocuments.filter(p => p.id !== id));
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
+  const handleClearIncidents = async () => {
+    try {
+      await fetch('/api/compliance-incidents', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(actorBody()) });
+      await refreshAuditLogs();
+    } catch (err) { console.error(err); }
+  };
 
   const handleUpdateFilingDeadline = async (id: string, values: any) => {
     try {
@@ -3475,6 +3526,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onCreateComplianceCheck={handleCreateComplianceCheck}
               onUpdateComplianceCheck={handleUpdateComplianceCheck}
               onDeleteComplianceCheck={handleDeleteComplianceCheck}
+              onDeletePolicyDocument={handleDeletePolicyDocument}
+              onClearIncidents={handleClearIncidents}
               onAcknowledgePolicy={handleAcknowledgePolicy}
               onFileDeadline={handleFileDeadline}
               onCreateFilingDeadline={handleCreateFilingDeadline}
@@ -3530,9 +3583,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               emailTemplates={emailTemplates}
               onAddEmailTemplate={handleAddEmailTemplate}
               chatMessages={chatMessages}
+              chatGroups={chatGroups}
               chatReads={chatReads}
               onSendChatMessage={handleSendChatMessage}
               onMarkThreadRead={handleMarkThreadRead}
+              onCreateChatGroup={handleCreateChatGroup}
+              onUpdateChatGroupMembers={handleUpdateChatGroupMembers}
               polls={polls}
               pollOptions={pollOptions}
               pollVotes={pollVotes}
@@ -3730,9 +3786,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       departments={departments}
       employees={employees}
       chatMessages={chatMessages}
+      chatGroups={chatGroups}
       chatReads={chatReads}
       onSendChatMessage={handleSendChatMessage}
       onMarkThreadRead={handleMarkThreadRead}
+      onCreateChatGroup={handleCreateChatGroup}
+      onUpdateChatGroupMembers={handleUpdateChatGroupMembers}
     />
     </>
   );

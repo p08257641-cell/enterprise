@@ -7,7 +7,7 @@ import { isAdminRole, isHRRole } from '../../permissions';
 import { CommunicationAnnouncement, EmailTemplate } from '../../types';
 
 export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement, emailTemplates, onAddEmailTemplate, chatMessages, onSendChatMessage, chatReads, onMarkThreadRead } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement, emailTemplates, onAddEmailTemplate, chatMessages, chatGroups, onCreateChatGroup, onUpdateChatGroupMembers, onSendChatMessage, chatReads, onMarkThreadRead } = props;
 
   type CommTab = 'feed' | 'compose' | 'chat' | 'email';
   const commTabFromView = (): CommTab =>
@@ -26,7 +26,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
   const [commTitle, setCommTitle] = useState(''); const [commBody, setCommBody] = useState('');
   const [commChannel, setCommChannel] = useState('Company'); const [commSent, setCommSent] = useState(false);
   const [commPinned, setCommPinned] = useState(false);
-  type ChatRecipient = { type: 'team' | 'person'; id: string; name: string };
+  type ChatRecipient = { type: 'team' | 'person' | 'custom_group'; id: string; name: string };
   const [chatRecipient, setChatRecipient] = useState<ChatRecipient | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatSearch, setChatSearch] = useState('');
@@ -42,7 +42,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
 
   // Canonical thread ID: for DMs use sorted IDs so both parties see same thread
   const getThreadId = (recipient: ChatRecipient): string => {
-    if (recipient.type === 'team') return recipient.id;
+    if (recipient.type === 'team' || recipient.type === 'custom_group') return recipient.id;
     // For DMs, sort sender + recipient IDs so the thread is consistent both ways
     return [selectedUser.id, recipient.id].sort().join('::dm::');
   };
@@ -97,7 +97,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
         <StatCard label="Announcements" value={localAnnouncements.length} sub={`${localAnnouncements.filter(a => a.pinned).length} pinned`} icon="bi bi-megaphone" accent />
         <StatCard label="Active Channels" value={new Set(localAnnouncements.map(a => a.channel)).size} sub="Broadcast groups" icon="bi bi-collection" color="text-slate-900" />
         <StatCard label="Team Chat" value={chatMessages.filter((m: any) => m.companyId === selectedCompany.id).length} sub="Messages this session" icon="bi bi-chat-dots" color="text-sky-600" />
-        <StatCard label="Email Templates" value={4} sub="Reusable campaigns" icon="bi bi-envelope" color="text-violet-600" />
+        <StatCard label="Email Templates" value={emailTemplates.filter((t: any) => t.companyId === selectedCompany.id).length} sub="Reusable campaigns" icon="bi bi-envelope" color="text-violet-600" />
       </div>
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {commTabs.map(t => (
@@ -109,7 +109,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
           {localAnnouncements.map(a => (
             <div key={a.id} className={`bg-white border rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all ${a.pinned ? 'border-slate-900' : 'border-slate-200'}`}>
               <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {a.pinned && <span className="data-value-small fw-bold uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded">📌 Pinned</span>}
                   <Badge label={a.channel} variant="info" />
                 </div>
@@ -130,7 +130,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
             <div className="space-y-4">
               <div><Label>Title</Label><Input value={commTitle} onChange={e => setCommTitle(e.target.value)} placeholder="Announcement title…" /></div>
               <div><Label>Channel</Label><Select value={commChannel} onChange={e => setCommChannel(e.target.value)}><option>Company</option><option>Operations</option><option>Finance</option><option>IT</option><option>HR</option></Select></div>
-              <div className="flex items-center gap-2"><input type="checkbox" id="comm-pinned" checked={commPinned} onChange={e => setCommPinned(e.target.checked)} className="rounded border-slate-300" /><Label>Pin to top</Label></div>
+              <div className="flex flex-wrap items-center gap-2"><input type="checkbox" id="comm-pinned" checked={commPinned} onChange={e => setCommPinned(e.target.checked)} className="rounded border-slate-300" /><Label>Pin to top</Label></div>
               <div><Label>Message</Label><textarea value={commBody} onChange={e => setCommBody(e.target.value)} rows={5} placeholder="Write your announcement…" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" /></div>
               <PrimaryBtn icon="bi bi-send" onClick={() => {
                 if (!commTitle || !commBody) return;
@@ -152,7 +152,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
             <div className="flex-1 overflow-y-auto">
               {/* Teams */}
               <div className="px-4 pt-3 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400">Teams</div>
-              {departments.filter(d => d.companyId === selectedCompany.id)
+              {departments.filter(d => d.companyId === selectedCompany.id && d.name === myDeptName)
                 .filter(d => !chatSearch || d.name.toLowerCase().includes(chatSearch.toLowerCase()))
                 .sort((a, b) => getThreadLastMessageTime(b.id) - getThreadLastMessageTime(a.id))
                 .map(d => {
@@ -162,6 +162,31 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                       className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 fs-xs cursor-pointer transition-all ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
                       <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{d.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>
                       <span className="truncate fw-semibold flex-1">{d.name}</span>
+                      {unread > 0 && <span className="bg-rose-500 text-white text-[9px] fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
+                    </button>
+                  );
+                })}
+
+              {/* Custom Groups */}
+              <div className="px-4 pt-4 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400 flex items-center justify-between">
+                <span>Groups</span>
+                <button onClick={() => {
+                  const name = prompt('Enter group name:');
+                  if (name && onCreateChatGroup) {
+                    onCreateChatGroup({ name, members: [selectedUser.id], type: 'custom' });
+                  }
+                }} className="hover:text-slate-600"><i className="bi bi-plus-lg"></i></button>
+              </div>
+              {(chatGroups || []).filter(g => g.companyId === selectedCompany.id && g.members.includes(selectedUser.id))
+                .filter(g => !chatSearch || g.name.toLowerCase().includes(chatSearch.toLowerCase()))
+                .sort((a, b) => getThreadLastMessageTime(b.id) - getThreadLastMessageTime(a.id))
+                .map(g => {
+                  const unread = getUnreadCount({ type: 'custom_group', id: g.id, name: g.name });
+                  return (
+                    <button key={`cgrp-${g.id}`} onClick={() => { setChatRecipient({ type: 'custom_group', id: g.id, name: g.name }); }}
+                      className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 fs-xs cursor-pointer transition-all ${chatRecipient?.type === 'custom_group' && chatRecipient.id === g.id ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${chatRecipient?.type === 'custom_group' && chatRecipient.id === g.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}><i className="bi bi-people-fill"></i></span>
+                      <span className="truncate fw-semibold flex-1">{g.name}</span>
                       {unread > 0 && <span className="bg-rose-500 text-white text-[9px] fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
                     </button>
                   );
@@ -201,8 +226,34 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] fw-bold">{chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
                   <div>
                     <div className="fs-sm fw-bold text-slate-900">{chatRecipient.name}</div>
-                    <div className="text-[10px] text-slate-400">{chatRecipient.type === 'team' ? 'Team channel' : 'Direct message'}</div>
+                    <div className="text-[10px] text-slate-400">{chatRecipient.type === 'team' ? 'Department channel' : chatRecipient.type === 'custom_group' ? 'Custom Group' : 'Direct message'}</div>
                   </div>
+                  {chatRecipient.type === 'custom_group' && onUpdateChatGroupMembers && (
+                    <div className="ml-auto">
+                      <button 
+                        onClick={() => {
+                          const currentGroup = (chatGroups || []).find(g => g.id === chatRecipient.id);
+                          if (!currentGroup) return;
+                          const action = prompt('Type "add" to add a user email, or "remove" to remove a user email:');
+                          if (action === 'add' || action === 'remove') {
+                            const email = prompt(`Enter email to ${action}:`);
+                            const emp = employees.find(e => e.companyId === selectedCompany.id && e.email === email);
+                            if (!emp) {
+                              alert('Employee not found!');
+                              return;
+                            }
+                            const uid = emp.userId || emp.id;
+                            let newMembers = [...currentGroup.members];
+                            if (action === 'add' && !newMembers.includes(uid)) newMembers.push(uid);
+                            if (action === 'remove') newMembers = newMembers.filter(m => m !== uid);
+                            onUpdateChatGroupMembers(chatRecipient.id, newMembers);
+                          }
+                        }}
+                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] fw-semibold transition-colors">
+                        Manage Members
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-5 space-y-3">
                   {(() => {
@@ -214,11 +265,6 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
 
                     const threadMsgs = chatMessages
                       .filter(m => m.companyId === selectedCompany.id && m.threadId === threadId)
-                      .filter(m => {
-                        if (chatRecipient.type !== 'team') return true;
-                        if (isDeptMember) return true;
-                        return m.senderId === selectedUser.id; // Non-members only see their own messages
-                      })
                       .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                     if (threadMsgs.length === 0) return (
                       <div className="flex flex-col items-center justify-center h-full gap-2">
@@ -293,7 +339,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                 <div><Label>Subject Line</Label><Input value={tplSubject} onChange={e => setTplSubject(e.target.value)} placeholder="e.g. Welcome to {Company}!" /></div>
               </div>
               <div><Label>Body</Label><textarea value={tplBody} onChange={e => setTplBody(e.target.value)} rows={4} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Email body content. Use {Name}, {Company}, {ID} etc. as placeholders." /></div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <PrimaryBtn onClick={() => { if (!tplName.trim() || !tplSubject.trim()) return; onAddEmailTemplate({ companyId: selectedCompany.id, name: tplName.trim(), subject: tplSubject.trim(), body: tplBody.trim(), updated: new Date().toISOString().split('T')[0] }); setTplName(''); setTplSubject(''); setTplBody(''); setShowAddTemplate(false); }} disabled={!tplName.trim() || !tplSubject.trim()}>Save Template</PrimaryBtn>
                 <SecBtn onClick={() => setShowAddTemplate(false)}>Cancel</SecBtn>
               </div>

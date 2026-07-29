@@ -132,7 +132,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
     <div className="flex h-[calc(100vh-10rem)] flex-col rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
       {/* Copilot Navigation header */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch border-b border-slate-200 bg-white px-5 py-4 gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <i className="bi bi-stars text-slate-950 animate-pulse fs-sm"></i>
           <div>
             <h2 className="fs-sm fw-semibold tracking-tight text-slate-900">Gemini Enterprise Co-Pilot</h2>

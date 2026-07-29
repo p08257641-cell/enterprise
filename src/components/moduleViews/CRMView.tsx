@@ -223,7 +223,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   }}
                 >
                   <div className="flex items-center justify-between mb-3 shrink-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="relative">
                         <button onClick={() => setEditingStageColor(editingStageColor === stage ? null : stage)} className="h-3 w-3 rounded-full cursor-pointer ring-2 ring-white shadow-sm hover:scale-125 transition-transform" style={{ backgroundColor: stageHeaderColors[stage] }} title={`Change ${stage} color`}></button>
                         {editingStageColor === stage && (
@@ -234,7 +234,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                                 <button key={c} onClick={() => setStageHeaderColors(prev => ({ ...prev, [stage]: c }))} className={`h-5 w-5 rounded-full cursor-pointer border-2 transition-all hover:scale-110 ${stageHeaderColors[stage] === c ? 'border-slate-900 ring-1 ring-slate-400' : 'border-white hover:border-slate-300'}`} style={{ backgroundColor: c }}></button>
                               ))}
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <input type="color" value={stageHeaderColors[stage]} onChange={e => setStageHeaderColors(prev => ({ ...prev, [stage]: e.target.value }))} className="h-6 w-6 rounded cursor-pointer border-0 p-0" />
                               <input type="text" value={stageHeaderColors[stage]} onChange={e => setStageHeaderColors(prev => ({ ...prev, [stage]: e.target.value }))} className="flex-1 text-[10px] font-mono rounded border border-slate-200 px-1.5 py-1" />
                             </div>
@@ -244,7 +244,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       </div>
                       <span className="section-title text-slate-600">{stage}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="data-value-small font-sans tabular-nums text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded">{stageLeads.length}</span>
                       {hasMore && (
                         <button
@@ -450,7 +450,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               </div>
 
               <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <input
                     type="text"
                     value={newComment}
@@ -547,7 +547,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center avatar-text fw-bold text-white">{lead.firstName[0]}{lead.lastName[0]}</div>
                     <div>
                       <h3 className="fs-lg fw-bold text-slate-900">{lead.firstName} {lead.lastName}</h3>
@@ -658,7 +658,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
         })()}
 
         {crmTab === 'contacts' && (
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">All Contacts</h3>
               <PrimaryBtn icon="bi bi-person-plus" onClick={() => setShowLeadForm(true)}>Add Contact</PrimaryBtn>
@@ -669,7 +669,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                 {localLeads.map(l => (
                   <tr key={l.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center avatar-text fw-bold text-white shrink-0">{l.firstName[0]}{l.lastName[0]}</div>
                         <div className="fs-xs fw-semibold text-slate-900">{l.firstName} {l.lastName}</div>
                       </div>
@@ -709,7 +709,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="table-cell-semibold text-slate-900">{act.subject}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge label={act.type} variant="info" />
                         {lead && <span className="text-[10px] text-slate-400">{lead.firstName} {lead.lastName}</span>}
                       </div>
@@ -958,7 +958,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           const count = localLeads.filter(l => l.status === stage).length;
                           const pct = localLeads.length > 0 ? (count / localLeads.length) * 100 : 0;
                           return (
-                            <div key={stage} className="flex items-center gap-3">
+                            <div key={stage} className="flex flex-wrap items-center gap-3">
                               <span className="fs-xs fw-semibold text-slate-700 w-32 shrink-0">{stage}</span>
                               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: stageHeaderColors[stage] }} /></div>
                               <span className="data-value-small font-sans tabular-nums text-slate-500 w-12 text-right">{count} leads</span>
@@ -971,7 +971,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                       <h3 className="section-title text-slate-500 mb-5">Leads by Source</h3>
                       <div className="space-y-3">
                         {sourceCounts.map(({ source, count }) => (
-                          <div key={source} className="flex items-center gap-3">
+                          <div key={source} className="flex flex-wrap items-center gap-3">
                             <span className="fs-xs fw-semibold text-slate-700 w-24 shrink-0">{source}</span>
                             <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full transition-all" style={{ width: `${(count / maxSourceCount) * 100}%` }} /></div>
                             <span className="data-value-small font-sans tabular-nums text-slate-500 w-12 text-right">{count}</span>

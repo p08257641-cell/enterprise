@@ -25,6 +25,16 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
     return 'branches';
   });
 
+  useEffect(() => {
+    if (activeView === 'admin-users') setAdminTab('users');
+    else if (activeView === 'admin-roles') setAdminTab('roles');
+    else if (activeView === 'admin-branches') setAdminTab('branches');
+    else if (activeView === 'admin-departments') setAdminTab('departments');
+    else if (activeView === 'admin-approvals') setAdminTab('approvals');
+    else if (activeView === 'admin-settings') setAdminTab('settings');
+    else if (activeView === 'admin-evat') setAdminTab('evat');
+  }, [activeView]);
+
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
@@ -126,7 +136,7 @@ const [deptParent, setDeptParent] = useState('');
         <PageHeader title="Administration" subtitle="Company configuration, branch management, users, roles and system settings." />
 
         {adminTab === 'branches' && (
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">Branch Locations</h3>
               {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBranchName(''); setBranchLocation(''); setShowBranchModal(true); }}>Add Branch</PrimaryBtn>}
@@ -158,7 +168,7 @@ const [deptParent, setDeptParent] = useState('');
           return (
             <div className="space-y-6">
               {/* Department Table */}
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                   <div>
                     <h3 className="fs-sm fw-bold text-slate-900">Department Structure</h3>
@@ -175,7 +185,7 @@ const [deptParent, setDeptParent] = useState('');
                       return (
                         <tr key={dept.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
                           <td className="px-4 py-3.5">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <div className={`h-2 w-2 rounded-full shrink-0 ${!dept.parentId ? 'bg-slate-900' : 'bg-slate-300'}`}></div>
                               <span className="fs-xs fw-semibold text-slate-900">{dept.name}</span>
                             </div>
@@ -445,7 +455,7 @@ const [deptParent, setDeptParent] = useState('');
                       <option value="Regional East">Regional East</option>
                     </Select>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <PrimaryBtn icon="bi bi-send">Send Invitation</PrimaryBtn>
                     <SecBtn onClick={() => setShowInviteForm(false)}>Cancel</SecBtn>
                   </div>
@@ -453,7 +463,7 @@ const [deptParent, setDeptParent] = useState('');
               </div>
             )}
 
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">System Users</h3>
                 {isAdmin && <PrimaryBtn icon="bi bi-person-plus" onClick={() => setShowInviteForm(true)}>Invite User</PrimaryBtn>}
@@ -483,7 +493,7 @@ const [deptParent, setDeptParent] = useState('');
         )}
 
         {adminTab === 'roles' && (
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">Role Management</h3>
@@ -517,7 +527,7 @@ const [deptParent, setDeptParent] = useState('');
                         <i className={`bi bi-shield-lock ${r.isSystem ? 'text-white' : 'text-slate-500'} fs-sm`}></i>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="fs-sm fw-bold text-slate-900">{r.name}</span>
                           {r.isSystem && <span className="bg-slate-100 border border-slate-200 text-slate-500 rounded px-1.5 py-0.5 text-[9px] font-mono">built-in</span>}
                         </div>
@@ -580,9 +590,9 @@ const [deptParent, setDeptParent] = useState('');
         )}
 
         {adminTab === 'approvals' && (
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-white"><i className="bi bi-diagram-3 fs-sm"></i></div>
                 <div>
                   <div className="fs-sm fw-bold text-slate-900">Approval Workflow Configuration</div>
@@ -893,7 +903,7 @@ const [deptParent, setDeptParent] = useState('');
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <form onSubmit={handleSaveRole}>
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${editingRole ? 'bg-violet-500' : 'bg-slate-900'}`}>
                       <i className={`bi ${editingRole ? 'bi-pencil' : 'bi-plus-lg'} text-white fs-sm`}></i>
                     </div>
@@ -1150,7 +1160,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
 
   return (
     <div className="space-y-5 p-6">
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="fs-sm fw-bold text-slate-900">GRA E-VAT Credentials</h3>
           <p className="text-[11px] text-slate-500 mt-0.5">Configure your Ghana Revenue Authority E-VAT API credentials.</p>
@@ -1171,7 +1181,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
             <Input type="password" value={form.securityKey} onChange={e => setForm(f => ({ ...f, securityKey: e.target.value }))} placeholder="GRA API security key" />
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Label>API Mode</Label>
               <label className={`px-3 py-1.5 rounded-lg border text-[11px] fw-semibold cursor-pointer transition-all ${form.apiMode === 'test' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white text-slate-400 border-slate-200'}`}>
                 <input type="radio" name="apiMode" checked={form.apiMode === 'test'} onChange={() => setForm(f => ({ ...f, apiMode: 'test' }))} className="sr-only" />
@@ -1206,7 +1216,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="fs-sm fw-bold text-slate-900">E-VAT Submission History</h3>
           <p className="text-[11px] text-slate-500 mt-0.5">Recent submissions to GRA.</p>

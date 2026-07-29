@@ -43,7 +43,7 @@ const StatCard = ({ label, value, sub, icon, trend, trendUp }: {
 );
 
 const ChartBar: React.FC<{ label: string; value: number; maxValue: number; color?: string }> = ({ label, value, maxValue, color = 'bg-slate-800' }) => (
-  <div className="flex items-center gap-3">
+  <div className="flex flex-wrap items-center gap-3">
     <span className="fs-xs text-slate-500 w-24 truncate">{label}</span>
     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
       <div className={`h-full rounded-full ${color}`} style={{ width: `${(value / maxValue) * 100}%` }} />
@@ -176,7 +176,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
               <h3 className="fs-sm fw-bold text-slate-900 mb-4">Revenue vs Expenses</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <i className="bi bi-arrow-up-right text-emerald-600"></i>
                     <div>
                       <div className="fs-sm fw-semibold text-slate-900">Revenue</div>
@@ -186,7 +186,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                   <span className="fs-lg fw-bold text-emerald-700 tabular-nums">${totalRevenue.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-rose-50 rounded-lg">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <i className="bi bi-arrow-down-right text-rose-600"></i>
                     <div>
                       <div className="fs-sm fw-semibold text-slate-900">Expenses</div>
@@ -253,7 +253,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             <StatCard label="Avg Deal Size" value={`$${companyLeads.length > 0 ? Math.round(companyLeads.reduce((s, l) => s + l.value, 0) / companyLeads.length).toLocaleString() : 0}`} icon="bi bi-cash-coin" sub="Per lead" />
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100">
               <h3 className="fs-sm fw-bold text-slate-900">Invoice Summary</h3>
             </div>
@@ -323,7 +323,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
             <StatCard label="Resolution Time" value={avgTicketResolution} icon="bi bi-clock" sub="Average" />
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100">
               <h3 className="fs-sm fw-bold text-slate-900">Recent Tickets</h3>
             </div>
@@ -382,7 +382,7 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
                   { category: 'Payroll', amount: totalPayroll, color: 'bg-slate-800' },
                   { category: 'Operating', amount: totalExpenses, color: 'bg-slate-400' },
                 ].map(e => (
-                  <div key={e.category} className="flex items-center gap-3">
+                  <div key={e.category} className="flex flex-wrap items-center gap-3">
                     <span className="fs-xs text-slate-500 w-20">{e.category}</span>
                     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${e.color}`} style={{ width: `${(totalPayroll + totalExpenses) ? (e.amount / (totalPayroll + totalExpenses)) * 100 : 0}%` }} />

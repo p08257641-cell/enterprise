@@ -258,6 +258,25 @@ app.post('/api/auth/register', authLimiter, asyncHandler(async (req, res) => {
   res.status(201).json({ token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, companyId: newUser.companyId, permissions: [], crudPermissions: activeRole?.crudPermissions || [] } });
 }));
 
+app.post('/api/auth/reset-password', authLimiter, asyncHandler(async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+  if (!email || !oldPassword || !newPassword) {
+    return res.status(400).json({ error: 'Email, old password, and new password are required' });
+  }
+  const allUsers = await dbAll<any>(schema.users);
+  const user = allUsers.find(u => u.email === email);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const valid = await comparePassword(oldPassword, user.passwordHash || '');
+  if (!valid) return res.status(401).json({ error: 'Invalid old password' });
+
+  const newHash = await hashPassword(newPassword);
+  await dbUpdate(schema.users, user.id, { passwordHash: newHash });
+  
+  logAudit(user.companyId, user.id, user.name, 'PASSWORD_RESET', 'Auth', `User ${user.name} reset their password`);
+  res.json({ success: true, message: 'Password updated successfully' });
+}));
+
 // Dev-only endpoint: auto-login token (before auth middleware)
 if (process.env.NODE_ENV !== 'production') {
   app.get('/api/dev-token', asyncHandler(async (req, res) => {
@@ -1686,6 +1705,36 @@ app.post('/api/chat/messages', asyncHandler(async (req, res) => {
     createdAt: new Date().toISOString(),
   });
   res.status(201).json(msg);
+}));
+
+app.get('/api/chat/groups', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.json([]);
+  const all = await dbByCompany<any>(schema.chatGroups, companyId as string);
+  res.json(all);
+}));
+
+app.post('/api/chat/groups', asyncHandler(async (req, res) => {
+  const { companyId, name, type, members, createdBy } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Group name is required' });
+  const group = await dbInsert(schema.chatGroups, {
+    id: `cgrp-${Date.now()}`,
+    companyId,
+    name: name.trim(),
+    type: type || 'custom',
+    members: members || [],
+    createdBy,
+    createdAt: new Date().toISOString(),
+  });
+  res.status(201).json(group);
+}));
+
+app.put('/api/chat/groups/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { members } = req.body;
+  if (!members) return res.status(400).json({ error: 'Members array is required' });
+  const updated = await dbUpdate(schema.chatGroups, id, { members });
+  res.json(updated);
 }));
 
 app.get('/api/chat/reads', asyncHandler(async (req, res) => {
@@ -3738,7 +3787,28 @@ app.delete('/api/compliance-checks/:id', asyncHandler(async (req, res) => {
   await dbDelete(schema.complianceChecks, id);
   logAudit(check.companyId, userId, userName, 'DELETE_COMPLIANCE', 'Compliance', `Deleted compliance check: ${check.title}`);
   res.json({ success: true });
-    }));
+}));
+
+app.delete('/api/policy-documents/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userId, userName } = req.body;
+  const doc = await dbById<any>(schema.policyDocuments, id);
+  if (!doc) return res.status(404).json({ error: 'Policy not found' });
+  await dbDelete(schema.policyDocuments, id);
+  logAudit(doc.companyId, userId, userName, 'DELETE_POLICY', 'Compliance', `Deleted policy: ${doc.title}`);
+  res.json({ success: true });
+}));
+
+app.delete('/api/compliance-incidents', asyncHandler(async (req, res) => {
+  const { companyId, userId, userName } = req.body;
+  const logs = await dbAll<any>(schema.auditLogs);
+  const toDelete = logs.filter((l: any) => l.companyId === companyId && (l.action?.includes('COMPLIANCE') || l.action?.includes('INCIDENT') || l.module === 'Compliance'));
+  for (const l of toDelete) {
+    await dbDelete(schema.auditLogs, l.id);
+  }
+  logAudit(companyId, userId, userName, 'CLEAR_INCIDENTS', 'Compliance', `Cleared all compliance incidents`);
+  res.json({ success: true });
+}));
 
 app.post('/api/compliance-checks/:id/resolve', asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -5556,6 +5626,7 @@ async function runMigrations() {
     'migration_budget_items.sql',
     'migration_auth.sql',
     'migration_chat.sql',
+    'migration_chat_groups.sql',
     'migration_voting.sql',
     'migration_add_voting_to_acme.sql',
     'migration_gallery.sql',

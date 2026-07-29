@@ -95,7 +95,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
                 const deptEmployees = localEmployees.filter(e => e.department === dept);
                 const colors = ['#0f172a', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0'];
                 return (
-                  <div key={dept} className="flex items-center gap-2">
+                  <div key={dept} className="flex flex-wrap items-center gap-2">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: colors[index] }}></span>
                     <span className="fs-sm text-slate-800 fw-medium">{dept}</span>
                     <span className="fs-sm text-slate-500">({deptEmployees.length})</span>

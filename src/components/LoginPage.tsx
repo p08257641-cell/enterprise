@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { modalAlert, toast } from '../utils/modal';
 
@@ -15,6 +15,22 @@ export const LoginPage: React.FC = () => {
   const [whisperDepartment, setWhisperDepartment] = useState('');
   const [whisperSubmitting, setWhisperSubmitting] = useState(false);
   const [whisperSuccess, setWhisperSuccess] = useState(false);
+  const [whisperCompanyId, setWhisperCompanyId] = useState('');
+  const [companies, setCompanies] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (showWhisper) {
+      fetch('/api/companies')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setCompanies(data);
+            if (data.length > 0) setWhisperCompanyId(data[0].id);
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  }, [showWhisper]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +55,7 @@ export const LoginPage: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          companyId: 'c-acme',
+          companyId: whisperCompanyId || 'c-acme',
           category: whisperCategory,
           description: whisperDescription,
           location: whisperLocation,
@@ -157,7 +173,7 @@ export const LoginPage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto mx-2 sm:mx-0">
             <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-white">
                   <i className="bi bi-eye-slash"></i>
                 </div>
@@ -198,6 +214,19 @@ export const LoginPage: React.FC = () => {
                   <span>
                     <strong className="fw-semibold">100% Anonymous.</strong> Your name, email, IP address, and any identifying information are never recorded or tracked.
                   </span>
+                </div>
+
+                <div>
+                  <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">Company</label>
+                  <select
+                    value={whisperCompanyId}
+                    onChange={(e) => setWhisperCompanyId(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                  >
+                    {companies.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -270,7 +299,7 @@ export const LoginPage: React.FC = () => {
                     }`}
                   >
                     {whisperSubmitting ? (
-                      <span className="flex items-center gap-2">
+                      <span className="flex flex-wrap items-center gap-2">
                         <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         Submitting...
                       </span>

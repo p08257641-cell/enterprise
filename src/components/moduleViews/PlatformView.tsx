@@ -78,7 +78,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Avg Modules" value={(platformCompanies.reduce((sum, c) => sum + c.modules, 0) / platformCompanies.length).toFixed(1)} icon="bi bi-box-seam" sub="Per tenant" />
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">Tenant Companies</h3>
               <PrimaryBtn icon="bi bi-plus-lg">Add Company</PrimaryBtn>
@@ -640,7 +640,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="text-[10px] uppercase tracking-wider text-slate-400">Monthly Total</div>
                       <div className="fs-xl fw-bold text-slate-900 font-sans tabular-nums">${planTotal.toLocaleString()}</div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <SecBtn onClick={() => setPlanModalOpen(false)}>Cancel</SecBtn>
                       <PrimaryBtn icon="bi bi-check-lg" onClick={submitPlan}>Assign Plan</PrimaryBtn>
                     </div>

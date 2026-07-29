@@ -376,7 +376,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           title="HR & Employee Directory"
           subtitle={`${selectedCompany.name} · ${localEmployees.length} employees registered`}
           action={isHRorAdmin ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-4 py-2 rounded-lg transition-all cursor-pointer">
                 <i className="bi bi-upload fs-xs"></i>Bulk Upload
               </button>
@@ -730,7 +730,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                               <span className="fs-xs fw-medium text-slate-800">{okr.title}</span>
                               <Badge label={okr.status} variant={okr.status === 'On Track' ? 'success' : 'warning'} />
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
                               <div className="flex-1"><ProgressBar value={okr.progress} color={okr.progress >= 70 ? 'bg-emerald-500' : 'bg-amber-500'} /></div>
                               <span className="fs-xs fw-bold text-slate-700 tabular-nums w-8 text-right">{okr.progress}%</span>
                             </div>
@@ -908,7 +908,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     className="hover:bg-blue-50/30 transition-colors"
                   >
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
                         <div>
                           <div className="fs-sm fw-semibold text-slate-900 transition-colors">{emp.firstName} {emp.lastName}</div>
@@ -1027,14 +1027,14 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <div className="divide-y divide-slate-100">
               {applicants.map((app, i) => (
                 <div key={app.name} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Avatar first={app.name.split(' ')[0]} last={app.name.split(' ')[1] || 'X'} index={i} />
                     <div>
                       <div className="fs-sm fw-semibold text-slate-900">{app.name}</div>
                       <div className="fs-xs text-slate-500">{app.role} · {app.dept}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="fs-xs text-slate-400">{app.applied}</span>
                     <Badge
                       label={app.stage}
@@ -1385,12 +1385,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 )}
                 {myLeaves.map(req => (
                   <div key={req.id} className="p-4 hover:bg-slate-50/40 transition-colors flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                         <i className="bi bi-calendar-event"></i>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="fs-sm fw-semibold text-slate-900">{req.leaveType}</span>
                           <Badge label={req.status} variant={req.status === 'Approved' ? 'success' : req.status === 'Pending' ? 'warning' : 'danger'} />
                         </div>
@@ -1447,7 +1447,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <h3 className="fs-sm fw-bold text-slate-900">Leave Requests</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
                 <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} className={`fs-xs fw-semibold border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${leaveFilter === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                   {f}
@@ -1504,7 +1504,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       
                       if (canApprove) {
                         return (
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button onClick={() => onApproveLeave(req.id, 'Approved')} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
                             <button onClick={() => onRejectLeave(req.id)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                           </div>
@@ -1519,7 +1519,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       const canFinalApprove = isCompanyAdmin || hasLeavePermission || isHRDeptHeadUser;
                       if (canFinalApprove) {
                         return (
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button onClick={() => onApproveLeave(req.id, 'Approved')} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
                             <button onClick={() => onRejectLeave(req.id)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                           </div>
@@ -1573,7 +1573,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <button onClick={() => setShowAttSettings(!showAttSettings)}
               className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center">
                   <i className="bi bi-gear6 text-slate-600"></i>
                 </div>
@@ -1709,7 +1709,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-100 gap-3">
               <h3 className="fs-sm fw-bold text-slate-900">Attendance Log</h3>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input type="date" value={attDateFilter} onChange={e => setAttDateFilter(e.target.value)}
                     className="rounded-lg border border-slate-200 px-3 py-1.5 fs-xs text-slate-700 focus:border-slate-400 focus:outline-none" />
                 </div>
@@ -1835,7 +1835,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               )}
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <div className="text-center px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
               <div className="fs-lg fw-bold text-emerald-700 tabular-nums">{myAttToday?.checkIn || '—'}</div>
               <div className="fs-xs text-emerald-600">Check In</div>
@@ -1992,7 +1992,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               return (
                 <div key={o.id} className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <Avatar first={o.employeeName.split(' ')[0]} last={o.employeeName.split(' ')[1] || ''} index={idx} />
                       <div>
                         <div className="fs-sm fw-semibold text-slate-900">{o.employeeName}</div>
@@ -2124,7 +2124,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="fs-sm fw-bold text-slate-900">Performance Objectives — Q3 2026</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Select className="w-40 fs-xs py-1.5">
                   <option>All Departments</option>
                   {['Engineering', 'Finance', 'HR', 'Sales', 'Operations'].map(d => <option key={d}>{d}</option>)}
@@ -2144,7 +2144,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 return (
                   <div key={okr.id} className={`p-5 transition-colors ${isAwaitingReview ? 'bg-amber-50/40 hover:bg-amber-50/60 border-l-4 border-l-amber-400' : 'hover:bg-slate-50/30'}`}>
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <Avatar first={okr.employeeName.split(' ')[0]} last={okr.employeeName.split(' ')[1] || 'X'} index={i} size="sm" />
                         <div>
                           <div className="fs-sm fw-semibold text-slate-900">{okr.employeeName}</div>
@@ -2155,7 +2155,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     </div>
                     <div className="fs-sm text-slate-700 mb-1">{okr.title}</div>
                     <div className="fs-xs text-slate-500 mb-2 flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="flex-1">
                         <ProgressBar value={p} color={isAwaitingReview ? 'bg-amber-500' : p >= 90 ? 'bg-blue-500' : p >= 70 ? 'bg-emerald-500' : p >= 40 ? 'bg-amber-500' : 'bg-rose-500'} />
                       </div>
@@ -2169,7 +2169,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           <i className="bi bi-hourglass-split"></i>
                           <span className="fw-medium">Employee marked this as complete — awaiting your review</span>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => onUpdateOKRProgress(okr.id, 95, 'On Track')}
                             className="fs-xs fw-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 bg-white hover:bg-rose-50 transition-colors flex items-center gap-1.5 cursor-pointer"
@@ -2327,7 +2327,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                               { pct: 75, label: 'Review & Refine', reached: okr.progress >= 75 },
                               { pct: 100, label: 'Completed', reached: okr.progress >= 100 },
                             ].map(ms => (
-                              <div key={ms.pct} className="flex items-center gap-3">
+                              <div key={ms.pct} className="flex flex-wrap items-center gap-3">
                                 <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${ms.reached ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
                                   {ms.reached ? <i className="bi bi-check"></i> : ms.pct}
                                 </div>
@@ -2431,7 +2431,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <option value="">Top Level (no parent)</option>
                 {departments.filter(d => d.companyId === selectedCompany.id && d.id !== editDeptModal?.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button onClick={() => { onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined }); setEditDeptModal(null); }} className="flex-1 bg-blue-600 text-white rounded-lg py-2 fs-sm fw-semibold hover:bg-blue-700 transition-colors">Save</button>
                 <button onClick={() => setEditDeptModal(null)} className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 fs-sm fw-semibold hover:bg-slate-200 transition-colors">Cancel</button>
               </div>
@@ -2482,8 +2482,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
               )}
             </div>
             {editingNotice ? (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <Label>Notice Period (days)</Label>
                   <input type="number" min="1" max="365" value={noticeInput} onChange={e => setNoticeInput(e.target.value)} className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 fs-sm text-slate-900 focus:border-slate-400 focus:outline-none" />
                   <span className="fs-xs text-slate-500">days</span>
@@ -2631,7 +2631,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         const isHOD = empDeptRecord?.managerId === selectedUser.id;
                         if (isHOD) {
                           return (
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <button onClick={() => onApproveExitRequest(req.id, 'HOD Approved', selectedUser.name)} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
                               <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                             </div>
@@ -2642,7 +2642,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
                       {/* HR: approve/reject HOD Approved requests */}
                       {req.status === 'HOD Approved' && isHRorAdmin && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Final Approve</button>
                           <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                         </div>
@@ -2650,7 +2650,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
                       {/* HR: direct approve/reject for Pending (involuntary terminations) */}
                       {req.status === 'Pending' && isHRorAdmin && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button onClick={() => onApproveExitRequest(req.id, 'Approved', selectedUser.name)} className="fs-xs fw-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-xs">Approve</button>
                           <button onClick={() => onRejectExitRequest(req.id, selectedUser.name)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all shadow-xs bg-white">Decline</button>
                         </div>
@@ -2745,7 +2745,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <option value="">Top Level (no parent)</option>
                 {departments.filter(d => d.companyId === selectedCompany.id && d.id !== editDeptModal?.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button onClick={() => { onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined }); setEditDeptModal(null); }} className="flex-1 bg-blue-600 text-white rounded-lg py-2 fs-sm fw-semibold hover:bg-blue-700 transition-colors">Save</button>
                 <button onClick={() => setEditDeptModal(null)} className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 fs-sm fw-semibold hover:bg-slate-200 transition-colors">Cancel</button>
               </div>
@@ -2829,7 +2829,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 {pendingUpdates.length === 0 ? <EmptyRow cols={5} message="No pending bank account updates" /> : pendingUpdates.map(req => (
                   <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-5">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 fs-sm fw-semibold">
                           {req.employeeName.charAt(0)}
                         </div>
@@ -2852,7 +2852,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <Badge label="Pending" variant="warning" />
                     </td>
                     <td className="py-3 px-5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => onApproveBankAccountUpdate && onApproveBankAccountUpdate(req.id, req.employeeId, JSON.stringify({ bankName: req.bankName, accountName: req.accountName, accountNumber: req.accountNumber, sortCode: req.sortCode, routingNumber: req.routingNumber }), selectedUser.name)}
                           className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg fs-xs fw-semibold transition-colors"
@@ -2885,7 +2885,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 {[...approvedUpdates, ...rejectedUpdates].sort((a,b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0,10).map(req => (
                   <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-5">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 fs-sm fw-semibold">
                           {req.employeeName.charAt(0)}
                         </div>
@@ -2957,7 +2957,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 {pendingRequests.length === 0 ? <EmptyRow cols={6} message="No pending profile update requests" /> : pendingRequests.map(req => (
                   <tr key={req.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-5">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 fs-sm fw-semibold">
                           {req.employeeName.charAt(0)}
                         </div>
@@ -2972,7 +2972,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     <td className="py-3 px-5 text-slate-800 fs-sm fw-semibold">{req.newValue}</td>
                     <td className="py-3 px-5 text-slate-500 fs-sm">{new Date(req.requestedAt).toLocaleDateString()}</td>
                     <td className="py-3 px-5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => onApproveProfileUpdate?.(req.id)}
                           className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg fs-xs fw-semibold transition-colors cursor-pointer"
@@ -3184,7 +3184,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
         <div className="border border-slate-200 rounded-xl overflow-hidden">
           <div className="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
             <span className="fs-xs fw-bold text-slate-700 uppercase tracking-wide">Letter Preview</span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button onClick={() => setShowPreview(false)} className="fs-xs fw-semibold text-slate-500 hover:text-slate-700 cursor-pointer px-2 py-1 rounded hover:bg-slate-200 transition-all"><i className="bi bi-x-lg mr-1"></i>Close</button>
               <button onClick={handlePrint} className="fs-xs fw-semibold text-white bg-slate-900 hover:bg-slate-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-printer mr-1"></i>Print / PDF</button>
               <button onClick={handleDownload} className="fs-xs fw-semibold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer px-3 py-1.5 rounded-lg transition-all shadow-xs"><i className="bi bi-download mr-1"></i>Download</button>

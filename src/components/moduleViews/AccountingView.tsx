@@ -373,7 +373,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="section-title text-slate-500">Chart of Accounts</h3>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <input type="text" placeholder="Search accounts..." className="px-3 py-1.5 border border-slate-200 rounded-lg fs-xs data-value focus:outline-none focus:ring-1 focus:ring-slate-300" value={accSearch} onChange={(e) => setAccSearch(e.target.value)} />
                   </div>
                 </div>
@@ -410,8 +410,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     const typeTotal = typeAccounts.reduce((sum, a) => sum + (a.balance ?? 0), 0);
                     return (
                       <div key={type} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-slate-400"></span><span className="data-value text-slate-800">{type}</span></div>
-                        <div className="flex items-center gap-3"><span className="data-value-small text-slate-500">{typeAccounts.length} accounts</span><span className="data-value font-sans tabular-nums fw-semibold text-slate-900">${typeTotal.toLocaleString()}</span></div>
+                        <div className="flex flex-wrap items-center gap-2"><span className="h-2 w-2 rounded-full bg-slate-400"></span><span className="data-value text-slate-800">{type}</span></div>
+                        <div className="flex flex-wrap items-center gap-3"><span className="data-value-small text-slate-500">{typeAccounts.length} accounts</span><span className="data-value font-sans tabular-nums fw-semibold text-slate-900">${typeTotal.toLocaleString()}</span></div>
                       </div>
                     );
                   })}
@@ -425,7 +425,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
           <>
             <PageHeader title="Invoices" subtitle="Manage customer invoices, track payments and send reminders."
               action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`invoices-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Issue Date', 'Due Date', 'Total', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.issueDate, i.dueDate, i.total ?? 0, i.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setAccTab('create')}>New Invoice</PrimaryBtn></>} />
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Invoice #' }, { label: 'Client' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -459,7 +459,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Pending Approval" value={localExpenses.filter(e => e.status === 'Pending').length} icon="bi bi-clock" sub="Awaiting review" />
               <StatCard label="Approved" value={localExpenses.filter(e => e.status === 'Approved').length} icon="bi bi-check-circle" sub="Auto-posted to GL" color="text-emerald-600" />
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Date' }, { label: 'Description' }, { label: 'Category' }, { label: 'Department' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -565,8 +565,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <span className="data-value-small font-sans tabular-nums text-emerald-600">DR: ${entry.totalDebit.toLocaleString()}</span>
                         <span className="data-value-small font-sans tabular-nums text-rose-600">CR: ${entry.totalCredit.toLocaleString()}</span>
                       </div>
-                      {entry.status === 'Draft' && canPostJE && <div className="flex gap-2"><button onClick={() => onPostJournalEntry(entry.id)} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-slate-800">Post</button></div>}
-                      {entry.status === 'Posted' && canApproveJE && <div className="flex gap-2"><button onClick={() => onApproveJournalEntry(entry.id)} className="data-value-small fw-semibold bg-emerald-600 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-emerald-700">Approve</button><button onClick={() => onVoidJournalEntry(entry.id)} className="data-value-small fw-semibold bg-white border border-slate-200 text-slate-600 px-3 py-1 rounded-lg cursor-pointer hover:bg-slate-50">Void</button></div>}
+                      {entry.status === 'Draft' && canPostJE && <div className="flex flex-wrap gap-2"><button onClick={() => onPostJournalEntry(entry.id)} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-slate-800">Post</button></div>}
+                      {entry.status === 'Posted' && canApproveJE && <div className="flex flex-wrap gap-2"><button onClick={() => onApproveJournalEntry(entry.id)} className="data-value-small fw-semibold bg-emerald-600 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-emerald-700">Approve</button><button onClick={() => onVoidJournalEntry(entry.id)} className="data-value-small fw-semibold bg-white border border-slate-200 text-slate-600 px-3 py-1 rounded-lg cursor-pointer hover:bg-slate-50">Void</button></div>}
                     </div>
                   ))}
                   {localJournalEntries.length === 0 && <EmptyRow cols={1} message="No journal entries yet." />}
@@ -584,7 +584,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Total Credits" value={`$${totalCredits.toLocaleString()}`} icon="bi bi-arrow-up-circle" sub="Sum of all credit balances" color="text-emerald-600" />
             </div>
             {Math.abs(totalDebits - totalCredits) > 0.01 && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl fs-xs text-rose-700 fw-semibold"><i className="bi bi-exclamation-triangle mr-1"></i> Trial balance is NOT balanced! Difference: ${Math.abs(totalDebits - totalCredits).toLocaleString()}</div>}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -654,7 +654,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center"><i className={`bi ${report.icon} text-slate-600`}></i></div>
                     <div><div className="data-value fw-semibold text-slate-900">{report.title}</div><div className="data-value-small text-slate-500">{report.desc}</div></div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button onClick={() => generateReport(report.type, 'csv')} className="flex-1 data-value-small fw-semibold bg-slate-900 text-white px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Download CSV</button>
                     <button onClick={() => generateReport(report.type, 'pdf')} className="data-value-small fw-semibold border border-slate-200 bg-white text-slate-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-50 transition-all"><i className="bi bi-download"></i></button>
                   </div>
@@ -690,7 +690,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 }}>Save Opening Balance</PrimaryBtn>
               </div>
             </div>}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Period' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -716,7 +716,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {accGroup === 'gl' && accTab === 'fiscal-periods' && (
           <>
             <PageHeader title="Fiscal Periods" subtitle="Manage fiscal year periods, close periods and lock transactions." />
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Period' }, { label: 'Start Date' }, { label: 'End Date' }, { label: 'Status' }, { label: 'Closed By' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -749,7 +749,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Total Outstanding" value={`$${localBills.filter(b => b.status !== 'Paid' && b.status !== 'Void').reduce((s, b) => s + ((b.total ?? 0) - (b.amountPaid ?? 0)), 0).toLocaleString()}`} icon="bi bi-cash-stack" color="text-rose-600" />
               <StatCard label="Paid This Month" value={`$${localBillPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Bill #' }, { label: 'Vendor' }, { label: 'Description' }, { label: 'Total' }, { label: 'Paid' }, { label: 'Due Date' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -786,7 +786,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Collected This Month" value={`$${localCustomerPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
               <StatCard label="Total Invoices" value={localInvoices.length} icon="bi bi-file-earmark-text" />
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Invoice #' }, { label: 'Customer' }, { label: 'Total' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'E-VAT' }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -827,7 +827,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={ba.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-3">
                     <span className="section-title text-slate-400">{ba.accountType}</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge label={ba.isActive ? 'Active' : 'Inactive'} variant={ba.isActive ? 'success' : 'default'} />
                       {canEditBankAccount && <button onClick={() => { setEditingBankAccount(ba); setBaName(ba.name); setBaBankName(ba.bankName); setBaAccountNumber(ba.accountNumber); setBaAccountType(ba.accountType); setBaBalance(String(ba.balance ?? 0)); setShowBankAccountModal(true); }} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i></button>}
                     </div>
@@ -862,7 +862,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               </table>
             </div>
             {localBankReconciliations.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
                 <div className="px-4 py-3 border-b border-slate-100">
                   <span className="section-title text-slate-500">Reconciliation History</span>
                 </div>
@@ -922,7 +922,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               </table>
             </div>
             {localDepreciationEntries.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
                 <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                   <span className="section-title text-slate-500">Depreciation Schedule</span>
                   <PrimaryBtn icon="bi bi-play-circle" onClick={() => onRunDepreciation('August 2026')}>Run Depreciation</PrimaryBtn>
@@ -959,7 +959,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Total Actual" value={`$${localBudgets.reduce((s, b) => s + (b.actualAmount ?? 0), 0).toLocaleString()}`} icon="bi bi-cash-stack" />
               <StatCard label="Overall Variance" value={`${localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0) >= 0 ? '+' : ''}$${localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0).toLocaleString()}`} icon="bi bi-graph-up" color={localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'} />
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Budget' }, { label: 'Account' }, { label: 'Budget Amt' }, { label: 'Actual' }, { label: 'Variance' }, { label: '% Used' }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
@@ -976,7 +976,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${actualAmt.toLocaleString()}</td>
                         <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${varianceAmt >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{varianceAmt >= 0 ? '+' : ''}${varianceAmt.toLocaleString()}</td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${pctUsed > 90 ? 'bg-rose-500' : pctUsed > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(pctUsed, 100)}%` }}></div></div>
                             <span className="text-[10px] fw-semibold text-slate-500">{pctUsed}%</span>
                           </div>
@@ -1092,7 +1092,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <h3 className="fs-sm fw-bold text-slate-900">{tr.type} Return — {tr.period}</h3>
                       <p className="text-[10px] text-slate-400">{tr.jurisdiction} · Due {tr.dueDate}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${tr.status === 'Filed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         tr.status === 'Draft' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
                           'bg-amber-50 text-amber-600 border border-amber-200'
@@ -1129,7 +1129,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <h3 className="fs-sm fw-bold text-slate-900">{tx.description}</h3>
                       <p className="text-[10px] text-slate-400">{tx.type} · {tx.fromCompanyName} → {tx.toCompanyName}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${tx.status === 'Settled' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         tx.status === 'Eliminated' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
                           'bg-amber-50 text-amber-600 border border-amber-200'
@@ -1211,7 +1211,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               {localLogs.slice().reverse().map(log => (
                 <div key={log.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${/CREATE|POST|APPROVE|RECEIVE|PAY|FILE|RUN|RESOLVE|SET/.test(log.action) ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         /UPDATE|VOID|ELIMINATE|CLOSE/.test(log.action) ? 'bg-blue-50 text-blue-600 border border-blue-200' :
                           'bg-rose-50 text-rose-600 border border-rose-200'
@@ -1274,7 +1274,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <h3 className="fs-sm fw-bold text-slate-900">{fd.title}</h3>
                       <p className="text-[10px] text-slate-400">{fd.type} · {fd.jurisdiction} · Due {fd.dueDate}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${fd.status === 'Filed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         fd.status === 'Overdue' ? 'bg-rose-50 text-rose-600 border border-rose-200' :
                           'bg-amber-50 text-amber-600 border border-amber-200'

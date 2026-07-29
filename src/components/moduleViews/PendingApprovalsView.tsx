@@ -83,14 +83,14 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
       if (data.roleId && data.changes) {
         return (
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="fs-xs fw-semibold text-slate-500">Role:</span>
               <span className="fs-xs fw-bold text-slate-900">{data.roleName || data.roleId}</span>
             </div>
             {data.changes.name && (
               <div className="p-3 bg-slate-50 rounded-lg">
                 <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">Name Change</div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="fs-xs text-red-500 line-through">{data.changes.name.from}</span>
                   <i className="bi bi-arrow-right text-slate-400"></i>
                   <span className="fs-xs text-emerald-600 fw-semibold">{data.changes.name.to}</span>
@@ -136,7 +136,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
             {data.changes.description && (
               <div className="p-3 bg-slate-50 rounded-lg">
                 <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">Description</div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="fs-xs text-slate-500">{data.changes.description.from || '(empty)'}</span>
                   <i className="bi bi-arrow-right text-slate-400"></i>
                   <span className="fs-xs text-slate-900">{data.changes.description.to || '(empty)'}</span>
@@ -162,7 +162,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg p-1">
           {['Pending', 'Approved', 'Rejected', 'All'].map(s => (
             <button
@@ -190,7 +190,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
       </div>
 
       {/* Approvals List */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
         {filtered.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
@@ -212,7 +212,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
                     <i className={`${moduleIcons[a.module] || 'bi bi-gear'} text-slate-500 fs-sm`}></i>
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="fs-sm fw-semibold text-slate-900 truncate">{a.title}</span>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] fw-bold ${a.status === 'Pending' ? 'bg-amber-100 text-amber-700' : a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {a.status}
@@ -259,7 +259,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
           >
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                   <i className={`${moduleIcons[selectedApproval.module] || 'bi bi-gear'} text-slate-600`}></i>
                 </div>
@@ -279,7 +279,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
             {/* Body */}
             <div className="px-6 py-5 space-y-4">
               {/* Status */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="fs-xs fw-semibold text-slate-500 w-20">Status</span>
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] fw-bold ${
                   selectedApproval.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
@@ -291,13 +291,13 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
               </div>
 
               {/* Requester */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="fs-xs fw-semibold text-slate-500 w-20">From</span>
                 <span className="fs-xs text-slate-900">{selectedApproval.requesterName}</span>
               </div>
 
               {/* Date */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="fs-xs fw-semibold text-slate-500 w-20">Requested</span>
                 <span className="fs-xs text-slate-900">{new Date(selectedApproval.createdAt).toLocaleString()}</span>
               </div>
@@ -316,7 +316,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
 
               {/* Approved By */}
               {selectedApproval.approvedBy && (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="fs-xs fw-semibold text-slate-500 w-20">Reviewed</span>
                   <span className="fs-xs text-slate-900">{selectedApproval.approvedBy}</span>
                 </div>

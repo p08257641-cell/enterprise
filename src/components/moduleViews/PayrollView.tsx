@@ -249,7 +249,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl fs-xs text-amber-800">
                     <strong>Confirm Payroll Run:</strong> {payrollTarget === 'all' ? localEmployees.length : payrollTarget === 'selected' ? selectedEmployeeIds.size : payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0} employees · Period: {payMonth} · Net: ${(totalPayroll * 0.75).toLocaleString()}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <PrimaryBtn icon="bi bi-check-circle" onClick={() => {
                       const employeeIds = payrollTarget === 'all' ? [] :
                         payrollTarget === 'selected' ? Array.from(selectedEmployeeIds) :
@@ -286,7 +286,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div key={band.id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
                       <div className="flex justify-between items-center">
                         <span className="table-cell-semibold text-slate-800">{band.name}</span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="data-value-small font-sans tabular-nums text-slate-400">{band.employeeCount} employees</span>
                           {isHRorAdmin && (
                             <button onClick={async () => { if (await modalConfirm('Delete this salary band?', { variant: 'danger' })) onDeleteSalaryBand(band.id); }} className="text-slate-300 hover:text-red-500 transition-colors">
@@ -371,7 +371,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="text-[10px] text-slate-500 mt-0.5">{group.description || 'No description'}</div>
                           <div className="text-[10px] text-slate-400 mt-1">{group.employeeIds.length} employees</div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <SecBtn onClick={() => {
                             setSelectedGroupId(group.id);
                             setPayrollTarget('group');
@@ -495,10 +495,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
 
         {effectivePayrollTab === 'slips' && (
           isHRorAdmin ? (
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="section-title text-slate-900">Payslips — {activeSlipsPeriod}</h3>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Select value={activeSlipsPeriod} onChange={e => setSlipsPeriod(e.target.value)}>
                     {companySlipPeriods.length === 0 && <option>{payMonth}</option>}
                     {companySlipPeriods.map(per => <option key={per} value={per}>{per}</option>)}
@@ -552,7 +552,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
 
               return (
                 <div className="space-y-6">
-                  <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
                     <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                       <div>
                         <h3 className="section-title text-slate-900">My Payslip — {activeSlip.period}</h3>
@@ -623,7 +623,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
 
                   {/* Previous payslips list */}
-                  <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
                     <div className="px-5 py-4 border-b border-slate-100">
                       <h3 className="section-title text-slate-900">All Available Payslips</h3>
                     </div>
@@ -739,7 +739,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
             )}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Tax & Deductions Register</h3></div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Employee' }, { label: 'Base', right: true }, { label: 'Taxes', right: true }, { label: 'Benefits', right: true, colSpan: 3 }, { label: 'Net', right: true }, { label: 'Actions', right: true }]} />
@@ -801,7 +801,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="OT Payout" value={`$${Math.round(attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length * 2 * (totalPayroll / localEmployees.length / 160) * 1.5).toLocaleString()}`} icon="bi bi-currency-dollar" sub="1.5x premium rate" />
               <StatCard label="Employees with OT" value={attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length} icon="bi bi-people" sub="Claimed overtime this month" />
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Overtime Log</h3></div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Regular Hours', right: true }, { label: 'OT Hours', right: true }, { label: 'OT Rate', right: true }, { label: 'OT Pay', right: true }, { label: 'Approved By' }, { label: 'Actions', right: true }]} />

@@ -133,7 +133,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               <div key={wo.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all cursor-pointer" onClick={() => woModal.open(wo)}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="fs-xs font-sans tabular-nums fw-bold text-slate-500">{wo.woNumber}</span>
                       <Badge label={wo.status} variant={wo.status === 'Completed' ? 'success' : wo.status === 'In Progress' ? 'info' : wo.status === 'On Hold' ? 'danger' : 'warning'} />
                     </div>
@@ -183,7 +183,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
             </Select>
             {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBomPart(''); setBomQty('1'); setBomCost('10'); setShowBOMModal(true); }}>Add BOM Item</PrimaryBtn>}
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Bill of Materials{activeBomProduct ? ` — ${activeBomProduct}` : ''}</h3>
               <span className="table-cell-mono fw-bold text-slate-900">Total Cost: ${bomTotal.toFixed(2)}</span>
@@ -244,7 +244,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="data-value text-slate-500 mt-0.5">{q.inspector} · {q.date}</div>
                   {q.notes && <div className="text-[10px] text-slate-400 mt-0.5 italic">{q.notes}</div>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge label={q.result} variant={q.result === 'Passed' ? 'success' : q.result === 'Failed' ? 'danger' : 'warning'} />
                   {isAdmin && (
                     <div className="flex gap-1" onClick={e => e.stopPropagation()}>

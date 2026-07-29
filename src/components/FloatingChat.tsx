@@ -6,15 +6,18 @@ interface FloatingChatProps {
   selectedCompany: { id: string; name: string };
   selectedUser: { id: string; name: string };
   departments: Array<{ id: string; name: string; companyId: string }>;
-  employees: Array<{ id: string; userId?: string; firstName: string; lastName: string; department?: string; companyId: string }>;
+  employees: Array<{ id: string; userId?: string; firstName: string; lastName: string; department?: string; companyId: string; email?: string; }>;
   chatMessages: any[];
+  chatGroups?: import('../types').ChatGroup[];
   chatReads?: any[];
   onSendChatMessage: (msg: { companyId: string; threadId: string; senderId: string; senderName: string; message: string }) => void;
   onMarkThreadRead?: (threadId: string) => void;
+  onCreateChatGroup?: (group: Omit<import('../types').ChatGroup, 'id' | 'createdAt' | 'companyId' | 'createdBy'>) => void;
+  onUpdateChatGroupMembers?: (groupId: string, members: string[]) => void;
 }
 
 export const FloatingChat: React.FC<FloatingChatProps> = ({
-  selectedCompany, selectedUser, departments, employees, chatMessages, chatReads, onSendChatMessage, onMarkThreadRead
+  selectedCompany, selectedUser, departments, employees, chatMessages, chatGroups, chatReads, onSendChatMessage, onMarkThreadRead, onCreateChatGroup, onUpdateChatGroupMembers
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [chatRecipient, setChatRecipient] = useState<ChatRecipient | null>(null);
@@ -185,7 +188,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                   );
                 })}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button onClick={() => setShowGroupCreator(false)} className="flex-1 text-[10px] fw-semibold py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
                 <button onClick={createGroup} disabled={!groupName.trim() || groupMembers.length === 0}
                   className="flex-1 text-[10px] fw-bold py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
@@ -210,7 +213,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
               <div className="flex-1 overflow-y-auto">
                 {/* Teams */}
                 <div className="px-3 pt-2.5 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400">Teams</div>
-                {departments.filter(d => d.companyId === selectedCompany.id)
+                {departments.filter(d => d.companyId === selectedCompany.id && d.name === myDeptName)
                   .filter(d => !chatSearch || d.name.toLowerCase().includes(chatSearch.toLowerCase()))
                   .sort((a, b) => (getLastMessage(b.id)?.timestamp || 0) - (getLastMessage(a.id)?.timestamp || 0))
                   .map(d => {
@@ -240,45 +243,45 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                   })}
 
                 {/* Groups */}
-                {[...new Set(chatMessages.filter(m => m.companyId === selectedCompany.id && m.threadId.startsWith('group-')).map(m => m.threadId))].length > 0 && (
-                  <>
-                    <div 
-                      className="px-3 pt-3 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400 cursor-pointer flex items-center gap-1 hover:text-slate-600 transition-colors"
-                      onClick={() => setGroupsExpanded(!groupsExpanded)}
-                    >
-                      <i className={`bi bi-chevron-${groupsExpanded ? 'down' : 'right'} text-[8px]`}></i>
-                      Groups
-                    </div>
-                    {groupsExpanded && [...new Set(chatMessages.filter(m => m.companyId === selectedCompany.id && m.threadId.startsWith('group-')).map(m => m.threadId))]
-                      .sort((a, b) => (getLastMessage(b)?.timestamp || 0) - (getLastMessage(a)?.timestamp || 0))
-                      .map(tid => {
-                      const lastMsg = getLastMessage(tid);
-                      const unread = unreadByThread[tid] || 0;
-                      const groupChat = chatRecipient?.type === 'group' && getThreadId(chatRecipient) === tid;
-                      // Try to find group name from message context or use thread ID
-                      const groupNameLabel = lastMsg?.from || tid.replace('group-', 'Group ');
-                      return (
-                        <button key={tid} onClick={() => setChatRecipient({ type: 'group', id: tid.replace('group-', ''), name: groupNameLabel })}
-                          className={`w-full text-left px-3 py-2 flex items-center gap-2 text-[11px] cursor-pointer transition-all rounded-md mx-1 ${
-                            groupChat ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'
-                          }`}>
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] shrink-0 ${
-                            groupChat ? 'bg-white/20 text-white' : 'bg-violet-100 text-violet-600'
-                          }`}><i className="bi bi-people-fill text-[9px]"></i></span>
-                          <div className="min-w-0 flex-1">
-                            <div className={`truncate fw-semibold ${groupChat ? 'text-white' : 'text-slate-900'}`}>Group Chat</div>
-                            {lastMsg && <div className={`truncate text-[9px] ${groupChat ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.text}</div>}
-                          </div>
-                          {unread > 0 && !groupChat && (
-                            <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[8px] fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
-                              {unread > 9 ? '9+' : unread}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </>
-                )}
+                <div className="px-3 pt-3 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400 cursor-pointer flex items-center justify-between transition-colors">
+                  <div onClick={() => setGroupsExpanded(!groupsExpanded)} className="flex items-center gap-1 hover:text-slate-600">
+                    <i className={`bi bi-chevron-${groupsExpanded ? 'down' : 'right'} text-[8px]`}></i> Groups
+                  </div>
+                  <button onClick={() => {
+                    const name = prompt('Enter group name:');
+                    if (name && onCreateChatGroup) {
+                      onCreateChatGroup({ name, members: [selectedUser.id], type: 'custom' });
+                    }
+                  }} className="hover:text-slate-600"><i className="bi bi-plus-lg"></i></button>
+                </div>
+                {groupsExpanded && (chatGroups || []).filter(g => g.companyId === selectedCompany.id && g.members.includes(selectedUser.id))
+                  .filter(g => !chatSearch || g.name.toLowerCase().includes(chatSearch.toLowerCase()))
+                  .sort((a, b) => (getLastMessage(b.id)?.timestamp || 0) - (getLastMessage(a.id)?.timestamp || 0))
+                  .map(g => {
+                    const tid = g.id;
+                    const lastMsg = getLastMessage(tid);
+                    const unread = unreadByThread[tid] || 0;
+                    const isActive = chatRecipient?.type === 'group' && chatRecipient.id === tid;
+                    return (
+                      <button key={`ft-grp-${tid}`} onClick={() => setChatRecipient({ type: 'group', id: tid, name: g.name })}
+                        className={`w-full text-left px-3 py-2 flex items-center gap-2 text-[11px] cursor-pointer transition-all rounded-md mx-1 ${
+                          isActive ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'
+                        }`}>
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] shrink-0 ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-violet-100 text-violet-600'
+                        }`}><i className="bi bi-people-fill text-[9px]"></i></span>
+                        <div className="min-w-0 flex-1">
+                          <div className={`truncate fw-semibold ${isActive ? 'text-white' : 'text-slate-900'}`}>{g.name}</div>
+                          {lastMsg && <div className={`truncate text-[9px] ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.text}</div>}
+                        </div>
+                        {unread > 0 && !isActive && (
+                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[8px] fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
+                            {unread > 9 ? '9+' : unread}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
 
                 {/* People */}
                 <div className="px-3 pt-3 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400">People</div>
@@ -337,10 +340,36 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="text-[11px] fw-bold text-slate-900 truncate">{chatRecipient.name}</div>
                       <div className="text-[9px] text-slate-400">
-                        {chatRecipient.type === 'team' ? 'Team channel' : chatRecipient.type === 'group' ? 'Group chat' : 'Direct message'}
+                        {chatRecipient.type === 'team' ? 'Department channel' : chatRecipient.type === 'group' ? 'Custom Group' : 'Direct message'}
                       </div>
                     </div>
                   </div>
+                  {chatRecipient.type === 'group' && onUpdateChatGroupMembers && (
+                    <div className="mr-3">
+                      <button 
+                        onClick={() => {
+                          const currentGroup = (chatGroups || []).find(g => g.id === chatRecipient.id);
+                          if (!currentGroup) return;
+                          const action = prompt('Type "add" to add a user email, or "remove" to remove a user email:');
+                          if (action === 'add' || action === 'remove') {
+                            const email = prompt(`Enter email to ${action}:`);
+                            const emp = employees.find(e => e.companyId === selectedCompany.id && e.email === email);
+                            if (!emp) {
+                              alert('Employee not found!');
+                              return;
+                            }
+                            const uid = emp.userId || emp.id;
+                            let newMembers = [...currentGroup.members];
+                            if (action === 'add' && !newMembers.includes(uid)) newMembers.push(uid);
+                            if (action === 'remove') newMembers = newMembers.filter(m => m !== uid);
+                            onUpdateChatGroupMembers(chatRecipient.id, newMembers);
+                          }
+                        }}
+                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[9px] fw-semibold transition-colors">
+                        Manage Members
+                      </button>
+                    </div>
+                  )}
                   <div className="flex-1 overflow-y-auto p-4 space-y-2.5 bg-slate-50/50">
                     {(() => {
                       const threadId = getThreadId(chatRecipient);
@@ -351,11 +380,6 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
 
                       const threadMsgs = chatMessages
                         .filter(m => m.companyId === selectedCompany.id && m.threadId === threadId)
-                        .filter(m => {
-                          if (chatRecipient.type !== 'team') return true;
-                          if (isDeptMember) return true;
-                          return m.senderId === selectedUser.id; // Non-members only see their own messages
-                        })
                         .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                       if (threadMsgs.length === 0) return (
                         <div className="flex flex-col items-center justify-center h-full gap-2">

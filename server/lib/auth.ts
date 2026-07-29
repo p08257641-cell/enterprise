@@ -2,6 +2,9 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'enterprise-erp-secret-change-in-production';
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'enterprise-erp-secret-change-in-production') {
+  throw new Error('FATAL: JWT_SECRET environment variable is required in production!');
+}
 const TOKEN_EXPIRY = '24h';
 
 export interface TokenPayload {

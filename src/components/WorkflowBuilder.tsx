@@ -144,7 +144,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
                       </div>
                     )}
                     <div className="flex w-full max-w-md items-center justify-between rounded-xl border border-slate-200/80 bg-white p-3.5 hover:border-slate-400 hover:shadow-xs transition-all duration-150">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <span className={`text-[9px] fw-bold px-2 py-1 rounded-md uppercase tracking-wider ${
                           block.type === 'Trigger' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' :
                           block.type === 'Condition' ? 'bg-amber-50 text-amber-700 border border-amber-200/50' :
@@ -243,7 +243,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
       {/* TAB: Triggers */}
       {wfTab === 'triggers' && (
         <div className="space-y-4 animate-fade-in">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Trigger' }, { label: 'Event' }, { label: 'Description' }, { label: 'Status', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -269,7 +269,7 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
       {/* TAB: Run Logs */}
       {wfTab === 'logs' && (
         <div className="space-y-4 animate-fade-in">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Timestamp' }, { label: 'Action' }, { label: 'Module' }, { label: 'Details' }]} />
               <tbody className="divide-y divide-slate-100">

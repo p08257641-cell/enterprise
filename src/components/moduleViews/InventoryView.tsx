@@ -60,7 +60,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {invTab === 'stock' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-slate-100">
             <Input placeholder="Search by SKU or product name…" value={invSearch} onChange={e => setInvSearch(e.target.value)} />
           </div>
@@ -136,7 +136,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="In Transit" value={transfers.filter(t => t.status === 'In Transit').length} icon="bi bi-truck" sub="Currently moving" accent />
             <StatCard label="Completed" value={transfers.filter(t => t.status === 'Completed').length} icon="bi bi-check-circle" sub="Delivered" color="text-emerald-600" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Stock Transfer Log</h3>
               <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setTrfItem(localStock[0]?.id ?? ''); setTrfFrom('Warehouse A'); setTrfTo('Main Store'); setTrfQty('10'); setShowTransferModal(true); }}>New Transfer</PrimaryBtn>
@@ -213,7 +213,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Highest Value SKU" value={[...localStock].sort((a, b) => b.stockLevel * b.unitPrice - a.stockLevel * a.unitPrice)[0]?.name ?? '—'} icon="bi bi-award" sub="By total stock value" />
             <StatCard label="Low Stock Risk Value" value={`$${localStock.filter(i => i.stockLevel <= i.minStockLevel).reduce((s, i) => s + i.stockLevel * i.unitPrice, 0).toLocaleString()}`} icon="bi bi-exclamation-triangle" sub="Value at risk" color="text-rose-600" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Stock Valuation Report</h3></div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Qty on Hand', right: true }, { label: 'Unit Cost', right: true }, { label: 'Total Value', right: true }, { label: 'Warehouse' }, { label: 'Actions', right: true }]} />

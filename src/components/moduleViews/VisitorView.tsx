@@ -244,7 +244,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {visTab === 'log' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Visitor Log</h3></div>
           <div className="divide-y divide-slate-100">
             {visitors.map(v => (
@@ -260,7 +260,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {visTab === 'badges' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <h3 className="section-title text-slate-900">Printed Badges</h3>
             <span className="fs-xs text-slate-400">{visitors.length} badge(s)</span>

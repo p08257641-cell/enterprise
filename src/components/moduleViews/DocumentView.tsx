@@ -137,7 +137,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                     <i className={`${fileIcons[d.type] || 'bi bi-file-earmark'} fs-base text-slate-500`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="fs-xs fw-semibold text-slate-900 truncate">{d.name}</span>
                       <span className={`shrink-0 text-[9px] fw-bold px-1.5 py-0.5 rounded-full ${
                         d.visibility === 'only_me' ? 'bg-amber-50 text-amber-600' :
@@ -209,7 +209,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
       {/* eSign Tab */}
       {docTab === 'esign' && (
         <div className="space-y-3">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">eSign Requests</h3>
               <p className="text-[10px] text-slate-400 mt-0.5">Documents sent for digital signature.</p>

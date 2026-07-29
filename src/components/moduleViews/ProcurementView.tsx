@@ -124,7 +124,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
 
       {/* Purchase Orders Tab */}
       {procTab === 'orders' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'PO Number' }, { label: 'Vendor' }, { label: 'Item' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
             <tbody className="divide-y divide-slate-100">
@@ -203,7 +203,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Total Bids Received" value={localRFQs.reduce((s, r) => s + r.quotesReceived, 0)} icon="bi bi-clock" sub="Across all RFQs" accent />
             <StatCard label="Awarded" value={localRFQs.filter(r => r.status === 'Awarded').length} icon="bi bi-piggy-bank" sub="RFQs closed" color="text-emerald-600" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Request for Quotation</h3>
               {isAdmin && <PrimaryBtn icon="bi bi-send" onClick={() => { setRfqItem(''); setSelectedRfqInvId(''); setRfqVendorCount('3'); setShowRfqModal(true); }}>Send New RFQ</PrimaryBtn>}

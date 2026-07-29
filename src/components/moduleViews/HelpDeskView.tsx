@@ -82,7 +82,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {hdTab === 'queue' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Subject' }, { label: 'Category' }, { label: 'Priority' }, { label: 'Status' }, { label: 'Created' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
@@ -196,7 +196,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Breached" value={localTickets.filter(t => slaStatus(t).breached).length} icon="bi bi-x-circle" sub="Past target" color="text-rose-600" />
             <StatCard label="Avg Response" value={localTickets.length ? `${Math.round((localTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length / localTickets.length) * 100)}%` : '--'} icon="bi bi-stopwatch" sub="Resolution rate" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Priority' }, { label: 'Elapsed' }, { label: 'Target' }, { label: 'SLA' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -234,7 +234,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={ticketModal.close}>
             <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl max-h-[88vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="flex items-start justify-between p-5 border-b border-slate-100">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 fs-lg"><i className="bi bi-ticket-detailed"></i></div>
                   <div>
                     <h2 className="fs-sm fw-bold text-slate-900">Ticket {t.ticketNumber}</h2>

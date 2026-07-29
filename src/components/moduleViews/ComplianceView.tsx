@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, ViewModal, useRowModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
-import { modalAlert } from '../../utils/modal';
+import { modalAlert, modalConfirm } from '../../utils/modal';
 import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
 import { ComplianceCheck, PolicyDocument } from '../../types';
 
 export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onCreateComplianceCheck, onDeleteComplianceCheck, onUpdateComplianceCheck } = props;
+  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onCreateComplianceCheck, onDeleteComplianceCheck, onUpdateComplianceCheck, onDeletePolicyDocument, onClearIncidents } = props;
 
   const canEditCompliance = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
   const localChecks = complianceChecks.filter(c => c.companyId === selectedCompany.id);
@@ -111,7 +111,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
               <div><Label>Description</Label><textarea value={newCheckDesc} onChange={e => setNewCheckDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" placeholder="Optional description" /></div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <PrimaryBtn onClick={submitNewCheck} disabled={!newCheckTitle.trim()}>Create Check</PrimaryBtn>
                 <SecBtn onClick={() => setShowAddCheck(false)}>Cancel</SecBtn>
               </div>
@@ -119,7 +119,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
           )}
           {localChecks.map(check => (
             <div key={check.id} onClick={() => checkModal.open(check)} className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer hover:shadow-xs ${check.status === 'Compliant' ? 'bg-emerald-50/30 border-emerald-200' : check.status === 'Non-Compliant' || check.status === 'Overdue' ? 'bg-rose-50/20 border-rose-200' : 'bg-slate-50/50 border-slate-200'}`}>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${check.status === 'Compliant' ? 'bg-emerald-100' : check.status === 'Non-Compliant' || check.status === 'Overdue' ? 'bg-rose-100' : 'bg-slate-100'}`}>
                   <i className={`${check.status === 'Compliant' ? 'bi bi-check-circle-fill text-emerald-600' : check.status === 'Non-Compliant' || check.status === 'Overdue' ? 'bi bi-x-circle-fill text-rose-500' : 'bi bi-clock-fill text-slate-400'} fs-sm`}></i>
                 </div>
@@ -131,13 +131,19 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge label={check.status} variant={check.status === 'Compliant' ? 'success' : check.status === 'Non-Compliant' || check.status === 'Overdue' ? 'danger' : 'warning'} />
                 {canEditCompliance && (
-                  <button onClick={(e) => { e.stopPropagation(); toggleCheckStatus(check); }}
-                    className={`text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer border transition-all ${check.status === 'Compliant' ? 'border-slate-200 text-slate-500 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
-                    {check.status === 'Compliant' ? 'Mark Fail' : 'Mark Pass'}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={(e) => { e.stopPropagation(); toggleCheckStatus(check); }}
+                      className={`text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer border transition-all ${check.status === 'Compliant' ? 'border-slate-200 text-slate-500 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+                      {check.status === 'Compliant' ? 'Mark Fail' : 'Mark Pass'}
+                    </button>
+                    <button onClick={async (e) => { e.stopPropagation(); if (await modalConfirm('Delete this compliance check?', { variant: 'danger' })) onDeleteComplianceCheck(check.id); }}
+                      className="text-[10px] fw-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                      Delete
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -155,7 +161,15 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="text-[10px] text-slate-400 mt-1">{p.version} · {p.category} · {p.totalEmployees} employees</div>
                 {p.dueDate && <div className="text-[10px] text-slate-400 mt-0.5">Due: {p.dueDate}</div>}
               </div>
-              <Badge label={p.status || 'Active'} variant={p.status === 'Active' ? 'success' : 'default'} />
+              <div className="flex flex-col items-end gap-2">
+                <Badge label={p.status || 'Active'} variant={p.status === 'Active' ? 'success' : 'default'} />
+                {canEditCompliance && (
+                  <button onClick={async (e) => { e.stopPropagation(); if (await modalConfirm('Delete this policy?', { variant: 'danger' })) onDeletePolicyDocument?.(p.id); }}
+                    className="text-[10px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
           ))}
           {localPolicies.length === 0 && <div className="sm:col-span-2 text-center fs-xs text-slate-400 py-8">No policy documents yet.</div>}
@@ -165,7 +179,12 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
       {compTab === 'incidents' && (
         <div className="space-y-4">
           {/* Report Incident Button — available to all roles */}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {canEditCompliance && (
+              <SecBtn onClick={() => { modalConfirm('Clear all incidents?', { variant: 'danger' }).then(res => { if (res) onClearIncidents?.(); }); }}>
+                <i className="bi bi-trash fs-xs"></i> Clear Incidents
+              </SecBtn>
+            )}
             <PrimaryBtn icon="bi bi-flag" onClick={() => setShowReportIncident(true)}>Report Incident</PrimaryBtn>
           </div>
 
@@ -174,7 +193,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
               <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
                 <div className="bg-gradient-to-r from-rose-500 to-orange-500 px-6 py-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <i className="bi bi-flag-fill text-white"></i>
                     </div>
@@ -240,7 +259,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="fs-xs fw-bold text-slate-900">{inc.title}</div>
                 <div className="data-value text-slate-500 mt-0.5">Due: {inc.dueDate} · {inc.assigneeName && inc.assigneeName !== 'Unassigned' ? `Assigned to: ${inc.assigneeName}` : 'Pending review by HR, Head of Dept & Admin'}</div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge label={inc.status} variant={inc.status === 'Overdue' ? 'danger' : 'warning'} />
                 {canEditCompliance && (
                   <button onClick={() => onResolveComplianceCheck(inc.id, 'Compliant')} className="text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer bg-slate-900 text-white hover:bg-slate-800 transition-all">
@@ -263,7 +282,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
               </div>
               <div className="px-6 py-4 border-t border-emerald-100">
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
                       <i className="bi bi-check-circle-fill text-emerald-500 fs-sm"></i>
                     </div>
@@ -272,7 +291,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="text-[10px] text-slate-500">Checks Passing</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center">
                       <i className="bi bi-file-text-fill text-sky-500 fs-sm"></i>
                     </div>
@@ -281,7 +300,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="text-[10px] text-slate-500">Active Policies</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center">
                       <i className="bi bi-calendar-check-fill text-slate-400 fs-sm"></i>
                     </div>
@@ -304,7 +323,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
             {/* Colored header based on status */}
             <div className={`px-6 py-4 ${checkModal.selected.status === 'Compliant' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : checkModal.selected.status === 'Non-Compliant' || checkModal.selected.status === 'Overdue' ? 'bg-gradient-to-r from-rose-500 to-pink-500' : 'bg-gradient-to-r from-slate-600 to-slate-700'}`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                     <i className={`${checkModal.selected.status === 'Compliant' ? 'bi bi-shield-check' : 'bi bi-shield-exclamation'} text-white fs-lg`}></i>
                   </div>
@@ -381,7 +400,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
               {/* Blue header */}
               <div className="bg-gradient-to-r from-sky-500 to-blue-600 px-6 py-4 shrink-0">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <i className="bi bi-file-earmark-text text-white fs-lg"></i>
                     </div>
@@ -421,7 +440,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 {/* Document Attachment */}
                 {pol.attachmentUrl && (
                   <div className={`rounded-xl p-4 border ${ft.bg} flex items-center justify-between`}>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-xs">
                         <i className={`${ft.icon} ${ft.color} fs-lg`}></i>
                       </div>

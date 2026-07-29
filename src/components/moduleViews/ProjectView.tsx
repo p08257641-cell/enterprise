@@ -146,7 +146,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                   ) : (
                     <>
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="section-title text-slate-600">{col}</span>
                           <button onClick={() => setCollapsedCols(prev => { const next = new Set(prev); next.add(col); return next; })} className="text-slate-400 hover:text-slate-600 cursor-pointer transition-colors" title={`Collapse ${col}`}>
                             <i className="bi bi-chevron-down text-[10px]"></i>
@@ -224,7 +224,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Billable Hours" value={`${Math.round(localTasks.length * 8 * 0.83)}h`} icon="bi bi-currency-dollar" sub="83% billability" color="text-emerald-600" />
             <StatCard label="Overdue Tasks" value={overdueTasks} icon="bi bi-exclamation-triangle" sub="Past due, not done" color="text-rose-600" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Time Log — This Week</h3></div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Team Member' }, { label: 'Task' }, { label: 'Due' }, { label: 'Hours Logged', right: true }, { label: 'Priority' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
@@ -264,7 +264,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Avg Utilisation" value={`${localEmployees.length ? Math.round((attendance.filter(a => a.companyId === selectedCompany.id && a.status === 'Present').length / localEmployees.length) * 100) : 0}%`} icon="bi bi-speedometer" sub="Capacity vs logged hours" accent />
             <StatCard label="Available Capacity" value={`${localEmployees.length ? Math.round(((localEmployees.length - attendance.filter(a => a.companyId === selectedCompany.id && a.status === 'Present').length) / localEmployees.length) * 100) : 100}%`} icon="bi bi-person-check" sub="Unallocated bandwidth" color="text-emerald-600" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Team Resource Allocation</h3></div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Team Member' }, { label: 'Department' }, { label: 'Role' }, { label: 'Utilisation', right: true }, { label: 'Tasks Assigned', right: true }, { label: 'Actions', right: true }]} />

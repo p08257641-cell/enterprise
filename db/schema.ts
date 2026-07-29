@@ -1229,6 +1229,16 @@ export const chatMessages = pgTable('chat_messages', {
   createdAt: text('createdAt'),
 });
 
+export const chatGroups = pgTable('chat_groups', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  name: text('name'),
+  type: text('type'),
+  members: text('members').array(),
+  createdBy: text('createdBy'),
+  createdAt: text('createdAt'),
+});
+
 export const whisperReports = pgTable('whisper_reports', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),

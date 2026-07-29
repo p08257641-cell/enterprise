@@ -157,7 +157,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex items-center gap-2 mb-3 p-2 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="fs-[10px] fw-semibold text-slate-500 mr-1">Poll Controls:</span>
                     {isEditing ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Input
                           type="date"
                           value={editEndDate}
@@ -199,7 +199,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                 {!canVote ? (
                   <div className="space-y-2 mt-4">
                     {results.length > 0 ? results.map(opt => (
-                      <div key={opt.id} className="flex items-center gap-3">
+                      <div key={opt.id} className="flex flex-wrap items-center gap-3">
                         <div className="flex-1">
                           <div className="flex justify-between mb-1">
                             <span className="fs-xs fw-semibold text-slate-700">{opt.label}</span>
@@ -216,7 +216,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="space-y-2 mt-4">
                     <div className="fs-xs fw-semibold text-emerald-600 mb-2"><i className="bi bi-check-circle-fill"></i> You voted</div>
                     {results.map(opt => (
-                      <div key={opt.id} className="flex items-center gap-3">
+                      <div key={opt.id} className="flex flex-wrap items-center gap-3">
                         <div className="flex-1">
                           <div className="flex justify-between mb-1">
                             <span className="fs-xs fw-semibold text-slate-700">{opt.label}</span>
@@ -290,7 +290,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                   <Input type="date" value={newEndDate} onChange={e => setNewEndDate(e.target.value)} />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <input type="checkbox" id="anonymous-vote" checked={newAnonymous} onChange={e => setNewAnonymous(e.target.checked)} className="rounded border-slate-300" />
                 <Label>Anonymous voting (hide voter identities)</Label>
               </div>
@@ -300,7 +300,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                   {newOptions.map((opt, i) => {
                     const isCustom = opt !== '' && !companyEmployees.some(e => `${e.firstName} ${e.lastName}` === opt);
                     return (
-                      <div key={i} className="flex gap-2">
+                      <div key={i} className="flex flex-wrap gap-2">
                         <select
                           value={isCustom ? '__custom__' : opt}
                           onChange={e => {
@@ -382,7 +382,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                 )}
                 <div className="space-y-2">
                   {results.map((opt, i) => (
-                    <div key={opt.id} className="flex items-center gap-3">
+                    <div key={opt.id} className="flex flex-wrap items-center gap-3">
                       <span className="text-[10px] font-mono text-slate-400 w-4">{i + 1}</span>
                       <div className="flex-1">
                         <div className="flex justify-between mb-1">

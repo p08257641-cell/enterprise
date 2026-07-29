@@ -134,7 +134,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
         title="Sales & Order Management"
         subtitle="Manage sales orders, quotations, customer accounts and territory performance."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {salesTab === 'orders' && <PrimaryBtn onClick={() => setShowCreate(true)}><i className="bi bi-plus-lg mr-1"></i> New Order</PrimaryBtn>}
             {salesTab === 'quotes' && <PrimaryBtn onClick={() => setShowQuoteModal(true)}><i className="bi bi-plus-lg mr-1"></i> New Quote</PrimaryBtn>}
             {salesTab === 'customers' && <PrimaryBtn onClick={() => setShowCustModal(true)}><i className="bi bi-plus-lg mr-1"></i> New Customer</PrimaryBtn>}
@@ -154,7 +154,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
 
       {/* ─── Orders Tab ─── */}
       {salesTab === 'orders' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Order ID' }, { label: 'Customer' }, { label: 'Items' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Priority' }, { label: 'Status' }, { label: 'Actions' }]} />
             <tbody className="divide-y divide-slate-100">
@@ -169,7 +169,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3"><Badge label={o.priority} variant={priorityVariant(o.priority)} /></td>
                   <td className="px-4 py-3"><Badge label={o.status} variant={statusVariant(o.status)} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button onClick={() => setViewOrder(o)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
                       <select value={o.status} onChange={e => onUpdateSalesOrder(o.id, { status: e.target.value as any })} className="text-[10px] fw-semibold border border-slate-200 rounded px-2 py-1 bg-white cursor-pointer">
                         {['Draft', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Completed', 'Cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
@@ -185,7 +185,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
 
       {/* ─── Quotations Tab ─── */}
       {salesTab === 'quotes' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Quote ID' }, { label: 'Customer' }, { label: 'Items' }, { label: 'Valid Until' }, { label: 'Total', right: true }, { label: 'Status' }, { label: 'Actions' }]} />
             <tbody className="divide-y divide-slate-100">
@@ -199,7 +199,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${q.total.toLocaleString()}</td>
                   <td className="px-4 py-3"><Badge label={q.status} variant={statusVariant(q.status)} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button onClick={() => setViewQuote(q)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
                       {q.status === 'Draft' && <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Sent' })} className="fs-xs fw-semibold text-blue-500 hover:text-blue-700 cursor-pointer">Send</button>}
                       {q.status === 'Sent' && <>
@@ -218,7 +218,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
 
       {/* ─── Customers Tab ─── */}
       {salesTab === 'customers' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Customer' }, { label: 'Company' }, { label: 'Email' }, { label: 'Orders' }, { label: 'Total Spend', right: true }, { label: 'Last Order' }, { label: 'Actions' }]} />
             <tbody className="divide-y divide-slate-100">
@@ -232,7 +232,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${c.totalSpend.toLocaleString()}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{c.lastOrderDate || '—'}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button onClick={() => setViewCust(c)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
                       <button onClick={() => onDeleteSalesCustomer(c.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
@@ -252,7 +252,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Revenue Closed" value={`$${completedRevenue.toLocaleString()}`} icon="bi bi-graph-up" sub="This month" color="text-emerald-600" />
             <StatCard label="Remaining" value={`$${Math.max(0, monthlyTarget - completedRevenue).toLocaleString()}`} icon="bi bi-flag" sub="To hit monthly target" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Sales Rep' }, { label: 'Month' }, { label: 'Target', right: true }, { label: 'Achieved', right: true }, { label: 'Attainment' }, { label: 'Actions' }]} />
               <tbody className="divide-y divide-slate-100">
@@ -266,7 +266,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${t.targetAmount.toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${t.actualAmount.toLocaleString()}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden w-20">
                             <div className={`h-full rounded-full ${pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-400'}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                           </div>

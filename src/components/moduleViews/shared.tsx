@@ -141,6 +141,8 @@ export interface ModuleViewsProps {
   onCreateComplianceCheck: (check: { companyId: string; category: string; title: string; description: string; dueDate: string; assignee: string; assigneeName: string; createdBy: string; status?: string }) => void;
   onUpdateComplianceCheck: (id: string, values: any) => void;
   onDeleteComplianceCheck: (id: string) => void;
+  onDeletePolicyDocument?: (id: string) => void;
+  onClearIncidents?: () => void;
   onAcknowledgePolicy: (policyId: string, employeeId: string) => void;
   onFileDeadline: (filingId: string) => void;
   onCreateFilingDeadline: (filing: { companyId: string; filingType: string; jurisdiction: string; dueDate: string; assignee: string; assigneeName: string; notes: string; createdBy: string }) => void;
@@ -223,9 +225,12 @@ export interface ModuleViewsProps {
   onAddEmailTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt'>) => void;
   // Team chat
   chatMessages: any[];
+  chatGroups?: import('../../types').ChatGroup[];
   chatReads?: any[];
   onSendChatMessage: (message: { companyId: string; threadId: string; senderId: string; senderName: string; message: string }) => void;
   onMarkThreadRead?: (threadId: string) => void;
+  onCreateChatGroup?: (group: Omit<import('../../types').ChatGroup, 'id' | 'createdAt' | 'companyId' | 'createdBy'>) => void;
+  onUpdateChatGroupMembers?: (groupId: string, members: string[]) => void;
   // Voting / Polls
   polls: import('../../types').Poll[];
   pollOptions: import('../../types').PollOption[];
@@ -310,7 +315,7 @@ export const ViewModal = ({ title, subtitle, onClose, size = '2xl', actions, chi
             <h2 className="fs-sm fw-semibold text-slate-900">{title}</h2>
             {subtitle && <p className="fs-xs text-slate-500 mt-0.5">{subtitle}</p>}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {actions && <div>{actions}</div>}
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x-lg fs-lg"></i></button>
           </div>
@@ -410,7 +415,7 @@ export const PageHeader = ({ title, subtitle, action }: { title: string; subtitl
       <h1 className="fs-xl fw-bold tracking-tight text-slate-900 page-title">{title}</h1>
       <p className="fs-sm text-slate-500 mt-0.5 page-subtitle">{subtitle}</p>
     </div>
-    {action && <div className="shrink-0">{action}</div>}
+    {action && <div className="shrink-0 flex items-center gap-2">{action}</div>}
   </div>
 );
 

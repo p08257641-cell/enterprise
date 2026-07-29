@@ -18,7 +18,7 @@ export const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) =
 export const SkeletonRows: React.FC<{ rows?: number; className?: string }> = ({ rows = 5, className = '' }) => (
   <div className={`space-y-3 ${className}`}>
     {Array.from({ length: rows }).map((_, i) => (
-      <div key={i} className="flex items-center gap-3">
+      <div key={i} className="flex flex-wrap items-center gap-3">
         <Skeleton className="h-9 w-9 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-3 w-1/3" />

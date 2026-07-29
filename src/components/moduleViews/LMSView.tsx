@@ -98,7 +98,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {lmsTab === 'progress' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Employee' }, { label: 'Course' }, { label: 'Progress', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">

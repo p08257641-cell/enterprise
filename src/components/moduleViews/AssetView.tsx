@@ -244,7 +244,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
               <PrimaryBtn icon="bi bi-arrow-repeat" onClick={() => onRunDepreciation(new Date().toISOString().slice(0, 7))}>Run Depreciation ({new Date().toISOString().slice(0, 7)})</PrimaryBtn>
             </div>
           )}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Depreciation Schedule (Straight-Line, 10% Salvage)</h3></div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Purchase Price', right: true }, { label: 'Life (yrs)' }, { label: 'Annual Dep.', right: true }, { label: 'Accumulated', right: true }, { label: 'Net Book Value', right: true }]} />
