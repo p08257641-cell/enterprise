@@ -507,10 +507,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Period' }, { label: 'Gross', right: true }, { label: 'Deductions', right: true }, { label: 'Net', right: true }, { label: 'Status' }]} />
+                <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Period' }, { label: 'Gross', right: true }, { label: 'Deductions', right: true }, { label: 'Net', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {payslips.filter(p => p.companyId === selectedCompany.id && p.period === activeSlipsPeriod).map(slip => (
-                    <tr key={slip.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => payslipModal.open(slip)}>
+                    <tr key={slip.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{getEmployeeNameById(employees, slip.employeeId) || slip.employeeName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{slip.department}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{slip.period}</td>
@@ -518,10 +518,18 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); payslipModal.open(slip); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          View
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {payslips.filter(p => p.companyId === selectedCompany.id && p.period === activeSlipsPeriod).length === 0 && (
-                    <EmptyRow cols={7} message={`No payroll run found for ${activeSlipsPeriod}. Go to "Run Payroll" to generate.`} />
+                    <EmptyRow cols={8} message={`No payroll run found for ${activeSlipsPeriod}. Go to "Run Payroll" to generate.`} />
                   )}
                 </tbody>
               </table>
@@ -620,16 +628,16 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <h3 className="section-title text-slate-900">All Available Payslips</h3>
                     </div>
                     <table className="w-full text-left">
-                      <TableHead cols={[{ label: 'Period' }, { label: 'Gross', right: true }, { label: 'Deductions', right: true }, { label: 'Net', right: true }, { label: 'Status' }, { label: '' }]} />
+                      <TableHead cols={[{ label: 'Period' }, { label: 'Gross', right: true }, { label: 'Deductions', right: true }, { label: 'Net', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                       <tbody className="divide-y divide-slate-100">
                         {mySlips.map(slip => (
-                          <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors cursor-pointer ${activeSlip.id === slip.id ? 'bg-slate-50' : ''}`} onClick={() => payslipModal.open(slip)}>
+                          <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors ${activeSlip.id === slip.id ? 'bg-slate-50' : ''}`}>
                             <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{slip.period}</td>
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
                             <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
-                            <td className="px-4 py-3 text-right" onClick={() => payslipModal.open(slip)}>
+                            <td className="px-4 py-3 text-right">
                               <button onClick={e => { e.stopPropagation(); setSelectedSlipId(slip.id); }} className="text-blue-600 hover:text-blue-800 data-value-small fw-semibold cursor-pointer mr-3">View Details</button>
                             </td>
                           </tr>
@@ -734,7 +742,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Tax & Deductions Register</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Employee' }, { label: 'Base', right: true }, { label: 'Taxes', right: true }, { label: 'Benefits', right: true, colSpan: 3 }, { label: 'Net', right: true }]} />
+                <TableHead cols={[{ label: 'Employee' }, { label: 'Base', right: true }, { label: 'Taxes', right: true }, { label: 'Benefits', right: true, colSpan: 3 }, { label: 'Net', right: true }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localEmployees.slice(0, 8).map(emp => {
                     let totalCustomTax = 0;
@@ -763,12 +771,20 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     const net = Math.round(emp.salary + totalCustomBenefit - totalCustomTax);
 
                     return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => taxModal.open({ ...emp, fedTax: 0, stateTax: 0, ss: 0, medicare: 0, net })}>
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${emp.salary.toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${Math.round(totalCustomTax).toLocaleString()}</td>
                       <td colSpan={3} className="px-4 py-3 fs-xs font-sans tabular-nums text-emerald-600 text-right">+${Math.round(totalCustomBenefit).toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${net.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); taxModal.open({ ...emp, fedTax: 0, stateTax: 0, ss: 0, medicare: 0, net }); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          View
+                        </button>
+                      </td>
                     </tr>
                     );
                   })}
@@ -788,13 +804,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Overtime Log</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Regular Hours', right: true }, { label: 'OT Hours', right: true }, { label: 'OT Rate', right: true }, { label: 'OT Pay', right: true }, { label: 'Approved By' }]} />
+                <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Regular Hours', right: true }, { label: 'OT Hours', right: true }, { label: 'OT Rate', right: true }, { label: 'OT Pay', right: true }, { label: 'Approved By' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localEmployees.slice(0, 4).map((emp, i) => {
                     const otHours = [12, 8, 18, 6][i] ?? 5;
                     const otRate = Math.round((emp.salary / 160) * 1.5);
                     return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => otModal.open({ ...emp, otHours, otRate, otPay: otHours * otRate })}>
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{emp.department}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">160h</td>
@@ -802,6 +818,14 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${otRate}/hr</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${(otHours * otRate).toLocaleString()}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">HR Manager</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); otModal.open({ ...emp, otHours, otRate, otPay: otHours * otRate }); }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                        </td>
                       </tr>
                     );
                   })}

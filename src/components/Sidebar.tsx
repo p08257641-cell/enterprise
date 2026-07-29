@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User } from '../types';
+import { Company, User, CustomRole, PendingApproval } from '../types';
 import { ROLE_MODULES as rolePermissions, ROLE_SUBMENUS as submenuPermissions } from '../permissions';
 
 interface SidebarProps {
@@ -14,6 +14,8 @@ interface SidebarProps {
   onSelectView: (view: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  customRoles?: CustomRole[];
+  pendingApprovals?: PendingApproval[];
 }
 
 interface SubMenuItem {
@@ -44,12 +46,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeView,
   onSelectView,
   isOpen = false,
-  onClose
+  onClose,
+  customRoles = [],
+  pendingApprovals = []
 }) => {
   // Use activeRole for permission checks
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isSuperAdmin = userRole === 'Super Admin';
   const isEmployee = userRole === 'Employee';
+
+  // Pending approval badge count for current user's role and company
+  const pendingApprovalCount = pendingApprovals.filter(a => a.status === 'Pending' && a.companyId === selectedCompany.id).length;
+
+  // Resolve role from DB (custom_roles table) — falls back to hardcoded maps
+  const dbRole = customRoles.find(r => r.name === userRole && r.companyId === selectedCompany.id);
 
   // Employee-specific label overrides to make ESS feel distinct
   const employeeLabelOverrides: Record<string, string> = {
@@ -69,16 +79,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'Payroll': 'bi bi-wallet2',
   };
 
-  // Role→module and role→submenu maps are owned by src/permissions.ts (single source of truth).
-  // Check if user has access to a module
+  // Role→module and role→submenu maps — DB takes precedence, hardcoded is fallback
   const hasModuleAccess = (moduleId: string): boolean => {
     if (moduleId === 'Dashboard') return true;
+    if (dbRole) {
+      return dbRole.modules.includes(moduleId) || dbRole.modules.includes('*');
+    }
     const userPermissions = rolePermissions[userRole] || [];
     return userPermissions.includes(moduleId) || userPermissions.includes('*');
   };
 
-  // Check if user has access to a submenu item
   const hasSubmenuAccess = (submenuId: string): boolean => {
+    if (dbRole) {
+      return dbRole.submenus.includes('*') || dbRole.submenus.includes(submenuId);
+    }
     const userPermissions = submenuPermissions[userRole] || [];
     return userPermissions.includes('*') || userPermissions.includes(submenuId);
   };
@@ -135,7 +149,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ]
         },
       ],
-      roleRestriction: 'Super Admin' // Only show this group to Super Admin
     },
     {
       title: 'Core Suite',
@@ -149,6 +162,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'admin-roles', label: 'Roles', viewId: 'admin-roles', iconClass: 'bi bi-shield-lock' },
             { id: 'admin-approvals', label: 'Approval Workflows', viewId: 'admin-approvals', iconClass: 'bi bi-check2-square' },
             { id: 'admin-settings', label: 'Settings', viewId: 'admin-settings', iconClass: 'bi bi-toggles' },
+            { id: 'admin-evat', label: 'E-VAT Settings', viewId: 'admin-evat', iconClass: 'bi bi-receipt-cutoff' },
+            { id: 'pending-approvals', label: 'Pending Approvals', viewId: 'pending-approvals', iconClass: 'bi bi-clipboard-check' },
           ]
         },
         {
@@ -165,6 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'hr-departments', label: 'Departments', viewId: 'hr-departments', iconClass: 'bi bi-diagram-3' },
             { id: 'hr-bank-updates', label: 'Bank Account Updates', viewId: 'hr-bank-updates', iconClass: 'bi bi-bank' },
             { id: 'hr-profile-updates', label: 'Profile Update Requests', viewId: 'hr-profile-updates', iconClass: 'bi bi-person-gear' },
+            { id: 'pending-approvals', label: 'Pending Approvals', viewId: 'pending-approvals', iconClass: 'bi bi-clipboard-check' },
           ]
         },
         {
@@ -310,8 +326,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside className={`fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-slate-200 bg-white text-slate-600 transition-transform duration-300 lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:flex'}`}>
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-100 px-6">
-          <div className="flex items-center gap-2">
-            <span className="fs-2xl">{userRole === 'Super Admin' ? '🌐' : selectedCompany.logo}</span>
+          <div className="flex items-center gap-3">
+            {userRole === 'Super Admin' ? (
+              <span className="fs-2xl">🌐</span>
+            ) : selectedCompany.companyLogo ? (
+              <img src={selectedCompany.companyLogo} alt="Logo" className="h-8 w-8 rounded object-cover" />
+            ) : (
+              <span className="fs-2xl">{selectedCompany.logo}</span>
+            )}
             <div className="flex flex-col">
               <span className="fs-sm fw-bold text-slate-900 tracking-tight leading-tight truncate w-32">
                 {userRole === 'Super Admin' ? 'Platform Admin' : selectedCompany.name}
@@ -419,7 +441,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <button
                             key={sub.id}
                             onClick={() => onSelectView(sub.viewId)}
-                            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 fs-xs fw-medium transition-all cursor-pointer ${
+                            className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 fs-xs fw-medium transition-all cursor-pointer ${
                               activeView === sub.viewId ||
                               (sub.id === 'proj-kanban' && (activeView === 'project' || activeView.startsWith('proj-'))) ||
                               (sub.id === 'proc-pos' && (activeView === 'procurement' || activeView.startsWith('proc-'))) ||
@@ -430,8 +452,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                             }`}
                           >
-                            <i className={`${sub.iconClass} fs-sm`}></i>
-                            {isEmployee && employeeSubmenuLabelOverrides[sub.id] ? employeeSubmenuLabelOverrides[sub.id] : sub.label}
+                            <span className="flex items-center gap-2">
+                              <i className={`${sub.iconClass} fs-sm`}></i>
+                              {isEmployee && employeeSubmenuLabelOverrides[sub.id] ? employeeSubmenuLabelOverrides[sub.id] : sub.label}
+                            </span>
+                            {sub.id === 'pending-approvals' && pendingApprovalCount > 0 && (
+                              <span className="bg-amber-500 text-white rounded-full px-1.5 py-0.5 text-[9px] fw-bold leading-none">{pendingApprovalCount}</span>
+                            )}
                           </button>
                         ))}
                       </div>

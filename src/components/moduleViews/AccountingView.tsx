@@ -182,6 +182,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
   // Bill form state
   const [showBillModal, setShowBillModal] = useState(false);
+  const [billNumber, setBillNumber] = useState('');
   const [billVendor, setBillVendor] = useState('');
   const [billDesc, setBillDesc] = useState('');
   const [billAmount, setBillAmount] = useState('');
@@ -193,6 +194,35 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const [obPeriodId, setObPeriodId] = useState('');
   const [obDebit, setObDebit] = useState('');
   const [obCredit, setObCredit] = useState('');
+
+  // Bank Reconciliation form state
+  const [showReconModal, setShowReconModal] = useState(false);
+  const [reconBankAccountId, setReconBankAccountId] = useState('');
+  const [reconStatementBalance, setReconStatementBalance] = useState('');
+  const [reconPeriodStart, setReconPeriodStart] = useState('');
+  const [reconPeriodEnd, setReconPeriodEnd] = useState('');
+
+  // Currency Rate form state
+  const [showCurrencyRateModal, setShowCurrencyRateModal] = useState(false);
+  const [crBase, setCrBase] = useState('USD');
+  const [crTarget, setCrTarget] = useState('EUR');
+  const [crRate, setCrRate] = useState('');
+  const [crSource, setCrSource] = useState('Manual');
+
+  // Intercompany Transaction form state
+  const [showIntercompanyModal, setShowIntercompanyModal] = useState(false);
+  const [icDesc, setIcDesc] = useState('');
+  const [icType, setIcType] = useState('Service Fee');
+  const [icAmount, setIcAmount] = useState('');
+  const [icCurrency, setIcCurrency] = useState('USD');
+  const [icToCompanyId, setIcToCompanyId] = useState('');
+
+  // Consolidation Rule form state
+  const [showConsolidationModal, setShowConsolidationModal] = useState(false);
+  const [conName, setConName] = useState('');
+  const [conType, setConType] = useState('Full Consolidation');
+  const [conDesc, setConDesc] = useState('');
+  const [conSubsidiaryIds, setConSubsidiaryIds] = useState('');
 
   // Compliance Check form state
   const [showComplianceModal, setShowComplianceModal] = useState(false);
@@ -356,14 +386,15 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <TableHead cols={[{ label: 'Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Balance', right: true }, { label: 'Actions', right: true }]} />
                   <tbody className="divide-y divide-slate-100">
                     {localGL.filter(acc => accFilter === 'All' || acc.type === accFilter).filter(acc => acc.name.toLowerCase().includes(accSearch.toLowerCase()) || acc.code.toLowerCase().includes(accSearch.toLowerCase())).map(acc => (
-                      <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accGLModal.open(acc)}>
+                      <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{acc.code}</td>
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{acc.name}</td>
                         <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">${(acc.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td className="px-4 py-3 text-right" onClick={() => accGLModal.open(acc)}>
-                          <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer mr-2">Edit</button>
-                          <button onClick={async e => { e.stopPropagation(); if (await modalConfirm('Delete this account?', { variant: 'danger' })) onDeleteGLAccount(acc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
+                        <td className="px-4 py-3 text-right">
+                          <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer mr-2"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
+                          <button onClick={async e => { e.stopPropagation(); if (await modalConfirm('Delete this account?', { variant: 'danger' })) onDeleteGLAccount(acc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer mr-2">Delete</button>
+                          <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                         </td>
                       </tr>
                     ))}
@@ -390,7 +421,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
           </>
         )}
 
-        {activeView === 'acc-invoices' && (
+        {activeView === 'acc-invoices' && accTab !== 'create' && (
           <>
             <PageHeader title="Invoices" subtitle="Manage customer invoices, track payments and send reminders."
               action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`invoices-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Issue Date', 'Due Date', 'Total', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.issueDate, i.dueDate, i.total ?? 0, i.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setAccTab('create')}>New Invoice</PrimaryBtn></>} />
@@ -399,14 +430,17 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Invoice #' }, { label: 'Client' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localInvoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accInvoiceModal.open(inv)}>
+                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{inv.invoiceNumber}</td>
                       <td className="px-4 py-3 fs-xs text-slate-700">{inv.customerName}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{inv.issueDate}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{inv.dueDate}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(inv.total ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right" onClick={() => accInvoiceModal.open(inv)}>{inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={e => { e.stopPropagation(); onPayInvoice(inv.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Pay</button>}</td>
+                      <td className="px-4 py-3 text-right">
+                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={e => { e.stopPropagation(); onPayInvoice(inv.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Pay</button>}
+                        <button onClick={e => { e.stopPropagation(); accInvoiceModal.open(inv); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      </td>
                     </tr>
                   ))}
                   {localInvoices.length === 0 && <EmptyRow cols={7} message="No invoices found." />}
@@ -430,14 +464,17 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Date' }, { label: 'Description' }, { label: 'Category' }, { label: 'Department' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localExpenses.map(exp => (
-                    <tr key={exp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accExpenseModal.open(exp)}>
+                    <tr key={exp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{exp.date}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{exp.description}</td>
                       <td className="px-4 py-3"><Badge label={exp.category} variant="default" /></td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{exp.department}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(exp.amount ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={exp.status} variant={exp.status === 'Approved' ? 'success' : exp.status === 'Rejected' ? 'danger' : 'warning'} /></td>
-                      <td className="px-4 py-3 text-right" onClick={() => accExpenseModal.open(exp)}>{exp.status === 'Pending' && canApproveExpense && <button onClick={e => { e.stopPropagation(); onApproveExpense(exp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Approve</button>}</td>
+                      <td className="px-4 py-3 text-right">
+                        {exp.status === 'Pending' && canApproveExpense && <button onClick={e => { e.stopPropagation(); onApproveExpense(exp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Approve</button>}
+                        <button onClick={e => { e.stopPropagation(); accExpenseModal.open(exp); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      </td>
                     </tr>
                   ))}
                   {localExpenses.length === 0 && <EmptyRow cols={7} message="No expenses recorded." />}
@@ -549,21 +586,25 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             {Math.abs(totalDebits - totalCredits) > 0.01 && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl fs-xs text-rose-700 fw-semibold"><i className="bi bi-exclamation-triangle mr-1"></i> Trial balance is NOT balanced! Difference: ${Math.abs(totalDebits - totalCredits).toLocaleString()}</div>}
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }]} />
+                <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localGL.map(acc => (
-                    <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accGLModal.open(acc)}>
+                    <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{acc.code}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{acc.name}</td>
                       <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Asset' || acc.type === 'Expense') ? `$${(acc.balance ?? 0).toLocaleString()}` : '-'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Liability' || acc.type === 'Revenue' || acc.type === 'Equity') ? `$${(acc.balance ?? 0).toLocaleString()}` : '-'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      </td>
                     </tr>
                   ))}
                   <tr className="bg-slate-50 fw-bold">
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900" colSpan={3}>TOTAL</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">${totalDebits.toLocaleString()}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">${totalCredits.toLocaleString()}</td>
+                    <td className="px-4 py-3"></td>
                   </tr>
                 </tbody>
               </table>
@@ -651,18 +692,21 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             </div>}
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Period' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }]} />
+                <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Period' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localOpeningBalances.map(ob => (
-                    <tr key={ob.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accOpeningBalModal.open(ob)}>
+                    <tr key={ob.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{ob.accountCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{ob.accountName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{localFiscalPeriods.find(f => f.id === ob.periodId)?.name || ob.periodId}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.debit > 0 ? `$${ob.debit.toLocaleString()}` : '-'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.credit > 0 ? `$${ob.credit.toLocaleString()}` : '-'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={e => { e.stopPropagation(); accOpeningBalModal.open(ob); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      </td>
                     </tr>
                   ))}
-                  {localOpeningBalances.length === 0 && <EmptyRow cols={5} message="No opening balances set." />}
+                  {localOpeningBalances.length === 0 && <EmptyRow cols={6} message="No opening balances set." />}
                 </tbody>
               </table>
             </div>
@@ -677,13 +721,16 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Period' }, { label: 'Start Date' }, { label: 'End Date' }, { label: 'Status' }, { label: 'Closed By' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localFiscalPeriods.map(fp => (
-                    <tr key={fp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accFiscalModal.open(fp)}>
+                    <tr key={fp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{fp.name}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{fp.startDate}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{fp.endDate}</td>
                       <td className="px-4 py-3"><Badge label={fp.status} variant={fp.status === 'Closed' ? 'default' : fp.status === 'Locked' ? 'danger' : 'success'} /></td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{fp.closedBy ? 'David Vance' : '-'}</td>
-                      <td className="px-4 py-3 text-right" onClick={() => accFiscalModal.open(fp)}>{fp.status === 'Open' && canCloseFiscalPeriod && <button onClick={async e => { e.stopPropagation(); if (await modalConfirm(`Close ${fp.name}?`, { variant: 'warning' })) onCloseFiscalPeriod(fp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">Close Period</button>}</td>
+                      <td className="px-4 py-3 text-right">
+                        {fp.status === 'Open' && canCloseFiscalPeriod && <button onClick={async e => { e.stopPropagation(); if (await modalConfirm(`Close ${fp.name}?`, { variant: 'warning' })) onCloseFiscalPeriod(fp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Close Period</button>}
+                        <button onClick={e => { e.stopPropagation(); accFiscalModal.open(fp); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -707,7 +754,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Bill #' }, { label: 'Vendor' }, { label: 'Description' }, { label: 'Total' }, { label: 'Paid' }, { label: 'Due Date' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localBills.map(bill => (
-                    <tr key={bill.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accBillModal.open(bill)}>
+                    <tr key={bill.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{bill.billNumber}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{bill.vendorName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500 max-w-[200px] truncate">{bill.description}</td>
@@ -715,9 +762,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">${bill.amountPaid.toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{bill.dueDate}</td>
                       <td className="px-4 py-3"><Badge label={bill.status} variant={bill.status === 'Paid' ? 'success' : bill.status === 'Overdue' ? 'danger' : bill.status === 'Approved' ? 'info' : bill.status === 'Partially Paid' ? 'warning' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right space-x-1" onClick={() => accBillModal.open(bill)}>
+                      <td className="px-4 py-3 text-right space-x-1">
                         {bill.status === 'Pending' && canApproveBill && <button onClick={e => { e.stopPropagation(); onApproveBill(bill.id); }} className="text-[10px] fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
                         {(bill.status === 'Approved' || bill.status === 'Partially Paid') && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Pay bill ${bill.billNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onPayBill(bill.id, Number(amt), 'Bank Transfer', 'ba-1'); }} className="text-[10px] fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Pay</button>}
+                        <button onClick={e => { e.stopPropagation(); accBillModal.open(bill); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -740,22 +788,30 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Invoice #' }, { label: 'Customer' }, { label: 'Total' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'Status' }, { label: 'Action', right: true }]} />
+                <TableHead cols={[{ label: 'Invoice #' }, { label: 'Customer' }, { label: 'Total' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'E-VAT' }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localInvoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accInvoiceModal.open(inv)}>
+                    <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{inv.invoiceNumber}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{inv.customerName}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(inv.total ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{inv.issueDate}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{inv.dueDate}</td>
+                      <td className="px-4 py-3">
+                        {inv.evatIrn ? (
+                          <Badge label="GRA" variant="success" />
+                        ) : (
+                          <span className="text-[10px] text-slate-400">—</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right" onClick={() => accInvoiceModal.open(inv)}>
-                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Record payment for ${inv.invoiceNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(amt), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Bank Transfer', bankAccountId: 'ba-1' }); }} className="text-[10px] fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Receive Payment</button>}
+                      <td className="px-4 py-3 text-right">
+                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Record payment for ${inv.invoiceNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(amt), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Bank Transfer', bankAccountId: 'ba-1' }); }} className="text-[10px] fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800 mr-2">Receive Payment</button>}
+                        <button onClick={e => { e.stopPropagation(); accInvoiceModal.open(inv); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                       </td>
                     </tr>
                   ))}
-                  {localInvoices.length === 0 && <EmptyRow cols={7} message="No invoices found." />}
+                  {localInvoices.length === 0 && <EmptyRow cols={8} message="No invoices found." />}
                 </tbody>
               </table>
             </div>
@@ -765,7 +821,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Bank Reconciliation ───────────────────────────────────── */}
         {accTab === 'bank' && (
           <>
-            <PageHeader title="Bank & Reconciliation" subtitle="Manage bank accounts, view transactions and reconcile statements." action={canEditBankAccount ? <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingBankAccount(null); setBaName(''); setBaBankName(''); setBaAccountNumber(''); setBaBalance(''); setShowBankAccountModal(true); }}>New Account</PrimaryBtn> : undefined} />
+            <PageHeader title="Bank & Reconciliation" subtitle="Manage bank accounts, view transactions and reconcile statements." action={<>{canEditBankAccount && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingBankAccount(null); setBaName(''); setBaBankName(''); setBaAccountNumber(''); setBaBalance(''); setShowBankAccountModal(true); }}>New Account</PrimaryBtn>} {localBankAccounts.length > 0 && <PrimaryBtn icon="bi bi-arrow-repeat" onClick={() => { setReconBankAccountId(localBankAccounts[0].id); setReconStatementBalance(''); setReconPeriodStart(''); setReconPeriodEnd(''); setShowReconModal(true); }}>New Reconciliation</PrimaryBtn>}</>} />
             <div className="grid gap-4 sm:grid-cols-3 mb-6">
               {localBankAccounts.map(ba => (
                 <div key={ba.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
@@ -773,7 +829,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <span className="section-title text-slate-400">{ba.accountType}</span>
                     <div className="flex items-center gap-2">
                       <Badge label={ba.isActive ? 'Active' : 'Inactive'} variant={ba.isActive ? 'success' : 'default'} />
-                      {canEditBankAccount && <button onClick={() => { setEditingBankAccount(ba); setBaName(ba.name); setBaBankName(ba.bankName); setBaAccountNumber(ba.accountNumber); setBaAccountType(ba.accountType); setBaBalance(String(ba.balance ?? 0)); setShowBankAccountModal(true); }} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-pencil fs-xs"></i></button>}
+                      {canEditBankAccount && <button onClick={() => { setEditingBankAccount(ba); setBaName(ba.name); setBaBankName(ba.bankName); setBaAccountNumber(ba.accountNumber); setBaAccountType(ba.accountType); setBaBalance(String(ba.balance ?? 0)); setShowBankAccountModal(true); }} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i></button>}
                     </div>
                   </div>
                   <p className="fs-lg fw-bold text-slate-900 font-sans tabular-nums">${(ba.balance ?? 0).toLocaleString()}</p>
@@ -787,16 +843,19 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <span className="section-title text-slate-500">Recent Transactions</span>
               </div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Date' }, { label: 'Description' }, { label: 'Type' }, { label: 'Amount' }, { label: 'Reconciled' }, { label: 'Reference' }]} />
+                <TableHead cols={[{ label: 'Date' }, { label: 'Description' }, { label: 'Type' }, { label: 'Amount' }, { label: 'Reconciled' }, { label: 'Reference' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localBankTransactions.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).map(tx => (
-                    <tr key={tx.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accBankTxModal.open(tx)}>
+                    <tr key={tx.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs text-slate-500">{tx.date}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{tx.description}</td>
                       <td className="px-4 py-3"><Badge label={tx.type} variant={tx.type === 'Credit' ? 'success' : 'danger'} /></td>
                       <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-rose-600'}`}>{tx.type === 'Credit' ? '+' : '-'}${(tx.amount ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3">{tx.reconciled ? <i className="bi bi-check-circle-fill text-emerald-500 fs-sm"></i> : <i className="bi bi-circle text-slate-300 fs-sm"></i>}</td>
                       <td className="px-4 py-3 text-[10px] text-slate-400 font-mono">{tx.reference || '-'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={e => { e.stopPropagation(); accBankTxModal.open(tx); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -808,16 +867,19 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <span className="section-title text-slate-500">Reconciliation History</span>
                 </div>
                 <table className="w-full text-left">
-                  <TableHead cols={[{ label: 'Period' }, { label: 'Statement Balance' }, { label: 'Book Balance' }, { label: 'Difference' }, { label: 'Status' }, { label: 'Completed By' }]} />
+                  <TableHead cols={[{ label: 'Period' }, { label: 'Statement Balance' }, { label: 'Book Balance' }, { label: 'Difference' }, { label: 'Status' }, { label: 'Completed By' }, { label: 'Actions', right: true }]} />
                   <tbody className="divide-y divide-slate-100">
                     {localBankReconciliations.map(rec => (
-                      <tr key={rec.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accReconModal.open(rec)}>
+                      <tr key={rec.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs text-slate-500">{rec.periodStartDate} to {rec.periodEndDate}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(rec.statementBalance ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(rec.bookBalance ?? 0).toLocaleString()}</td>
                         <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${Math.abs(rec.reconciledDifference ?? 0) < 0.01 ? 'text-emerald-600' : 'text-rose-600'}`}>${Math.abs(rec.reconciledDifference ?? 0).toFixed(2)}</td>
                         <td className="px-4 py-3"><Badge label={rec.status} variant={rec.status === 'Completed' ? 'success' : 'danger'} /></td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{resolveUserName(rec.completedBy || '')}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button onClick={e => { e.stopPropagation(); accReconModal.open(rec); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -842,7 +904,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <TableHead cols={[{ label: 'Code' }, { label: 'Name' }, { label: 'Category' }, { label: 'Purchase Price' }, { label: 'Book Value' }, { label: 'Location' }, { label: 'Status' }, { label: 'Action', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localFixedAssets.map(asset => (
-                    <tr key={asset.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accAssetModal.open(asset)}>
+                    <tr key={asset.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900 font-mono">{asset.assetCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{asset.name}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{asset.category}</td>
@@ -850,8 +912,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(asset.currentBookValue ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{asset.location}</td>
                       <td className="px-4 py-3"><Badge label={asset.status} variant={asset.status === 'Active' ? 'success' : asset.status === 'Disposed' ? 'danger' : 'default'} /></td>
-                      <td className="px-4 py-3 text-right" onClick={() => accAssetModal.open(asset)}>
-                        {asset.status === 'Active' && canRegisterAsset && <button onClick={async e => { e.stopPropagation(); const price = await modalPrompt(`Dispose ${asset.name}. Disposal price:`, { variant: 'danger', inputType: 'number', placeholder: '0.00' }); if (price) onDisposeAsset(asset.id, Number(price)); }} className="text-[10px] fw-semibold bg-rose-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-rose-700">Dispose</button>}
+                      <td className="px-4 py-3 text-right">
+                        {asset.status === 'Active' && canRegisterAsset && <button onClick={async e => { e.stopPropagation(); const price = await modalPrompt(`Dispose ${asset.name}. Disposal price:`, { variant: 'danger', inputType: 'number', placeholder: '0.00' }); if (price) onDisposeAsset(asset.id, Number(price)); }} className="text-[10px] fw-semibold bg-rose-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-rose-700 mr-2">Dispose</button>}
+                        <button onClick={e => { e.stopPropagation(); accAssetModal.open(asset); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -865,16 +928,19 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <PrimaryBtn icon="bi bi-play-circle" onClick={() => onRunDepreciation('August 2026')}>Run Depreciation</PrimaryBtn>
                 </div>
                 <table className="w-full text-left">
-                  <TableHead cols={[{ label: 'Asset' }, { label: 'Period' }, { label: 'Depreciation' }, { label: 'Accumulated' }, { label: 'Book Value' }, { label: 'Status' }]} />
+                  <TableHead cols={[{ label: 'Asset' }, { label: 'Period' }, { label: 'Depreciation' }, { label: 'Accumulated' }, { label: 'Book Value' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                   <tbody className="divide-y divide-slate-100">
                     {localDepreciationEntries.slice(0, 10).map(de => (
-                      <tr key={de.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accDeprModal.open(de)}>
+                      <tr key={de.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{de.assetCode} - {de.assetName}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{de.period}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600">${(de.depreciationAmount ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">${(de.accumulatedDepreciation ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(de.bookValue ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-3"><Badge label={de.status} variant={de.status === 'Posted' ? 'success' : 'warning'} /></td>
+                        <td className="px-4 py-3 text-right">
+                          <button onClick={e => { e.stopPropagation(); accDeprModal.open(de); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -903,7 +969,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     const varianceAmt = bud.variance ?? (budgetAmt - actualAmt);
                     const pctUsed = budgetAmt > 0 ? Math.round(actualAmt / budgetAmt * 100) : 0;
                     return (
-                      <tr key={bud.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed })}>
+                      <tr key={bud.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{bud.name}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{bud.accountCode} - {bud.accountName}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${budgetAmt.toLocaleString()}</td>
@@ -916,8 +982,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                           </div>
                         </td>
                         <td className="px-4 py-3"><Badge label={bud.status} variant={bud.status === 'Active' ? 'success' : bud.status === 'Approved' ? 'info' : 'default'} /></td>
-                        <td className="px-4 py-3 text-right" onClick={() => accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed })}>
-                          {bud.status === 'Draft' && canManageBudget && <button onClick={e => { e.stopPropagation(); onApproveBudget(bud.id); }} className="text-[10px] fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
+                        <td className="px-4 py-3 text-right">
+                          {bud.status === 'Draft' && canManageBudget && <button onClick={e => { e.stopPropagation(); onApproveBudget(bud.id); }} className="text-[10px] fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700 mr-2">Approve</button>}
+                          <button onClick={e => { e.stopPropagation(); accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                         </td>
                       </tr>
                     );
@@ -961,7 +1028,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 2: Multi-Currency ────────────────────────────────────────── */}
         {accTab === 'multi-currency' && (
           <>
-            <PageHeader title="Multi-Currency Management" subtitle="Exchange rates, currency conversion and gain/loss tracking." />
+            <PageHeader title="Multi-Currency Management" subtitle="Exchange rates, currency conversion and gain/loss tracking." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setCrBase('USD'); setCrTarget('EUR'); setCrRate(''); setCrSource('Manual'); setShowCurrencyRateModal(true); }}>New Rate</PrimaryBtn>} />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
               {localCurrencyRates.map(cr => (
                 <div key={cr.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
@@ -1005,7 +1072,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <p className="text-[10px] text-slate-400 mt-1">{tc.jurisdiction} · {tc.type}</p>
                   <p className="text-[10px] text-slate-400">Account: {tc.accountName}</p>
                   {canManageTax && <div className="flex gap-2 mt-3">
-                    <button onClick={() => { setEditingTaxCode(tc); setTcCode(tc.code); setTcName(tc.name); setTcRate(String(tc.rate)); setTcType(tc.type); setTcJurisdiction(tc.jurisdiction || ''); setShowTaxCodeModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>
+                    <button onClick={() => { setEditingTaxCode(tc); setTcCode(tc.code); setTcName(tc.name); setTcRate(String(tc.rate)); setTcType(tc.type); setTcJurisdiction(tc.jurisdiction || ''); setShowTaxCodeModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
                     <button onClick={async () => { if (await modalConfirm('Delete this tax code?', { variant: 'danger' })) onDeleteTaxCode(tc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
                   </div>}
                 </div>
@@ -1041,7 +1108,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   {tr.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {tr.filedDate} by {tr.filedBy}</p>}
                   {canManageTax && <div className="flex gap-2 mt-3">
-                    <button onClick={() => { setEditingTaxReturn(tr); setTrPeriod(tr.period); setTrTaxCodeId(tr.taxCodeId); setTrTaxableAmount(String(tr.taxableAmount ?? 0)); setTrTaxAmount(String(tr.taxAmount ?? 0)); setTrDueDate(tr.dueDate); setTrStatus(tr.status); setShowTaxReturnModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>
+                    <button onClick={() => { setEditingTaxReturn(tr); setTrPeriod(tr.period); setTrTaxCodeId(tr.taxCodeId); setTrTaxableAmount(String(tr.taxableAmount ?? 0)); setTrTaxAmount(String(tr.taxAmount ?? 0)); setTrDueDate(tr.dueDate); setTrStatus(tr.status); setShowTaxReturnModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
                     <button onClick={async () => { if (await modalConfirm('Delete this tax return?', { variant: 'danger' })) onDeleteTaxReturn(tr.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
                   </div>}
                 </div>
@@ -1053,7 +1120,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 3: Intercompany ────────────────────────────────────────── */}
         {accTab === 'intercompany' && (
           <>
-            <PageHeader title="Intercompany Transactions" subtitle="Track and reconcile transactions between group entities." />
+            <PageHeader title="Intercompany Transactions" subtitle="Track and reconcile transactions between group entities." action={canManageIntercompany ? <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setIcDesc(''); setIcType('Service Fee'); setIcAmount(''); setIcCurrency('USD'); setIcToCompanyId(''); setShowIntercompanyModal(true); }}>New Transaction</PrimaryBtn> : undefined} />
             <div className="space-y-3 mb-6">
               {localIntercompanyTxns.map(tx => (
                 <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
@@ -1086,7 +1153,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {/* ── Tier 3: Consolidation ────────────────────────────────────────── */}
         {accTab === 'consolidation' && (
           <>
-            <PageHeader title="Consolidation Rules" subtitle="Group-level rules for combining subsidiary financials." />
+            <PageHeader title="Consolidation Rules" subtitle="Group-level rules for combining subsidiary financials." action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setConName(''); setConType('Full Consolidation'); setConDesc(''); setConSubsidiaryIds(''); setShowConsolidationModal(true); }}>New Rule</PrimaryBtn>} />
             <div className="space-y-3 mb-6">
               {localConsolidationRules.map(rule => (
                 <div key={rule.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
@@ -1126,7 +1193,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <p className="text-[10px] text-slate-400">Assigned: {resolveUserName(cc.assignee)} · Due: {cc.dueDate}</p>
                   <div className="flex gap-2 mt-3">
                     {cc.status !== 'Compliant' && canManageCompliance && <PrimaryBtn onClick={() => onResolveComplianceCheck(cc.id, 'Pass')} icon="bi bi-check-lg">Mark Resolved</PrimaryBtn>}
-                    {canManageCompliance && <button onClick={() => { setEditingCompliance(cc); setCompCheckName(cc.title); setCompCheckDesc(cc.description); setCompCheckCategory(cc.category); setCompCheckDueDate(cc.dueDate); setCompCheckAssignee(cc.assignee); setShowComplianceModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
+                    {canManageCompliance && <button onClick={() => { setEditingCompliance(cc); setCompCheckName(cc.title); setCompCheckDesc(cc.description); setCompCheckCategory(cc.category); setCompCheckDueDate(cc.dueDate); setCompCheckAssignee(cc.assignee); setShowComplianceModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>}
                     {canManageCompliance && <button onClick={async () => { if (await modalConfirm('Delete this compliance check?', { variant: 'danger' })) onDeleteComplianceCheck(cc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>}
                   </div>
                 </div>
@@ -1222,7 +1289,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="flex gap-2 mt-3">
                     {fd.status === 'Upcoming' && canManageFilingDeadlines && <PrimaryBtn onClick={() => onFileDeadline(fd.id)} icon="bi bi-send">File</PrimaryBtn>}
-                    {canManageFilingDeadlines && <button onClick={() => { setEditingFiling(fd); setFilingName(fd.title); setFilingDesc(fd.description || ''); setFilingType(fd.type); setFilingDueDate(fd.dueDate); setFilingAssignee(fd.assignee); setShowFilingModal(true); }} className="data-value-small text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
+                    {canManageFilingDeadlines && <button onClick={() => { setEditingFiling(fd); setFilingName(fd.title); setFilingDesc(fd.description || ''); setFilingType(fd.type); setFilingDueDate(fd.dueDate); setFilingAssignee(fd.assignee); setShowFilingModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>}
                     {canManageFilingDeadlines && <button onClick={async () => { if (await modalConfirm('Delete this filing deadline?', { variant: 'danger' })) onDeleteFilingDeadline(fd.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>}
                   </div>
                   {fd.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {fd.filedDate} by {resolveUserName(fd.filedBy || '')}</p>}
@@ -1443,6 +1510,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
               <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">New Vendor Bill</h2>
               <div className="space-y-4">
+                <div><Label>Bill Number *</Label><Input value={billNumber} onChange={e => setBillNumber(e.target.value)} placeholder={`BILL-${Date.now().toString().slice(-6)}`} required /></div>
                 <div><Label>Vendor Name *</Label><Input value={billVendor} onChange={e => setBillVendor(e.target.value)} placeholder="Acme Supplies Inc." required /></div>
                 <div><Label>Description</Label><Input value={billDesc} onChange={e => setBillDesc(e.target.value)} placeholder="Monthly office supplies" /></div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -1456,8 +1524,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
                   if (!billVendor || !billAmount || !billDueDate) return void modalAlert('Vendor, amount, and due date required', { variant: 'warning' });
                   const assigneeEmp = localEmployees.find(e => e.userId === billAssignee || e.id === billAssignee);
-                  onCreateBill({ companyId: selectedCompany.id, vendorName: billVendor, description: billDesc, total: Number(billAmount), amountPaid: 0, dueDate: billDueDate, status: 'Pending', createdBy: billAssignee || selectedUser.id, createdByName: assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : selectedUser.name });
-                  setShowBillModal(false); setBillVendor(''); setBillDesc(''); setBillAmount(''); setBillDueDate(''); setBillAssignee('');
+                  const finalBillNumber = billNumber.trim() || `BILL-${Date.now().toString().slice(-6)}`;
+                  onCreateBill({ companyId: selectedCompany.id, billNumber: finalBillNumber, vendorName: billVendor, description: billDesc, total: Number(billAmount), amountPaid: 0, dueDate: billDueDate, status: 'Pending', createdBy: billAssignee || selectedUser.id, createdByName: assigneeEmp ? `${assigneeEmp.firstName} ${assigneeEmp.lastName}` : selectedUser.name });
+                  setShowBillModal(false); setBillNumber(''); setBillVendor(''); setBillDesc(''); setBillAmount(''); setBillDueDate(''); setBillAssignee('');
                 }}>Create Bill</PrimaryBtn>
               </div>
             </div>
@@ -1870,6 +1939,153 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
           </div>
         )}
 
+        {/* Bank Reconciliation Modal */}
+        {showReconModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowReconModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <i className="bi bi-arrow-repeat text-blue-600 fs-xs"></i>
+                    </div>
+                    <h3 className="fs-sm fw-bold text-slate-900">New Bank Reconciliation</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Reconcile your bank statement with book records.</p>
+                </div>
+                <button type="button" onClick={() => setShowReconModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x fs-xl"></i>
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div><Label>Bank Account *</Label><Select value={reconBankAccountId} onChange={e => setReconBankAccountId(e.target.value)}><option value="">Select account...</option>{localBankAccounts.map(ba => <option key={ba.id} value={ba.id}>{ba.name} ({ba.bankName})</option>)}</Select></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Period Start *</Label><Input type="date" value={reconPeriodStart} onChange={e => setReconPeriodStart(e.target.value)} /></div>
+                  <div><Label>Period End *</Label><Input type="date" value={reconPeriodEnd} onChange={e => setReconPeriodEnd(e.target.value)} /></div>
+                </div>
+                <div><Label>Statement Balance (USD) *</Label><Input type="number" value={reconStatementBalance} onChange={e => setReconStatementBalance(e.target.value)} placeholder="0.00" /></div>
+              </div>
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowReconModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
+                  if (!reconBankAccountId || !reconStatementBalance || !reconPeriodStart || !reconPeriodEnd) return void modalAlert('All fields required', { variant: 'warning' });
+                  const ba = localBankAccounts.find(b => b.id === reconBankAccountId);
+                  onReconcileBank({ bankAccountId: reconBankAccountId, statementBalance: Number(reconStatementBalance), bookBalance: ba?.balance ?? 0, reconciledDifference: Math.abs(Number(reconStatementBalance) - (ba?.balance ?? 0)), periodStartDate: reconPeriodStart, periodEndDate: reconPeriodEnd, status: 'Completed' });
+                  setShowReconModal(false); setReconBankAccountId(''); setReconStatementBalance(''); setReconPeriodStart(''); setReconPeriodEnd('');
+                }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Reconciliation</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Currency Rate Modal */}
+        {showCurrencyRateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowCurrencyRateModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
+                      <i className="bi bi-currency-exchange text-violet-600 fs-xs"></i>
+                    </div>
+                    <h3 className="fs-sm fw-bold text-slate-900">Add Exchange Rate</h3>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setShowCurrencyRateModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x fs-xl"></i>
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Base Currency *</Label><Select value={crBase} onChange={e => setCrBase(e.target.value)}><option>USD</option><option>EUR</option><option>GBP</option><option>GHS</option><option>JPY</option></Select></div>
+                  <div><Label>Target Currency *</Label><Select value={crTarget} onChange={e => setCrTarget(e.target.value)}><option>EUR</option><option>USD</option><option>GBP</option><option>GHS</option><option>JPY</option></Select></div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Exchange Rate *</Label><Input type="number" step="0.0001" value={crRate} onChange={e => setCrRate(e.target.value)} placeholder="1.2345" /></div>
+                  <div><Label>Source</Label><Select value={crSource} onChange={e => setCrSource(e.target.value)}><option>Manual</option><option>ECB</option><option>Fed</option><option>Bank of Ghana</option></Select></div>
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowCurrencyRateModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
+                  if (!crBase || !crTarget || !crRate) return void modalAlert('All fields required', { variant: 'warning' });
+                  if (crBase === crTarget) return void modalAlert('Base and target must differ', { variant: 'warning' });
+                  onUpdateCurrencyRate({ baseCurrency: crBase, targetCurrency: crTarget, rate: Number(crRate), source: crSource, effectiveDate: new Date().toISOString().slice(0, 10) });
+                  setShowCurrencyRateModal(false); setCrBase('USD'); setCrTarget('EUR'); setCrRate(''); setCrSource('Manual');
+                }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Rate</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Intercompany Transaction Modal */}
+        {showIntercompanyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowIntercompanyModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="h-7 w-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center">
+                    <i className="bi bi-arrow-left-right text-orange-600 fs-xs"></i>
+                  </div>
+                  <h3 className="fs-sm fw-bold text-slate-900">New Intercompany Transaction</h3>
+                </div>
+                <button type="button" onClick={() => setShowIntercompanyModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x fs-xl"></i></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div><Label>Description *</Label><Input value={icDesc} onChange={e => setIcDesc(e.target.value)} placeholder="Q4 management fee allocation" /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Type *</Label><Select value={icType} onChange={e => setIcType(e.target.value)}><option>Service Fee</option><option>Loan</option><option>Dividend</option><option>Shared Cost</option><option>Intercompany Sale</option></Select></div>
+                  <div><Label>Amount *</Label><Input type="number" value={icAmount} onChange={e => setIcAmount(e.target.value)} placeholder="0.00" /></div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label>Currency</Label><Select value={icCurrency} onChange={e => setIcCurrency(e.target.value)}><option>USD</option><option>EUR</option><option>GBP</option><option>GHS</option></Select></div>
+                  <div><Label>Target Company *</Label><Select value={icToCompanyId} onChange={e => setIcToCompanyId(e.target.value)}><option value="">Select...</option>{tenants.filter((c: any) => c.id !== selectedCompany.id).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select></div>
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button onClick={() => setShowIntercompanyModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button onClick={() => {
+                  if (!icDesc || !icAmount || !icToCompanyId) return void modalAlert('All fields required', { variant: 'warning' });
+                  const toCompany = tenants.find((c: any) => c.id === icToCompanyId);
+                  onCreateIntercompanyTxn({ fromCompanyId: selectedCompany.id, fromCompanyName: selectedCompany.name, toCompanyId: icToCompanyId, toCompanyName: toCompany?.name || '', description: icDesc, type: icType, amount: Number(icAmount), currency: icCurrency, date: new Date().toISOString().slice(0, 10), status: 'Pending' });
+                  setShowIntercompanyModal(false); setIcDesc(''); setIcAmount('');
+                }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Consolidation Rule Modal */}
+        {showConsolidationModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowConsolidationModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="h-7 w-7 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center">
+                    <i className="bi bi-diagram-3 text-teal-600 fs-xs"></i>
+                  </div>
+                  <h3 className="fs-sm fw-bold text-slate-900">New Consolidation Rule</h3>
+                </div>
+                <button type="button" onClick={() => setShowConsolidationModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x fs-xl"></i></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div><Label>Rule Name *</Label><Input value={conName} onChange={e => setConName(e.target.value)} placeholder="Acme Group Consolidation" /></div>
+                <div><Label>Type *</Label><Select value={conType} onChange={e => setConType(e.target.value)}><option>Full Consolidation</option><option>Proportional Consolidation</option><option>Equity Method</option></Select></div>
+                <div><Label>Description</Label><Input value={conDesc} onChange={e => setConDesc(e.target.value)} placeholder="Annual group financial consolidation" /></div>
+                <div><Label>Subsidiary IDs (comma-separated)</Label><Input value={conSubsidiaryIds} onChange={e => setConSubsidiaryIds(e.target.value)} placeholder="c-starlight, c-zenretail" /></div>
+              </div>
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button onClick={() => setShowConsolidationModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button onClick={() => {
+                  if (!conName) return void modalAlert('Rule name required', { variant: 'warning' });
+                  onCreateConsolidationRule({ parentCompanyId: selectedCompany.id, ruleName: conName, consolidationType: conType, description: conDesc, subsidiaryCompanyIds: conSubsidiaryIds.split(',').map(s => s.trim()).filter(Boolean), isActive: true });
+                  setShowConsolidationModal(false); setConName(''); setConDesc(''); setConSubsidiaryIds('');
+                }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Rule</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <RowModal
           row={accGLModal.selected}
           onClose={accGLModal.close}
@@ -1906,7 +2122,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 ['Due Date', r.dueDate],
                 ['Subtotal', `$${Number(r.subtotal || 0).toLocaleString()}`],
                 ['Tax', `$${Number(r.tax || 0).toLocaleString()}`],
-                ['Total', `$${Number(r.total || 0).toLocaleString()}`]
+                ['Total', `$${Number(r.total || 0).toLocaleString()}`],
+                ...(r.evatIrn ? [['GRA IRN', r.evatIrn]] : []),
+                ...(r.evatQrCode ? [['GRA QR Code', `<img src="${r.evatQrCode}" width="100" height="100" />`]] : []),
               ]), 
               selectedCompany
             )}>
@@ -1922,6 +2140,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
             { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-percent', section: 'Amounts' },
             { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
+            ...(accInvoiceModal.selected?.evatIrn ? [
+              { label: 'GRA IRN', key: 'evatIrn', mono: true, icon: 'bi bi-shield-check', section: 'E-VAT' },
+              { label: 'E-VAT Status', key: 'evatStatus', icon: 'bi bi-check-circle', section: 'E-VAT' },
+            ] : []),
             { label: 'Customer ID', key: 'customerId', mono: true, section: 'System' },
             { label: 'ID', key: 'id', mono: true, section: 'System' },
           ]}

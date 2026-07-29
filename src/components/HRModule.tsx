@@ -57,6 +57,9 @@ interface HRModuleProps {
   onRejectProfileUpdate?: (id: string, reason?: string) => void;
   attendanceSettings?: import('../types').AttendanceSettings | null;
   onUpdateAttendanceSettings?: (companyId: string, cfg: Partial<import('../types').AttendanceSettings>) => void;
+  onInviteUser?: (user: { name: string; email: string; role: string; roles?: string[]; department: string; branch: string }) => void;
+  onAddBranch?: (branch: Omit<Branch, 'id'>) => void;
+  customRoles?: import('../types').CustomRole[];
 }
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
@@ -170,7 +173,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   exitRequests, onSubmitExitRequest, onApproveExitRequest, onRejectExitRequest, onUpdateCompanySettings,
   payrollTaxConfig, bankAccountUpdates, onRequestBankAccountUpdate, onApproveBankAccountUpdate, onRejectBankAccountUpdate,
   profileUpdateRequests, onApproveProfileUpdate, onRejectProfileUpdate,
-  attendanceSettings, onUpdateAttendanceSettings
+  attendanceSettings, onUpdateAttendanceSettings, onInviteUser, onAddBranch, customRoles = []
 }) => {
   const userRole = selectedUser.activeRole || selectedUser.role;
   const isAdmin = isAdminRole(userRole);
@@ -219,6 +222,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [hrPhone, setHrPhone] = useState('');
   const [hrDept, setHrDept] = useState('Engineering');
   const [hrRole, setHrRole] = useState('');
+  const [hrSysRole, setHrSysRole] = useState('Employee');
+  const [hrSysRoles, setHrSysRoles] = useState<string[]>(['Employee']);
   const [hrBranch, setHrBranch] = useState('HQ');
   const [hrSalary, setHrSalary] = useState('6500');
   const [hrType, setHrType] = useState('Full-time');
@@ -230,6 +235,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [hrAccountName, setHrAccountName] = useState('');
   const [hrAccountNumber, setHrAccountNumber] = useState('');
   const [hrSortCode, setHrSortCode] = useState('');
+
+  // Bulk Upload
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkCsvText, setBulkCsvText] = useState('');
+  const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
 
   // Leave
   const [leaveType, setLeaveType] = useState('Annual Leave');
@@ -366,11 +376,138 @@ export const HRModule: React.FC<HRModuleProps> = ({
           title="HR & Employee Directory"
           subtitle={`${selectedCompany.name} · ${localEmployees.length} employees registered`}
           action={isHRorAdmin ? (
-            <a href="#hire" onClick={(e) => { e.preventDefault(); onNavigateView('hr-recruitment'); }}>
-              <PrimaryBtn icon="bi bi-person-plus">Register Employee</PrimaryBtn>
-            </a>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-4 py-2 rounded-lg transition-all cursor-pointer">
+                <i className="bi bi-upload fs-xs"></i>Bulk Upload
+              </button>
+              <a href="#hire" onClick={(e) => { e.preventDefault(); onNavigateView('hr-recruitment'); }}>
+                <PrimaryBtn icon="bi bi-person-plus">Register Employee</PrimaryBtn>
+              </a>
+            </div>
           ) : undefined}
         />
+
+        {showBulkModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowBulkModal(false)}>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                      <i className="bi bi-people text-emerald-600 fs-xs"></i>
+                    </div>
+                    <h3 className="fs-sm fw-bold text-slate-900">Bulk Employee Upload</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Upload a CSV file to register multiple employees at once.</p>
+                </div>
+                <button type="button" onClick={() => setShowBulkModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                  <i className="bi bi-x fs-xl"></i>
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                {bulkSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg fs-xs text-emerald-700 fw-semibold mb-4">
+                    <i className="bi bi-check-circle mr-2"></i>{bulkSuccess}
+                  </div>
+                )}
+                <div className="bg-slate-50 rounded-lg p-4 text-center">
+                  <i className="bi bi-file-earmark-spreadsheet text-4xl text-slate-300 mb-2"></i>
+                  <h4 className="fs-sm fw-semibold text-slate-700 mb-1">Download Template</h4>
+                  <p className="fs-xs text-slate-500 mb-4">Start with our pre-formatted CSV template.</p>
+                  <button type="button" onClick={() => {
+                    const template = 'FirstName*,LastName*,Email*,Department*,Designation*,Branch*,Salary*,BankName,AccountName,AccountNumber,SortCode,AssignedTaxes(pipe-separated),AssignedBenefits(pipe-separated)\nJohn,Doe,john.doe@company.com,Engineering,Software Engineer,HQ,5000,Chase,John Doe,123456789,1234,PAYE|NHIL,Health\n';
+                    const blob = new Blob([template], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'employee_bulk_upload_template.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }} className="fs-xs fw-semibold border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg transition-all cursor-pointer inline-flex items-center gap-2">
+                    <i className="bi bi-download"></i> Download CSV Template
+                  </button>
+                </div>
+                <div>
+                  <Label>Upload CSV File</Label>
+                  <input type="file" accept=".csv" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setBulkCsvText(ev.target?.result as string);
+                      };
+                      reader.readAsText(file);
+                    }
+                  }} className="w-full fs-xs border border-slate-200 rounded-lg p-2 bg-slate-50" />
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onClick={() => setShowBulkModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+                <button type="button" onClick={() => {
+                  if (!bulkCsvText) return;
+                  const lines = bulkCsvText.split('\n').filter(l => l.trim().length > 0);
+                  let successCount = 0;
+                  const skippedRows: number[] = [];
+                  for (let i = 1; i < lines.length; i++) {
+                    const row = lines[i].split(',').map(c => c.trim());
+                    
+                    const firstName = row[0] || '';
+                    const lastName = row[1] || '';
+                    const email = row[2] || '';
+                    const department = row[3] || '';
+                    const designation = row[4] || '';
+                    const branch = row[5] || '';
+                    const salary = row[6] ? Number(row[6]) : 0;
+                    
+                    if (!firstName || !lastName || !email || !department || !designation || !branch || !salary) {
+                      skippedRows.push(i + 1);
+                      continue;
+                    }
+                    
+                    const bankName = row[7] || '';
+                    const accountName = row[8] || '';
+                    const accountNumber = row[9] || '';
+                    const sortCode = row[10] || '';
+                    const assignedTaxes = row[11] ? row[11].split('|').map(t => t.trim()).filter(Boolean) : undefined;
+                    const assignedBenefits = row[12] ? row[12].split('|').map(t => t.trim()).filter(Boolean) : undefined;
+                    const bankAccount = (bankName || accountNumber) ? JSON.stringify({ bankName, accountName, accountNumber, sortCode }) : undefined;
+                    
+                    onAddEmployee({
+                      companyId: selectedCompany.id,
+                      firstName, lastName, email, department, designation, branch, 
+                      salary, assignedTaxes, assignedBenefits, bankAccount
+                    });
+                    
+                    if (onInviteUser) {
+                      onInviteUser({
+                        name: `${firstName} ${lastName}`,
+                        email,
+                        role: 'Employee',
+                        department,
+                        branch
+                      });
+                    }
+                    successCount++;
+                  }
+                  
+                  const msg = skippedRows.length > 0
+                    ? `Processed ${successCount} employees. Skipped ${skippedRows.length} row(s) with missing required fields (rows: ${skippedRows.join(', ')}).`
+                    : `Successfully processed ${successCount} employees.`;
+                  setBulkSuccess(msg);
+                  setTimeout(() => {
+                    setBulkSuccess(null);
+                    setShowBulkModal(false);
+                    setBulkCsvText('');
+                  }, 4000);
+                }} className="fs-xs fw-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-all shadow-xs disabled:opacity-50" disabled={!bulkCsvText}>
+                  Process Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Employee Profile Modal */}
         {selectedEmp && (
@@ -400,6 +537,96 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div className="text-right shrink-0">
                     <div className="fs-2xl fw-bold text-white tabular-nums">${(selectedEmp.salary || 0).toLocaleString()}</div>
                     <div className="fs-xs text-slate-400 mt-0.5">Monthly Gross</div>
+                    <button
+                      onClick={() => {
+                        const emp = selectedEmp;
+                        const initials = `${emp.firstName[0]}${emp.lastName[0]}`;
+                        const bars = Array.from({length: 30}, () => `<div class="bar" style="height:${8 + Math.floor(Math.random() * 16)}px;"></div>`).join('');
+                        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ID Card - ${emp.employeeNumber}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px; min-height: 100vh; background: #f1f5f9; padding: 40px 20px; }
+  .card { width: 3.4in; height: 2.16in; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+  .front { background: white; display: flex; overflow: hidden; }
+  .front-left { width: 40%; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px; color: white; position: relative; overflow: hidden; }
+  .front-left::before { content: ''; position: absolute; top: -25px; right: -25px; width: 70px; height: 70px; background: rgba(255,255,255,0.12); border-radius: 50%; }
+  .front-left::after { content: ''; position: absolute; bottom: -15px; left: -15px; width: 50px; height: 50px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+  .avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; letter-spacing: -1px; position: relative; z-index: 1; }
+  .emp-id { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; margin-top: 8px; opacity: 0.9; font-family: monospace; position: relative; z-index: 1; }
+  .emp-tag { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 12px; margin-top: 5px; position: relative; z-index: 1; }
+  .front-right { flex: 1; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
+  .front-right .name { font-size: 16px; font-weight: 800; color: #065f46; line-height: 1.15; letter-spacing: -0.3px; }
+  .front-right .role { font-size: 9px; font-weight: 600; color: #059669; margin-top: 2px; }
+  .front-right .details { margin-top: auto; }
+  .front-right .detail-row { font-size: 8px; font-weight: 500; color: #6b7280; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
+  .front-right .detail-row i { font-size: 7px; color: #10b981; }
+  .front-right .company-label { font-size: 7px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a7f3d0; margin-top: 6px; }
+  .front-right .qr { position: absolute; bottom: 14px; right: 14px; width: 44px; height: 44px; background: white; border-radius: 8px; padding: 3px; box-shadow: 0 2px 8px rgba(5,150,105,0.2); border: 1.5px solid #d1fae5; }
+  .front-right .qr img { width: 100%; height: 100%; display: block; border-radius: 5px; }
+  .back { background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%); color: white; padding: 18px 22px; display: flex; flex-direction: column; justify-content: space-between; }
+  .back::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #fbbf24, #f97316, #ef4444, #ec4899, #8b5cf6, #3b82f6, #10b981); }
+  .back .stripe-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6, #ec4899, #ef4444, #f97316, #fbbf24); }
+  .back .barcode { position: relative; z-index: 1; background: rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 12px; text-align: center; backdrop-filter: blur(4px); }
+  .back .barcode-label { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+  .back .barcode-lines { display: flex; justify-content: center; gap: 2px; height: 24px; align-items: flex-end; }
+  .back .bar { width: 2px; background: rgba(255,255,255,0.6); border-radius: 1px; }
+  .back .barcode-text { font-size: 8px; font-weight: 600; font-family: monospace; letter-spacing: 2px; margin-top: 4px; opacity: 0.8; }
+  .back .info-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .back .info-item { font-size: 8px; opacity: 0.85; }
+  .back .info-item .lbl { font-size: 6px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.6; margin-bottom: 1px; color: white; }
+  .back .footer { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; }
+  .back .emergency { font-size: 8px; font-weight: 600; opacity: 0.85; }
+  .back .emergency span { display: block; font-size: 7px; font-weight: 400; opacity: 0.7; }
+  .back .company-back { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; }
+  .side-label { font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: -16px; }
+  @media print { body { background: white; padding: 20px; gap: 16px; } .card { box-shadow: none; border: 2px solid #e2e8f0; page-break-inside: avoid; } }
+</style></head><body>
+<div class="side-label">Front</div>
+<div class="card front">
+  <div class="front-left">
+    <div class="avatar">${initials}</div>
+    <div class="emp-id">${emp.employeeNumber}</div>
+    <div class="emp-tag">EMPLOYEE</div>
+  </div>
+  <div class="front-right" style="position:relative;">
+    <div><div class="name">${emp.firstName} ${emp.lastName}</div><div class="role">${emp.designation}</div></div>
+    <div class="details">
+      <div class="detail-row"><i class="bi bi-building"></i> ${emp.department} · ${emp.branch}</div>
+      <div class="detail-row"><i class="bi bi-envelope"></i> ${emp.email}</div>
+      <div class="detail-row"><i class="bi bi-calendar3"></i> Joined ${emp.joiningDate}</div>
+      <div class="company-label">${selectedCompany.name}</div>
+    </div>
+    <div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(emp.employeeNumber)}&bgcolor=ffffff&color=059669" alt="QR"></div>
+  </div>
+</div>
+<div class="side-label">Back</div>
+<div class="card back">
+  <div class="stripe-bottom" style="top:0;bottom:auto;"></div>
+  <div class="barcode">
+    <div class="barcode-label">Employee Barcode</div>
+    <div class="barcode-lines">${bars}</div>
+    <div class="barcode-text">${emp.employeeNumber}</div>
+  </div>
+  <div class="info-grid">
+    <div class="info-item"><div class="lbl">Department</div>${emp.department}</div>
+    <div class="info-item"><div class="lbl">Branch</div>${emp.branch}</div>
+    <div class="info-item"><div class="lbl">Date of Issue</div>${new Date().toLocaleDateString()}</div>
+    <div class="info-item"><div class="lbl">Valid Until</div>Permanent</div>
+  </div>
+  <div class="footer">
+    <div class="emergency">Emergency: Dial 911<span>Security: Ext. 100</span></div>
+    <div class="company-back">${selectedCompany.name}</div>
+  </div>
+  <div class="stripe-bottom"></div>
+</div></body></html>`;
+                        const win = window.open('', '_blank');
+                        if (win) { win.document.write(html); win.document.close(); setTimeout(() => win.print(), 400); }
+                      }}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 fs-[10px] fw-semibold text-white hover:bg-white/20 cursor-pointer transition-all"
+                    >
+                      <i className="bi bi-printer"></i> Print ID Card
+                    </button>
                   </div>
                 )}
               </div>
@@ -669,23 +896,22 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   {[
                     'Employee', 'ID', 'Department', 'Designation', 'Branch',
                     ...(isHRorAdmin ? ['Salary', 'Status'] : ['Status']),
-                    '',
+                    'Actions',
                   ].map(col => (
-                    <th key={col} className={`px-4 py-3 section-title text-slate-400 ${col === 'Salary' ? 'text-right' : ''}`}>{col}</th>
+                    <th key={col} className={`px-4 py-3 section-title text-slate-400 ${col === 'Salary' || col === 'Actions' ? 'text-right' : ''}`}>{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filtered.map((emp, i) => (
                   <tr key={emp.id}
-                    className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
-                    onClick={() => setSelectedEmp(emp)}
+                    className="hover:bg-blue-50/30 transition-colors"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
                         <div>
-                          <div className="fs-sm fw-semibold text-slate-900 group-hover:text-blue-700 transition-colors">{emp.firstName} {emp.lastName}</div>
+                          <div className="fs-sm fw-semibold text-slate-900 transition-colors">{emp.firstName} {emp.lastName}</div>
                           <div className="fs-xs text-slate-400">{emp.email}</div>
                         </div>
                       </div>
@@ -717,16 +943,17 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {isHRorAdmin && emp.status !== 'Terminated' && (
-                          <button onClick={(e) => { e.stopPropagation(); setTerminateEmp(emp); }} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer" title="Terminate">
-                            <i className="bi bi-x-octagon"></i>
-                          </button>
-                        )}
-                        <button onClick={() => setSelectedEmp(emp)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
-                          View <i className="bi bi-arrow-right ml-0.5"></i>
+                      {isHRorAdmin && emp.status !== 'Terminated' && (
+                        <button onClick={(e) => { e.stopPropagation(); setTerminateEmp(emp); }} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer mr-2" title="Terminate">
+                          <i className="bi bi-x-octagon"></i>
                         </button>
-                      </div>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedEmp(emp); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -827,6 +1054,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           setHrEmail(`${firstName.toLowerCase()}.${lastName.toLowerCase()}@${selectedCompany.domain || 'company'}.com`);
                           setHrDept(app.dept);
                           setHrRole(app.role);
+                          setHrSysRole('Employee');
+                          setHrSysRoles(['Employee']);
                           setTimeout(() => {
                             document.getElementById('hire')?.scrollIntoView({ behavior: 'smooth' });
                           }, 100);
@@ -864,9 +1093,21 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     sortCode: hrSortCode
                   }) : undefined
                 });
+
+                if (onInviteUser) {
+                  onInviteUser({
+                    name: `${hrFirst} ${hrLast}`,
+                    email: hrEmail,
+                    role: hrSysRole || 'Employee',
+                    roles: hrSysRoles.length > 0 ? hrSysRoles : [hrSysRole || 'Employee'],
+                    department: hrDept,
+                    branch: hrBranch
+                  });
+                }
+
                 setHireSuccess(`${hrFirst} ${hrLast} registered as ${hrRole || 'Staff'}.`);
                 setHrFirst(''); setHrLast(''); setHrEmail(''); setHrRole(''); setHrTaxes([]); setHrBenefits([]);
-                setHrBankName(''); setHrAccountName(''); setHrAccountNumber(''); setHrSortCode('');
+                setHrBankName(''); setHrAccountName(''); setHrAccountNumber(''); setHrSortCode(''); setHrSysRole('Employee'); setHrSysRoles(['Employee']);
                 setTimeout(() => setHireSuccess(null), 4000);
               }}>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -879,7 +1120,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div>
                     <Label>Department</Label>
                     <Select value={hrDept} onChange={e => setHrDept(e.target.value)}>
-                      {['Engineering', 'Finance', 'HR', 'Sales', 'Operations', 'IT', 'Legal', 'Marketing'].map(d => <option key={d}>{d}</option>)}
+                      <option value="">Select Department</option>
+                      {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                     </Select>
                   </div>
                   <div><Label>Designation</Label><Input value={hrRole} onChange={e => setHrRole(e.target.value)} placeholder="Senior Engineer" /></div>
@@ -892,10 +1134,63 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     </Select>
                   </div>
                   <div>
+                    <Label>Primary Role</Label>
+                    <Select value={hrSysRole} onChange={e => { setHrSysRole(e.target.value); if (!hrSysRoles.includes(e.target.value)) setHrSysRoles([...hrSysRoles, e.target.value]); }}>
+                      <option value="Employee">Employee</option>
+                      {selectedCompany.activeModules.includes('Administration') && <option value="Company Admin">Company Admin</option>}
+                      {selectedCompany.activeModules.includes('Administration') && <option value="CEO">CEO</option>}
+                      {selectedCompany.activeModules.includes('HR') && <option value="HR Manager">HR Manager</option>}
+                      {selectedCompany.activeModules.includes('HR') && <option value="HR Officer">HR Officer</option>}
+                      {selectedCompany.activeModules.includes('Accounting') && <option value="Accountant">Accountant</option>}
+                      {selectedCompany.activeModules.includes('Accounting') && <option value="Finance Manager">Finance Manager</option>}
+                      {selectedCompany.activeModules.includes('CRM') && <option value="Sales Manager">Sales Manager</option>}
+                      {selectedCompany.activeModules.includes('CRM') && <option value="Sales Rep">Sales Rep</option>}
+                      {selectedCompany.activeModules.includes('Operations') && <option value="Inventory Manager">Inventory Manager</option>}
+                      {selectedCompany.activeModules.includes('Operations') && <option value="Store Keeper">Store Keeper</option>}
+                      {selectedCompany.activeModules.includes('Help Desk') && <option value="Support Agent">Support Agent</option>}
+                      {customRoles.filter(r => r.companyId === selectedCompany.id && !r.isSystem && !['Employee','Company Admin','CEO','HR Manager','HR Officer','Accountant','Finance Manager','Sales Manager','Sales Rep','Inventory Manager','Store Keeper','Support Agent'].includes(r.name)).map(r => (
+                        <option key={r.id} value={r.name}>{r.name}</option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
                     <Label>Branch</Label>
                     <Select value={hrBranch} onChange={e => setHrBranch(e.target.value)}>
-                      <option>HQ</option><option>Accra Office</option><option>Kumasi Branch</option><option>Takoradi Office</option>
+                      <option value="">Select Branch</option>
+                      {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
                     </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Additional Roles <span className="text-slate-400 font-normal">(optional)</span></Label>
+                  <div className="border border-slate-200 rounded-lg p-3 max-h-28 overflow-y-auto">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                      {[
+                        { val: 'Employee', mod: null },
+                        { val: 'Company Admin', mod: 'Administration' },
+                        { val: 'CEO', mod: 'Administration' },
+                        { val: 'HR Manager', mod: 'HR' },
+                        { val: 'HR Officer', mod: 'HR' },
+                        { val: 'HR Department Head', mod: 'HR' },
+                        { val: 'Accountant', mod: 'Accounting' },
+                        { val: 'Finance Manager', mod: 'Accounting' },
+                        { val: 'Sales Manager', mod: 'CRM' },
+                        { val: 'Sales Rep', mod: 'CRM' },
+                        { val: 'Inventory Manager', mod: 'Operations' },
+                        { val: 'Store Keeper', mod: 'Operations' },
+                        { val: 'Support Agent', mod: 'Help Desk' },
+                      ].filter(r => !r.mod || selectedCompany.activeModules.includes(r.mod)).concat(
+                        customRoles.filter(r => r.companyId === selectedCompany.id && !r.isSystem && !['Employee','Company Admin','CEO','HR Manager','HR Officer','HR Department Head','Accountant','Finance Manager','Sales Manager','Sales Rep','Inventory Manager','Store Keeper','Support Agent'].includes(r.name)).map(r => ({ val: r.name, mod: null }))
+                      ).map(r => (
+                        <label key={r.val} className="flex items-center gap-1.5 fs-xs text-slate-700 cursor-pointer whitespace-nowrap">
+                          <input type="checkbox" checked={hrSysRoles.includes(r.val)} onChange={e => {
+                            if (e.target.checked) setHrSysRoles([...hrSysRoles, r.val]);
+                            else setHrSysRoles(hrSysRoles.filter(x => x !== r.val));
+                          }} className="rounded" />
+                          {r.val}
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -903,43 +1198,51 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div><Label>Monthly Salary (GHS)</Label><Input type="number" value={hrSalary} onChange={e => setHrSalary(e.target.value)} placeholder="6500" /></div>
                 </div>
 
-                {/* Custom Taxes and Benefits Assignment */}
-                {payrollTaxConfig && (payrollTaxConfig.customTaxes?.length || payrollTaxConfig.customBenefits?.length) ? (
-                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100">
-                    {payrollTaxConfig.customTaxes && payrollTaxConfig.customTaxes.length > 0 && (
-                      <div>
-                        <Label>Assign Custom Taxes</Label>
-                        <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
-                          {payrollTaxConfig.customTaxes.map(tax => (
-                            <label key={tax.id} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
-                              <input type="checkbox" checked={hrTaxes.includes(tax.id)} onChange={e => {
-                                if (e.target.checked) setHrTaxes([...hrTaxes, tax.id]);
-                                else setHrTaxes(hrTaxes.filter(id => id !== tax.id));
-                              }} />
-                              {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : `$${tax.value}`})
-                            </label>
-                          ))}
-                        </div>
+                {/* Payroll Taxes and Benefits Assignment */}
+                <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100">
+                  <div>
+                    <Label>Assign Taxes</Label>
+                    {payrollTaxConfig && payrollTaxConfig.customTaxes && payrollTaxConfig.customTaxes.length > 0 ? (
+                      <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
+                        {payrollTaxConfig.customTaxes.map(tax => (
+                          <label key={tax.id} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
+                            <input type="checkbox" checked={hrTaxes.includes(tax.id)} onChange={e => {
+                              if (e.target.checked) setHrTaxes([...hrTaxes, tax.id]);
+                              else setHrTaxes(hrTaxes.filter(id => id !== tax.id));
+                            }} />
+                            {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : `$${tax.value}`})
+                          </label>
+                        ))}
                       </div>
-                    )}
-                    {payrollTaxConfig.customBenefits && payrollTaxConfig.customBenefits.length > 0 && (
-                      <div>
-                        <Label>Assign Custom Benefits</Label>
-                        <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
-                          {payrollTaxConfig.customBenefits.map(ben => (
-                            <label key={ben.id} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
-                              <input type="checkbox" checked={hrBenefits.includes(ben.id)} onChange={e => {
-                                if (e.target.checked) setHrBenefits([...hrBenefits, ben.id]);
-                                else setHrBenefits(hrBenefits.filter(id => id !== ben.id));
-                              }} />
-                              {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : `$${ben.value}`})
-                            </label>
-                          ))}
-                        </div>
+                    ) : (
+                      <div className="border border-dashed border-slate-200 rounded-lg p-3 text-center">
+                        <p className="fs-xs text-slate-400">No taxes configured yet.</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Create taxes in Payroll → Tax & Benefits Config</p>
                       </div>
                     )}
                   </div>
-                ) : null}
+                  <div>
+                    <Label>Assign Benefits</Label>
+                    {payrollTaxConfig && payrollTaxConfig.customBenefits && payrollTaxConfig.customBenefits.length > 0 ? (
+                      <div className="border border-slate-200 rounded-lg max-h-32 overflow-y-auto p-2 space-y-1">
+                        {payrollTaxConfig.customBenefits.map(ben => (
+                          <label key={ben.id} className="flex items-center gap-2 fs-xs text-slate-700 cursor-pointer">
+                            <input type="checkbox" checked={hrBenefits.includes(ben.id)} onChange={e => {
+                              if (e.target.checked) setHrBenefits([...hrBenefits, ben.id]);
+                              else setHrBenefits(hrBenefits.filter(id => id !== ben.id));
+                            }} />
+                            {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : `$${ben.value}`})
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="border border-dashed border-slate-200 rounded-lg p-3 text-center">
+                        <p className="fs-xs text-slate-400">No benefits configured yet.</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Create benefits in Payroll → Tax & Benefits Config</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100">
                   <div>

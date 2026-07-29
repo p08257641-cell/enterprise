@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, PrimaryBtn, SecBtn, Label, Input } from './shared';
 import { Poll, PollOption, PollVote } from '../../types';
 import { isHRRole, isEmployeeRole } from '../../permissions';
+import { toast } from '../../utils/modal';
 
 export const VotingView: React.FC<ModuleViewsProps> = (props) => {
-  const { selectedCompany, selectedUser, employees, polls, pollOptions, pollVotes, onCreatePoll, onClosePoll, onVotePoll } = props;
+  const { selectedCompany, selectedUser, employees, polls, pollOptions, pollVotes, onCreatePoll, onClosePoll, onUpdatePoll, onVotePoll } = props;
 
   const localPolls = polls.filter(p => p.companyId === selectedCompany.id);
   const localOptions = pollOptions.filter(o => o.companyId === selectedCompany.id);
@@ -13,6 +14,8 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
 
   const [activeTab, setActiveTab] = useState<'active' | 'create' | 'results'>('active');
   const [selectedPoll, setSelectedPoll] = useState<string | null>(null);
+  const [editingPollId, setEditingPollId] = useState<string | null>(null);
+  const [editEndDate, setEditEndDate] = useState('');
 
   // Create form state
   const [newTitle, setNewTitle] = useState('');
@@ -28,6 +31,18 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
 
   const activePolls = localPolls.filter(p => p.status === 'Active');
   const closedPolls = localPolls.filter(p => p.status === 'Closed');
+
+  const getTimeRemaining = (endDate: string) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    if (diff <= 0) return 'Expired';
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (days > 0) return `${days}d ${hours}h remaining`;
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m remaining`;
+  };
 
   const handleCreatePoll = () => {
     if (!newTitle.trim() || newOptions.filter(o => o.trim()).length < 2) return;
@@ -46,6 +61,19 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
     setNewDescription('');
     setNewOptions(['', '']);
     setActiveTab('active');
+  };
+
+  const handleEndNow = (pollId: string) => {
+    onUpdatePoll(pollId, { status: 'Closed' });
+    toast('Poll ended successfully', 'success');
+  };
+
+  const handleSetEndDate = (pollId: string) => {
+    if (!editEndDate) return;
+    onUpdatePoll(pollId, { endDate: editEndDate });
+    setEditingPollId(null);
+    setEditEndDate('');
+    toast('End date updated', 'success');
   };
 
   const handleVote = (pollId: string, optionId: string) => {
@@ -105,6 +133,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
             const opts = localOptions.filter(o => o.pollId === poll.id);
             const voted = hasVoted(poll.id);
             const results = getPollResults(poll.id);
+            const isEditing = editingPollId === poll.id;
             return (
               <div key={poll.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                 <div className="flex items-start justify-between mb-3">
@@ -114,10 +143,58 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                     {poll.description && <p className="fs-xs text-slate-500 mt-1">{poll.description}</p>}
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] text-slate-400">{new Date(poll.endDate).toLocaleDateString()}</div>
+                    {poll.endDate && (
+                      <div className="text-[10px] text-slate-400">
+                        {getTimeRemaining(poll.endDate)}
+                      </div>
+                    )}
                     {poll.anonymous && <div className="text-[10px] text-slate-400 mt-0.5"><i className="bi bi-eye-slash"></i> Anonymous</div>}
                   </div>
                 </div>
+
+                {/* HR Controls: End Now + Set Close Date */}
+                {canManage && (
+                  <div className="flex items-center gap-2 mb-3 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="fs-[10px] fw-semibold text-slate-500 mr-1">Poll Controls:</span>
+                    {isEditing ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="date"
+                          value={editEndDate}
+                          onChange={e => setEditEndDate(e.target.value)}
+                          className="fs-xs py-1 px-2 w-36"
+                        />
+                        <button
+                          onClick={() => handleSetEndDate(poll.id)}
+                          className="px-2 py-1 bg-slate-900 text-white rounded text-[10px] fw-semibold cursor-pointer hover:bg-slate-800"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => { setEditingPollId(null); setEditEndDate(''); }}
+                          className="px-2 py-1 border border-slate-200 text-slate-500 rounded text-[10px] fw-semibold cursor-pointer hover:bg-white"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => { setEditingPollId(poll.id); setEditEndDate(poll.endDate || ''); }}
+                          className="flex items-center gap-1 px-2 py-1 border border-slate-200 text-slate-600 rounded text-[10px] fw-semibold cursor-pointer hover:bg-white transition-all"
+                        >
+                          <i className="bi bi-calendar-event"></i> Set Close Date
+                        </button>
+                        <button
+                          onClick={() => handleEndNow(poll.id)}
+                          className="flex items-center gap-1 px-2 py-1 bg-red-50 border border-red-200 text-red-600 rounded text-[10px] fw-semibold cursor-pointer hover:bg-red-100 transition-all"
+                        >
+                          <i className="bi bi-stop-circle"></i> End Now
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {!canVote ? (
                   <div className="space-y-2 mt-4">

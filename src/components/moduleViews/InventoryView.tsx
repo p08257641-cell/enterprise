@@ -65,12 +65,12 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             <Input placeholder="Search by SKU or product name…" value={invSearch} onChange={e => setInvSearch(e.target.value)} />
           </div>
           <table className="w-full text-left">
-            <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Category' }, { label: 'Warehouse' }, { label: 'Stock', right: true }, { label: 'Min', right: true }, { label: 'Unit Price', right: true }, { label: 'Status' }]} />
+            <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Category' }, { label: 'Warehouse' }, { label: 'Stock', right: true }, { label: 'Min', right: true }, { label: 'Unit Price', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
               {filteredStock.map(item => {
                 const isLow = item.stockLevel <= item.minStockLevel;
                 return (
-                  <tr key={item.id} className={`hover:bg-slate-50/40 transition-colors cursor-pointer ${isLow ? 'bg-rose-50/20' : ''}`} onClick={() => stockModal.open(item)}>
+                  <tr key={item.id} className={`hover:bg-slate-50/40 transition-colors ${isLow ? 'bg-rose-50/20' : ''}`}>
                     <td className="px-4 py-3 data-value-small font-sans tabular-nums fw-bold text-slate-500">{item.sku}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{item.name}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{item.category}</td>
@@ -79,10 +79,18 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400 text-right">{item.minStockLevel}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">${item.unitPrice.toFixed(2)}</td>
                     <td className="px-4 py-3"><Badge label={isLow ? 'Low Stock' : 'OK'} variant={isLow ? 'danger' : 'success'} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); stockModal.open(item); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
-              {filteredStock.length === 0 && <EmptyRow cols={8} message="No items match your search." />}
+              {filteredStock.length === 0 && <EmptyRow cols={9} message="No items match your search." />}
             </tbody>
           </table>
         </div>
@@ -134,16 +142,24 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setTrfItem(localStock[0]?.id ?? ''); setTrfFrom('Warehouse A'); setTrfTo('Main Store'); setTrfQty('10'); setShowTransferModal(true); }}>New Transfer</PrimaryBtn>
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Transfer ID' }, { label: 'Item' }, { label: 'From' }, { label: 'To' }, { label: 'Qty', right: true }, { label: 'Status' }]} />
+              <TableHead cols={[{ label: 'Transfer ID' }, { label: 'Item' }, { label: 'From' }, { label: 'To' }, { label: 'Qty', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {transfers.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => transferModal.open(t)}>
+                  <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{t.id}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.item}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{t.from}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{t.to}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{t.qty}</td>
                     <td className="px-4 py-3"><Badge label={t.status} variant={t.status === 'Completed' ? 'success' : 'info'} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); transferModal.open(t); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -200,16 +216,24 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Stock Valuation Report</h3></div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Qty on Hand', right: true }, { label: 'Unit Cost', right: true }, { label: 'Total Value', right: true }, { label: 'Warehouse' }]} />
+              <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Qty on Hand', right: true }, { label: 'Unit Cost', right: true }, { label: 'Total Value', right: true }, { label: 'Warehouse' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localStock.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => stockModal.open(item)}>
+                  <tr key={item.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 data-value-small font-sans tabular-nums text-slate-500">{item.sku}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{item.name}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{item.stockLevel.toLocaleString()}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${item.unitPrice.toFixed(2)}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${(item.stockLevel * item.unitPrice).toLocaleString()}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{item.warehouse}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); stockModal.open(item); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

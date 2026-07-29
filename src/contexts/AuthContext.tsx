@@ -6,6 +6,8 @@ interface User {
   email: string;
   role: string;
   companyId: string;
+  permissions?: string[];
+  crudPermissions?: string[];
 }
 
 interface AuthContextType {
@@ -29,26 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
-      setIsLoading(false);
-      return;
     }
-    // Dev auto-login: fetch a dev token if no stored auth
-    if (import.meta.env.DEV) {
-      fetch('/api/dev-token')
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.token) {
-            localStorage.setItem('erp_token', data.token);
-            localStorage.setItem('erp_user', JSON.stringify(data.user));
-            setToken(data.token);
-            setUser(data.user);
-          }
-        })
-        .catch(() => {})
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {

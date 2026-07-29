@@ -84,10 +84,10 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
       {hdTab === 'queue' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
           <table className="w-full text-left">
-            <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Subject' }, { label: 'Category' }, { label: 'Priority' }, { label: 'Status' }, { label: 'Created' }]} />
+            <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Subject' }, { label: 'Category' }, { label: 'Priority' }, { label: 'Status' }, { label: 'Created' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
               {localTickets.map(t => (
-                <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => ticketModal.open(t)}>
+                <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.customerName}</td>
                   <td className="px-4 py-3 fs-xs text-slate-600 max-w-[200px] truncate">{t.subject}</td>
@@ -95,9 +95,17 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3"><Badge label={t.priority} variant={t.priority === 'Critical' ? 'danger' : t.priority === 'High' ? 'warning' : 'default'} /></td>
                   <td className="px-4 py-3"><Badge label={t.status} variant={t.status === 'Resolved' ? 'success' : t.status === 'In Progress' ? 'info' : 'warning'} /></td>
                   <td className="px-4 py-3 text-[10px] font-sans tabular-nums text-slate-400">{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); ticketModal.open(t); }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                    >
+                      <i className="bi bi-eye text-[11px]"></i> View
+                    </button>
+                  </td>
                 </tr>
               ))}
-              {localTickets.length === 0 && <EmptyRow cols={7} message="No tickets in the queue." />}
+              {localTickets.length === 0 && <EmptyRow cols={8} message="No tickets in the queue." />}
             </tbody>
           </table>
         </div>
@@ -190,22 +198,30 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Priority' }, { label: 'Elapsed' }, { label: 'Target' }, { label: 'SLA' }]} />
+              <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Priority' }, { label: 'Elapsed' }, { label: 'Target' }, { label: 'SLA' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localTickets.map(t => {
                   const s = slaStatus(t);
                   return (
-                    <tr key={t.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => ticketModal.open(t)}>
+                    <tr key={t.id} className="hover:bg-slate-50/40">
                       <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.customerName}</td>
                       <td className="px-4 py-3"><Badge label={t.priority} variant={t.priority === 'Critical' ? 'danger' : t.priority === 'High' ? 'warning' : 'default'} /></td>
                       <td className="px-4 py-3 fs-xs text-slate-600 tabular-nums">{s.elapsedH}h</td>
                       <td className="px-4 py-3 fs-xs text-slate-400 tabular-nums">{s.targetH}h</td>
                       <td className="px-4 py-3"><Badge label={s.breached ? 'Breached' : s.ok ? 'On Track' : 'At Risk'} variant={s.breached ? 'danger' : s.ok ? 'success' : 'warning'} /></td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); ticketModal.open(t); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
-                {localTickets.length === 0 && <EmptyRow cols={6} message="No tickets to monitor." />}
+                {localTickets.length === 0 && <EmptyRow cols={7} message="No tickets to monitor." />}
               </tbody>
             </table>
           </div>

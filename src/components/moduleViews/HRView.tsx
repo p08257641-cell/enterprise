@@ -45,6 +45,8 @@ export const HRView: React.FC<ModuleViewsProps> = (props) => {
       onRequestBankAccountUpdate={props.onRequestBankAccountUpdate}
       onApproveBankAccountUpdate={props.onApproveBankAccountUpdate}
       onRejectBankAccountUpdate={props.onRejectBankAccountUpdate}
+      onInviteUser={onInviteUser}
+      customRoles={props.customRoles}
     />
   );
 };

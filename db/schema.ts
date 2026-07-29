@@ -32,6 +32,9 @@ export const users = pgTable('users', {
   companyId: text('companyId'),
   name: text('name'),
   email: text('email'),
+  passwordHash: text('passwordHash'),
+  loginEnabled: boolean('loginEnabled'),
+  loginDisabledReason: text('loginDisabledReason'),
   role: text('role'),
   roles: text('roles').array(),
   activeRole: text('activeRole'),
@@ -1226,6 +1229,27 @@ export const chatMessages = pgTable('chat_messages', {
   createdAt: text('createdAt'),
 });
 
+export const whisperReports = pgTable('whisper_reports', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  category: text('category'),
+  description: text('description'),
+  location: text('location'),
+  department: text('department'),
+  status: text('status'),
+  assignedTo: text('assignedTo'),
+  notes: text('notes'),
+  createdAt: text('createdAt'),
+});
+
+export const chatReads = pgTable('chat_reads', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  threadId: text('threadId'),
+  userId: text('userId'),
+  lastReadAt: text('lastReadAt'),
+});
+
 /* ── Voting / Polls ────────────────────────────────────────────────────── */
 export const polls = pgTable('polls', {
   id: text('id').primaryKey(),
@@ -1273,5 +1297,41 @@ export const companyImages = pgTable('company_images', {
   imageData: text('imageData'),
   uploadedBy: text('uploadedBy'),
   uploadedByName: text('uploadedByName'),
+  createdAt: text('createdAt'),
+});
+
+/* ── GRA E-VAT Integration ────────────────────────────────────────────── */
+export const evatConfig = pgTable('evat_config', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  companyTin: text('companyTin'),
+  companyName: text('companyName'),
+  securityKey: text('securityKey'),
+  apiMode: text('apiMode'),
+  apiBaseUrl: text('apiBaseUrl'),
+  isActive: boolean('isActive'),
+  lastSignature: text('lastSignature'),
+  lastSignatureDate: text('lastSignatureDate'),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+});
+
+export const evatSubmissions = pgTable('evat_submissions', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  entityType: text('entityType'),
+  entityId: text('entityId'),
+  entityNumber: text('entityNumber'),
+  status: text('status'),
+  irn: text('irn'),
+  sdcCode: text('sdcCode'),
+  qrCodeUrl: text('qrCodeUrl'),
+  digitalSignature: text('digitalSignature'),
+  requestPayload: jsonb('requestPayload'),
+  responsePayload: jsonb('responsePayload'),
+  errorMessage: text('errorMessage'),
+  retryCount: integer('retryCount'),
+  submittedAt: text('submittedAt'),
+  validatedAt: text('validatedAt'),
   createdAt: text('createdAt'),
 });

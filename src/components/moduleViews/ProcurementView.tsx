@@ -126,16 +126,24 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
       {procTab === 'orders' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
           <table className="w-full text-left">
-            <TableHead cols={[{ label: 'PO Number' }, { label: 'Vendor' }, { label: 'Item' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
+            <TableHead cols={[{ label: 'PO Number' }, { label: 'Vendor' }, { label: 'Item' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
             <tbody className="divide-y divide-slate-100">
               {localPOs.map(o => (
-                <tr key={o.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => poModal.open(o)}>
+                <tr key={o.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{o.poNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.vendorName}</td>
                   <td className="px-4 py-3 fs-xs text-slate-500 max-w-[160px] truncate">{o.item}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{o.date}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(o.total || 0).toLocaleString()}</td>
                   <td className="px-4 py-3"><Badge label={o.status} variant={o.status === 'Approved' || o.status === 'Received' ? 'success' : o.status === 'Cancelled' ? 'danger' : 'warning'} /></td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); poModal.open(o); }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                    >
+                      <i className="bi bi-eye text-[11px]"></i> View
+                    </button>
+                  </td>
                   {isAdmin && (
                     <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex gap-1 justify-end">
@@ -147,7 +155,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
                   )}
                 </tr>
               ))}
-              {localPOs.length === 0 && <EmptyRow cols={isAdmin ? 7 : 6} message="No purchase orders yet. Create one from the 'New PO' tab." />}
+              {localPOs.length === 0 && <EmptyRow cols={isAdmin ? 8 : 7} message="No purchase orders yet. Create one from the 'New PO' tab." />}
             </tbody>
           </table>
         </div>
@@ -201,16 +209,24 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               {isAdmin && <PrimaryBtn icon="bi bi-send" onClick={() => { setRfqItem(''); setSelectedRfqInvId(''); setRfqVendorCount('3'); setShowRfqModal(true); }}>Send New RFQ</PrimaryBtn>}
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'RFQ #' }, { label: 'Item' }, { label: 'Vendors Invited' }, { label: 'Sent On' }, { label: 'Quotes Received' }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
+              <TableHead cols={[{ label: 'RFQ #' }, { label: 'Item' }, { label: 'Vendors Invited' }, { label: 'Sent On' }, { label: 'Quotes Received' }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
               <tbody className="divide-y divide-slate-100">
                 {localRFQs.map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => rfqModal.open(r)}>
+                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{r.rfqNumber}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.item}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600">{r.vendorsInvited}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{r.sentDate}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700">{r.quotesReceived}/{r.vendorsInvited}</td>
                     <td className="px-4 py-3"><Badge label={r.status} variant={r.status === 'Awarded' ? 'success' : r.status === 'In Review' ? 'warning' : 'info'} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); rfqModal.open(r); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
+                    </td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         <div className="flex gap-1 justify-end">
@@ -222,7 +238,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
                     )}
                   </tr>
                 ))}
-                {localRFQs.length === 0 && <EmptyRow cols={isAdmin ? 7 : 6} message="No RFQs sent yet." />}
+                {localRFQs.length === 0 && <EmptyRow cols={isAdmin ? 8 : 7} message="No RFQs sent yet." />}
               </tbody>
             </table>
           </div>

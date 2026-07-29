@@ -89,16 +89,24 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Asset Register</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Purchase Price', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
+                <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Purchase Price', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
                 <tbody className="divide-y divide-slate-100">
                   {localAssets.map(a => (
-                    <tr key={a.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => assetModal.open(a)}>
+                    <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{a.assetCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{a.name}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{a.category}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{a.location}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${(a.purchasePrice || 0).toLocaleString()}</td>
                       <td className="px-4 py-3"><Badge label={a.status} variant={a.status === 'Active' ? 'success' : a.status === 'Disposed' ? 'danger' : 'warning'} /></td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); assetModal.open(a); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                      </td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           {a.status === 'Active' && (
@@ -108,7 +116,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                       )}
                     </tr>
                   ))}
-                  {localAssets.length === 0 && <EmptyRow cols={isAdmin ? 7 : 6} message="No assets registered yet." />}
+                  {localAssets.length === 0 && <EmptyRow cols={isAdmin ? 8 : 7} message="No assets registered yet." />}
                 </tbody>
               </table>
             </div>
@@ -155,15 +163,23 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Maintenance Schedule</h3></div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
+                <TableHead cols={[{ label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
                 <tbody className="divide-y divide-slate-100">
                   {localMaintenance.map(m => (
-                    <tr key={m.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => maintModal.open(m)}>
+                    <tr key={m.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{m.assetName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{m.task}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{m.due}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{m.owner}</td>
                       <td className="px-4 py-3"><Badge label={m.status} variant={(m.status as string) === 'Completed' ? 'success' : new Date(m.due) < new Date() && (m.status as string) !== 'Completed' ? 'danger' : 'info'} /></td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); maintModal.open(m); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                      </td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1 justify-end">
@@ -174,7 +190,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                       )}
                     </tr>
                   ))}
-                  {localMaintenance.length === 0 && <EmptyRow cols={isAdmin ? 6 : 5} message="No maintenance tasks scheduled." />}
+                  {localMaintenance.length === 0 && <EmptyRow cols={isAdmin ? 7 : 6} message="No maintenance tasks scheduled." />}
                 </tbody>
               </table>
             </div>

@@ -189,10 +189,10 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               <span className="table-cell-mono fw-bold text-slate-900">Total Cost: ${bomTotal.toFixed(2)}</span>
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: '#' }, { label: 'Component' }, { label: 'Product' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Unit Cost', right: true }, { label: 'Line Total', right: true }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
+              <TableHead cols={[{ label: '#' }, { label: 'Component' }, { label: 'Product' }, { label: 'Qty' }, { label: 'Unit' }, { label: 'Unit Cost', right: true }, { label: 'Line Total', right: true }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
               <tbody className="divide-y divide-slate-100">
                 {filteredBOM.map((b, i) => (
-                  <tr key={b.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => bomModal.open(b)}>
+                  <tr key={b.id} className="hover:bg-slate-50/40">
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{i + 1}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{b.part}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{b.product}</td>
@@ -200,6 +200,14 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 fs-xs text-slate-500">{b.unit}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">${(b.cost || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${((b.qty || 0) * (b.cost || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); bomModal.open(b); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
+                    </td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         <button onClick={() => onDeleteBOMItem(b.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
@@ -213,7 +221,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 table-cell-mono fw-bold text-slate-900 text-right">${bomTotal.toFixed(2)}</td>
                   </tr>
                 )}
-                {filteredBOM.length === 0 && <EmptyRow cols={isAdmin ? 8 : 7} message="No BOM items found." />}
+                {filteredBOM.length === 0 && <EmptyRow cols={isAdmin ? 9 : 8} message="No BOM items found." />}
               </tbody>
             </table>
           </div>

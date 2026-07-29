@@ -664,10 +664,10 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
               <PrimaryBtn icon="bi bi-person-plus" onClick={() => setShowLeadForm(true)}>Add Contact</PrimaryBtn>
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Name' }, { label: 'Company' }, { label: 'Email' }, { label: 'Source' }, { label: 'Deal Value', right: true }, { label: 'Stage' }]} />
+              <TableHead cols={[{ label: 'Name' }, { label: 'Company' }, { label: 'Email' }, { label: 'Source' }, { label: 'Deal Value', right: true }, { label: 'Stage' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localLeads.map(l => (
-                  <tr key={l.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => setSelectedLeadForDetail(l.id)}>
+                  <tr key={l.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center avatar-text fw-bold text-white shrink-0">{l.firstName[0]}{l.lastName[0]}</div>
@@ -679,9 +679,17 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3"><Badge label={l.source} /></td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${l.value.toLocaleString()}</td>
                     <td className="px-4 py-3"><Badge label={l.status} variant={l.status === 'Won' ? 'success' : l.status === 'Lost' ? 'danger' : l.status === 'Qualified' ? 'info' : 'default'} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedLeadForDetail(l.id); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        <i className="bi bi-eye text-[11px]"></i> View
+                      </button>
+                    </td>
                   </tr>
                 ))}
-                {localLeads.length === 0 && <EmptyRow cols={6} message="No contacts found." />}
+                {localLeads.length === 0 && <EmptyRow cols={7} message="No contacts found." />}
               </tbody>
             </table>
           </div>

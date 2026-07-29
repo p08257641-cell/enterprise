@@ -19,7 +19,8 @@ export const INITIAL_COMPANIES: Company[] = [
     premiumFeatures: ['GPS Attendance', 'AI Lead Scoring', 'Financial Forecasting', 'Auto Reordering'],
     billingPlan: 'Enterprise',
     billingStatus: 'Active',
-    createdAt: '2025-01-15T08:00:00Z'
+    subscriptionExpiresAt: '2027-12-31T23:59:59Z',
+    createdAt: '2024-01-01T00:00:00Z',
   },
   {
     id: 'c-starlight',
@@ -34,7 +35,8 @@ export const INITIAL_COMPANIES: Company[] = [
     premiumFeatures: ['GPS Attendance'],
     billingPlan: 'Core',
     billingStatus: 'Active',
-    createdAt: '2025-03-20T09:00:00Z'
+    subscriptionExpiresAt: '2026-10-15T23:59:59Z',
+    createdAt: '2024-03-15T00:00:00Z',
   },
   {
     id: 'c-zenretail',
@@ -64,6 +66,7 @@ export const INITIAL_USERS: User[] = [
     roles: ['Super Admin'],
     activeRole: 'Super Admin',
     status: 'Active',
+    loginEnabled: true,
     permissions: ['ALL'],
     createdAt: '2025-01-01T00:00:00Z'
   },
@@ -81,6 +84,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👨‍💼',
     permissions: ['admin_all', 'module_manage', 'user_invite'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-01-16T09:00:00Z'
   },
   {
@@ -96,6 +100,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👩‍💼',
     permissions: ['hr_view', 'hr_edit', 'leave_approve', 'attendance_manage'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-01-20T10:00:00Z'
   },
   {
@@ -111,6 +116,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👨‍💻',
     permissions: ['accounting_view', 'accounting_edit', 'invoice_manage'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-01-18T11:00:00Z'
   },
   {
@@ -126,6 +132,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👩‍💼',
     permissions: ['accounting_view', 'accounting_edit', 'invoice_manage', 'payroll_manage', 'admin_manage'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-03-10T14:00:00Z'
   },
   {
@@ -141,6 +148,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👩‍💼',
     permissions: ['crm_view', 'crm_edit', 'leads_manage'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-02-01T09:00:00Z'
   },
   {
@@ -156,6 +164,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👨‍🔧',
     permissions: ['inventory_view', 'inventory_edit', 'stock_adjust'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-02-15T09:00:00Z'
   },
   {
@@ -171,6 +180,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👩‍💼',
     permissions: ['crm_view', 'crm_edit'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-04-10T09:00:00Z'
   },
   {
@@ -186,6 +196,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👨‍💼',
     permissions: ['crm_view', 'crm_edit'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-05-01T09:00:00Z'
   },
 
@@ -203,6 +214,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '🔬',
     permissions: ['admin_all'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-03-21T09:00:00Z'
   },
   {
@@ -218,6 +230,7 @@ export const INITIAL_USERS: User[] = [
     avatar: '👩‍💼',
     permissions: ['hr_view', 'hr_edit'],
     status: 'Active',
+    loginEnabled: true,
     createdAt: '2025-04-01T08:30:00Z'
   }
 ];

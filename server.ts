@@ -11,10 +11,13 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { Company, Employee, Department, Branch, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, Invoice, SupportTicket, ERPWorkflow, GLAccount, AuditLog, APIKey, POSProduct, POSCategory, POSTerminal, POSShift, POSCustomer, POSSale, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate } from './src/types';
 import * as schema from './db/schema';
+import { customRoles } from './db/customRoles';
+import { approvalPolicies } from './db/approvalPolicies';
+import { pendingApprovals } from './db/pendingApprovals';
 import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb, dbByCompanyPaginated, dbAllPaginated } from './db/repo';
 import { pool } from './db';
 import { logger, logRequest, logError } from './server/lib/logger';
-import { signToken, hashPassword, comparePassword } from './server/lib/auth';
+import { signToken, hashPassword, comparePassword, crudGuard } from './server/lib/auth';
 import { authenticate, requireRole, enforceTenantIsolation } from './server/middleware/auth';
 import { globalLimiter, authLimiter, aiLimiter } from './server/middleware/rateLimit';
 import { validate, LoginSchema, CreateTicketSchema, CreateLeadSchema, CreateExpenseSchema, CreateBillSchema, JournalEntrySchema } from './server/lib/validators';
@@ -189,21 +192,33 @@ app.post('/api/auth/login', authLimiter, asyncHandler(async (req, res) => {
   const user = allUsers.find(u => u.email === email);
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-  if (user.passwordHash) {
-    const valid = await comparePassword(password, user.passwordHash);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+  // Check if login is enabled for this user
+  if (user.loginEnabled === false) {
+    const reason = user.loginDisabledReason || 'account';
+    let message = 'Your account has been temporarily disabled.';
+    if (reason === 'leave') message = 'Your login is disabled while on leave. Contact HR to regain access.';
+    else if (reason === 'resigned') message = 'Your account has been deactivated following your resignation.';
+    else if (reason === 'terminated') message = 'Your account has been terminated.';
+    else if (reason === 'suspended') message = 'Your account has been suspended. Contact HR for details.';
+    return res.status(403).json({ error: message });
   }
 
+  const valid = await comparePassword(password, user.passwordHash || '');
+  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+
+  const allRoles = await dbAll<any>(customRoles);
+  const activeRole = allRoles.find((r: any) => r.name === user.role && r.companyId === user.companyId);
   const token = signToken({
     userId: user.id,
     companyId: user.companyId,
     role: user.role,
     roles: user.roles || [],
     permissions: user.permissions || [],
+    crudPermissions: activeRole?.crudPermissions || [],
   });
 
   logAudit(user.companyId, user.id, user.name, 'LOGIN', 'Auth', `User ${user.name} logged in`);
-  res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.companyId } });
+  res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, companyId: user.companyId, permissions: user.permissions || [], crudPermissions: activeRole?.crudPermissions || [] } });
 }));
 
 app.post('/api/auth/register', authLimiter, asyncHandler(async (req, res) => {
@@ -230,14 +245,17 @@ app.post('/api/auth/register', authLimiter, asyncHandler(async (req, res) => {
     permissions: [],
     status: 'Active',
   });
+  const allRoles = await dbAll<any>(customRoles);
+  const activeRole = allRoles.find((r: any) => r.name === newUser.role && r.companyId === newUser.companyId);
   const token = signToken({
     userId: newUser.id,
     companyId: newUser.companyId,
     role: newUser.role,
     roles: newUser.roles || [],
     permissions: newUser.permissions || [],
+    crudPermissions: activeRole?.crudPermissions || [],
   });
-  res.status(201).json({ token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, companyId: newUser.companyId } });
+  res.status(201).json({ token, user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role, companyId: newUser.companyId, permissions: [], crudPermissions: activeRole?.crudPermissions || [] } });
 }));
 
 // Dev-only endpoint: auto-login token (before auth middleware)
@@ -246,19 +264,179 @@ if (process.env.NODE_ENV !== 'production') {
     const allUsers = await dbAll<any>(schema.users);
     const devUser = allUsers.find(u => u.role === 'HR Manager') || allUsers[0];
     if (!devUser) return res.status(404).json({ error: 'No users in DB' });
+    const allRoles = await dbAll<any>(customRoles);
+    const activeRole = allRoles.find((r: any) => r.name === devUser.role && r.companyId === devUser.companyId);
     const token = signToken({
       userId: devUser.id,
       companyId: devUser.companyId,
       role: devUser.role,
       roles: devUser.roles || [],
       permissions: devUser.permissions || [],
+      crudPermissions: activeRole?.crudPermissions || [],
     });
-    res.json({ token, user: { id: devUser.id, name: devUser.name, email: devUser.email, role: devUser.role, companyId: devUser.companyId } });
+    res.json({ token, user: { id: devUser.id, name: devUser.name, email: devUser.email, role: devUser.role, companyId: devUser.companyId, permissions: devUser.permissions || [], crudPermissions: activeRole?.crudPermissions || [] } });
   }));
 }
 
+// ─── Whisper Reports (Anonymous - before auth middleware) ─────────────────────
+app.post('/api/whisper-reports', asyncHandler(async (req, res) => {
+  const { companyId, category, description, location, department } = req.body;
+  if (!description || !description.trim()) {
+    return res.status(400).json({ error: 'Description is required' });
+  }
+
+  const report = {
+    id: `wr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    companyId: companyId || 'c-acme',
+    category: category || 'other',
+    description: description.trim(),
+    location: location || '',
+    department: department || '',
+    status: 'New',
+    createdAt: new Date().toISOString(),
+  };
+
+  await dbInsert<any>(schema.whisperReports, report);
+
+  // Notify HR users in the company
+  const allUsers = await dbAll<any>(schema.users);
+  const hrUsers = allUsers.filter((u: any) =>
+    u.companyId === report.companyId &&
+    (u.role === 'HR Manager' || u.role === 'HR Officer' || u.role === 'HR Department Head')
+  );
+
+  // Create notification for HR
+  for (const hr of hrUsers) {
+    await dbInsert<any>(schema.chatMessages, {
+      id: `cm-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      companyId: report.companyId,
+      senderId: 'system',
+      senderName: 'Whisper System',
+      recipientId: hr.id,
+      message: `[Whisper Report] New anonymous ${category} report submitted. Category: ${category}. Please review in the Admin panel.`,
+      timestamp: new Date().toISOString(),
+      read: false,
+    });
+  }
+
+  logAudit(report.companyId, 'anonymous', 'Anonymous', 'WHISPER_REPORT', 'Compliance', `Anonymous ${category} report submitted`);
+  res.status(201).json({ success: true, message: 'Report submitted anonymously. Thank you for speaking up.' });
+}));
+
+app.get('/api/whisper-reports', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  let all = await dbAll<any>(schema.whisperReports);
+  if (companyId) all = all.filter((r: any) => r.companyId === companyId);
+  res.json(all);
+}));
+
+app.put('/api/whisper-reports/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status, assignedTo, notes } = req.body;
+  const updates: any = {};
+  if (status) updates.status = status;
+  if (assignedTo) updates.assignedTo = assignedTo;
+  if (notes) updates.notes = notes;
+  const updated = await dbUpdate<any>(schema.whisperReports, id, updates);
+  if (!updated) return res.status(404).json({ error: 'Report not found' });
+  res.json(updated);
+}));
+
 // Apply auth to all subsequent /api routes
 app.use('/api', authenticate);
+
+// CRUD permission enforcement
+const CRUD_ROUTES: Array<{ prefix: string; module: string }> = [
+  // HR
+  { prefix: '/employees', module: 'HR' },
+  { prefix: '/leaves', module: 'HR' },
+  { prefix: '/attendance', module: 'HR' },
+  { prefix: '/recruitment', module: 'HR' },
+  { prefix: '/onboarding', module: 'HR' },
+  { prefix: '/okrs', module: 'HR' },
+  { prefix: '/polls', module: 'HR' },
+  { prefix: '/poll-options', module: 'HR' },
+  { prefix: '/poll-votes', module: 'HR' },
+  { prefix: '/exit-requests', module: 'HR' },
+  { prefix: '/bank-account-updates', module: 'HR' },
+  { prefix: '/profile-update-requests', module: 'HR' },
+  // Payroll
+  { prefix: '/payroll', module: 'Payroll' },
+  { prefix: '/payslips', module: 'Payroll' },
+  // Accounting
+  { prefix: '/invoices', module: 'Accounting' },
+  { prefix: '/expenses', module: 'Accounting' },
+  { prefix: '/bills', module: 'Accounting' },
+  { prefix: '/bill-payments', module: 'Accounting' },
+  { prefix: '/customer-payments', module: 'Accounting' },
+  { prefix: '/journal-entries', module: 'Accounting' },
+  { prefix: '/gl-accounts', module: 'Accounting' },
+  { prefix: '/bank-accounts', module: 'Accounting' },
+  { prefix: '/bank-transactions', module: 'Accounting' },
+  { prefix: '/bank-reconciliations', module: 'Accounting' },
+  { prefix: '/fixed-assets', module: 'Accounting' },
+  { prefix: '/depreciation', module: 'Accounting' },
+  { prefix: '/budgets', module: 'Accounting' },
+  { prefix: '/cost-centers', module: 'Accounting' },
+  { prefix: '/currency-rates', module: 'Accounting' },
+  { prefix: '/tax-codes', module: 'Accounting' },
+  { prefix: '/tax-returns', module: 'Accounting' },
+  { prefix: '/intercompany-transactions', module: 'Accounting' },
+  { prefix: '/consolidation-rules', module: 'Accounting' },
+  // CRM
+  { prefix: '/leads', module: 'CRM' },
+  { prefix: '/crm-activities', module: 'CRM' },
+  { prefix: '/crm-tasks', module: 'CRM' },
+  { prefix: '/crm-emails', module: 'CRM' },
+  // Sales
+  { prefix: '/sales-orders', module: 'Sales' },
+  { prefix: '/sales-quotes', module: 'Sales' },
+  { prefix: '/sales-customers', module: 'Sales' },
+  { prefix: '/sales-targets', module: 'Sales' },
+  // POS
+  { prefix: '/pos', module: 'Sales' },
+  // Operations
+  { prefix: '/inventory', module: 'Operations' },
+  { prefix: '/warehouses', module: 'Operations' },
+  { prefix: '/transfers', module: 'Operations' },
+  { prefix: '/vendors', module: 'Operations' },
+  { prefix: '/purchase-orders', module: 'Operations' },
+  { prefix: '/rfqs', module: 'Operations' },
+  { prefix: '/work-orders', module: 'Operations' },
+  { prefix: '/bom', module: 'Operations' },
+  { prefix: '/quality-checks', module: 'Operations' },
+  { prefix: '/maintenance-tasks', module: 'Operations' },
+  { prefix: '/assets', module: 'Operations' },
+  // Help Desk
+  { prefix: '/tickets', module: 'Help Desk' },
+  { prefix: '/knowledge-base', module: 'Help Desk' },
+  // Administration
+  { prefix: '/departments', module: 'Administration' },
+  { prefix: '/branches', module: 'Administration' },
+  { prefix: '/users', module: 'Administration' },
+  { prefix: '/roles', module: 'Administration' },
+  { prefix: '/approval-policies', module: 'Administration' },
+  { prefix: '/pending-approvals', module: 'Administration' },
+];
+
+app.use('/api', (req, res, next) => {
+  const perms: string[] = (req as any).user?.crudPermissions || [];
+  if (perms.length === 0) return next();
+  const method = req.method;
+  const actionMap: Record<string, string> = { GET: 'Read', POST: 'Create', PUT: 'Update', PATCH: 'Update', DELETE: 'Delete' };
+  const action = actionMap[method];
+  if (!action) return next();
+  const path = req.path;
+  for (const route of CRUD_ROUTES) {
+    if (path.startsWith(route.prefix) || path.startsWith('/api' + route.prefix)) {
+      if (!perms.includes(`${route.module}.${action}`)) {
+        return res.status(403).json({ error: `Missing ${route.module}.${action} permission` });
+      }
+      return next();
+    }
+  }
+  next();
+});
 
 // 1. Tenants (Companies)
 app.get('/api/companies', asyncHandler(async (req, res) => {
@@ -383,6 +561,335 @@ app.post('/api/users/:id/switch-role', asyncHandler(async (req, res) => {
 
   logAudit(user.companyId, user.id, user.name, 'ROLE_SWITCH', 'User Management', `Switched active role from ${oldRole} to ${newRole}`);
   res.json(updated);
+    }));
+
+// ─── HR: Toggle Employee Login Access ─────────────────────────────────────────
+app.put('/api/users/:id/login-access', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { loginEnabled, loginDisabledReason, userRole } = req.body;
+
+  // Only HR roles and Company Admin can toggle login access
+  const allowedRoles = ['HR Manager', 'HR Officer', 'HR Department Head', 'Company Admin'];
+  if (!allowedRoles.includes(userRole)) {
+    return res.status(403).json({ error: 'Only HR and Company Admin can manage login access' });
+  }
+
+  const user = await dbById<any>(schema.users, id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // Cannot disable login for Super Admin or Company Admin
+  if ((user.role === 'Super Admin' || user.role === 'Company Admin') && loginEnabled === false) {
+    return res.status(403).json({ error: 'Cannot disable login for admin users' });
+  }
+
+  const updates: any = { loginEnabled: loginEnabled !== false };
+  if (loginEnabled === false && loginDisabledReason) {
+    updates.loginDisabledReason = loginDisabledReason;
+  } else if (loginEnabled === true) {
+    updates.loginDisabledReason = null;
+  }
+
+  const updated = await dbUpdate(schema.users, id, updates);
+  logAudit(user.companyId, req.body.requestedBy || 'system', req.body.requestedByName || 'System', 'LOGIN_ACCESS', 'User Management', `${loginEnabled ? 'Enabled' : 'Disabled'} login for ${user.name}${loginDisabledReason ? ` (${loginDisabledReason})` : ''}`);
+  res.json(updated);
+}));
+
+// ─── Custom Roles CRUD ───────────────────────────────────────────────────────
+
+app.get('/api/roles', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = await dbAll<any>(customRoles);
+  res.json(companyId ? all.filter((r: any) => r.companyId === companyId) : all);
+    }));
+
+app.post('/api/roles', asyncHandler(async (req, res) => {
+  const { companyId, name, description, modules, submenus, crudPermissions } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Role name is required' });
+
+  // Check duplicate name for this company
+  const existing = await dbAll<any>(customRoles);
+  const dup = existing.find((r: any) => r.companyId === companyId && r.name.toLowerCase() === name.trim().toLowerCase());
+  if (dup) return res.status(400).json({ error: 'A role with this name already exists' });
+
+  const newRole = {
+    id: `role-${Date.now()}`,
+    companyId,
+    name: name.trim(),
+    description: description || '',
+    modules: modules || [],
+    submenus: submenus || [],
+    crudPermissions: crudPermissions || [],
+    isSystem: false,
+    createdAt: new Date().toISOString(),
+  };
+  await dbInsert(customRoles, newRole);
+  logAudit(companyId, 'system', 'System', 'ROLE_CREATE', 'Administration', `Created role "${newRole.name}"`);
+  res.status(201).json(newRole);
+    }));
+
+app.put('/api/roles/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, description, modules, submenus, crudPermissions, userName, userRole } = req.body;
+
+  const role = await dbById<any>(customRoles, id);
+  if (!role) return res.status(404).json({ error: 'Role not found' });
+
+  // Block editing Employee and Super Admin names
+  const lockedNames = ['Employee', 'Super Admin'];
+  if (name && lockedNames.includes(role.name)) {
+    return res.status(403).json({ error: `Cannot rename the "${role.name}" role` });
+  }
+
+  // Check duplicate name if renaming
+  if (name && name.trim() !== role.name) {
+    const existing = await dbAll<any>(customRoles);
+    const dup = existing.find((r: any) => r.companyId === role.companyId && r.id !== id && r.name.toLowerCase() === name.trim().toLowerCase());
+    if (dup) return res.status(400).json({ error: 'A role with this name already exists' });
+  }
+
+  // Check if Role Management approval policy is enabled for this company
+  const policies = await dbAll<any>(approvalPolicies);
+  const rolePolicy = policies.find((p: any) => p.companyId === role.companyId && p.module === 'Role Management');
+
+  // If approval policy is enabled and user is not in approverRoles, create pending approval
+  if (rolePolicy && rolePolicy.enabled && rolePolicy.approverRoles?.length > 0) {
+    const isAuthorized = rolePolicy.approverRoles.includes(userRole);
+    if (!isAuthorized) {
+      // Build the changes description
+      const changes: any = {};
+      if (name !== undefined && name.trim() !== role.name) changes.name = { from: role.name, to: name.trim() };
+      if (description !== undefined && description !== role.description) changes.description = { from: role.description, to: description };
+      if (modules !== undefined) changes.modules = { from: role.modules || [], to: modules };
+      if (submenus !== undefined) changes.submenus = { from: role.submenus || [], to: submenus };
+      if (crudPermissions !== undefined) changes.crudPermissions = { from: role.crudPermissions || [], to: crudPermissions };
+
+      // Create pending approval
+      const pendingId = `pa-${Date.now()}`;
+      const pendingApproval = {
+        id: pendingId,
+        companyId: role.companyId,
+        module: 'Role Management',
+        recordId: id,
+        recordType: 'custom_role',
+        requesterId: req.body.userId || 'system',
+        requesterName: userName || 'System',
+        title: `Update role "${role.name}"`,
+        description: JSON.stringify({ roleId: id, roleName: role.name, changes }),
+        status: 'Pending',
+        assignedRoles: rolePolicy.approverRoles,
+        createdAt: new Date().toISOString(),
+      };
+      await dbInsert(pendingApprovals, pendingApproval);
+
+      logAudit(role.companyId, req.body.userId || 'system', userName || 'System', 'ROLE_CHANGE_PENDING', 'Administration', `Role update pending approval for "${role.name}"`);
+      return res.status(202).json({ pending: true, message: 'Role change submitted for approval', pendingApproval });
+    }
+  }
+
+  // Authorized — apply changes directly
+  // Handle name change: update all users who have this role
+  if (name && name.trim() !== role.name) {
+    const allUsers = await dbAll<any>(schema.users);
+    const affected = allUsers.filter((u: any) => u.activeRole === role.name || u.role === role.name);
+    for (const u of affected) {
+      const newRoles = u.roles.map((r: string) => r === role.name ? name.trim() : r);
+      const updates: any = {};
+      if (u.activeRole === role.name) updates.activeRole = name.trim();
+      if (u.role === role.name) updates.role = name.trim();
+      updates.roles = newRoles;
+      await dbUpdate(schema.users, u.id, updates);
+    }
+  }
+
+  const updates: any = {};
+  if (name !== undefined) updates.name = name.trim();
+  if (description !== undefined) updates.description = description;
+  if (modules !== undefined) updates.modules = modules;
+  if (submenus !== undefined) updates.submenus = submenus;
+  if (crudPermissions !== undefined) updates.crudPermissions = crudPermissions;
+
+  const updated = await dbUpdate(customRoles, id, updates);
+  logAudit(role.companyId, req.body.userId || 'system', userName || 'System', 'ROLE_UPDATE', 'Administration', `Updated role "${updated?.name || role.name}"`);
+  res.json(updated);
+    }));
+
+app.delete('/api/roles/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const role = await dbById<any>(customRoles, id);
+  if (!role) return res.status(404).json({ error: 'Role not found' });
+
+  // Block deleting system roles
+  if (role.isSystem) {
+    return res.status(403).json({ error: 'Cannot delete a built-in role' });
+  }
+
+  // Block deleting Employee role
+  if (role.name === 'Employee') {
+    return res.status(403).json({ error: 'Cannot delete the Employee role' });
+  }
+
+  // Check if any users have this role assigned
+  const allUsers = await dbAll<any>(schema.users);
+  const assignedCount = allUsers.filter((u: any) =>
+    u.role === role.name || u.roles?.includes(role.name) || u.activeRole === role.name
+  ).length;
+  if (assignedCount > 0) {
+    return res.status(400).json({ error: `Cannot delete: ${assignedCount} user(s) still have this role assigned` });
+  }
+
+  await dbDelete(customRoles, id);
+  logAudit(role.companyId, 'system', 'System', 'ROLE_DELETE', 'Administration', `Deleted role "${role.name}"`);
+  res.json({ success: true });
+    }));
+
+// ─── Approval Policies CRUD ──────────────────────────────────────────────────
+
+app.get('/api/approval-policies', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  const all = await dbAll<any>(approvalPolicies);
+  res.json(companyId ? all.filter((p: any) => p.companyId === companyId) : all);
+    }));
+
+app.put('/api/approval-policies', asyncHandler(async (req, res) => {
+  const { companyId, policies } = req.body;
+  if (!companyId || !Array.isArray(policies)) return res.status(400).json({ error: 'companyId and policies array required' });
+
+  // Upsert each policy
+  for (const p of policies) {
+    const existing = (await dbAll<any>(approvalPolicies)).find((r: any) => r.companyId === companyId && r.module === p.module);
+    if (existing) {
+      await dbUpdate(approvalPolicies, existing.id, { approverRoles: p.approverRoles, enabled: p.enabled !== false });
+    } else {
+      await dbInsert(approvalPolicies, {
+        id: `ap-${companyId}-${p.module.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+        companyId,
+        module: p.module,
+        description: p.description || '',
+        approverRoles: p.approverRoles || [],
+        enabled: p.enabled !== false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  logAudit(companyId, 'system', 'System', 'APPROVAL_POLICY_UPDATE', 'Administration', `Updated approval policies for ${policies.length} modules`);
+  const updated = (await dbAll<any>(approvalPolicies)).filter((p: any) => p.companyId === companyId);
+  res.json(updated);
+    }));
+
+// ─── Pending Approvals ───────────────────────────────────────────────────────
+
+app.get('/api/pending-approvals', asyncHandler(async (req, res) => {
+  const { companyId, userRole } = req.query;
+  let all = await dbAll<any>(pendingApprovals);
+  if (companyId) all = all.filter((a: any) => a.companyId === companyId);
+  // If userRole provided, filter to only items assigned to that role
+  if (userRole) {
+    all = all.filter((a: any) => a.status === 'Pending' && a.assignedRoles?.includes(userRole as string));
+  }
+  res.json(all);
+    }));
+
+app.post('/api/pending-approvals', asyncHandler(async (req, res) => {
+  const { companyId, module, recordId, recordType, requesterId, requesterName, title, description } = req.body;
+
+  // Look up the approval policy for this module to determine assigned roles
+  const policies = await dbAll<any>(approvalPolicies);
+  const policy = policies.find((p: any) => p.companyId === companyId && p.module === module);
+  const assignedRoles = policy?.approverRoles || ['Company Admin'];
+
+  const newApproval = {
+    id: `pa-${Date.now()}`,
+    companyId,
+    module,
+    recordId,
+    recordType,
+    requesterId,
+    requesterName,
+    title: title || `${module} request`,
+    description: description || '',
+    status: 'Pending',
+    assignedRoles,
+    createdAt: new Date().toISOString(),
+  };
+
+  await dbInsert(pendingApprovals, newApproval);
+  res.status(201).json(newApproval);
+    }));
+
+app.put('/api/pending-approvals/:id', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status, approvedBy, rejectionReason, userRole } = req.body;
+
+  const record = await dbById<any>(pendingApprovals, id);
+  if (!record) return res.status(404).json({ error: 'Approval request not found' });
+
+  // Enforce approval policy for Role Management
+  if (record.module === 'Role Management' && userRole) {
+    const policies = await dbAll<any>(approvalPolicies);
+    const policy = policies.find((p: any) => p.companyId === record.companyId && p.module === 'Role Management');
+    if (policy && policy.enabled && policy.approverRoles?.length > 0) {
+      if (!policy.approverRoles.includes(userRole)) {
+        return res.status(403).json({ error: `Your role "${userRole}" is not authorized to approve role changes.` });
+      }
+    }
+  }
+
+  const updates: any = { status, approvedBy, approvedAt: new Date().toISOString() };
+  if (rejectionReason) updates.rejectionReason = rejectionReason;
+
+  // If approved and this is a Role Management change, apply the role updates
+  if (status === 'Approved' && record.module === 'Role Management' && record.description) {
+    try {
+      const changeData = JSON.parse(record.description);
+      const { roleId, changes } = changeData;
+
+      if (roleId && changes) {
+        const role = await dbById<any>(customRoles, roleId);
+        if (role) {
+          const roleUpdates: any = {};
+          if (changes.name) roleUpdates.name = changes.name.to;
+          if (changes.description) roleUpdates.description = changes.description.to;
+          if (changes.modules) roleUpdates.modules = changes.modules.to;
+          if (changes.submenus) roleUpdates.submenus = changes.submenus.to;
+          if (changes.crudPermissions) roleUpdates.crudPermissions = changes.crudPermissions.to;
+
+          // Handle name change: update all users who have this role
+          if (changes.name && changes.name.to !== role.name) {
+            const allUsers = await dbAll<any>(schema.users);
+            const affected = allUsers.filter((u: any) => u.activeRole === role.name || u.role === role.name);
+            for (const u of affected) {
+              const newRoles = u.roles.map((r: string) => r === role.name ? changes.name.to : r);
+              const userUpdates: any = {};
+              if (u.activeRole === role.name) userUpdates.activeRole = changes.name.to;
+              if (u.role === role.name) userUpdates.role = changes.name.to;
+              userUpdates.roles = newRoles;
+              await dbUpdate(schema.users, u.id, userUpdates);
+            }
+          }
+
+          await dbUpdate(customRoles, roleId, roleUpdates);
+          logAudit(record.companyId, 'system', approvedBy || 'System', 'ROLE_UPDATE', 'Administration', `Approved and applied role update for "${role.name}"`);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to apply role changes:', e);
+    }
+  }
+
+  const updated = await dbUpdate(pendingApprovals, id, updates);
+  logAudit(record.companyId, 'system', approvedBy || 'System', 'APPROVAL_ACTION', record.module, `${status} approval for "${record.title}" by ${approvedBy}`);
+  res.json(updated);
+    }));
+
+app.get('/api/pending-approvals/count', asyncHandler(async (req, res) => {
+  const { companyId, userRole } = req.query;
+  let all = await dbAll<any>(pendingApprovals);
+  if (companyId) all = all.filter((a: any) => a.companyId === companyId);
+  if (userRole) {
+    all = all.filter((a: any) => a.status === 'Pending' && a.assignedRoles?.includes(userRole as string));
+  }
+  res.json({ count: all.length });
     }));
 
 app.get('/api/departments', asyncHandler(async (req, res) => {
@@ -576,15 +1083,45 @@ app.post('/api/leaves', asyncHandler(async (req, res) => {
   };
 
   await dbInsert(schema.leaves, newLeave);
+
+  // Create pending approval request
+  const policies = await dbAll<any>(approvalPolicies);
+  const policy = policies.find((p: any) => p.companyId === companyId && p.module === 'Leave Requests');
+  await dbInsert(pendingApprovals, {
+    id: `pa-${Date.now()}`,
+    companyId,
+    module: 'Leave Requests',
+    recordId: newLeave.id,
+    recordType: 'leave',
+    requesterId: employeeId,
+    requesterName: employeeName,
+    title: `${leaveType} Leave: ${startDate} to ${endDate}`,
+    description: reason,
+    status: 'Pending',
+    assignedRoles: policy?.approverRoles || ['HR Manager', 'Company Admin'],
+    createdAt: new Date().toISOString(),
+  });
+
   logAudit(companyId, employeeId, employeeName, 'LEAVE_REQUEST', 'HR', `Submitted ${leaveType} leave request: ${startDate} to ${endDate}. Reason: ${reason}`);
   res.status(201).json(newLeave);
     }));
 
 app.post('/api/leaves/:id/approve', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { userId, userName, status } = req.body;
+  const { userId, userName, status, userRole } = req.body;
   const leave = await dbById<any>(schema.leaves, id);
   if (!leave) return res.status(404).json({ error: 'Leave request not found' });
+
+  // Enforce approval policy — check if user's role is authorized
+  if (userRole) {
+    const policies = await dbAll<any>(approvalPolicies);
+    const policy = policies.find((p: any) => p.companyId === leave.companyId && p.module === 'Leave Requests');
+    if (policy && policy.enabled && policy.approverRoles?.length > 0) {
+      if (!policy.approverRoles.includes(userRole)) {
+        return res.status(403).json({ error: `Your role "${userRole}" is not authorized to approve leave requests. Required roles: ${policy.approverRoles.join(', ')}` });
+      }
+    }
+  }
 
   const newStatus = status || 'Approved';
 
@@ -592,6 +1129,17 @@ app.post('/api/leaves/:id/approve', asyncHandler(async (req, res) => {
     status: newStatus,
     approvedBy: userName || 'Admin'
   });
+
+  // Update the pending approval record
+  const allApprovals = await dbAll<any>(pendingApprovals);
+  const pendingRecord = allApprovals.find((a: any) => a.recordId === id && a.module === 'Leave Requests' && a.status === 'Pending');
+  if (pendingRecord) {
+    await dbUpdate(pendingApprovals, pendingRecord.id, {
+      status: newStatus,
+      approvedBy: userName,
+      approvedAt: new Date().toISOString(),
+    });
+  }
 
   const emp = await dbById<any>(schema.employees, leave.employeeId);
   
@@ -608,11 +1156,33 @@ app.post('/api/leaves/:id/approve', asyncHandler(async (req, res) => {
 
 app.post('/api/leaves/:id/decline', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { userId, userName } = req.body;
+  const { userId, userName, userRole } = req.body;
   const leave = await dbById<any>(schema.leaves, id);
   if (!leave) return res.status(404).json({ error: 'Leave request not found' });
 
+  // Enforce approval policy
+  if (userRole) {
+    const policies = await dbAll<any>(approvalPolicies);
+    const policy = policies.find((p: any) => p.companyId === leave.companyId && p.module === 'Leave Requests');
+    if (policy && policy.enabled && policy.approverRoles?.length > 0) {
+      if (!policy.approverRoles.includes(userRole)) {
+        return res.status(403).json({ error: `Your role "${userRole}" is not authorized to decline leave requests.` });
+      }
+    }
+  }
+
   const updatedLeave = await dbUpdate(schema.leaves, id, { status: 'Rejected' });
+
+  // Update the pending approval record
+  const allApprovals = await dbAll<any>(pendingApprovals);
+  const pendingRecord = allApprovals.find((a: any) => a.recordId === id && a.module === 'Leave Requests' && a.status === 'Pending');
+  if (pendingRecord) {
+    await dbUpdate(pendingApprovals, pendingRecord.id, {
+      status: 'Rejected',
+      approvedBy: userName,
+      approvedAt: new Date().toISOString(),
+    });
+  }
 
   // Revert employee status to 'Active'
   const emp = await dbById<any>(schema.employees, leave.employeeId);
@@ -1118,12 +1688,54 @@ app.post('/api/chat/messages', asyncHandler(async (req, res) => {
   res.status(201).json(msg);
 }));
 
+app.get('/api/chat/reads', asyncHandler(async (req, res) => {
+  const { companyId, userId } = req.query;
+  if (!companyId || !userId) return res.json([]);
+  const all = await dbByCompany<any>(schema.chatReads, companyId as string);
+  res.json(all.filter(r => r.userId === userId));
+}));
+
+app.post('/api/chat/read', asyncHandler(async (req, res) => {
+  const { companyId, threadId, userId } = req.body;
+  if (!companyId || !threadId || !userId) return res.status(400).json({ error: 'Missing parameters' });
+  
+  const all = await dbByCompany<any>(schema.chatReads, companyId);
+  const existing = all.find(r => r.threadId === threadId && r.userId === userId);
+  
+  const lastReadAt = new Date().toISOString();
+  if (existing) {
+    const updated = await dbUpdate(schema.chatReads, existing.id, { lastReadAt });
+    res.json(updated);
+  } else {
+    const created = await dbInsert(schema.chatReads, {
+      id: `cr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      companyId,
+      threadId,
+      userId,
+      lastReadAt,
+    });
+    res.status(201).json(created);
+  }
+}));
+
 // 3.6 Voting / Polls
 app.get('/api/polls', asyncHandler(async (req, res) => {
   try {
     const { companyId } = req.query;
     const all = await dbAll<any>(schema.polls);
-    res.json(companyId ? all.filter((p: any) => p.companyId === companyId) : all);
+    const filtered = companyId ? all.filter((p: any) => p.companyId === companyId) : all;
+    // Auto-close polls past their endDate
+    const now = new Date();
+    for (const poll of filtered) {
+      if (poll.status === 'Active' && poll.endDate) {
+        const end = new Date(poll.endDate);
+        if (end < now) {
+          await dbUpdate(schema.polls, poll.id, { status: 'Closed' });
+          poll.status = 'Closed';
+        }
+      }
+    }
+    res.json(filtered);
   } catch (err: any) {
     logError('GET /api/polls error:', err);
     res.status(500).json({ error: err.message });
@@ -1189,6 +1801,23 @@ app.post('/api/polls/:id/close', asyncHandler(async (req, res) => {
     res.json(updated);
   } catch (err: any) {
     logError('POST /api/polls/:id/close error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}));
+
+app.put('/api/polls/:id', asyncHandler(async (req, res) => {
+  try {
+    const poll = await dbById<any>(schema.polls, req.params.id);
+    if (!poll) return res.status(404).json({ error: 'Poll not found' });
+    const updates: any = {};
+    if (req.body.endDate !== undefined) updates.endDate = req.body.endDate;
+    if (req.body.status !== undefined) updates.status = req.body.status;
+    if (req.body.title !== undefined) updates.title = req.body.title;
+    if (req.body.description !== undefined) updates.description = req.body.description;
+    const updated = await dbUpdate(schema.polls, req.params.id, updates);
+    res.json(updated);
+  } catch (err: any) {
+    logError('PUT /api/polls/:id error:', err);
     res.status(500).json({ error: err.message });
   }
 }));
@@ -1809,7 +2438,7 @@ app.get('/api/accounting', asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/invoices', asyncHandler(async (req, res) => {
-  const { companyId, customerName, subtotal, tax, dueDate, userId, userName } = req.body;
+  const { companyId, customerName, subtotal, tax, dueDate, userId, userName, customerTin } = req.body;
   const total = Number(subtotal) + Number(tax);
   const invNumber = `INV-2026-0${Math.floor(400 + Math.random() * 599)}`;
 
@@ -1840,7 +2469,33 @@ app.post('/api/invoices', asyncHandler(async (req, res) => {
 
   logAudit(companyId, userId, userName, 'INVOICE_CREATE', 'Accounting', `Dispatched Invoice ${invNumber} of $${total} to ${customerName}. Adjusting general ledger accounts: DR Accounts Receivable, CR Sales Revenue`);
 
-  res.status(201).json(newInvoice);
+  // GRA E-VAT submission (async, non-blocking)
+  let evatResult: any = null;
+  try {
+    evatResult = await submitInvoiceToGRA(companyId, {
+      invoiceNumber: invNumber,
+      issueDate: newInvoice.issueDate,
+      customerName,
+      customerTin,
+      subtotal: Number(subtotal),
+      tax: Number(tax),
+      total,
+    });
+
+    // Record the submission
+    await recordSubmission(companyId, 'invoice', newInvoice.id, invNumber, evatResult, req.body);
+  } catch (evatError: any) {
+    logger.error({ companyId, invoiceId: newInvoice.id, error: evatError.message }, 'E-VAT submission failed');
+    // Queue for retry if GRA unavailable
+    await queueSubmission(companyId, 'invoice', newInvoice.id, invNumber, req.body);
+  }
+
+  res.status(201).json({
+    ...newInvoice,
+    evatStatus: evatResult?.status || 'Queued',
+    evatIrn: evatResult?.irn,
+    evatQrCode: evatResult?.qrCodeUrl,
+  });
     }));
 
 app.post('/api/invoices/:id/pay', asyncHandler(async (req, res) => {
@@ -2794,9 +3449,10 @@ app.get('/api/tax-codes', asyncHandler(async (req, res) => {
     }));
 
 app.post('/api/tax-codes', asyncHandler(async (req, res) => {
-  const { companyId, code, name, rate, type, glAccountId, createdBy, createdByName, userId, userName } = req.body;
+  const { companyId, code, name, rate, type, glAccountId, accountName, jurisdiction, createdBy, createdByName, userId, userName } = req.body;
   const newCode: TaxCode = {
     id: `tc-${Date.now()}`, companyId, code, name, rate: Number(rate), type, glAccountId,
+    accountName: accountName || '', jurisdiction: jurisdiction || '',
     isActive: true, createdAt: new Date().toISOString()
   };
   await dbInsert(schema.taxCodes, newCode);
@@ -2806,7 +3462,7 @@ app.post('/api/tax-codes', asyncHandler(async (req, res) => {
 
 app.put('/api/tax-codes/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, rate, type, glAccountId, isActive, userId, userName } = req.body;
+  const { name, rate, type, glAccountId, accountName, jurisdiction, isActive, userId, userName } = req.body;
   const code = await dbById<any>(schema.taxCodes, id);
   if (!code) return res.status(404).json({ error: 'Tax code not found' });
   const values: any = {};
@@ -2814,6 +3470,8 @@ app.put('/api/tax-codes/:id', asyncHandler(async (req, res) => {
   if (rate !== undefined) values.rate = Number(rate);
   if (type !== undefined) values.type = type;
   if (glAccountId !== undefined) values.glAccountId = glAccountId;
+  if (accountName !== undefined) values.accountName = accountName;
+  if (jurisdiction !== undefined) values.jurisdiction = jurisdiction;
   if (isActive !== undefined) values.isActive = isActive;
   const updated = await dbUpdate(schema.taxCodes, id, values);
   logAudit(code.companyId, userId, userName, 'UPDATE_TAX_CODE', 'Accounting', `Updated tax code ${code.code}: ${name ?? code.name}`);
@@ -2838,10 +3496,11 @@ app.get('/api/tax-returns', asyncHandler(async (req, res) => {
     }));
 
 app.post('/api/tax-returns', asyncHandler(async (req, res) => {
-  const { companyId, period, taxCodeId, taxCodeName, taxableAmount, taxAmount, dueDate, createdBy } = req.body;
+  const { companyId, period, taxCodeId, taxCodeName, taxableAmount, taxAmount, taxableIncome, taxDue, netPayable, dueDate, createdBy } = req.body;
   const newReturn: TaxReturn = {
     id: `tr-${Date.now()}`, companyId, period, taxCodeId, taxCodeName,
     taxableAmount: Number(taxableAmount), taxAmount: Number(taxAmount),
+    taxableIncome: Number(taxableIncome || taxableAmount), taxDue: Number(taxDue || taxAmount), netPayable: Number(netPayable || 0),
     status: 'Draft', dueDate, createdBy, createdAt: new Date().toISOString()
   };
   await dbInsert(schema.taxReturns, newReturn);
@@ -2885,6 +3544,95 @@ app.post('/api/tax-returns/:id/file', asyncHandler(async (req, res) => {
   const updated = await dbUpdate(schema.taxReturns, id, { status: 'Filed', filedDate: new Date().toISOString().split('T')[0] });
   logAudit(ret.companyId, userId, userName, 'FILE_TAX_RETURN', 'Accounting', `Filed tax return ${ret.period}`);
   res.json(updated);
+    }));
+
+// --- GRA E-VAT Integration ---
+import {
+  getEvatConfig,
+  upsertEvatConfig,
+  submitInvoiceToGRA,
+  submitRefundToGRA,
+  submitZReport,
+  validateTIN as validateTINGRA,
+  healthCheck as evatHealthCheck,
+  getSubmissions,
+  queueSubmission,
+  recordSubmission,
+  retrySubmission as retryEvatSubmission,
+  retryQueuedSubmissions,
+} from './server/lib/evat';
+
+app.get('/api/evat/config', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const config = await getEvatConfig(companyId as string);
+  res.json(config || { isActive: false, apiMode: 'test' });
+    }));
+
+app.put('/api/evat/config', asyncHandler(async (req, res) => {
+  const { companyId, companyTin, companyName, securityKey, apiMode, apiBaseUrl, isActive, userId, userName } = req.body;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const config = await upsertEvatConfig(companyId, {
+    companyTin, companyName, securityKey, apiMode, apiBaseUrl, isActive,
+  });
+  logAudit(companyId, userId, userName, 'UPDATE_EVAT_CONFIG', 'Accounting', `Updated E-VAT configuration for ${companyId}`);
+  res.json(config);
+    }));
+
+app.post('/api/evat/test-connection', asyncHandler(async (req, res) => {
+  const { companyId } = req.body;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const health = await evatHealthCheck(companyId);
+  res.json(health);
+    }));
+
+app.get('/api/evat/health-check', asyncHandler(async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const health = await evatHealthCheck(companyId as string);
+  res.json(health);
+    }));
+
+app.get('/api/evat/submissions', asyncHandler(async (req, res) => {
+  const { companyId, entityType, status, limit, offset } = req.query;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const submissions = await getSubmissions(companyId as string, {
+    entityType: entityType as string,
+    status: status as string,
+    limit: limit ? Number(limit) : undefined,
+    offset: offset ? Number(offset) : undefined,
+  });
+  res.json(submissions);
+    }));
+
+app.post('/api/evat/retry/:submissionId', asyncHandler(async (req, res) => {
+  const { submissionId } = req.params;
+  const result = await retryEvatSubmission(submissionId);
+  res.json(result);
+    }));
+
+app.post('/api/evat/validate-tin', asyncHandler(async (req, res) => {
+  const { companyId, tin } = req.body;
+  if (!companyId || !tin) return res.status(400).json({ error: 'companyId and tin required' });
+  const result = await validateTINGRA(companyId, tin);
+  res.json(result);
+    }));
+
+app.post('/api/evat/z-report', asyncHandler(async (req, res) => {
+  const { companyId, reportDate, totalSales, totalTax, totalTransactions, userId, userName } = req.body;
+  if (!companyId) return res.status(400).json({ error: 'companyId required' });
+  const result = await submitZReport(companyId, {
+    reportDate: reportDate || new Date().toISOString().split('T')[0],
+    totalSales: Number(totalSales || 0),
+    totalTax: Number(totalTax || 0),
+    totalTransactions: Number(totalTransactions || 0),
+  });
+
+  // Record the submission
+  await recordSubmission(companyId, 'z_report', `zreport-${Date.now()}`, `Z-REPORT-${new Date().toISOString().split('T')[0]}`, result, req.body);
+
+  logAudit(companyId, userId, userName, 'SUBMIT_Z_REPORT', 'Accounting', `Submitted Z-Report to GRA: ${result.status}`);
+  res.json(result);
     }));
 
 // --- Intercompany Transactions ---
@@ -3796,7 +4544,42 @@ app.post('/api/pos/sales', asyncHandler(async (req, res) => {
   }
 
   logAudit(companyId, employeeId, employeeName, 'CREATE_POS_SALE', 'POS', `Sale ${saleNumber} - Total: $${total}`);
-  res.status(201).json(newSale);
+
+  // GRA E-VAT submission (async, non-blocking)
+  let evatResult: any = null;
+  try {
+    // Map POS items to GRA format
+    const evatItems = items.map((item: any, index: number) => ({
+      itemNumber: index + 1,
+      description: item.productName || item.name || 'Item',
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      taxRate: 20,
+      taxAmount: item.tax || 0,
+    }));
+
+    evatResult = await submitInvoiceToGRA(companyId, {
+      invoiceNumber: saleNumber,
+      issueDate: new Date().toISOString().split('T')[0],
+      customerName: customerName || 'Walk-in Customer',
+      subtotal,
+      tax,
+      total,
+      items: evatItems,
+    });
+
+    await recordSubmission(companyId, 'pos_sale', newSale.id, saleNumber, evatResult, req.body);
+  } catch (evatError: any) {
+    logger.error({ companyId, saleId: newSale.id, error: evatError.message }, 'E-VAT POS submission failed');
+    await queueSubmission(companyId, 'pos_sale', newSale.id, saleNumber, req.body);
+  }
+
+  res.status(201).json({
+    ...newSale,
+    evatStatus: evatResult?.status || 'Queued',
+    evatIrn: evatResult?.irn,
+    evatQrCode: evatResult?.qrCodeUrl,
+  });
     }));
 
 app.post('/api/pos/sales/:id/void', asyncHandler(async (req, res) => {
@@ -4450,15 +5233,87 @@ app.post('/api/exit-requests', asyncHandler(async (req, res) => {
     createdAt: new Date().toISOString(),
   };
   await dbInsert(schema.exitRequests, exitReq);
+
+  // Create pending approval
+  const policies = await dbAll<any>(approvalPolicies);
+  const policy = policies.find((p: any) => p.companyId === companyId && p.module === 'Exit Management');
+  await dbInsert(pendingApprovals, {
+    id: `pa-${Date.now()}`,
+    companyId,
+    module: 'Exit Management',
+    recordId: exitReq.id,
+    recordType: 'exit',
+    requesterId: employeeId,
+    requesterName: employeeName,
+    title: `${exitType}: ${employeeName}`,
+    description: reason,
+    status: 'Pending',
+    assignedRoles: policy?.approverRoles || ['HR Manager', 'Company Admin'],
+    createdAt: new Date().toISOString(),
+  });
+
   logAudit(companyId, employeeId, employeeName, 'SUBMIT_EXIT_REQUEST', 'Exit Management', `Submitted ${exitType} request`);
   res.status(201).json(exitReq);
 }));
 
 app.put('/api/exit-requests/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { userId, userName, ...values } = req.body;
+  const { userId, userName, userRole, ...values } = req.body;
+
+  // Enforce approval policy for exit requests
+  if (userRole && values.status && (values.status === 'HOD Approved' || values.status === 'Approved' || values.status === 'Rejected')) {
+    const exitReq = await dbById<any>(schema.exitRequests, id);
+    if (exitReq) {
+      const policies = await dbAll<any>(approvalPolicies);
+      const policy = policies.find((p: any) => p.companyId === exitReq.companyId && p.module === 'Exit Management');
+      if (policy && policy.enabled && policy.approverRoles?.length > 0) {
+        if (!policy.approverRoles.includes(userRole)) {
+          return res.status(403).json({ error: `Your role "${userRole}" is not authorized to process exit requests.` });
+        }
+      }
+    }
+  }
+
   const updated = await dbUpdate(schema.exitRequests, id, values);
+
+  // Update the pending approval record
+  if (values.status && values.status !== 'Pending') {
+    const allApprovals = await dbAll<any>(pendingApprovals);
+    const pendingRecord = allApprovals.find((a: any) => a.recordId === id && a.module === 'Exit Management' && a.status === 'Pending');
+    if (pendingRecord) {
+      await dbUpdate(pendingApprovals, pendingRecord.id, {
+        status: values.status === 'Rejected' ? 'Rejected' : 'Approved',
+        approvedBy: userName,
+        approvedAt: new Date().toISOString(),
+      });
+    }
+  }
+
   logAudit(updated.companyId, userId, userName, 'UPDATE_EXIT_REQUEST', 'Exit Management', `Updated exit request status to ${values.status}`);
+
+  // Auto-disable login immediately when exit is approved and lastWorkingDay has passed
+  if (values.status === 'Approved') {
+    const lastDay = updated.lastWorkingDay ? new Date(updated.lastWorkingDay) : null;
+    if (lastDay && lastDay <= new Date()) {
+      const allUsers = await dbAll<any>(schema.users);
+      const user = allUsers.find((u: any) =>
+        u.id === updated.employeeId ||
+        (u.companyId === updated.companyId && u.name === updated.employeeName)
+      );
+      if (user && user.loginEnabled !== false && user.role !== 'Super Admin' && user.role !== 'Company Admin') {
+        const reason = updated.exitType === 'Resignation' ? 'resigned'
+          : updated.exitType === 'Termination' ? 'terminated'
+          : 'exited';
+        await dbUpdate(schema.users, user.id, {
+          loginEnabled: false,
+          loginDisabledReason: reason,
+          status: 'Inactive',
+        });
+        logAudit(updated.companyId, userId, userName, 'AUTO_DISABLE_LOGIN', 'User Management', `Auto-disabled login for ${user.name} — exit approved, last working day passed`);
+      }
+    }
+  }
+
   res.json(updated);
 }));
 
@@ -4561,6 +5416,25 @@ app.post('/api/profile-update-requests', asyncHandler(async (req, res) => {
     requestedAt: new Date().toISOString(),
   };
   await dbInsert(schema.profileUpdateRequests, request);
+
+  // Create pending approval
+  const policies = await dbAll<any>(approvalPolicies);
+  const policy = policies.find((p: any) => p.companyId === companyId && p.module === 'Profile Updates');
+  await dbInsert(pendingApprovals, {
+    id: `pa-${Date.now()}`,
+    companyId,
+    module: 'Profile Updates',
+    recordId: id,
+    recordType: 'profile',
+    requesterId: employeeId,
+    requesterName: employeeName,
+    title: `Profile Update: ${label}`,
+    description: `${currentValue} → ${newValue}`,
+    status: 'Pending',
+    assignedRoles: policy?.approverRoles || ['HR Manager', 'Company Admin'],
+    createdAt: new Date().toISOString(),
+  });
+
   await dbInsert(schema.auditLogs, {
     id: `al-${Date.now()}`, companyId, userId: employeeId, userName: employeeName,
     action: 'Profile Update Requested', module: 'Employee Profile',
@@ -4571,10 +5445,21 @@ app.post('/api/profile-update-requests', asyncHandler(async (req, res) => {
 }));
 
 app.patch('/api/profile-update-requests/:id/approve', asyncHandler(async (req, res) => {
-  const { processedBy } = req.body;
+  const { processedBy, userRole } = req.body;
   const all = await dbAll<any>(schema.profileUpdateRequests);
   const request = all.find((r: any) => r.id === req.params.id);
   if (!request) return res.status(404).json({ error: 'Request not found' });
+
+  // Enforce approval policy
+  if (userRole) {
+    const policies = await dbAll<any>(approvalPolicies);
+    const policy = policies.find((p: any) => p.companyId === request.companyId && p.module === 'Profile Updates');
+    if (policy && policy.enabled && policy.approverRoles?.length > 0) {
+      if (!policy.approverRoles.includes(userRole)) {
+        return res.status(403).json({ error: `Your role "${userRole}" is not authorized to approve profile updates.` });
+      }
+    }
+  }
 
   const now = new Date().toISOString();
   const updated = await dbUpdate(schema.profileUpdateRequests, request.id, {
@@ -4588,6 +5473,13 @@ app.patch('/api/profile-update-requests/:id/approve', asyncHandler(async (req, r
     await dbUpdate(schema.employees, emp.id, { [request.field]: request.newValue });
   }
 
+  // Update pending approval
+  const allApprovals = await dbAll<any>(pendingApprovals);
+  const pendingRecord = allApprovals.find((a: any) => a.recordId === request.id && a.module === 'Profile Updates' && a.status === 'Pending');
+  if (pendingRecord) {
+    await dbUpdate(pendingApprovals, pendingRecord.id, { status: 'Approved', approvedBy: processedBy, approvedAt: now });
+  }
+
   await dbInsert(schema.auditLogs, {
     id: `al-${Date.now()}`, companyId: request.companyId, userId: processedBy, userName: processedBy,
     action: 'Profile Update Approved', module: 'Employee Profile',
@@ -4598,15 +5490,33 @@ app.patch('/api/profile-update-requests/:id/approve', asyncHandler(async (req, r
 }));
 
 app.patch('/api/profile-update-requests/:id/reject', asyncHandler(async (req, res) => {
-  const { processedBy, rejectionReason } = req.body;
+  const { processedBy, rejectionReason, userRole } = req.body;
   const all = await dbAll<any>(schema.profileUpdateRequests);
   const request = all.find((r: any) => r.id === req.params.id);
   if (!request) return res.status(404).json({ error: 'Request not found' });
+
+  // Enforce approval policy
+  if (userRole) {
+    const policies = await dbAll<any>(approvalPolicies);
+    const policy = policies.find((p: any) => p.companyId === request.companyId && p.module === 'Profile Updates');
+    if (policy && policy.enabled && policy.approverRoles?.length > 0) {
+      if (!policy.approverRoles.includes(userRole)) {
+        return res.status(403).json({ error: `Your role "${userRole}" is not authorized to reject profile updates.` });
+      }
+    }
+  }
 
   const now = new Date().toISOString();
   const updated = await dbUpdate(schema.profileUpdateRequests, request.id, {
     status: 'Rejected', processedAt: now, processedBy, rejectionReason,
   });
+
+  // Update pending approval
+  const allApprovals = await dbAll<any>(pendingApprovals);
+  const pendingRecord = allApprovals.find((a: any) => a.recordId === request.id && a.module === 'Profile Updates' && a.status === 'Pending');
+  if (pendingRecord) {
+    await dbUpdate(pendingApprovals, pendingRecord.id, { status: 'Rejected', approvedBy: processedBy, approvedAt: now, rejectionReason });
+  }
 
   await dbInsert(schema.auditLogs, {
     id: `al-${Date.now()}`, companyId: request.companyId, userId: processedBy, userName: processedBy,
@@ -4674,8 +5584,106 @@ async function runMigrations() {
   logger.info('✅ DB migrations applied');
 }
 
+// --- AUTO-DISABLE LOGIN ON EXIT ---
+// Disables login for employees whose approved exit lastWorkingDay has passed.
+// Called on startup, on exit approval, and every 24 hours.
+async function autoDisableExitLogins() {
+  try {
+    const allExits = await dbAll<any>(schema.exitRequests);
+    const allUsers = await dbAll<any>(schema.users);
+    const now = new Date();
+    let disabledCount = 0;
+
+    for (const exit of allExits) {
+      if (exit.status !== 'Approved' || !exit.lastWorkingDay) continue;
+      const lastDay = new Date(exit.lastWorkingDay);
+      if (lastDay > now) continue; // not yet past last day
+
+      // Find the matching user
+      const user = allUsers.find((u: any) =>
+        u.id === exit.employeeId ||
+        (u.companyId === exit.companyId && u.name === exit.employeeName)
+      );
+      if (!user || user.loginEnabled === false) continue; // already disabled or not found
+
+      // Cannot disable Super Admin or Company Admin
+      if (user.role === 'Super Admin' || user.role === 'Company Admin') continue;
+
+      const reason = exit.exitType === 'Resignation' ? 'resigned'
+        : exit.exitType === 'Termination' ? 'terminated'
+        : 'exited';
+
+      await dbUpdate(schema.users, user.id, {
+        loginEnabled: false,
+        loginDisabledReason: reason,
+        status: 'Inactive',
+      });
+
+      logAudit(
+        user.companyId,
+        'system',
+        'System',
+        'AUTO_DISABLE_LOGIN',
+        'User Management',
+        `Automatically disabled login for ${user.name} — ${exit.exitType} (last working day: ${exit.lastWorkingDay})`
+      );
+      disabledCount++;
+    }
+
+    if (disabledCount > 0) {
+      logger.info(`🔐 Auto-disabled login for ${disabledCount} user(s) past their last working day`);
+    }
+  } catch (err: any) {
+    logger.warn({ err }, 'autoDisableExitLogins error');
+  }
+}
+
+// Daily cron — check every 24 hours for any exits that passed their last day
+function startExitLoginCron() {
+  setInterval(autoDisableExitLogins, 24 * 60 * 60 * 1000);
+  logger.info('⏰ Exit login cron scheduled (every 24h)');
+}
+
+// E-VAT retry cron — retry queued submissions every hour
+function startEvatRetryCron() {
+  setInterval(async () => {
+    try {
+      await retryQueuedSubmissions();
+    } catch (err: any) {
+      logger.warn({ err }, 'E-VAT retry cron error');
+    }
+  }, 60 * 60 * 1000); // every hour
+  logger.info('⏰ E-VAT retry cron scheduled (every 1h)');
+}
+
 async function start() {
   await runMigrations();
+
+  // Auto-disable logins on startup
+  await autoDisableExitLogins();
+  startExitLoginCron();
+
+  // Retry queued E-VAT submissions on startup
+  try {
+    await retryQueuedSubmissions();
+  } catch (err: any) {
+    logger.warn({ err }, 'E-VAT startup retry error');
+  }
+  startEvatRetryCron();
+
+  // Migrate legacy users — hash blank passwords
+  try {
+    const allUsers = await dbAll<any>(schema.users);
+    for (const u of allUsers) {
+      if (!u.passwordHash) {
+        const hash = await hashPassword('');
+        await dbUpdate(schema.users, u.id, { passwordHash: hash });
+        logger.info({ userId: u.id, email: u.email }, 'Hashed blank password for legacy user');
+      }
+    }
+  } catch (err: any) {
+    logger.warn({ err }, 'Password migration error');
+  }
 
   if (process.env.DISABLE_HMR === 'true' || process.env.NODE_ENV === 'production') {
     // Production/Build static asset rendering

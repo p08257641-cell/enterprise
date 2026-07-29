@@ -278,15 +278,18 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'SKU' }, { label: 'Name' }, { label: 'Category' }, { label: 'Price', right: true }, { label: 'Stock', right: true }]} />
+              <TableHead cols={[{ label: 'SKU' }, { label: 'Name' }, { label: 'Category' }, { label: 'Price', right: true }, { label: 'Stock', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localProducts.map(p => (
-                  <tr key={p.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => productModal.open(p)}>
+                  <tr key={p.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{p.sku}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{p.name}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{p.category}</td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${p.unitPrice.toFixed(2)}</td>
                     <td className={`px-4 py-3 fs-xs font-mono fw-semibold text-right ${p.stockLevel <= p.reorderLevel ? 'text-rose-600' : 'text-slate-900'}`}>{p.stockLevel}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); productModal.open(p); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -304,15 +307,18 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Name' }, { label: 'Email' }, { label: 'Phone' }, { label: 'Tier' }, { label: 'Lifetime Spend', right: true }]} />
+              <TableHead cols={[{ label: 'Name' }, { label: 'Email' }, { label: 'Phone' }, { label: 'Tier' }, { label: 'Lifetime Spend', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localCustomers.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => customerModal.open(c)}>
+                  <tr key={c.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{c.firstName} {c.lastName}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{c.email}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{c.phone || '—'}</td>
                     <td className="px-4 py-3"><Badge label={c.tier || 'Standard'} variant={c.tier === 'Gold' ? 'warning' : c.tier === 'Platinum' ? 'info' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${(c.totalSpent || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); customerModal.open(c); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -324,14 +330,17 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
       {tab === 'sessions' && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <table className="w-full text-left">
-            <TableHead cols={[{ label: 'Terminal' }, { label: 'Location' }, { label: 'Status' }, { label: 'Last Sync' }]} />
+            <TableHead cols={[{ label: 'Terminal' }, { label: 'Location' }, { label: 'Status' }, { label: 'Last Sync' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
               {localTerminals.map(t => (
-                  <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => terminalModal.open(t)}>
+                  <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.name}</td>
                   <td className="px-4 py-3 fs-xs text-slate-500">{t.location || '—'}</td>
                   <td className="px-4 py-3"><Badge label={t.isActive !== false ? 'Active' : 'Inactive'} variant={t.isActive !== false ? 'success' : 'default'} /></td>
                   <td className="px-4 py-3 fs-xs font-mono text-slate-500">{t.lastSync || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={(e) => { e.stopPropagation(); terminalModal.open(t); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -350,14 +359,17 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Recent Sales</h3></div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Total', right: true }]} />
+              <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Total', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localSales.slice(0, 5).map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => saleModal.open(s)}>
+                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900">{s.saleNumber || s.id}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.paymentMethod}</td>
                     <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); saleModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -375,20 +387,23 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Shift ID' }, { label: 'Terminal' }, { label: 'Cashier' }, { label: 'Status' }, { label: 'Opened', right: true }, { label: 'Closed', right: true }]} />
+              <TableHead cols={[{ label: 'Shift ID' }, { label: 'Terminal' }, { label: 'Cashier' }, { label: 'Status' }, { label: 'Opened', right: true }, { label: 'Closed', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localShifts.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => shiftModal.open(s)}>
+                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{s.id}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{s.terminalId || '—'}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.employeeName || '—'}</td>
                     <td className="px-4 py-3"><Badge label={s.status} variant={s.status === 'Open' ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.startTime ? new Date(s.startTime).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.endTime ? new Date(s.endTime).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); shiftModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
                 {localShifts.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No shifts recorded</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center fs-xs text-slate-400">No shifts recorded</td></tr>
                 )}
               </tbody>
             </table>
@@ -405,20 +420,23 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Items' }, { label: 'Total', right: true }, { label: 'Date', right: true }]} />
+              <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Items' }, { label: 'Total', right: true }, { label: 'Date', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localSales.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => saleModal.open(s)}>
+                  <tr key={s.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 text-[10px] font-mono fw-semibold text-slate-900">{s.saleNumber || s.id}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.paymentMethod}</td>
                     <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.items?.length || 0}</td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">${(s.total || 0).toFixed(2)}</td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); saleModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
                 {localSales.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No sales recorded</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center fs-xs text-slate-400">No sales recorded</td></tr>
                 )}
               </tbody>
             </table>
@@ -435,20 +453,23 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Name' }, { label: 'Type' }, { label: 'Value' }, { label: 'Usage' }, { label: 'Max Usage' }, { label: 'Status' }]} />
+              <TableHead cols={[{ label: 'Name' }, { label: 'Type' }, { label: 'Value' }, { label: 'Usage' }, { label: 'Max Usage' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localDiscounts.map(d => (
-                  <tr key={d.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => discountModal.open(d)}>
+                  <tr key={d.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{d.name}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.type}</td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : `$${d.value}`}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.usageCount || 0}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
                     <td className="px-4 py-3"><Badge label={d.isActive !== false ? 'Active' : 'Inactive'} variant={d.isActive !== false ? 'success' : 'default'} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); discountModal.open(d); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
                 {localDiscounts.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No discounts configured</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center fs-xs text-slate-400">No discounts configured</td></tr>
                 )}
               </tbody>
             </table>
@@ -465,20 +486,23 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Return #' }, { label: 'Original Sale' }, { label: 'Reason' }, { label: 'Refund Method' }, { label: 'Status' }, { label: 'Date', right: true }]} />
+              <TableHead cols={[{ label: 'Return #' }, { label: 'Original Sale' }, { label: 'Reason' }, { label: 'Refund Method' }, { label: 'Status' }, { label: 'Date', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localReturns.map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => returnModal.open(r)}>
+                  <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 text-[10px] font-mono fw-semibold text-slate-900">{r.returnNumber || r.id}</td>
                     <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{r.originalSaleId || '—'}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{r.reason || '—'}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{r.refundMethod || '—'}</td>
                     <td className="px-4 py-3"><Badge label={r.refundStatus || 'Pending'} variant={r.refundStatus === 'Processed' ? 'success' : 'warning'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={(e) => { e.stopPropagation(); returnModal.open(r); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    </td>
                   </tr>
                 ))}
                 {localReturns.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-10 text-center fs-xs text-slate-400">No returns recorded</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-10 text-center fs-xs text-slate-400">No returns recorded</td></tr>
                 )}
               </tbody>
             </table>

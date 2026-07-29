@@ -30,6 +30,7 @@ import { GalleryView } from './moduleViews/GalleryView';
 import { ReportsView } from './moduleViews/ReportsView';
 import { SuperAdminView } from './moduleViews/SuperAdminView';
 import { ApiKeysView } from './moduleViews/ApiKeysView';
+import { PendingApprovalsView } from './moduleViews/PendingApprovalsView';
 
 export const ModuleViews: React.FC<ModuleViewsProps> = (props) => {
   const { activeView } = props;
@@ -58,6 +59,7 @@ export const ModuleViews: React.FC<ModuleViewsProps> = (props) => {
   if (activeView === 'gallery') return <GalleryView {...props} />;
   if (activeView === 'reports' || activeView.startsWith('reports-')) return <ReportsView {...props} />;
   if (activeView === 'superadmin') return <SuperAdminView {...props} />;
+  if (activeView === 'pending-approvals') return <PendingApprovalsView {...props} />;
   if (activeView === 'apikeys') return <ApiKeysView {...props} />;
 
   return (

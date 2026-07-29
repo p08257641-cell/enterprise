@@ -16,6 +16,7 @@ export interface Company {
   premiumFeatures: string[]; // List of premium features enabled
   billingPlan: 'Trial' | 'Core' | 'Premium' | 'Enterprise';
   billingStatus: 'Active' | 'Past Due' | 'Trialing';
+  subscriptionExpiresAt?: string;
   noticePeriodDays?: number;
   companyLogo?: string;
   companySignature?: string;
@@ -35,6 +36,61 @@ export interface User {
   avatar?: string;
   permissions: string[];
   status: 'Active' | 'Inactive';
+  loginEnabled: boolean; // HR can toggle to block/unblock employee login
+  loginDisabledReason?: string; // 'leave', 'resigned', 'terminated', 'suspended'
+  createdAt: string;
+}
+
+export interface CustomRole {
+  id: string;
+  companyId: string;
+  name: string;
+  description: string;
+  modules: string[];
+  submenus: string[];
+  crudPermissions?: string[];
+  isSystem: boolean;
+  createdAt: string;
+}
+
+export interface ApprovalPolicy {
+  id: string;
+  companyId: string;
+  module: string;
+  description: string;
+  approverRoles: string[];
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface PendingApproval {
+  id: string;
+  companyId: string;
+  module: string;
+  recordId: string;
+  recordType: string;
+  requesterId: string;
+  requesterName: string;
+  title: string;
+  description: string;
+  status: string;
+  assignedRoles: string[];
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectionReason?: string;
+  createdAt: string;
+}
+
+export interface WhisperReport {
+  id: string;
+  companyId: string;
+  category: string; // 'harassment', 'safety', 'fraud', 'discrimination', 'other'
+  description: string;
+  location?: string;
+  department?: string;
+  status: 'New' | 'Under Review' | 'Investigating' | 'Resolved' | 'Dismissed';
+  assignedTo?: string;
+  notes?: string;
   createdAt: string;
 }
 
@@ -306,6 +362,9 @@ export interface Invoice {
   tax: number;
   total: number;
   status: 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Void';
+  evatStatus?: string;
+  evatIrn?: string;
+  evatQrCode?: string;
 }
 
 export interface InventoryItem {
@@ -1404,4 +1463,53 @@ export interface CompanyImage {
   uploadedBy: string;
   uploadedByName: string;
   createdAt: string;
+}
+
+// --- GRA E-VAT Integration ---
+export interface EvatConfig {
+  id: string;
+  companyId: string;
+  companyTin: string;
+  companyName: string;
+  securityKey: string;
+  apiMode: 'test' | 'production';
+  apiBaseUrl?: string;
+  isActive: boolean;
+  lastSignature?: string;
+  lastSignatureDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EvatSubmission {
+  id: string;
+  companyId: string;
+  entityType: 'invoice' | 'pos_sale' | 'refund' | 'z_report';
+  entityId: string;
+  entityNumber: string;
+  status: 'Pending' | 'Validated' | 'Failed' | 'Queued';
+  irn?: string;
+  sdcCode?: string;
+  qrCodeUrl?: string;
+  digitalSignature?: string;
+  requestPayload?: any;
+  responsePayload?: any;
+  errorMessage?: string;
+  retryCount: number;
+  submittedAt?: string;
+  validatedAt?: string;
+  createdAt: string;
+}
+
+export interface EvatHealthCheck {
+  online: boolean;
+  message: string;
+  timestamp: string;
+}
+
+export interface EvatValidationResult {
+  valid: boolean;
+  tin: string;
+  name?: string;
+  message?: string;
 }

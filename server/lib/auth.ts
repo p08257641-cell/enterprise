@@ -10,6 +10,7 @@ export interface TokenPayload {
   role: string;
   roles: string[];
   permissions: string[];
+  crudPermissions?: string[];
 }
 
 export function signToken(payload: TokenPayload): string {
@@ -26,4 +27,13 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function comparePassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash);
+}
+
+export function crudGuard(module: string, action: string, options?: { allowOnEmpty?: boolean }) {
+  return (req: any, res: any, next: any) => {
+    const perms = req.user?.crudPermissions as string[] | undefined;
+    if (!perms || perms.length === 0) return next();
+    if (perms.includes(`${module}.${action}`)) return next();
+    return res.status(403).json({ error: `Missing ${module}.${action} permission` });
+  };
 }

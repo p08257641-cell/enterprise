@@ -227,19 +227,27 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Time Log — This Week</h3></div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Team Member' }, { label: 'Task' }, { label: 'Due' }, { label: 'Hours Logged', right: true }, { label: 'Priority' }, { label: 'Status' }]} />
+              <TableHead cols={[{ label: 'Team Member' }, { label: 'Task' }, { label: 'Due' }, { label: 'Hours Logged', right: true }, { label: 'Priority' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localTasks.slice(0, 8).map((task, i) => {
                   const hours = [6.5, 8, 4, 7.5, 5, 6, 3, 7][i] ?? 5;
                   const billable = [true, true, false, true, true, true, false, true][i];
                   return (
-                    <tr key={task.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => timeModal.open({ ...task, hours, billable })}>
+                    <tr key={task.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{task.assigneeName || 'Unassigned'}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600 max-w-[180px] truncate">{task.title}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{task.due || '—'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{hours}h</td>
                       <td className="px-4 py-3"><Badge label={billable ? 'Billable' : 'Internal'} variant={billable ? 'success' : 'default'} /></td>
                       <td className="px-4 py-3"><Badge label={task.status} variant={task.status === 'Done' ? 'success' : 'info'} /></td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); timeModal.open({ ...task, hours, billable }); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -259,14 +267,14 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Team Resource Allocation</h3></div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Team Member' }, { label: 'Department' }, { label: 'Role' }, { label: 'Utilisation', right: true }, { label: 'Tasks Assigned', right: true }]} />
+              <TableHead cols={[{ label: 'Team Member' }, { label: 'Department' }, { label: 'Role' }, { label: 'Utilisation', right: true }, { label: 'Tasks Assigned', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localEmployees.slice(0, 8).map((emp, i) => {
                   const utils = [92, 78, 45, 100, 65, 80, 55, 72];
                   const u = utils[i] ?? 70;
                   const empTaskCount = localTasks.filter(t => t.assignee === emp.id || t.assigneeName?.includes(emp.firstName)).length;
                   return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => resourceModal.open({ ...emp, util: u, taskCount: empTaskCount })}>
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{emp.department}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{emp.designation}</td>
@@ -277,6 +285,14 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                         </div>
                       </td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{empTaskCount}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); resourceModal.open({ ...emp, util: u, taskCount: empTaskCount }); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}

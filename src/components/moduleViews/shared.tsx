@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import {
   Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice,
-  InventoryItem, SupportTicket, AuditLog, APIKey, Department, Branch,
+  InventoryItem, SupportTicket, AuditLog, APIKey, Department, Branch, CustomRole, ApprovalPolicy, PendingApproval,
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
   Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate,
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
@@ -19,6 +19,7 @@ export interface ModuleViewsProps {
   selectedCompany: Company;
   selectedUser: User;
   users: User[];
+  customRoles: CustomRole[];
   employees: Employee[];
   departments: Department[];
   branches: Branch[];
@@ -222,13 +223,16 @@ export interface ModuleViewsProps {
   onAddEmailTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt'>) => void;
   // Team chat
   chatMessages: any[];
+  chatReads?: any[];
   onSendChatMessage: (message: { companyId: string; threadId: string; senderId: string; senderName: string; message: string }) => void;
+  onMarkThreadRead?: (threadId: string) => void;
   // Voting / Polls
   polls: import('../../types').Poll[];
   pollOptions: import('../../types').PollOption[];
   pollVotes: import('../../types').PollVote[];
   onCreatePoll: (poll: { companyId: string; title: string; description: string; category: string; createdBy: string; createdByName: string; anonymous: boolean; endDate: string; options: { label: string; nomineeId?: string; nomineeName?: string }[] }) => void;
   onClosePoll: (pollId: string) => void;
+  onUpdatePoll: (pollId: string, updates: { endDate?: string; status?: string }) => void;
   onVotePoll: (pollId: string, optionId: string, voterId: string, voterName: string) => void;
   // Company Image Gallery
   companyImages: import('../../types').CompanyImage[];
@@ -285,6 +289,13 @@ export interface ModuleViewsProps {
   onRejectExitRequest: (id: string, rejectedBy: string) => void;
   // Bank Account Updates
   onUpdateCompanySettings: (companyId: string, updates: Record<string, any>) => void;
+  onCreateRole: (roleInput: { name: string; description: string; modules: string[]; submenus: string[]; crudPermissions?: string[] }) => void;
+  onUpdateRole: (roleId: string, updates: { name?: string; description?: string; modules?: string[]; submenus?: string[]; crudPermissions?: string[] }) => void;
+  onDeleteRole: (roleId: string) => void;
+  approvalPolicies: ApprovalPolicy[];
+  pendingApprovals: PendingApproval[];
+  onUpdateApprovalPolicies: (policies: { module: string; description: string; approverRoles: string[]; enabled: boolean }[]) => void;
+  onRefreshPendingApprovals: () => void;
 }
 
 export const ViewModal = ({ title, subtitle, onClose, size = '2xl', actions, children }: {

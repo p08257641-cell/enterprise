@@ -18,6 +18,9 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
   const [planModuleIds, setPlanModuleIds] = useState<string[]>([]);
   const [planBilling, setPlanBilling] = useState<Company['billingPlan']>('Core');
 
+  // Filter tenants for non-Super Admins so they only see their own company
+  const viewableTenants = selectedUser.role === 'Super Admin' ? tenants : tenants.filter(t => t.id === selectedCompany.id);
+
   const openPlanModal = () => {
     setPlanTenantId(tenants[0]?.id ?? '');
     setPlanModuleIds([]);
@@ -47,7 +50,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
   });
 
   const planMrr: Record<string, number> = { Enterprise: 2400, Premium: 900, Core: 350, Trial: 0 };
-  const platformCompanies = tenants.map(t => ({
+  const platformCompanies = viewableTenants.map(t => ({
     id: t.id,
     name: t.name,
     domain: t.domain || '—',
@@ -57,6 +60,10 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
     modules: t.activeModules?.length || 0,
     mrr: planMrr[t.billingPlan] || 0,
   }));
+
+  const platformUsers = employees.length + 420; // Mock total users across all tenants
+  const totalMRR = viewableTenants.reduce((sum, t) => sum + planPriceForModules(t.activeModules), 0);
+  const totalModules = viewableTenants.reduce((sum, t) => sum + (t.activeModules?.length || 0), 0);
 
   return (
     <div>
@@ -77,10 +84,10 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
               <PrimaryBtn icon="bi bi-plus-lg">Add Company</PrimaryBtn>
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Company' }, { label: 'Domain' }, { label: 'Plan' }, { label: 'Users' }, { label: 'Modules' }, { label: 'MRR' }, { label: 'Status' }]} />
+              <TableHead cols={[{ label: 'Company' }, { label: 'Domain' }, { label: 'Plan' }, { label: 'Users' }, { label: 'Modules' }, { label: 'MRR' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {platformCompanies.map((company) => (
-                  <tr key={company.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => companyModal.open(company)}>
+                  <tr key={company.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 table-cell-semibold text-slate-900">{company.name}</td>
                     <td className="px-4 py-3 table-cell text-slate-500">{company.domain}</td>
                     <td className="px-4 py-3"><Badge label={company.plan} variant={company.plan === 'Enterprise' ? 'info' : company.plan === 'Premium' ? 'success' : company.plan === 'Trial' ? 'warning' : 'default'} /></td>
@@ -88,6 +95,14 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 table-cell-mono text-slate-700">{company.modules}</td>
                     <td className="px-4 py-3 table-cell-mono text-slate-700">${company.mrr.toLocaleString()}</td>
                     <td className="px-4 py-3"><Badge label={company.status} variant={company.status === 'Active' ? 'success' : company.status === 'Past Due' ? 'danger' : 'warning'} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); companyModal.open(company); }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                      >
+                        View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -392,15 +407,15 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="section-title text-slate-900">Tenant Plans</h3>
-                <span className="text-[10px] text-slate-400 font-sans">{tenants.length} tenants</span>
+                <span className="text-[10px] text-slate-400 font-sans">{viewableTenants.length} tenants</span>
               </div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Tenant' }, { label: 'Plan' }, { label: 'Modules' }, { label: 'Monthly' }]} />
+                <TableHead cols={[{ label: 'Tenant' }, { label: 'Plan' }, { label: 'Expires' }, { label: 'Modules' }, { label: 'Monthly' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {tenants.map(t => {
+                  {viewableTenants.map(t => {
                     const price = planPriceForModules(t.activeModules);
                     return (
-                      <tr key={t.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => billingModal.open({ ...t, monthlyPrice: planPriceForModules(t.activeModules) })}>
+                      <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-5 py-3 fs-xs fw-semibold text-slate-900">{t.name}</td>
                         <td className="px-5 py-3">
                           <Badge
@@ -408,8 +423,17 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                             variant={t.billingPlan === 'Enterprise' ? 'info' : t.billingPlan === 'Premium' ? 'success' : t.billingPlan === 'Trial' ? 'warning' : 'default'}
                           />
                         </td>
+                        <td className="px-5 py-3 fs-xs text-slate-500 font-sans">{t.subscriptionExpiresAt ? new Date(t.subscriptionExpiresAt).toLocaleDateString() : 'Never'}</td>
                         <td className="px-5 py-3 fs-xs font-sans tabular-nums text-slate-700">{t.activeModules.length}</td>
                         <td className="px-5 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900">${price.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); billingModal.open({ ...t, monthlyPrice: planPriceForModules(t.activeModules) }); }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                          >
+                            <i className="bi bi-eye text-[11px]"></i> View
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}

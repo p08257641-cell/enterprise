@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
-import { modalAlert } from '../../utils/modal';
+import { modalAlert, toast } from '../../utils/modal';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
-import { isAdminRole } from '../../permissions';
+import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings } = props;
+  const { activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies } = props;
 
-  const isAdmin = isAdminRole(selectedUser.activeRole);
+  const isAdmin = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
   const localBranches = branches.filter(b => b.companyId === selectedCompany.id);
 
-  const [adminTab, setAdminTab] = useState<'branches' | 'departments' | 'users' | 'roles' | 'approvals' | 'settings'>(() => {
+  const [adminTab, setAdminTab] = useState<'branches' | 'departments' | 'users' | 'roles' | 'approvals' | 'settings' | 'evat'>(() => {
     if (activeView === 'admin-users') return 'users';
     if (activeView === 'admin-roles') return 'roles';
     if (activeView === 'admin-branches') return 'branches';
     if (activeView === 'admin-departments') return 'departments';
     if (activeView === 'admin-approvals') return 'approvals';
     if (activeView === 'admin-settings') return 'settings';
+    if (activeView === 'admin-evat') return 'evat';
     return 'branches';
   });
 
@@ -43,6 +44,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
     'Procurement / PO': ['Finance Manager', 'Operations Department Head', 'Company Admin'],
     'Recruitment Offers': ['HR Department Head', 'HR Manager'],
     'Asset Requests': ['Company Admin', 'Operations Department Head'],
+    'Role Management': ['HR Manager', 'HR Department Head', 'HR Officer', 'Company Admin'],
   });
   const [approvalSaveSuccess, setApprovalSaveSuccess] = useState(false);
 
@@ -51,30 +53,23 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [editDeptManager, setEditDeptManager] = useState('');
   const [editDeptBudget, setEditDeptBudget] = useState('');
 
-  const [customRoles, setCustomRoles] = useState([
-    { id: 'role-1', name: 'Company Admin', permissions: 'Full system access within tenant', rawPermissions: ['admin_all'], users: 1 },
-    { id: 'role-ceo', name: 'CEO', permissions: 'Full company access, executive oversight', rawPermissions: ['admin_all', 'executive_view'], users: 0 },
-    { id: 'role-2', name: 'HR Manager', permissions: 'HR, Payroll, Attendance, Recruitment, Leave Approvals', rawPermissions: ['hr_view', 'hr_edit', 'leave_approve', 'payroll_manage'], users: 2 },
-    { id: 'role-hro', name: 'HR Officer', permissions: 'HR, Payroll, Attendance, Recruitment', rawPermissions: ['hr_view', 'hr_edit', 'leave_approve'], users: 1 },
-    { id: 'role-3', name: 'Finance Manager', permissions: 'Accounting, Invoices, Ledger, Expenses, Payroll Processing', rawPermissions: ['accounting_view', 'accounting_edit', 'payroll_manage'], users: 1 },
-    { id: 'role-acc', name: 'Accountant', permissions: 'Accounting, Journal Entries, Reports', rawPermissions: ['accounting_view', 'accounting_edit'], users: 1 },
-    { id: 'role-4', name: 'Sales Manager', permissions: 'CRM pipeline, Customer contacts, Sales logs', rawPermissions: ['sales_manage'], users: 2 },
-    { id: 'role-sr', name: 'Sales Rep', permissions: 'CRM pipeline, Customer contacts', rawPermissions: ['crm_view', 'crm_edit'], users: 2 },
-    { id: 'role-se', name: 'Sales Executive', permissions: 'CRM pipeline, Sales targets, Customer contacts', rawPermissions: ['crm_view', 'crm_edit', 'sales_manage'], users: 0 },
-    { id: 'role-5', name: 'Inventory Manager', permissions: 'Stock Levels, Warehouse transfers, Procurement POs', rawPermissions: ['inventory_manage'], users: 1 },
-    { id: 'role-sk', name: 'Store Keeper', permissions: 'Stock Levels, Warehouse management', rawPermissions: ['inventory_view', 'inventory_edit'], users: 1 },
-    { id: 'role-6', name: 'Support Agent', permissions: 'Help Desk tickets, Visitor logs, Internal chat', rawPermissions: ['helpdesk_edit'], users: 3 },
-    { id: 'role-dh-hr', name: 'HR Department Head', permissions: 'HR, Payroll, Compliance, LMS — full authority', rawPermissions: ['hr_view', 'hr_edit', 'leave_approve', 'payroll_manage', 'compliance_manage'], users: 0 },
-    { id: 'role-dh-sales', name: 'Sales Department Head', permissions: 'Sales, CRM, POS — full authority', rawPermissions: ['sales_manage', 'crm_view', 'crm_edit'], users: 0 },
-    { id: 'role-dh-finance', name: 'Finance Department Head', permissions: 'Accounting, Payroll — full authority', rawPermissions: ['accounting_view', 'accounting_edit', 'payroll_manage'], users: 0 },
-    { id: 'role-dh-ops', name: 'Operations Department Head', permissions: 'Operations, Inventory, Manufacturing — full authority', rawPermissions: ['inventory_manage', 'project_manage'], users: 0 },
-    { id: 'role-dh-it', name: 'IT Department Head', permissions: 'Administration, Help Desk, POS — full authority', rawPermissions: ['admin_manage', 'helpdesk_edit'], users: 0 },
-  ]);
+  // Roles are DB-backed via props.customRoles — filter to current company
+  const customRoles = propCustomRoles.filter(r => r.companyId === selectedCompany.id);
+
+  // Count users assigned to a role (checks user.role, activeRole and roles array)
+  const countUsersForRole = (roleName: string) => {
+    const companyUsers = (users || []).filter(u => u.companyId === selectedCompany.id);
+    return companyUsers.filter(u =>
+      u.role === roleName || u.activeRole === roleName || (Array.isArray(u.roles) && u.roles.includes(roleName))
+    ).length;
+  };
+
   const [showRoleModal, setShowRoleModal] = useState(false);
-  const [editingRole, setEditingRole] = useState<{ id: string; name: string; permissions: string; rawPermissions: string[]; users: number } | null>(null);
+  const [editingRole, setEditingRole] = useState<import('../../types').CustomRole | null>(null);
   const [roleFormName, setRoleFormName] = useState('');
   const [roleFormDesc, setRoleFormDesc] = useState('');
-  const [roleFormPermissions, setRoleFormPermissions] = useState<string[]>([]);
+  const [roleFormModules, setRoleFormModules] = useState<string[]>([]);
+  const [roleFormCrudPermissions, setRoleFormCrudPermissions] = useState<string[]>([]);
   const [showBranchModal, setShowBranchModal] = useState(false);
   const [branchName, setBranchName] = useState('');
   const [branchLocation, setBranchLocation] = useState('');
@@ -84,41 +79,42 @@ const [deptName, setDeptName] = useState('');
 const [deptManager, setDeptManager] = useState('');
 const [deptParent, setDeptParent] = useState('');
 
-  const handleOpenRoleModal = (roleToEdit: typeof customRoles[0] | null) => {
+  const handleOpenRoleModal = (roleToEdit: import('../../types').CustomRole | null) => {
     if (roleToEdit) {
       setEditingRole(roleToEdit);
       setRoleFormName(roleToEdit.name);
-      setRoleFormDesc(roleToEdit.permissions);
-      setRoleFormPermissions(roleToEdit.rawPermissions);
+      setRoleFormDesc(roleToEdit.description);
+      setRoleFormModules(roleToEdit.modules || []);
+      setRoleFormCrudPermissions(roleToEdit.crudPermissions || []);
     } else {
       setEditingRole(null);
       setRoleFormName('');
       setRoleFormDesc('');
-      setRoleFormPermissions([]);
+      setRoleFormModules([]);
+      setRoleFormCrudPermissions([]);
     }
     setShowRoleModal(true);
   };
 
-  const handleSaveRole = (e: React.FormEvent) => {
+  const handleSaveRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roleFormName.trim()) return;
 
     if (editingRole) {
-      setCustomRoles(prev => prev.map(r => r.id === editingRole.id ? {
-        ...r,
-        name: roleFormName,
-        permissions: roleFormDesc || 'Custom permissions assigned',
-        rawPermissions: roleFormPermissions
-      } : r));
+      await onUpdateRole(editingRole.id, {
+        name: roleFormName.trim(),
+        description: roleFormDesc,
+        modules: roleFormModules,
+        crudPermissions: roleFormCrudPermissions,
+      });
     } else {
-      const newRole = {
-        id: `role-${Date.now()}`,
-        name: roleFormName,
-        permissions: roleFormDesc || 'Custom permissions assigned',
-        rawPermissions: roleFormPermissions,
-        users: 0
-      };
-      setCustomRoles(prev => [...prev, newRole]);
+      await onCreateRole({
+        name: roleFormName.trim(),
+        description: roleFormDesc,
+        modules: roleFormModules,
+        crudPermissions: roleFormCrudPermissions,
+        submenus: [],
+      });
     }
     setShowRoleModal(false);
   };
@@ -490,8 +486,8 @@ const [deptParent, setDeptParent] = useState('');
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div>
-                <h3 className="fs-sm fw-bold text-slate-900">Role Management & Permissions</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Manage job definitions, modify raw permissions, and create custom security roles.</p>
+                <h3 className="fs-sm fw-bold text-slate-900">Role Management</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">Define roles and assign granular CRUD permissions.</p>
               </div>
               {isAdmin && (
                 <button
@@ -503,35 +499,82 @@ const [deptParent, setDeptParent] = useState('');
               )}
             </div>
             <div className="divide-y divide-slate-100">
-              {customRoles.map(r => (
-                <div key={r.id} className="p-5 flex items-center justify-between hover:bg-slate-50/40 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                      <i className="bi bi-shield-lock text-slate-500 fs-sm"></i>
-                    </div>
-                    <div>
-                      <div className="fs-sm fw-bold text-slate-900">{r.name}</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">{r.permissions}</div>
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {r.rawPermissions.map(p => (
-                          <span key={p} className="bg-slate-100 border border-slate-200 text-slate-600 rounded px-1.5 py-0.5 text-[9px] font-mono">{p}</span>
-                        ))}
+              {customRoles.length === 0 && (
+                <div className="px-5 py-8 text-center text-[11px] text-slate-400">No roles found. Click "Add Role" to create one.</div>
+              )}
+              {customRoles.map(r => {
+                const userCount = countUsersForRole(r.name);
+                const crudByModule = (r.crudPermissions || []).reduce((acc: any, p: string) => {
+                  const [mod, action] = p.split('.');
+                  if (!acc[mod]) acc[mod] = [];
+                  acc[mod].push(action);
+                  return acc;
+                }, {});
+                return (
+                  <div key={r.id} className="p-5 flex items-start justify-between hover:bg-slate-50/40 transition-colors gap-4">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${r.isSystem ? 'bg-slate-900' : 'bg-slate-100'}`}>
+                        <i className={`bi bi-shield-lock ${r.isSystem ? 'text-white' : 'text-slate-500'} fs-sm`}></i>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="fs-sm fw-bold text-slate-900">{r.name}</span>
+                          {r.isSystem && <span className="bg-slate-100 border border-slate-200 text-slate-500 rounded px-1.5 py-0.5 text-[9px] font-mono">built-in</span>}
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">{r.description || 'No description'}</div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {(r.modules || []).slice(0, 8).map(m => (
+                            <span key={m} className="bg-slate-100 border border-slate-200 text-slate-600 rounded px-1.5 py-0.5 text-[9px] font-mono">{m}</span>
+                          ))}
+                          {(r.modules || []).length > 8 && (
+                            <span className="text-[9px] text-slate-400">+{(r.modules || []).length - 8} more</span>
+                          )}
+                        </div>
+                        {Object.keys(crudByModule).length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {Object.entries(crudByModule).map(([mod, actions]: [string, any]) => (
+                              <div key={mod} className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5">
+                                <span className="text-[9px] font-mono fw-bold text-slate-500">{mod}</span>
+                                <span className="text-slate-300">|</span>
+                                <div className="flex gap-0.5">
+                                  {['Create','Read','Update','Delete'].map(a => (
+                                    <span key={a} className={`text-[9px] px-1 py-0 rounded-sm fw-semibold ${actions.includes(a) ? 'text-slate-900 bg-slate-200/60' : 'text-slate-300'}`}>{a[0]}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2 pt-0.5">
+                      <span className="text-[11px] text-slate-400 font-sans tabular-nums whitespace-nowrap">{userCount} user{userCount !== 1 ? 's' : ''}</span>
+                      {isAdmin && (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenRoleModal(r)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                          >
+                            <i className="bi bi-pencil text-[11px]"></i>
+                          </button>
+                          {!r.isSystem && r.name !== 'Employee' && userCount === 0 && onDeleteRole && (
+                            <button
+                              onClick={async () => {
+                                if (window.confirm(`Delete role "${r.name}"? This cannot be undone.`)) {
+                                  await onDeleteRole(r.id);
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-600 hover:text-white border border-red-200 hover:border-red-600 text-red-500 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                            >
+                              <i className="bi bi-trash text-[11px]"></i>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 ml-4">
-                    <span className="text-[11px] text-slate-400 font-sans tabular-nums">{r.users} users</span>
-                    {isAdmin && (
-                      <button
-                        onClick={() => handleOpenRoleModal(r)}
-                        className="text-[11px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all"
-                      >
-                        Edit Role
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -548,6 +591,13 @@ const [deptParent, setDeptParent] = useState('');
               </div>
               <button
                 onClick={() => {
+                  const policiesToSave = Object.entries(approvalPolicies).map(([module, approverRoles]) => ({
+                    module,
+                    description: '',
+                    approverRoles,
+                    enabled: true,
+                  }));
+                  onUpdateApprovalPolicies(policiesToSave);
                   setApprovalSaveSuccess(true);
                   setTimeout(() => setApprovalSaveSuccess(false), 3000);
                 }}
@@ -570,6 +620,7 @@ const [deptParent, setDeptParent] = useState('');
                   'Procurement / PO': 'bi bi-cart3',
                   'Recruitment Offers': 'bi bi-person-plus',
                   'Asset Requests': 'bi bi-box-seam',
+                  'Role Management': 'bi bi-shield-lock',
                 };
                 const descriptions: Record<string, string> = {
                   'Leave Requests': 'Annual, sick, casual, and maternity leave applications',
@@ -578,6 +629,7 @@ const [deptParent, setDeptParent] = useState('');
                   'Procurement / PO': 'Purchase orders and vendor requisitions',
                   'Recruitment Offers': 'Job offers, hiring decisions and onboarding',
                   'Asset Requests': 'Equipment requisitions and asset assignments',
+                  'Role Management': 'Create, update, or delete roles and permission sets',
                 };
                 const availableRoles = [
                   'HR Department Head',
@@ -712,10 +764,97 @@ const [deptParent, setDeptParent] = useState('');
                       const url = (document.getElementById('sigUrl') as HTMLInputElement)?.value;
                       if (url) onUpdateCompanySettings(selectedCompany.id, { companySignature: url });
                     }} icon="bi bi-check-lg">Save URL</PrimaryBtn>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>CRUD Permissions</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose one CRUD action per module (or none).</p>
+                    <div className="space-y-2">
+                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above to configure CRUD permissions.</p>}
+                      {roleFormModules.map(mod => {
+                        const crudActions = ['Create', 'Read', 'Update', 'Delete'];
+                        const current = crudActions.find(a => roleFormCrudPermissions.includes(`${mod}.${a}`));
+                        return (
+                          <div key={mod} className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 bg-white">
+                            <span className="text-[11px] fw-bold text-slate-700 w-24 shrink-0">{mod}</span>
+                            <div className="flex gap-1.5">
+                              {crudActions.map(action => {
+                                const perm = `${mod}.${action}`;
+                                const checked = roleFormCrudPermissions.includes(perm);
+                                return (
+                                  <label
+                                    key={perm}
+                                    className={`px-2.5 py-1 rounded-md border text-[10px] fw-semibold cursor-pointer transition-all ${checked
+                                      ? 'bg-slate-900 text-white border-slate-900'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                      }`}
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`crud-${mod}`}
+                                      checked={checked}
+                                      onChange={() => setRoleFormCrudPermissions(prev => [...prev.filter(p => !p.startsWith(`${mod}.`)), perm])}
+                                      className="sr-only"
+                                    />
+                                    {action}
+                                  </label>
+                                );
+                              })}
+                              <button
+                                type="button"
+                                onClick={() => setRoleFormCrudPermissions(prev => prev.filter(p => !p.startsWith(`${mod}.`)))}
+                                className={`px-2.5 py-1 rounded-md border text-[10px] fw-semibold cursor-pointer transition-all ${!current ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                              >
+                                None
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>CRUD Permissions</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose one action per module (or None).</p>
+                    <div className="space-y-1.5">
+                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above first.</p>}
+                      {roleFormModules.map(mod => {
+                        const crudActions = ['Create', 'Read', 'Update', 'Delete'];
+                        const current = crudActions.find(a => roleFormCrudPermissions.includes(`${mod}.${a}`));
+                        return (
+                          <div key={mod} className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 bg-white">
+                            <span className="text-[10px] fw-bold text-slate-700 w-20 shrink-0">{mod}</span>
+                            <div className="flex gap-1">
+                              {crudActions.map(action => {
+                                const perm = `${mod}.${action}`;
+                                const checked = roleFormCrudPermissions.includes(perm);
+                                return (
+                                  <label
+                                    key={perm}
+                                    className={`px-2 py-0.5 rounded border text-[9px] fw-semibold cursor-pointer transition-all ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                  >
+                                    <input type="radio" name={`crud-${mod}`} checked={checked} onChange={() => setRoleFormCrudPermissions(prev => [...prev.filter(p => !p.startsWith(`${mod}.`)), perm])} className="sr-only" />
+                                    {action}
+                                  </label>
+                                );
+                              })}
+                              <button
+                                type="button"
+                                onClick={() => setRoleFormCrudPermissions(prev => prev.filter(p => !p.startsWith(`${mod}.`)))}
+                                className={`px-2 py-0.5 rounded border text-[9px] fw-semibold cursor-pointer transition-all ${!current ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                              >
+                                None
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
             {/* System Settings */}
             <div>
@@ -744,15 +883,24 @@ const [deptParent, setDeptParent] = useState('');
           </div>
         )}
 
-        {/* ΓöÇΓöÇ Add/Edit Role Modal ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+        {adminTab === 'evat' && (
+          <EvatSettingsView selectedCompany={selectedCompany} />
+        )}
+
+        {/* ── Add/Edit Role Modal ──────────────────────────────────── */}
         {showRoleModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <form onSubmit={handleSaveRole}>
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                  <div>
-                    <h3 className="fs-sm fw-bold text-slate-900">{editingRole ? 'Edit Permissions' : 'Create Custom Role'}</h3>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Assign access scopes and customize permission groups.</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${editingRole ? 'bg-violet-500' : 'bg-slate-900'}`}>
+                      <i className={`bi ${editingRole ? 'bi-pencil' : 'bi-plus-lg'} text-white fs-sm`}></i>
+                    </div>
+                    <div>
+                      <h3 className="fs-sm fw-bold text-slate-900">{editingRole ? `Edit ${editingRole.name}` : 'Create Custom Role'}</h3>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{editingRole ? 'Modify modules and CRUD permissions.' : 'Define a new role with custom access scopes.'}</p>
+                    </div>
                   </div>
                   <button type="button" onClick={() => setShowRoleModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><i className="bi bi-x fs-xl"></i></button>
                 </div>
@@ -780,47 +928,75 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
 
                   <div>
-                    <Label>System Permissions Checklists</Label>
-                    <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                      {[
-                        { key: 'admin_all', label: 'Full Admin Access', desc: 'Absolute system access within tenant' },
-                        { key: 'hr_view', label: 'HR Directory View', desc: 'Allows viewing of employee list' },
-                        { key: 'hr_edit', label: 'HR Directory Edit', desc: 'Add/manage/dismiss personnel' },
-                        { key: 'leave_approve', label: 'Leave Approvals', desc: 'Approve or reject leave requests' },
-                        { key: 'attendance_manage', label: 'Attendance Management', desc: 'Manage attendance and logs' },
-                        { key: 'payroll_manage', label: 'Payroll Management', desc: 'Process monthly payroll runs' },
-                        { key: 'accounting_view', label: 'Accounting Read', desc: 'View financial ledger records' },
-                        { key: 'accounting_edit', label: 'Accounting Write', desc: 'Invoices, expenses, journal posts' },
-                        { key: 'sales_manage', label: 'CRM & Sales', desc: 'Manage CRM leads, sales logs' },
-                        { key: 'inventory_manage', label: 'Inventory & Stock', desc: 'Stock control, warehouse, POs' },
-                        { key: 'helpdesk_edit', label: 'Support Operations', desc: 'Manage customer support tickets' }
-                      ].map(perm => {
-                        const hasPerm = roleFormPermissions.includes(perm.key);
+                    <Label>Module Access</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Select which ERP modules this role can access.</p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {['HR', 'Accounting', 'CRM', 'Operations', 'Administration', 'Help Desk', 'Payroll', 'Sales', 'Procurement', 'Compliance'].map(mod => {
+                        const hasModule = roleFormModules.includes(mod);
                         return (
                           <label
-                            key={perm.key}
-                            className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition-all ${hasPerm
+                            key={mod}
+                            className={`p-3 rounded-xl border flex items-center gap-2.5 cursor-pointer transition-all ${hasModule
                               ? 'bg-slate-50 border-slate-900/40 text-slate-900'
                               : 'bg-white border-slate-100 hover:border-slate-200 text-slate-600'
                               }`}
                           >
                             <input
                               type="checkbox"
-                              checked={hasPerm}
+                              checked={hasModule}
                               onChange={() => {
-                                setRoleFormPermissions(prev =>
-                                  prev.includes(perm.key)
-                                    ? prev.filter(p => p !== perm.key)
-                                    : [...prev, perm.key]
+                                setRoleFormModules(prev =>
+                                  prev.includes(mod)
+                                    ? prev.filter(m => m !== mod)
+                                    : [...prev, mod]
                                 );
                               }}
-                              className="mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900/50"
+                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/50"
                             />
-                            <div>
-                              <div className="text-[11px] fw-bold">{perm.label}</div>
-                              <div className="text-[9px] text-slate-400 mt-0.5 leading-normal">{perm.desc}</div>
-                            </div>
+                            <div className="text-[11px] fw-bold">{mod}</div>
                           </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>CRUD Permissions</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Select any combination of Create, Read, Update, Delete per module.</p>
+                    <div className="space-y-1.5">
+                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above first.</p>}
+                      {roleFormModules.map(mod => {
+                        const crudActions = ['Create', 'Read', 'Update', 'Delete'];
+                        return (
+                          <div key={mod} className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 bg-white">
+                            <span className="text-[10px] fw-bold text-slate-700 w-20 shrink-0">{mod}</span>
+                            <div className="flex gap-1">
+                              {crudActions.map(action => {
+                                const perm = `${mod}.${action}`;
+                                const checked = roleFormCrudPermissions.includes(perm);
+                                return (
+                                  <label
+                                    key={perm}
+                                    className={`px-2 py-0.5 rounded border text-[9px] fw-semibold cursor-pointer transition-all ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => {
+                                        setRoleFormCrudPermissions(prev =>
+                                          prev.includes(perm)
+                                            ? prev.filter(p => p !== perm)
+                                            : [...prev, perm]
+                                        );
+                                      }}
+                                      className="sr-only"
+                                    />
+                                    {action}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
@@ -829,7 +1005,7 @@ const [deptParent, setDeptParent] = useState('');
 
                 <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
                   <button type="button" onClick={() => setShowRoleModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
-                  <button type="submit" className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Role Settings</button>
+                  <button type="submit" className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">{editingRole ? 'Save Changes' : 'Create Role'}</button>
                 </div>
               </form>
             </div>
@@ -896,6 +1072,171 @@ const [deptParent, setDeptParent] = useState('');
           </div>
         </ViewModal>
       )}
+    </div>
+  );
+};
+
+const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany }) => {
+  const [config, setConfig] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [form, setForm] = useState({
+    companyTin: '',
+    companyName: '',
+    securityKey: '',
+    apiMode: 'test' as 'test' | 'production',
+    isActive: true,
+  });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/evat/config?companyId=${selectedCompany.id}`);
+        const data = await res.json();
+        if (data && data.companyTin) {
+          setConfig(data);
+          setForm({
+            companyTin: data.companyTin || '',
+            companyName: data.companyName || '',
+            securityKey: data.securityKey || '',
+            apiMode: data.apiMode || 'test',
+            isActive: data.isActive !== false,
+          });
+        }
+        const subRes = await fetch(`/api/evat/submissions?companyId=${selectedCompany.id}`);
+        const subData = await subRes.json();
+        if (Array.isArray(subData)) setSubmissions(subData);
+      } catch (e) { console.error(e); }
+      setLoading(false);
+    })();
+  }, [selectedCompany.id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/evat/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, companyId: selectedCompany.id }),
+      });
+      const data = await res.json();
+      if (data.error) return toast(data.error, 'error');
+      setConfig(data);
+      toast('E-VAT configuration saved', 'success');
+    } catch (e: any) { toast(e.message || 'Save failed', 'error'); }
+    setSaving(false);
+  };
+
+  const handleTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch('/api/evat/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: selectedCompany.id }),
+      });
+      const data = await res.json();
+      if (data.success) setTestResult({ ok: true, message: data.message || 'Connection successful' });
+      else setTestResult({ ok: false, message: data.error || 'Connection failed' });
+    } catch { setTestResult({ ok: false, message: 'Network error' }); }
+    setTesting(false);
+  };
+
+  if (loading) return <div className="p-6 text-[11px] text-slate-400">Loading E-VAT configuration...</div>;
+
+  return (
+    <div className="space-y-5 p-6">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100">
+          <h3 className="fs-sm fw-bold text-slate-900">GRA E-VAT Credentials</h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">Configure your Ghana Revenue Authority E-VAT API credentials.</p>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Company TIN *</Label>
+              <Input type="text" value={form.companyTin} onChange={e => setForm(f => ({ ...f, companyTin: e.target.value }))} placeholder="e.g. C000123456789" />
+            </div>
+            <div>
+              <Label>Company Legal Name *</Label>
+              <Input type="text" value={form.companyName} onChange={e => setForm(f => ({ ...f, companyName: e.target.value }))} placeholder="Registered business name" />
+            </div>
+          </div>
+          <div>
+            <Label>Security Key *</Label>
+            <Input type="password" value={form.securityKey} onChange={e => setForm(f => ({ ...f, securityKey: e.target.value }))} placeholder="GRA API security key" />
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <Label>API Mode</Label>
+              <label className={`px-3 py-1.5 rounded-lg border text-[11px] fw-semibold cursor-pointer transition-all ${form.apiMode === 'test' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white text-slate-400 border-slate-200'}`}>
+                <input type="radio" name="apiMode" checked={form.apiMode === 'test'} onChange={() => setForm(f => ({ ...f, apiMode: 'test' }))} className="sr-only" />
+                Test (Sandbox)
+              </label>
+              <label className={`px-3 py-1.5 rounded-lg border text-[11px] fw-semibold cursor-pointer transition-all ${form.apiMode === 'production' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white text-slate-400 border-slate-200'}`}>
+                <input type="radio" name="apiMode" checked={form.apiMode === 'production'} onChange={() => setForm(f => ({ ...f, apiMode: 'production' }))} className="sr-only" />
+                Production (Live)
+              </label>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div className={`relative h-5 w-9 rounded-full cursor-pointer transition-colors ${form.isActive ? 'bg-slate-900' : 'bg-slate-200'}`} onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}>
+                <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${form.isActive ? 'left-4' : 'left-0.5'}`}></div>
+              </div>
+              <span className="text-[11px] text-slate-600">E-VAT Active</span>
+            </label>
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 bg-slate-900 text-white fw-semibold fs-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs disabled:opacity-50">
+              {saving ? 'Saving...' : 'Save Configuration'}
+            </button>
+            <button onClick={handleTest} disabled={testing} className="flex items-center gap-1.5 bg-white border border-slate-200 text-slate-600 fw-semibold fs-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-50 transition-all disabled:opacity-50">
+              {testing ? 'Testing...' : 'Test Connection'}
+            </button>
+          </div>
+          {testResult && (
+            <div className={`p-3 rounded-lg border text-[11px] fw-semibold flex items-center gap-2 ${testResult.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+              <i className={`bi ${testResult.ok ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}`}></i>
+              {testResult.message}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100">
+          <h3 className="fs-sm fw-bold text-slate-900">E-VAT Submission History</h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">Recent submissions to GRA.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead><tr className="border-b border-slate-100">
+              {['Entity', 'Number', 'IRN', 'Status', 'Submitted', 'Error'].map(h => <th key={h} className="text-left px-4 py-3 text-[10px] fw-semibold text-slate-500 uppercase tracking-wider">{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {submissions.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-[11px] text-slate-400">No submissions yet.</td></tr>}
+              {submissions.map((s: any) => (
+                <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50/40">
+                  <td className="px-4 py-2.5 text-[11px] text-slate-600">{s.entityType}</td>
+                  <td className="px-4 py-2.5 text-[11px] font-mono text-slate-900">{s.entityNumber}</td>
+                  <td className="px-4 py-2.5 text-[11px] font-mono text-slate-600">{s.irn || '—'}</td>
+                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] fw-semibold ${
+                    s.status === 'Validated' ? 'bg-emerald-100 text-emerald-700' :
+                    s.status === 'Failed' ? 'bg-red-100 text-red-600' :
+                    s.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                    'bg-slate-100 text-slate-500'
+                  }`}>{s.status}</span></td>
+                  <td className="px-4 py-2.5 text-[11px] text-slate-500">{s.submittedAt ? new Date(s.submittedAt).toLocaleString() : '—'}</td>
+                  <td className="px-4 py-2.5 text-[11px] text-red-500 max-w-[200px] truncate">{s.errorMessage || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage } from './types';
+import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage, CustomRole, ApprovalPolicy, PendingApproval } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -14,12 +14,15 @@ import { ModuleViews } from './components/ModuleViews';
 import { TenantSetup } from './components/TenantSetup';
 import { FadeIn, Skeleton } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { FloatingChat } from './components/FloatingChat';
+import { LoginPage } from './components/LoginPage';
 import { useAuth } from './contexts/AuthContext';
 // No lucide-react imports needed
 import { modalAlert, toast } from './utils/modal';
 
 const safeJson = async (res: Response): Promise<any> => {
   try {
+    if (!res.ok) return [];
     const text = await res.text();
     return text ? JSON.parse(text) : [];
   } catch (e) {
@@ -28,7 +31,7 @@ const safeJson = async (res: Response): Promise<any> => {
 };
 
 export default function App() {
-  const { token, isLoading: authLoading } = useAuth();
+  const { user: authUser, token, isLoading: authLoading } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -53,6 +56,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [workflowTriggers, setWorkflowTriggers] = useState<WorkflowTrigger[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatReads, setChatReads] = useState<any[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [pollOptions, setPollOptions] = useState<PollOption[]>([]);
   const [pollVotes, setPollVotes] = useState<PollVote[]>([]);
@@ -129,6 +133,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const [exitRequests, setExitRequests] = useState<ExitRequest[]>([]);
   const [bankAccountUpdates, setBankAccountUpdates] = useState<BankAccountUpdateRequest[]>([]);
   const [profileUpdateRequests, setProfileUpdateRequests] = useState<import('./types').ProfileUpdateRequest[]>([]);
+  const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
+  const [approvalPolicies, setApprovalPolicies] = useState<ApprovalPolicy[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
 
   // Navigation states
   const [activeView, setActiveView] = useState('dashboard');
@@ -146,7 +153,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     if (authLoading || !token) return;
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, pollsRes, pollOptsRes, pollVotesRes, imgRes] = await Promise.all([
+        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -202,7 +209,10 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           fetch('/api/polls?companyId=c-acme'),
           fetch('/api/poll-options?companyId=c-acme'),
           fetch('/api/poll-votes?companyId=c-acme'),
-          fetch('/api/company-images?companyId=c-acme')
+          fetch('/api/company-images?companyId=c-acme'),
+          fetch('/api/roles?companyId=c-acme'),
+          fetch('/api/approval-policies?companyId=c-acme'),
+          fetch('/api/pending-approvals?companyId=c-acme')
         ]);
 
         const cData = await safeJson(cRes);
@@ -258,6 +268,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         const pollOptsData = await safeJson(pollOptsRes);
         const pollVotesData = await safeJson(pollVotesRes);
         const imgData = await safeJson(imgRes);
+        const rolesData = await safeJson(rolesRes);
+        const policiesData = await safeJson(policiesRes);
+        const approvalsData = await safeJson(approvalsRes);
 
         setCompanies(cData);
         setUsers(uData);
@@ -305,6 +318,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setPollOptions(pollOptsData);
         setPollVotes(pollVotesData);
         setCompanyImages(imgData);
+        setCustomRoles(Array.isArray(rolesData) ? rolesData : []);
+        setApprovalPolicies(policiesData);
+        setPendingApprovals(approvalsData);
 
         // Fetch CRM activities
         const actRes = await fetch('/api/crm-activities');
@@ -412,12 +428,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           setProfileUpdateRequests(await safeJson(purRes));
         } catch (e) { console.error('Failed to load profile update requests:', e); }
 
-        // Select default tenant and user role
+        // Select default tenant matching the logged-in user's company
         if (cData.length > 0) {
-          const acme = cData.find((c: any) => c.id === 'c-acme');
-          setSelectedCompany(acme || cData[0]);
+          const userCompany = authUser ? cData.find((c: any) => c.id === authUser.companyId) : null;
+          setSelectedCompany(userCompany || cData[0]);
         }
-        if (uData.length > 0) setSelectedUser(uData[1]); // default to Alex Mercer (Company Admin)
+        // Set selectedUser to the logged-in user
+        if (authUser && uData.length > 0) {
+          const match = uData.find((u: any) => u.id === authUser.id);
+          if (match) setSelectedUser(match);
+        }
         } catch (err) {
           console.error("Error loading full-stack database tables:", err);
         } finally {
@@ -457,34 +477,27 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
   // Reload chat messages whenever selected company changes
   useEffect(() => {
-    if (!selectedCompany) return;
+    if (!selectedCompany || !selectedUser) return;
     let cancelled = false;
     const loadChat = async () => {
       try {
-        const res = await fetch(`/api/chat/messages?companyId=${selectedCompany.id}`);
-        const data = await safeJson(res);
-        if (!cancelled && Array.isArray(data)) setChatMessages(data);
-      } catch (e) { console.error('Failed to load chat messages:', e); }
+        const [msgsRes, readsRes] = await Promise.all([
+          fetch(`/api/chat/messages?companyId=${selectedCompany.id}`),
+          fetch(`/api/chat/reads?companyId=${selectedCompany.id}&userId=${selectedUser.id}`)
+        ]);
+        const msgs = await safeJson(msgsRes);
+        const reads = await safeJson(readsRes);
+        if (!cancelled) {
+          if (Array.isArray(msgs)) setChatMessages(msgs);
+          if (Array.isArray(reads)) setChatReads(reads);
+        }
+      } catch (e) { console.error('Failed to load chat data:', e); }
     };
     loadChat();
     // Poll every 5 seconds to surface messages sent by other users
     const interval = setInterval(loadChat, 5000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [selectedCompany]);
-
-  // Update states whenever selected company is switched to maintain full tenant isolation
-  const handleSelectCompany = (company: Company) => {
-    setSelectedCompany(company);
-
-    // Auto align user perspective to matching tenant's admin, or keep Super Admin
-    if (selectedUser?.role !== 'Super Admin') {
-      const match = users.find(u => u.companyId === company.id);
-      if (match) setSelectedUser(match);
-    }
-
-    // Reset to dashboard so we never land on a view that doesn't belong to the new tenant/role
-    setActiveView('dashboard');
-  };
+  }, [selectedCompany, selectedUser]);
 
   // --- ACTIONS HANDLERS (PERSIST ON EXPRESS BACKEND IN MEMORY) ---
 
@@ -728,7 +741,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
   const handleApproveExitRequest = async (id: string, status: string, approverName: string) => {
     try {
-      const updates: any = { status };
+      const updates: any = { status, userRole: selectedUser.activeRole || selectedUser.role, userId: selectedUser.id, userName: approverName };
       if (status === 'HOD Approved') {
         updates.hodApprovedBy = approverName;
         updates.hodApprovedAt = new Date().toISOString();
@@ -752,7 +765,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const res = await fetch(`/api/exit-requests/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Rejected', rejectedBy, rejectedAt: new Date().toISOString() }),
+        body: JSON.stringify({ status: 'Rejected', rejectedBy, rejectedAt: new Date().toISOString(), userRole: selectedUser.activeRole || selectedUser.role, userId: selectedUser.id, userName: rejectedBy }),
       });
       const data = await safeJson(res);
       setExitRequests(exitRequests.map(e => e.id === id ? data : e));
@@ -822,7 +835,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const res = await fetch(`/api/profile-update-requests/${id}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ processedBy: selectedUser.name }),
+        body: JSON.stringify({ processedBy: selectedUser.name, userRole: selectedUser.activeRole || selectedUser.role }),
       });
       const data = await safeJson(res);
       setProfileUpdateRequests(profileUpdateRequests.map(r => r.id === id ? data : r));
@@ -841,7 +854,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const res = await fetch(`/api/profile-update-requests/${id}/reject`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ processedBy: selectedUser.name, rejectionReason: reason }),
+        body: JSON.stringify({ processedBy: selectedUser.name, rejectionReason: reason, userRole: selectedUser.activeRole || selectedUser.role }),
       });
       const data = await safeJson(res);
       setProfileUpdateRequests(profileUpdateRequests.map(r => r.id === id ? data : r));
@@ -1000,19 +1013,97 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
-  const handleSelectUser = (user: User) => {
-    setSelectedUser(user);
-    setActiveView('dashboard');
+  const handleCreateRole = async (roleInput: { name: string; description: string; modules: string[]; submenus: string[]; crudPermissions?: string[] }) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/roles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...roleInput, companyId: selectedCompany.id })
+      });
+      const data = await safeJson(res);
+      if (data.error) { toast(data.error, 'error', 'Error'); return; }
+      setCustomRoles([...customRoles, data]);
+      toast('Role created successfully', 'success', 'Role Added');
+    } catch (err) { console.error(err); toast('Failed to create role', 'error', 'Error'); }
+  };
+
+  const handleRefreshPendingApprovals = async () => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch(`/api/pending-approvals?companyId=${selectedCompany.id}`);
+      const data = await safeJson(res);
+      setPendingApprovals(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateRole = async (roleId: string, updates: { name?: string; description?: string; modules?: string[]; submenus?: string[]; crudPermissions?: string[] }) => {
+    try {
+      const res = await fetch(`/api/roles/${roleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...updates,
+          userName: selectedUser.name,
+          userRole: selectedUser.activeRole || selectedUser.role,
+          userId: selectedUser.id,
+        })
+      });
+      const data = await safeJson(res);
+
+      // Handle pending approval (202 status)
+      if (res.status === 202 && data.pending) {
+        toast(data.message || 'Role change submitted for approval', 'info', 'Pending Approval');
+        handleRefreshPendingApprovals();
+        return;
+      }
+
+      if (data.error) { toast(data.error, 'error', 'Error'); return; }
+      setCustomRoles(customRoles.map(r => r.id === roleId ? data : r));
+      // If role name changed, also update users who had this role
+      if (updates.name) {
+        const uRes = await fetch('/api/users');
+        const uData = await safeJson(uRes);
+        setUsers(uData);
+      }
+      toast('Role updated successfully', 'success', 'Updated');
+    } catch (err) { console.error(err); toast('Failed to update role', 'error', 'Error'); }
+  };
+
+  const handleDeleteRole = async (roleId: string) => {
+    try {
+      const res = await fetch(`/api/roles/${roleId}`, { method: 'DELETE' });
+      const data = await safeJson(res);
+      if (data.error) { toast(data.error, 'error', 'Error'); return; }
+      setCustomRoles(customRoles.filter(r => r.id !== roleId));
+      toast('Role deleted', 'success', 'Deleted');
+    } catch (err) { console.error(err); toast('Failed to delete role', 'error', 'Error'); }
+  };
+
+  const handleUpdateApprovalPolicies = async (policies: { module: string; description: string; approverRoles: string[]; enabled: boolean }[]) => {
+    if (!selectedCompany) return;
+    try {
+      const res = await fetch('/api/approval-policies', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: selectedCompany.id, policies })
+      });
+      const data = await safeJson(res);
+      setApprovalPolicies(data);
+      toast('Approval policies saved', 'success', 'Saved');
+    } catch (err) { console.error(err); toast('Failed to save approval policies', 'error', 'Error'); }
   };
 
   const handleApproveLeave = async (leaveId: string, status: string = 'Approved') => {
     if (!selectedUser || !selectedCompany) return;
     try {
-      await fetch(`/api/leaves/${leaveId}/approve`, {
+      const res = await fetch(`/api/leaves/${leaveId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name, status })
+        body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name, status, userRole: selectedUser.activeRole || selectedUser.role })
       });
+      const data = await safeJson(res);
+      if (data.error) { toast(data.error, 'error', 'Authorization Failed'); return; }
       toast('Leave request approved', 'success', 'Approved');
       
       // Reload leaves, employees, audits
@@ -1033,11 +1124,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   const handleDeclineLeave = async (leaveId: string) => {
     if (!selectedUser || !selectedCompany) return;
     try {
-      await fetch(`/api/leaves/${leaveId}/decline`, {
+      const res = await fetch(`/api/leaves/${leaveId}/decline`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name })
+        body: JSON.stringify({ userId: selectedUser.id, userName: selectedUser.name, userRole: selectedUser.activeRole || selectedUser.role })
       });
+      const data = await safeJson(res);
+      if (data.error) { toast(data.error, 'error', 'Authorization Failed'); return; }
       toast('Leave request declined', 'info', 'Declined');
       
       // Reload leaves, employees, audits
@@ -1438,6 +1531,27 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
+  const handleMarkThreadRead = async (threadId: string) => {
+    if (!selectedCompany || !selectedUser) return;
+    try {
+      const res = await fetch('/api/chat/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId: selectedCompany.id, userId: selectedUser.id, threadId })
+      });
+      const updatedRead = await safeJson(res);
+      setChatReads(prev => {
+        const existing = prev.find(r => r.threadId === threadId);
+        if (existing) {
+          return prev.map(r => r.threadId === threadId ? updatedRead : r);
+        }
+        return [...prev, updatedRead];
+      });
+    } catch (err) {
+      console.error('Failed to mark thread read', err);
+    }
+  };
+
   const handleCreatePoll = async (poll: { companyId: string; title: string; description: string; category: string; createdBy: string; createdByName: string; anonymous: boolean; endDate: string; options: { label: string; nomineeId?: string; nomineeName?: string }[] }) => {
     try {
       const res = await fetch('/api/polls', {
@@ -1459,6 +1573,22 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     try {
       await fetch(`/api/polls/${pollId}/close`, { method: 'POST' });
       setPolls(prev => prev.map(p => p.id === pollId ? { ...p, status: 'Closed' as const } : p));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdatePoll = async (pollId: string, updates: { endDate?: string; status?: string }) => {
+    try {
+      const res = await fetch(`/api/polls/${pollId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const updated = await safeJson(res);
+        setPolls(prev => prev.map(p => p.id === pollId ? { ...p, ...updated } : p));
+      }
     } catch (err) {
       console.error(err);
     }
@@ -3054,6 +3184,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
 
 
+    // Show login page if not authenticated
+    if (!authLoading && !token) {
+      return <LoginPage />;
+    }
+
     if (loading || !selectedCompany || !selectedUser) {
       return (
         <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans">
@@ -3086,6 +3221,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
 
   return (
+    <>
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans">
       {/* Dynamic Left Sidebar Rail */}
       <Sidebar
@@ -3098,23 +3234,24 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         }}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        customRoles={customRoles}
+        pendingApprovals={pendingApprovals}
       />
 
       {/* Main Content Layout Container */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Dynamic Context Header */}
         <Header
-          companies={companies}
-          selectedCompany={selectedCompany}
-          onSelectCompany={handleSelectCompany}
-          users={users}
           selectedUser={selectedUser}
-          onSelectUser={handleSelectUser}
           notificationCount={notificationCount}
+          pendingApprovalCount={pendingApprovals.filter(a => a.status === 'Pending' && a.companyId === selectedCompany.id).length}
+          pendingApprovals={pendingApprovals}
+          selectedCompanyId={selectedCompany.id}
           onClearNotifications={handleClearNotifications}
           onSearch={setSearchTerm}
           onSwitchRole={handleSwitchRole}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onNavigateView={setActiveView}
         />
 
         {/* Dynamic Dashboard/Controls View stage */}
@@ -3207,6 +3344,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               selectedCompany={selectedCompany}
               selectedUser={selectedUser}
               users={users}
+              customRoles={customRoles}
               employees={employees}
               bankAccountUpdates={bankAccountUpdates}
               onRequestBankAccountUpdate={handleRequestBankAccountUpdate}
@@ -3392,12 +3530,15 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               emailTemplates={emailTemplates}
               onAddEmailTemplate={handleAddEmailTemplate}
               chatMessages={chatMessages}
+              chatReads={chatReads}
               onSendChatMessage={handleSendChatMessage}
+              onMarkThreadRead={handleMarkThreadRead}
               polls={polls}
               pollOptions={pollOptions}
               pollVotes={pollVotes}
               onCreatePoll={handleCreatePoll}
               onClosePoll={handleClosePoll}
+              onUpdatePoll={handleUpdatePoll}
               onVotePoll={handleVotePoll}
               companyImages={companyImages}
               onUploadCompanyImage={handleUploadCompanyImage}
@@ -3446,6 +3587,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onApproveExitRequest={handleApproveExitRequest}
               onRejectExitRequest={handleRejectExitRequest}
               onUpdateCompanySettings={handleUpdateCompanySettings}
+              onCreateRole={handleCreateRole}
+              onUpdateRole={handleUpdateRole}
+              onDeleteRole={handleDeleteRole}
+              approvalPolicies={approvalPolicies}
+              pendingApprovals={pendingApprovals}
+              onUpdateApprovalPolicies={handleUpdateApprovalPolicies}
+              onRefreshPendingApprovals={handleRefreshPendingApprovals}
             />
           )}
           </FadeIn>
@@ -3574,5 +3722,18 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         </div>
       )}
     </div>
+
+    {/* Floating Team Chat — always visible */}
+    <FloatingChat
+      selectedCompany={selectedCompany}
+      selectedUser={selectedUser}
+      departments={departments}
+      employees={employees}
+      chatMessages={chatMessages}
+      chatReads={chatReads}
+      onSendChatMessage={handleSendChatMessage}
+      onMarkThreadRead={handleMarkThreadRead}
+    />
+    </>
   );
 }

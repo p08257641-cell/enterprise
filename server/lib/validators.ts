@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 
 export const LoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1).max(128),
+  password: z.string().max(128),
 });
 
 export const CreateEmployeeSchema = z.object({

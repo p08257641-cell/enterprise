@@ -100,19 +100,27 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
       {lmsTab === 'progress' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
           <table className="w-full text-left">
-            <TableHead cols={[{ label: 'Employee' }, { label: 'Course' }, { label: 'Progress', right: true }, { label: 'Status' }]} />
+            <TableHead cols={[{ label: 'Employee' }, { label: 'Course' }, { label: 'Progress', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
               {lmsCourses.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-10 text-center fs-xs text-slate-400">No courses available. Add courses to track employee progress.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-10 text-center fs-xs text-slate-400">No courses available. Add courses to track employee progress.</td></tr>
               ) : (
                 localEmployees.slice(0, 6).map((emp, i) => {
                   const course = lmsCourses[i % lmsCourses.length] || { title: 'No course', category: 'General', level: 'Beginner', duration: '--' };
                   return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 cursor-pointer" onClick={() => progressModal.open({ emp, course, prog: 0 })}>
+                    <tr key={emp.id} className="hover:bg-slate-50/40">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{course.title}</td>
                       <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: '0%' }} /></div><span className="text-[10px] font-sans tabular-nums text-slate-500 w-8">0%</span></div></td>
                       <td className="px-4 py-3"><Badge label="Not Started" variant="default" /></td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); progressModal.open({ emp, course, prog: 0 }); }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                        >
+                          <i className="bi bi-eye text-[11px]"></i> View
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
