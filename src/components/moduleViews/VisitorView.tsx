@@ -84,89 +84,86 @@ const printVisitorBadge = (visitor: { id: string; name: string; host: string; co
 
 const printEmployeeIdCard = (emp: { firstName: string; lastName: string; employeeNumber: string; department: string; designation: string; email: string; branch: string; joiningDate: string; photoUrl?: string }, companyName: string) => {
   const initials = `${emp.firstName[0]}${emp.lastName[0]}`;
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>ID Card - ${emp.employeeNumber}</title>
+  const bars = Array.from({length: 45}, () => `<div class="bar" style="height:${16 + Math.floor(Math.random() * 12)}px;"></div>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>ID Card - ${emp.employeeNumber}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 24px; min-height: 100vh; background: #f1f5f9; padding: 40px 20px; }
-  .card { width: 3.4in; height: 2.16in; border-radius: 16px; position: relative; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
-  .front { background: white; display: flex; overflow: hidden; }
-  .front-left { width: 40%; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px; color: white; position: relative; overflow: hidden; }
-  .front-left::before { content: ''; position: absolute; top: -25px; right: -25px; width: 70px; height: 70px; background: rgba(255,255,255,0.12); border-radius: 50%; }
-  .front-left::after { content: ''; position: absolute; bottom: -15px; left: -15px; width: 50px; height: 50px; background: rgba(255,255,255,0.08); border-radius: 50%; }
-  .avatar { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; letter-spacing: -1px; position: relative; z-index: 1; }
-  .emp-id { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; margin-top: 8px; opacity: 0.9; font-family: monospace; position: relative; z-index: 1; }
-  .emp-tag { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 12px; margin-top: 5px; position: relative; z-index: 1; }
-  .front-right { flex: 1; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
-  .front-right .name { font-size: 16px; font-weight: 800; color: #065f46; line-height: 1.15; letter-spacing: -0.3px; }
-  .front-right .role { font-size: 9px; font-weight: 600; color: #059669; margin-top: 2px; }
-  .front-right .details { margin-top: auto; }
-  .front-right .detail-row { font-size: 8px; font-weight: 500; color: #6b7280; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
-  .front-right .detail-row i { font-size: 7px; color: #10b981; }
-  .front-right .company-label { font-size: 7px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a7f3d0; margin-top: 6px; }
-  .front-right .qr { position: absolute; bottom: 14px; right: 14px; width: 44px; height: 44px; background: white; border-radius: 8px; padding: 3px; box-shadow: 0 2px 8px rgba(5,150,105,0.2); border: 1.5px solid #d1fae5; }
-  .front-right .qr img { width: 100%; height: 100%; display: block; border-radius: 5px; }
-  .back { background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%); color: white; padding: 18px 22px; display: flex; flex-direction: column; justify-content: space-between; }
-  .back::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #fbbf24, #f97316, #ef4444, #ec4899, #8b5cf6, #3b82f6, #10b981); }
-  .back .stripe-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6, #ec4899, #ef4444, #f97316, #fbbf24); }
-  .back .barcode { position: relative; z-index: 1; background: rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 12px; text-align: center; backdrop-filter: blur(4px); }
-  .back .barcode-label { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
-  .back .barcode-lines { display: flex; justify-content: center; gap: 2px; height: 24px; align-items: flex-end; }
-  .back .bar { width: 2px; background: rgba(255,255,255,0.6); border-radius: 1px; }
-  .back .barcode-text { font-size: 8px; font-weight: 600; font-family: monospace; letter-spacing: 2px; margin-top: 4px; opacity: 0.8; }
-  .back .info-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .back .info-item { font-size: 8px; opacity: 0.85; }
-  .back .info-item .label { font-size: 6px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.6; margin-bottom: 1px; color: white; }
-  .back .footer { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; }
-  .back .emergency { font-size: 8px; font-weight: 600; opacity: 0.85; }
-  .back .emergency span { display: block; font-size: 7px; font-weight: 400; opacity: 0.7; }
-  .back .company-back { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5; }
-  .side-label { font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: -16px; }
-  @media print { body { background: white; padding: 20px; gap: 16px; } .card { box-shadow: none; border: 2px solid #e2e8f0; page-break-inside: avoid; } }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #e2e8f0; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 40px; margin: 0; }
+  .card { width: 3.375in; height: 2.125in; background: #ffffff; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #cbd5e1; border-radius: 8px; display: flex; }
+  .card.front { flex-direction: row; }
+  .card.back { flex-direction: column; }
+  .sidebar { width: 1.1in; background: #0f172a; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; color: white; position: relative; }
+  .sidebar::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px; background: #3b82f6; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; background: #ffffff; color: #0f172a; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 2; }
+  .emp-id-label { font-size: 7px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
+  .emp-id { font-size: 11px; font-weight: 600; font-family: monospace; letter-spacing: 1px; margin-top: 3px; z-index: 2; }
+  .main { flex: 1; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+  .company-header { font-size: 11px; font-weight: 700; color: #0f172a; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; }
+  .company-header span { color: #3b82f6; margin-right: 4px; }
+  .name-wrapper { margin-top: auto; margin-bottom: auto; padding-right: 48px; }
+  .name { font-size: 15px; font-weight: 700; color: #0f172a; line-height: 1.2; text-transform: uppercase; }
+  .role { font-size: 9px; font-weight: 600; color: #3b82f6; margin-top: 4px; }
+  .info-group { margin-top: auto; display: flex; flex-direction: column; gap: 3px; }
+  .info-row { font-size: 7.5px; color: #475569; display: flex; align-items: center; gap: 4px; font-weight: 500; }
+  .qr { position: absolute; bottom: 16px; right: 16px; width: 46px; height: 46px; border: 1px solid #e2e8f0; padding: 2px; border-radius: 4px; background: white; }
+  .qr img { width: 100%; height: 100%; display: block; }
+  
+  .back-header { background: #0f172a; color: white; padding: 12px 16px; font-size: 9px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; }
+  .back-content { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  .return-text { font-size: 7.5px; color: #475569; line-height: 1.5; font-weight: 500; text-align: center; margin: 0 10px; }
+  .barcode-box { display: flex; flex-direction: column; align-items: center; margin: 8px 0; }
+  .barcode { display: flex; align-items: flex-end; gap: 1px; height: 26px; }
+  .bar { width: 1.5px; background: #0f172a; border-radius: 1px; }
+  .barcode-text { font-size: 9px; font-weight: 600; font-family: monospace; letter-spacing: 2px; margin-top: 6px; color: #0f172a; }
+  .back-footer { border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; justify-content: space-between; font-size: 7px; color: #64748b; font-weight: 500; }
+  .label-text { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 2px; margin-bottom: -16px; margin-top: 12px; }
+  @media print {
+    body { background: white; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #cbd5e1; -webkit-print-color-adjust: exact; print-color-adjust: exact; page-break-inside: avoid; }
+    .label-text { display: none; }
+  }
 </style></head><body>
-<div class="side-label">Front</div>
+<div class="label-text">Front</div>
 <div class="card front">
-  <div class="front-left">
-    <div class="avatar">${initials}</div>
+  <div class="sidebar">
+    ${emp.photoUrl ? `<img src="${emp.photoUrl}" class="avatar" style="object-fit:cover; border:none;" />` : `<div class="avatar">${initials}</div>`}
+    <div class="emp-id-label">Employee ID</div>
     <div class="emp-id">${emp.employeeNumber}</div>
-    <div class="emp-tag">EMPLOYEE</div>
   </div>
-  <div class="front-right" style="position:relative;">
-    <div>
+  <div class="main">
+    <div class="company-header"><span>◆</span> ${companyName}</div>
+    <div class="name-wrapper">
       <div class="name">${emp.firstName} ${emp.lastName}</div>
       <div class="role">${emp.designation}</div>
     </div>
-    <div class="details">
-      <div class="detail-row"><i class="bi bi-building"></i> ${emp.department} · ${emp.branch}</div>
-      <div class="detail-row"><i class="bi bi-envelope"></i> ${emp.email}</div>
-      <div class="detail-row"><i class="bi bi-calendar3"></i> Joined ${emp.joiningDate}</div>
-      <div class="company-label">${companyName}</div>
+    <div class="info-group">
+      <div class="info-row"><strong>DEP:</strong> ${emp.department}</div>
+      <div class="info-row"><strong>LOC:</strong> ${emp.branch}</div>
     </div>
-    <div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(emp.employeeNumber)}&bgcolor=ffffff&color=059669" alt="QR"></div>
+    <div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(emp.employeeNumber)}&bgcolor=ffffff&color=0f172a" alt="QR"></div>
   </div>
 </div>
-<div class="side-label">Back</div>
+<div class="label-text">Back</div>
 <div class="card back">
-  <div class="stripe-bottom" style="top:0;bottom:auto;"></div>
-  <div class="barcode">
-    <div class="barcode-label">Employee Barcode</div>
-    <div class="barcode-lines">
-      ${Array.from({length: 30}, () => `<div class="bar" style="height:${8 + Math.floor(Math.random() * 16)}px;"></div>`).join('')}
+  <div class="back-header">
+    <div>EMPLOYEE IDENTIFICATION</div>
+    <div>${emp.joiningDate}</div>
+  </div>
+  <div class="back-content">
+    <div class="return-text">
+      This card is the property of <strong>${companyName}</strong>.<br>
+      If found, please return to the nearest company office or contact security.
     </div>
-    <div class="barcode-text">${emp.employeeNumber}</div>
+    <div class="barcode-box">
+      <div class="barcode">${bars}</div>
+      <div class="barcode-text">${emp.employeeNumber}</div>
+    </div>
+    <div class="back-footer">
+      <div>Valid Until: PERMANENT</div>
+      <div>Auth: HR DEPT</div>
+    </div>
   </div>
-  <div class="info-grid">
-    <div class="info-item"><div class="label">Department</div>${emp.department}</div>
-    <div class="info-item"><div class="label">Branch</div>${emp.branch}</div>
-    <div class="info-item"><div class="label">Date of Issue</div>${new Date().toLocaleDateString()}</div>
-    <div class="info-item"><div class="label">Valid Until</div>Permanent</div>
-  </div>
-  <div class="footer">
-    <div class="emergency">Emergency: Dial 911<span>Security: Ext. 100</span></div>
-    <div class="company-back">${companyName}</div>
-  </div>
-  <div class="stripe-bottom"></div>
 </div>
 </body></html>`;
   const win = window.open('', '_blank');

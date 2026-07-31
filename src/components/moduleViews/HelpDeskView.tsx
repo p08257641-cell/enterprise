@@ -38,7 +38,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
     const { sub } = parseActiveView(activeView);
     if (sub === 'sla') return 'sla';
     if (sub === 'kb') return 'kb';
-    return 'create';
+    return 'queue';
   };
   const [hdTab, setHdTab] = useState<'queue' | 'create' | 'kb' | 'sla'>(initialHdTab);
   useEffect(() => { setHdTab(initialHdTab()); }, [activeView]);

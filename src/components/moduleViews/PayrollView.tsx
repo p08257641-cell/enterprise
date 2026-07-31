@@ -84,7 +84,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
   const payslipModal = useRowModal<typeof payslips[0]>();
-  const taxModal = useRowModal<typeof localEmployees[0] & { fedTax: number; stateTax: number; ss: number; medicare: number; net: number }>();
+  const taxModal = useRowModal<typeof localEmployees[0] & { net: number; taxesList?: { name: string; value: number }[]; benefitsList?: { name: string; value: number }[] }>();
   const otModal = useRowModal<typeof localEmployees[0] & { otHours: number; otRate: number; otPay: number }>();
   
   // Group management state
@@ -637,8 +637,32 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
                             <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
-                            <td className="px-4 py-3 text-right">
-                              <button onClick={e => { e.stopPropagation(); setSelectedSlipId(slip.id); }} className="text-blue-600 hover:text-blue-800 data-value-small fw-semibold cursor-pointer mr-3">View Details</button>
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                              <button onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setSelectedSlipId(slip.id); 
+                                window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                              }} className="text-blue-600 hover:text-blue-800 data-value-small fw-semibold cursor-pointer mr-3">
+                                View Details
+                              </button>
+                              <button onClick={(e) => {
+                                e.stopPropagation();
+                                downloadPDF(`payslip-${slip.id}`, `Payslip — ${slip.period}`, payslipPDFBody({
+                                  employeeName: slip.employeeName,
+                                  employeeId: slip.employeeId,
+                                  department: slip.department,
+                                  period: slip.period,
+                                  baseSalary: slip.baseSalary || slip.gross,
+                                  gross: slip.gross,
+                                  deductions: slip.deductions || 0,
+                                  net: slip.net || 0,
+                                  status: slip.status,
+                                  customBenefitsTotal: slip.customBenefitsTotal || 0,
+                                  breakdown: slip.breakdown,
+                                }), selectedCompany);
+                              }} className="text-slate-500 hover:text-slate-700 data-value-small fw-semibold cursor-pointer" title="Download PDF">
+                                <i className="bi bi-printer"></i> Print
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -750,11 +774,16 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     const assignedTaxes = emp.assignedTaxes ? (typeof emp.assignedTaxes === 'string' ? JSON.parse(emp.assignedTaxes) : emp.assignedTaxes) : [];
                     const assignedBenefits = emp.assignedBenefits ? (typeof emp.assignedBenefits === 'string' ? JSON.parse(emp.assignedBenefits) : emp.assignedBenefits) : [];
                     
+                    const taxesBreakdown: { name: string; value: number }[] = [];
+                    const benefitsBreakdown: { name: string; value: number }[] = [];
+
                     if (Array.isArray(assignedTaxes)) {
                       assignedTaxes.forEach((taxId: string) => {
                         const taxConfig = (taxCfg.customTaxes || []).find((t: any) => t.id === taxId);
                         if (taxConfig) {
-                          totalCustomTax += taxConfig.type === 'Percentage' ? (emp.salary * (taxConfig.value / 100)) : taxConfig.value;
+                          const val = taxConfig.type === 'Percentage' ? (emp.salary * (taxConfig.value / 100)) : taxConfig.value;
+                          totalCustomTax += val;
+                          taxesBreakdown.push({ name: taxConfig.name, value: val });
                         }
                       });
                     }
@@ -763,10 +792,28 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       assignedBenefits.forEach((benefitId: string) => {
                         const benefitConfig = (taxCfg.customBenefits || []).find((b: any) => b.id === benefitId);
                         if (benefitConfig) {
-                          totalCustomBenefit += benefitConfig.type === 'Percentage' ? (emp.salary * (benefitConfig.value / 100)) : benefitConfig.value;
+                          const val = benefitConfig.type === 'Percentage' ? (emp.salary * (benefitConfig.value / 100)) : benefitConfig.value;
+                          totalCustomBenefit += val;
+                          benefitsBreakdown.push({ name: benefitConfig.name, value: val });
                         }
                       });
                     }
+
+                    const allTaxesBreakdown = (taxCfg.customTaxes || []).map((t: any) => {
+                      const isAssigned = Array.isArray(assignedTaxes) && assignedTaxes.includes(t.id);
+                      const val = isAssigned
+                        ? (t.type === 'Percentage' ? (emp.salary * (t.value / 100)) : t.value)
+                        : 0;
+                      return { name: t.name, value: val };
+                    });
+
+                    const allBenefitsBreakdown = (taxCfg.customBenefits || []).map((b: any) => {
+                      const isAssigned = Array.isArray(assignedBenefits) && assignedBenefits.includes(b.id);
+                      const val = isAssigned
+                        ? (b.type === 'Percentage' ? (emp.salary * (b.value / 100)) : b.value)
+                        : 0;
+                      return { name: b.name, value: val };
+                    });
 
                     const net = Math.round(emp.salary + totalCustomBenefit - totalCustomTax);
 
@@ -779,7 +826,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${net.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right">
                         <button
-                          onClick={(e) => { e.stopPropagation(); taxModal.open({ ...emp, fedTax: 0, stateTax: 0, ss: 0, medicare: 0, net }); }}
+                          onClick={(e) => { e.stopPropagation(); taxModal.open({ ...emp, net, taxesList: allTaxesBreakdown, benefitsList: allBenefitsBreakdown }); }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
                           View
@@ -881,26 +928,39 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         </ViewModal>
       )}
       {taxModal.selected && (
-        <ViewModal title={`${taxModal.selected.firstName} ${taxModal.selected.lastName}`} subtitle="Tax Breakdown" onClose={taxModal.close}>
+        <ViewModal title={`${taxModal.selected.firstName} ${taxModal.selected.lastName}`} subtitle="Tax & Deductions Breakdown" onClose={taxModal.close}>
           <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-5 -mt-1" style={{ background: '#7c3aed0d', border: '1px solid #7c3aed1f' }}>
             <div className="h-11 w-11 rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm" style={{ background: '#7c3aed' }}><i className="bi bi-percent fs-lg" /></div>
             <div className="min-w-0">
               <div className="fs-sm fw-bold text-slate-900 truncate">{taxModal.selected.firstName} {taxModal.selected.lastName}</div>
-              <div className="fs-xs text-slate-500 truncate">Tax Breakdown</div>
+              <div className="fs-xs text-slate-500 truncate">Tax & Deductions Breakdown</div>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: 'Gross (Salary)', value: `$${taxModal.selected.salary.toLocaleString()}`, icon: 'bi bi-cash' },
-              { label: 'Federal Tax', value: `-$${taxModal.selected.fedTax.toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Deductions' },
-              { label: 'State Tax', value: `-$${taxModal.selected.stateTax.toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Deductions' },
-              { label: 'Social Security', value: `-$${taxModal.selected.ss.toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Deductions' },
-              { label: 'Medicare', value: `-$${taxModal.selected.medicare.toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Deductions' },
-              { label: 'Net', value: `$${taxModal.selected.net.toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Net Pay' },
+              { label: 'Gross (Salary)', value: `$${taxModal.selected.salary.toLocaleString()}`, icon: 'bi bi-cash', variant: 'normal' },
+              ...(taxModal.selected.taxesList || []).map((t: any) => ({
+                label: t.name,
+                value: `-$${Math.round(t.value).toLocaleString()}`,
+                icon: 'bi bi-dash-circle',
+                variant: 'danger'
+              })),
+              ...(taxModal.selected.benefitsList || []).map((b: any) => ({
+                label: b.name,
+                value: `+$${Math.round(b.value).toLocaleString()}`,
+                icon: 'bi bi-plus-circle',
+                variant: 'success'
+              })),
+              { label: 'Net Pay', value: `$${taxModal.selected.net.toLocaleString()}`, icon: 'bi bi-wallet2', variant: 'net' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
-                <div className="data-value fw-semibold text-slate-900">{f.value}</div>
+                <div className={`data-value fw-semibold ${
+                  f.variant === 'danger' ? 'text-rose-600' :
+                  f.variant === 'success' ? 'text-emerald-600' :
+                  f.variant === 'net' ? 'text-emerald-700 fw-bold' :
+                  'text-slate-900'
+                }`}>{f.value}</div>
               </div>
             ))}
           </div>

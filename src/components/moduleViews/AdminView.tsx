@@ -187,7 +187,7 @@ const [deptParent, setDeptParent] = useState('');
                           <td className="px-4 py-3.5">
                             <div className="flex flex-wrap items-center gap-2">
                               <div className={`h-2 w-2 rounded-full shrink-0 ${!dept.parentId ? 'bg-slate-900' : 'bg-slate-300'}`}></div>
-                              <span className="fs-xs fw-semibold text-slate-900">{dept.name}</span>
+                              <span className="fs-sm fw-semibold text-slate-900">{dept.name}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3.5">
@@ -195,7 +195,7 @@ const [deptParent, setDeptParent] = useState('');
                               <select
                                 value={dept.parentId || ''}
                                 onChange={(e) => onUpdateDepartment(dept.id, { parentId: e.target.value || undefined })}
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] fw-medium text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 min-w-[130px]"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 fs-sm fw-medium text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 min-w-[130px]"
                               >
                                 <option value="">— Root (Top Level)</option>
                                 {companyDepts.filter(d => d.id !== dept.id).map(d => (
@@ -203,16 +203,16 @@ const [deptParent, setDeptParent] = useState('');
                                 ))}
                               </select>
                             ) : (
-                              <span className="fs-xs text-slate-500">{parentName || '— Root'}</span>
+                              <span className="fs-sm text-slate-500">{parentName || '— Root'}</span>
                             )}
                           </td>
-                          <td className="px-4 py-3.5 fs-xs font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
-                          <td className="px-4 py-3.5 fs-xs font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
-                          <td className="px-4 py-3.5 fs-xs text-slate-600">
+                          <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
+                          <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
+                          <td className="px-4 py-3.5 fs-sm text-slate-600">
                             {manager ? `${manager.firstName} ${manager.lastName}` : '—'}
                           </td>
                           <td className="px-4 py-3.5 text-right" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
-                            {isAdmin && <button onClick={e => { e.stopPropagation(); setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); }} className="text-[11px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
+                            {isAdmin && <button onClick={e => { e.stopPropagation(); setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); }} className="fs-sm fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
                           </td>
                         </tr>
                       );

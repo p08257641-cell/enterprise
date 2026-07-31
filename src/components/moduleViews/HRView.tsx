@@ -12,6 +12,7 @@ export const HRView: React.FC<ModuleViewsProps> = (props) => {
       activeView={activeView}
       selectedCompany={selectedCompany}
       selectedUser={selectedUser}
+      users={props.users || []}
       employees={employees}
       departments={departments}
       branches={branches}

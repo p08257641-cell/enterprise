@@ -3385,6 +3385,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               auditLogs={auditLogs}
               onSaveWorkflow={handleSaveWorkflow}
               onToggleWorkflow={handleToggleWorkflow}
+              invoices={invoices}
+              employees={employees}
+              expenses={expenses}
+              inventory={inventory}
+              leads={leads}
+              attendance={attendance}
             />
           ) : activeView === 'ai-copilot' || activeView.startsWith('ai-') ? (
             <AIAssistant selectedCompany={selectedCompany} activeView={activeView} />

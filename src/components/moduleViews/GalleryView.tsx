@@ -153,15 +153,22 @@ export const GalleryView: React.FC<ModuleViewsProps> = (props) => {
 
       {/* Image Grid */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-slate-400 fs-sm">
-          <i className="bi bi-images fs-3xl mb-3 block"></i>
-          {localImages.length === 0 ? 'No images yet. Upload the first one!' : 'No images in this category.'}
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-400 mb-5 shadow-xs border border-indigo-100">
+            <i className="bi bi-images text-3xl"></i>
+          </div>
+          <div className="fs-sm fw-bold text-slate-900 mb-1">{localImages.length === 0 ? 'No images yet' : 'No images in this category'}</div>
+          <p className="fs-xs text-slate-400 max-w-xs mx-auto">{localImages.length === 0 ? 'Upload your first company image to get started.' : 'Try selecting a different category filter above.'}</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map(img => (
-            <div key={img.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow group">
-              <div className="relative aspect-video bg-slate-100 cursor-pointer" onClick={async () => {
+          {filtered.map(img => {
+            const catIcon = img.category === 'Company Events' ? 'bi-calendar-event' : img.category === 'Team Building' ? 'bi-people' : img.category === 'Products' ? 'bi-box-seam' : img.category === 'Awards' ? 'bi-trophy' : img.category === 'Office Life' ? 'bi-building' : 'bi-image';
+            const catGradient = img.category === 'Company Events' ? 'from-indigo-100 to-purple-100' : img.category === 'Team Building' ? 'from-emerald-100 to-teal-100' : img.category === 'Products' ? 'from-amber-100 to-orange-100' : img.category === 'Awards' ? 'from-yellow-100 to-amber-100' : 'from-slate-100 to-slate-200';
+            return (
+            <div key={img.id} className="group bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-indigo-200 transition-all duration-300 relative">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
+              <div className={`relative aspect-video bg-gradient-to-br ${catGradient} cursor-pointer flex items-center justify-center`} onClick={async () => {
                 setViewImage(img);
                 setLoadingImage(true);
                 try {
@@ -171,24 +178,26 @@ export const GalleryView: React.FC<ModuleViewsProps> = (props) => {
                 } catch { setViewImageData(''); }
                 setLoadingImage(false);
               }}>
-                <div className="absolute inset-0 flex items-center justify-center text-slate-300">
-                  <i className="bi bi-image fs-2xl"></i>
+                <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-indigo-500 transition-colors duration-300">
+                  <i className={`bi ${catIcon} text-3xl`}></i>
+                  <span className="text-[10px] fw-semibold uppercase tracking-wider">Click to view</span>
                 </div>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
               </div>
-              <div className="p-3">
+              <div className="p-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h4 className="fs-xs fw-bold text-slate-900 truncate">{img.title}</h4>
-                    {img.description && <p className="fs-[10px] text-slate-500 truncate mt-0.5">{img.description}</p>}
+                    <h4 className="fs-xs fw-bold text-slate-900 truncate group-hover:text-indigo-900 transition-colors">{img.title}</h4>
+                    {img.description && <p className="text-[10px] text-slate-500 truncate mt-0.5">{img.description}</p>}
                   </div>
                   <Badge label={img.category} variant="info" />
                 </div>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                  <span className="text-[10px] text-slate-400">{img.uploadedByName} · {new Date(img.createdAt).toLocaleDateString()}</span>
+                <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100">
+                  <span className="text-[10px] text-slate-400 flex items-center gap-1"><i className="bi bi-person text-[9px]"></i> {img.uploadedByName} · {new Date(img.createdAt).toLocaleDateString()}</span>
                   {canManage && (
                     <button
                       onClick={(e) => { e.stopPropagation(); if (confirm('Delete this image?')) onDeleteCompanyImage(img.id); }}
-                      className="text-slate-300 hover:text-red-500 cursor-pointer transition-colors"
+                      className="text-slate-300 hover:text-red-500 cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <i className="bi bi-trash fs-xs"></i>
                     </button>
@@ -196,7 +205,8 @@ export const GalleryView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

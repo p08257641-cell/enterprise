@@ -154,25 +154,31 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                         </div>
                         <span className="text-[10px] font-sans tabular-nums bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-400">{colTasks.length}</span>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {colTasks.map(task => (
                           <div key={task.id}
                             draggable={isAdmin}
                             onDragStart={(e) => onDragStart(e, task.id)}
                             onDragEnd={onDragEnd}
                             onClick={() => taskModal.open(task)}
-                            className={`bg-white border rounded-lg p-3 shadow-xs transition-all ${draggedTaskId === task.id ? 'opacity-40 scale-95 border-dashed' : 'cursor-grab hover:border-slate-300 hover:shadow-sm active:cursor-grabbing'} border-slate-200`}>
-                            <div className="fs-xs fw-semibold text-slate-900 mb-2 leading-tight">{task.title}</div>
-                            <div className="flex items-center justify-between">
+                            className={`group bg-white border rounded-xl p-3 shadow-xs transition-all duration-300 ${draggedTaskId === task.id ? 'opacity-40 scale-95 border-dashed ring-2 ring-indigo-500/50' : 'cursor-grab hover:border-indigo-200 hover:shadow-md hover:-translate-y-0.5 active:cursor-grabbing hover:ring-1 hover:ring-indigo-100'} border-slate-200 relative overflow-hidden`}>
+                            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-400 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="fs-xs fw-semibold text-slate-900 mb-2.5 leading-snug group-hover:text-indigo-900 transition-colors">{task.title}</div>
+                            <div className="flex items-center justify-between mb-2">
                               <span className={`data-value-small fw-bold border px-1.5 py-0.5 rounded ${priorityColor(task.priority)}`}>{task.priority}</span>
-                              <span className="text-[10px] text-slate-400 font-sans tabular-nums">{task.due || '—'}</span>
+                              <span className="text-[10px] text-slate-400 font-sans tabular-nums flex items-center gap-1"><i className="bi bi-calendar-event opacity-70"></i> {task.due || '—'}</span>
                             </div>
-                            <div className="text-[10px] text-slate-400 mt-1.5">{task.assigneeName || 'Unassigned'}</div>
-                            {isAdmin && (
-                              <div className="flex justify-end mt-2 pt-2 border-t border-slate-100">
-                                <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Delete</button>
+                            <div className="flex items-center justify-between mt-1">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[9px] fw-bold border border-indigo-200 shadow-xs">
+                                  {task.assigneeName ? task.assigneeName.charAt(0) : '?'}
+                                </div>
+                                <div className="text-[10px] text-slate-500 fw-medium truncate max-w-[80px]">{task.assigneeName || 'Unassigned'}</div>
                               </div>
-                            )}
+                              {isAdmin && (
+                                <button onClick={(e) => { e.stopPropagation(); onDeleteProjectTask(task.id); }} className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] fw-bold px-1.5 py-1 rounded text-rose-500 hover:bg-rose-50 cursor-pointer" title="Delete Task"><i className="bi bi-trash"></i></button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>

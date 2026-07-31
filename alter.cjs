@@ -1,0 +1,1 @@
+const { Client } = require('pg'); const client = new Client({ connectionString: 'postgresql://postgres:Admin@127.0.0.1:5432/enterprise' }); client.connect().then(() => client.query('ALTER TABLE employees ADD COLUMN "photoUrl" text')).then(() => { console.log('Done'); process.exit(0); }).catch(e => { console.log(e.message); process.exit(0); });

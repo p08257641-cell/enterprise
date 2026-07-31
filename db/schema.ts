@@ -71,6 +71,7 @@ export const employees = pgTable('employees', {
   employeeNumber: text('employeeNumber'),
   firstName: text('firstName'),
   lastName: text('lastName'),
+  photoUrl: text('photoUrl'),
   email: text('email'),
   department: text('department'),
   designation: text('designation'),

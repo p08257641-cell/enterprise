@@ -119,6 +119,7 @@ export interface Employee {
   employeeNumber: string;
   firstName: string;
   lastName: string;
+  photoUrl?: string;
   email: string;
   department: string;
   designation: string;

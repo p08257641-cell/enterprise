@@ -991,7 +991,7 @@ app.get('/api/employees', asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/employees', asyncHandler(async (req, res) => {
-  const { companyId, firstName, lastName, email, department, designation, branch, salary } = req.body;
+  const { companyId, firstName, lastName, photoUrl, email, department, designation, branch, salary } = req.body;
 
   const empId = `emp-${Date.now()}`;
   const empNumber = `EMP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -1002,6 +1002,7 @@ app.post('/api/employees', asyncHandler(async (req, res) => {
     employeeNumber: empNumber,
     firstName,
     lastName,
+    photoUrl,
     email,
     department,
     designation,
@@ -1040,9 +1041,52 @@ app.put('/api/employees/:id', asyncHandler(async (req, res) => {
   
   const oldStatus = emp.status;
   const newStatus = req.body.status || oldStatus;
-  
+
+  const body = { ...req.body };
+  const systemRole = body.role;
+  const systemRoles = body.roles;
+  delete body.role;
+  delete body.roles;
+
+  if (body.assignedTaxes && Array.isArray(body.assignedTaxes)) body.assignedTaxes = JSON.stringify(body.assignedTaxes);
+  if (body.assignedBenefits && Array.isArray(body.assignedBenefits)) body.assignedBenefits = JSON.stringify(body.assignedBenefits);
+
   // Update employee
-  const updated = await dbUpdate(schema.employees, emp.id, req.body);
+  const updated = await dbUpdate(schema.employees, emp.id, body);
+
+  // Sync to User if present
+  const emailToFind = req.body.email || emp.email;
+  const userIdToFind = emp.userId;
+  
+  let user;
+  if (userIdToFind) {
+    user = await dbById<any>(schema.users, userIdToFind);
+  }
+  if (!user && emailToFind) {
+    const allUsers = await dbAll<any>(schema.users);
+    user = allUsers.find(u => u.email === emailToFind);
+  }
+
+  if (user) {
+    const userUpdates: any = {};
+    if (req.body.firstName || req.body.lastName) {
+      const fName = req.body.firstName || emp.firstName;
+      const lName = req.body.lastName || emp.lastName;
+      userUpdates.name = `${fName} ${lName}`;
+    }
+    if (req.body.email) userUpdates.email = req.body.email;
+    if (req.body.department) userUpdates.department = req.body.department;
+    if (req.body.branch) userUpdates.branch = req.body.branch;
+    if (systemRole) {
+      userUpdates.role = systemRole;
+      userUpdates.activeRole = systemRole;
+    }
+    if (systemRoles) userUpdates.roles = systemRoles;
+
+    if (Object.keys(userUpdates).length > 0) {
+      await dbUpdate(schema.users, user.id, userUpdates);
+    }
+  }
   
   // Cross-module sync: When employee is terminated, unassign from active tasks/leads
   if (newStatus === 'Terminated' && oldStatus !== 'Terminated') {
@@ -1067,8 +1111,14 @@ app.put('/api/employees/:id', asyncHandler(async (req, res) => {
     logAudit(updated!.companyId, userId, `${updated!.firstName} ${updated!.lastName}`, 'EMPLOYEE_TERMINATED', 'HR', `Employee terminated. Unassigned from active leads and tasks.`);
   }
   
-  res.json(updated);
-    }));
+  const responseData = {
+    ...updated,
+    assignedTaxes: updated!.assignedTaxes ? JSON.parse(updated!.assignedTaxes) : [],
+    assignedBenefits: updated!.assignedBenefits ? JSON.parse(updated!.assignedBenefits) : [],
+    bankAccount: updated!.bankAccount ? JSON.parse(updated!.bankAccount) : undefined
+  };
+  res.json(responseData);
+}));
 
 // 3.1 HR Leaves
 app.get('/api/leaves', asyncHandler(async (req, res) => {
@@ -1403,11 +1453,76 @@ app.get('/api/payslips', asyncHandler(async (req, res) => {
   let all = await dbAll<any>(schema.payslips);
   if (companyId) all = all.filter((p: any) => p.companyId === companyId);
   if (employeeId) all = all.filter((p: any) => p.employeeId === employeeId);
-  res.json(all);
-    }));
+
+  // Load all employees to resolve assigned taxes/benefits
+  const allEmployees = await dbAll<any>(schema.employees);
+  
+  // Load payroll tax config for company
+  const cfgRows = companyId ? await dbByCompany<any>(schema.payrollTaxConfigs, companyId as string) : [];
+  const cfg = cfgRows[0] || { customTaxes: '[]', customBenefits: '[]' };
+  const customTaxes = typeof cfg.customTaxes === 'string' ? JSON.parse(cfg.customTaxes || '[]') : (cfg.customTaxes || []);
+  const customBenefits = typeof cfg.customBenefits === 'string' ? JSON.parse(cfg.customBenefits || '[]') : (cfg.customBenefits || []);
+
+  const enriched = all.map((slip: any) => {
+    const emp = allEmployees.find((e: any) => e.id === slip.employeeId);
+    if (!emp) {
+      return {
+        ...slip,
+        breakdown: slip.breakdown ? (typeof slip.breakdown === 'string' ? JSON.parse(slip.breakdown) : slip.breakdown) : []
+      };
+    }
+
+    const baseSalary = emp.salary;
+    const assignedTaxes = emp.assignedTaxes ? (typeof emp.assignedTaxes === 'string' ? JSON.parse(emp.assignedTaxes) : emp.assignedTaxes) : [];
+    const assignedBenefits = emp.assignedBenefits ? (typeof emp.assignedBenefits === 'string' ? JSON.parse(emp.assignedBenefits) : emp.assignedBenefits) : [];
+
+    let totalCustomTax = 0;
+    const breakdown: any[] = [];
+
+    if (Array.isArray(assignedTaxes)) {
+      assignedTaxes.forEach((taxId: string) => {
+        const taxConfig = customTaxes.find((t: any) => t.id === taxId);
+        if (taxConfig) {
+          const val = taxConfig.type === 'Percentage' ? (baseSalary * (taxConfig.value / 100)) : taxConfig.value;
+          totalCustomTax += val;
+          breakdown.push({ name: taxConfig.name, amount: Math.round(val), type: 'Tax' });
+        }
+      });
+    }
+
+    let totalCustomBenefit = 0;
+    if (Array.isArray(assignedBenefits)) {
+      assignedBenefits.forEach((benefitId: string) => {
+        const benefitConfig = customBenefits.find((b: any) => b.id === benefitId);
+        if (benefitConfig) {
+          const val = benefitConfig.type === 'Percentage' ? (baseSalary * (benefitConfig.value / 100)) : benefitConfig.value;
+          totalCustomBenefit += val;
+          breakdown.push({ name: benefitConfig.name, amount: Math.round(val), type: 'Benefit' });
+        }
+      });
+    }
+
+    const gross = baseSalary;
+    const deductions = Math.round(totalCustomTax);
+    const net = Math.round(gross + totalCustomBenefit - totalCustomTax);
+
+    return {
+      ...slip,
+      gross,
+      deductions,
+      net,
+      baseSalary,
+      customTaxesTotal: deductions,
+      customBenefitsTotal: Math.round(totalCustomBenefit),
+      breakdown
+    };
+  });
+
+  res.json(enriched);
+}));
 
 app.post('/api/payroll/run', asyncHandler(async (req, res) => {
-  const { companyId, period, structure, userId, userName, employeeIds } = req.body;
+  const { companyId, period, userId, userName, employeeIds } = req.body;
   const allEmployees = await dbAll<any>(schema.employees);
   let compEmployees = allEmployees.filter((e: any) => e.companyId === companyId);
 
@@ -1417,26 +1532,50 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
   }
 
   const allPayslips = await dbAll<any>(schema.payslips);
+  
+  // Load payroll tax config for company
   const cfgRows = companyId ? await dbByCompany<any>(schema.payrollTaxConfigs, companyId) : [];
-  const cfg = cfgRows[0] || DEFAULT_TAX_CONFIG;
-  const incomeTaxRate = Number(cfg.incomeTaxRate ?? DEFAULT_TAX_CONFIG.incomeTaxRate);
-  const socialSecurityRate = Number(cfg.socialSecurityRate ?? DEFAULT_TAX_CONFIG.socialSecurityRate);
-  const medicareRate = Number(cfg.medicareRate ?? DEFAULT_TAX_CONFIG.medicareRate);
-  const allowances = Number(cfg.allowances ?? DEFAULT_TAX_CONFIG.allowances);
-  const healthIns = Number(cfg.healthInsurance ?? DEFAULT_TAX_CONFIG.healthInsurance);
-  const overtimeRate = Number(cfg.overtimeRate ?? DEFAULT_TAX_CONFIG.overtimeRate);
+  const cfg = cfgRows[0] || { customTaxes: '[]', customBenefits: '[]' };
+  
+  const customTaxes = typeof cfg.customTaxes === 'string' ? JSON.parse(cfg.customTaxes || '[]') : (cfg.customTaxes || []);
+  const customBenefits = typeof cfg.customBenefits === 'string' ? JSON.parse(cfg.customBenefits || '[]') : (cfg.customBenefits || []);
+
   const generatedSlips: any[] = [];
 
   for (const emp of compEmployees) {
     const baseSalary = emp.salary;
-    const overtimePay = Math.round(baseSalary * overtimeRate); // Simulated overtime
-    const gross = baseSalary + overtimePay + allowances;
+    const assignedTaxes = emp.assignedTaxes ? (typeof emp.assignedTaxes === 'string' ? JSON.parse(emp.assignedTaxes) : emp.assignedTaxes) : [];
+    const assignedBenefits = emp.assignedBenefits ? (typeof emp.assignedBenefits === 'string' ? JSON.parse(emp.assignedBenefits) : emp.assignedBenefits) : [];
 
-    const tax = Math.round(baseSalary * incomeTaxRate);
-    const socialSec = Math.round(baseSalary * socialSecurityRate);
-    const medicare = Math.round(baseSalary * medicareRate);
-    const deductions = tax + socialSec + medicare + healthIns;
-    const net = gross - deductions;
+    let totalCustomTax = 0;
+    const breakdown: any[] = [];
+
+    if (Array.isArray(assignedTaxes)) {
+      assignedTaxes.forEach((taxId: string) => {
+        const taxConfig = customTaxes.find((t: any) => t.id === taxId);
+        if (taxConfig) {
+          const val = taxConfig.type === 'Percentage' ? (baseSalary * (taxConfig.value / 100)) : taxConfig.value;
+          totalCustomTax += val;
+          breakdown.push({ name: taxConfig.name, amount: Math.round(val), type: 'Tax' });
+        }
+      });
+    }
+
+    let totalCustomBenefit = 0;
+    if (Array.isArray(assignedBenefits)) {
+      assignedBenefits.forEach((benefitId: string) => {
+        const benefitConfig = customBenefits.find((b: any) => b.id === benefitId);
+        if (benefitConfig) {
+          const val = benefitConfig.type === 'Percentage' ? (baseSalary * (benefitConfig.value / 100)) : benefitConfig.value;
+          totalCustomBenefit += val;
+          breakdown.push({ name: benefitConfig.name, amount: Math.round(val), type: 'Benefit' });
+        }
+      });
+    }
+
+    const gross = baseSalary;
+    const deductions = Math.round(totalCustomTax);
+    const net = Math.round(gross + totalCustomBenefit - totalCustomTax);
 
     // Check if payslip already exists for this period and employee
     const existingIndex = allPayslips.findIndex((p: any) => p.employeeId === emp.id && p.period === period);
@@ -1453,21 +1592,8 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
       status: 'Paid',
       baseSalary,
       customTaxesTotal: deductions,
-      customBenefitsTotal: overtimePay + allowances,
-      breakdown: [
-        { name: 'Income Tax', amount: tax, type: 'Tax' },
-        { name: 'Social Security', amount: socialSec, type: 'Tax' },
-        { name: 'Medicare', amount: medicare, type: 'Tax' },
-        { name: 'Health Insurance', amount: healthIns, type: 'Tax' },
-        { name: 'Allowances', amount: allowances, type: 'Benefit' },
-        { name: 'Overtime Pay', amount: overtimePay, type: 'Benefit' }
-      ],
-      overtimePay,
-      allowances,
-      tax,
-      socialSec,
-      medicare,
-      healthIns
+      customBenefitsTotal: Math.round(totalCustomBenefit),
+      breakdown: JSON.stringify(breakdown) as any,
     };
 
     if (existingIndex >= 0) {
@@ -1475,12 +1601,13 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
     } else {
       await dbInsert(schema.payslips, slip);
     }
-    generatedSlips.push(slip);
+    // Return with parsed breakdown to client
+    generatedSlips.push({ ...slip, breakdown });
   }
 
-  logAudit(companyId, userId, userName, 'PAYROLL_RUN', 'Payroll', `Processed monthly payroll for ${period}. Net disbursed: $${generatedSlips.reduce((sum: number, s: any) => sum + s.net, 0).toLocaleString()}`);
+  logAudit(companyId, userId || 'u-system', userName || 'System', 'PAYROLL_RUN', 'Payroll', `Processed monthly payroll for ${period}. Net disbursed: $${generatedSlips.reduce((sum: number, s: any) => sum + s.net, 0).toLocaleString()}`);
   res.json(generatedSlips);
-    }));
+}));
 
 // 3.4.1 Payroll tax / deduction configuration (DB-backed, company-specific)
 const DEFAULT_TAX_CONFIG = {
@@ -1496,20 +1623,24 @@ app.get('/api/payroll-tax-config', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   if (!companyId) return res.status(400).json({ error: 'companyId required' });
   const rows = await dbByCompany<any>(schema.payrollTaxConfigs, companyId as string);
-  res.json(rows[0] || null);
-    }));
+  const row = rows[0] || null;
+  if (row) {
+    return res.json({
+      ...row,
+      customTaxes: row.customTaxes ? (typeof row.customTaxes === 'string' ? JSON.parse(row.customTaxes) : row.customTaxes) : [],
+      customBenefits: row.customBenefits ? (typeof row.customBenefits === 'string' ? JSON.parse(row.customBenefits) : row.customBenefits) : [],
+    });
+  }
+  res.json(null);
+}));
 
 app.put('/api/payroll-tax-config', asyncHandler(async (req, res) => {
-  const { companyId, incomeTaxRate, socialSecurityRate, medicareRate, allowances, healthInsurance, overtimeRate } = req.body;
+  const { companyId, customTaxes, customBenefits } = req.body;
   if (!companyId) return res.status(400).json({ error: 'companyId required' });
   const existing = await dbByCompany<any>(schema.payrollTaxConfigs, companyId);
   const values: any = {
-    incomeTaxRate: Number(incomeTaxRate ?? DEFAULT_TAX_CONFIG.incomeTaxRate),
-    socialSecurityRate: Number(socialSecurityRate ?? DEFAULT_TAX_CONFIG.socialSecurityRate),
-    medicareRate: Number(medicareRate ?? DEFAULT_TAX_CONFIG.medicareRate),
-    allowances: Number(allowances ?? DEFAULT_TAX_CONFIG.allowances),
-    healthInsurance: Number(healthInsurance ?? DEFAULT_TAX_CONFIG.healthInsurance),
-    overtimeRate: Number(overtimeRate ?? DEFAULT_TAX_CONFIG.overtimeRate),
+    customTaxes: customTaxes ? (typeof customTaxes === 'string' ? customTaxes : JSON.stringify(customTaxes)) : JSON.stringify([]),
+    customBenefits: customBenefits ? (typeof customBenefits === 'string' ? customBenefits : JSON.stringify(customBenefits)) : JSON.stringify([]),
     updatedAt: new Date().toISOString(),
   };
   let result;
@@ -1518,9 +1649,16 @@ app.put('/api/payroll-tax-config', asyncHandler(async (req, res) => {
   } else {
     result = await dbInsert(schema.payrollTaxConfigs, { id: `ptc-${Date.now()}`, companyId, ...values });
   }
+
+  const returnedResult = {
+    ...result,
+    customTaxes: result.customTaxes ? (typeof result.customTaxes === 'string' ? JSON.parse(result.customTaxes) : result.customTaxes) : [],
+    customBenefits: result.customBenefits ? (typeof result.customBenefits === 'string' ? JSON.parse(result.customBenefits) : result.customBenefits) : [],
+  };
+
   logAudit(companyId, 'u-acme-admin', 'Alex Mercer', 'PAYROLL_TAX_CONFIG', 'Payroll', `Updated payroll tax/deduction rates for ${companyId}.`);
-  res.json(result);
-    }));
+  res.json(returnedResult);
+}));
 
 // 3.4.1b Attendance Settings (DB-backed, company-specific)
 const DEFAULT_ATTENDANCE_SETTINGS = {

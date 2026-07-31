@@ -32,7 +32,7 @@ export const ROLE_MODULES: Record<string, string[]> = {
   'Operations Department Head': ['Operations', 'Intelligence'],
   'IT Department Head': ['Administration', 'Help Desk', 'POS', 'Intelligence'],
   'Help Desk Admin': ['Help Desk', 'Intelligence', 'Communication', 'Learning Management (LMS)'],
-  'Employee': ['HR', 'Payroll', 'Help Desk', 'Compliance', 'Communication', 'Voting', 'Gallery', 'Learning Management (LMS)'],
+  'Employee': ['HR', 'Payroll', 'Help Desk', 'Operations', 'Compliance', 'Communication', 'Voting', 'Gallery', 'Learning Management (LMS)'],
 };
 
 /**
@@ -175,6 +175,7 @@ export const ROLE_SUBMENUS: Record<string, string[]> = {
   'Employee': [
     'hr-employees', 'hr-attendance', 'hr-leave', 'hr-orgchart', 'hr-performance', 'hr-exit',
     'payroll-slips',
+    'proj-kanban',
     'hd-tickets', 'hd-sla', 'hd-kb',
     'comm-announcements', 'comm-chat', 'comm-email',
     'lms-courses', 'lms-quizzes', 'lms-progress',

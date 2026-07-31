@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, ERPWorkflow, WorkflowBlock, WorkflowTrigger, AuditLog } from '../types';
+import { Company, ERPWorkflow, WorkflowBlock, WorkflowTrigger, AuditLog, Invoice, Employee, Expense, InventoryItem, CRMLead, AttendanceRecord } from '../types';
 import { PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './moduleViews/shared';
 import { parseActiveView } from '../parseActiveView';
 
@@ -17,6 +17,12 @@ interface WorkflowBuilderProps {
   auditLogs: AuditLog[];
   onSaveWorkflow: (workflow: Omit<ERPWorkflow, 'id' | 'createdAt' | 'isActive'>) => void;
   onToggleWorkflow: (id: string, active: boolean) => void;
+  invoices?: Invoice[];
+  employees?: Employee[];
+  expenses?: Expense[];
+  inventory?: InventoryItem[];
+  leads?: CRMLead[];
+  attendance?: AttendanceRecord[];
 }
 
 export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
@@ -27,21 +33,29 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   onToggleWorkflowTrigger,
   auditLogs,
   onSaveWorkflow,
-  onToggleWorkflow
+  onToggleWorkflow,
+  invoices = [],
+  employees = [],
+  expenses = [],
+  inventory = [],
+  leads = [],
+  attendance = []
 }) => {
   const localWorkflows = workflows.filter(w => w.companyId === selectedCompany.id);
   const localTriggers = workflowTriggers.filter(t => t.companyId === selectedCompany.id);
   const localLogs = auditLogs.filter(l => l.companyId === selectedCompany.id && (l.action?.includes('WORKFLOW') || l.action?.includes('TRIGGER') || l.module === 'Workflow & Automation'));
 
-  type WfTab = 'builder' | 'triggers' | 'logs';
+  type WfTab = 'builder' | 'triggers' | 'logs' | 'ai-automations';
   const wfTabFromView = (): WfTab =>
     activeView === 'wf-triggers' ? 'triggers'
       : activeView === 'wf-logs' ? 'logs'
+      : activeView === 'ai-automations' ? 'ai-automations'
         : 'builder';
   const [wfTab, setWfTab] = useState<WfTab>(wfTabFromView());
   useEffect(() => { setWfTab(wfTabFromView()); }, [activeView]);
   const wfTabs: { id: WfTab; label: string; icon: string }[] = [
     { id: 'builder', label: 'Flow Builder', icon: 'bi bi-diagram-3' },
+    { id: 'ai-automations', label: 'AI Automations', icon: 'bi bi-robot text-violet-500' },
     { id: 'triggers', label: 'Triggers', icon: 'bi bi-lightning' },
     { id: 'logs', label: 'Run Logs', icon: 'bi bi-list-check' },
   ];
@@ -262,6 +276,118 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
                 {localTriggers.length === 0 && <EmptyRow cols={4} message="No triggers configured." />}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: AI Automations */}
+      {wfTab === 'ai-automations' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Health Score */}
+            <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col justify-center items-center text-center">
+               <div className="h-20 w-20 rounded-full border-4 border-violet-500 flex items-center justify-center mb-4">
+                 <span className="fs-3xl fw-bold text-slate-900">72</span>
+               </div>
+               <h3 className="fs-sm fw-bold text-slate-900">Automation Health</h3>
+               <p className="text-[11px] text-slate-500 mt-1">Moderate automation. Opportunity to save ~12 hours/week.</p>
+            </div>
+            {/* Anomaly Alerts */}
+            <div className="md:col-span-2 rounded-xl border border-slate-200/80 bg-white p-6 shadow-xs">
+              <h3 className="fs-sm fw-bold text-slate-900 flex items-center gap-2 mb-4">
+                <i className="bi bi-exclamation-triangle-fill text-amber-500"></i> AI Anomaly Alerts
+              </h3>
+              <div className="space-y-3">
+                {invoices.filter(i => i.status === 'Overdue').length > 5 && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
+                    <i className="bi bi-receipt text-amber-600 fs-sm"></i>
+                    <div className="flex-1">
+                      <div className="text-[11px] fw-bold text-slate-900">High volume of overdue invoices</div>
+                      <div className="text-[10px] text-slate-600">Currently {invoices.filter(i => i.status === 'Overdue').length} invoices are overdue. Consider automating payment reminders.</div>
+                    </div>
+                  </div>
+                )}
+                {inventory.filter(i => i.stockLevel < i.reorderLevel).length > 0 && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-100">
+                    <i className="bi bi-box-seam text-red-600 fs-sm"></i>
+                    <div className="flex-1">
+                      <div className="text-[11px] fw-bold text-slate-900">Critical Stock Depletion</div>
+                      <div className="text-[10px] text-slate-600">{inventory.filter(i => i.stockLevel < i.reorderLevel).length} items are below reorder level.</div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <i className="bi bi-graph-up-arrow text-slate-500 fs-sm"></i>
+                  <div className="flex-1">
+                    <div className="text-[11px] fw-bold text-slate-900">Unusual Expense Spike</div>
+                    <div className="text-[10px] text-slate-600">Travel expenses have increased by 45% this month compared to last month.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Smart Suggestions */}
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-6">
+            <h3 className="fs-sm fw-bold text-slate-900 flex items-center gap-2 mb-4">
+              <i className="bi bi-stars text-violet-500"></i> Smart Workflow Suggestions
+            </h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { 
+                  title: 'Auto-Remind Overdue Invoices', 
+                  desc: 'Automatically send email reminders to clients when an invoice is 3 days overdue.', 
+                  trigger: 'Invoice Overdue', 
+                  action: 'Send Email',
+                  blocks: [
+                    { id: 'b1', type: 'Trigger', label: 'Invoice Overdue', value: 'Invoice Overdue', config: { delayDays: 3 } },
+                    { id: 'b2', type: 'Action', label: 'Send Email', value: 'Send Email', config: { template: 'Overdue Reminder' } }
+                  ]
+                },
+                { 
+                  title: 'Low Stock Auto-Reorder', 
+                  desc: 'Draft a purchase order when an inventory item drops below its reorder level.', 
+                  trigger: 'Inventory Low', 
+                  action: 'Create Draft Bill',
+                  blocks: [
+                    { id: 'b1', type: 'Trigger', label: 'Inventory Low', value: 'Inventory Low', config: {} },
+                    { id: 'b2', type: 'Action', label: 'Create Draft Bill', value: 'Create Draft Bill', config: {} }
+                  ]
+                },
+                { 
+                  title: 'New Hire Onboarding', 
+                  desc: 'Assign IT setup tasks and send welcome email when a new employee is registered.', 
+                  trigger: 'Employee Created', 
+                  action: 'Create Support Ticket',
+                  blocks: [
+                    { id: 'b1', type: 'Trigger', label: 'Employee Created', value: 'Employee Created', config: {} },
+                    { id: 'b2', type: 'Action', label: 'Create Support Ticket', value: 'Create Support Ticket', config: { title: 'IT Setup for New Hire' } },
+                    { id: 'b3', type: 'Action', label: 'Send Email', value: 'Send Email', config: { template: 'Welcome to the team!' } }
+                  ]
+                }
+              ].map((sug, idx) => (
+                <div key={idx} className="border border-slate-200 rounded-lg p-4 hover:border-violet-300 hover:shadow-sm transition-all flex flex-col justify-between">
+                  <div>
+                    <h4 className="fs-xs fw-bold text-slate-900">{sug.title}</h4>
+                    <p className="text-[10px] text-slate-500 mt-1 mb-3">{sug.desc}</p>
+                    <div className="flex items-center gap-1.5 text-[9px] fw-medium text-slate-400">
+                       <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{sug.trigger}</span>
+                       <i className="bi bi-arrow-right"></i>
+                       <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{sug.action}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      onSaveWorkflow({ companyId: selectedCompany.id, name: sug.title, description: sug.desc, blocks: sug.blocks as any });
+                      setWfTab('builder');
+                    }}
+                    className="mt-4 w-full bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200 fs-xs fw-semibold px-3 py-2 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <i className="bi bi-magic"></i> Deploy Workflow
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

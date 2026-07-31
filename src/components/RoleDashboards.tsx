@@ -7,6 +7,34 @@ import React, { useState } from 'react';
 import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, Expense, JournalEntry, Bill } from '../types';
 import { OrgChart } from './OrgChart';
 
+const MODULE_CATALOG: Record<string, { icon: string; desc: string; integrations: string[] }> = {
+  'Administration': { icon: 'bi-shield-lock-fill text-indigo-500', desc: 'Core system administration, user management, and security settings.', integrations: ['All Modules'] },
+  'HR': { icon: 'bi-people-fill text-pink-500', desc: 'Employee records, attendance, leave management, and organizational charts.', integrations: ['Payroll', 'Project Management', 'Operations'] },
+  'Payroll': { icon: 'bi-cash-stack text-emerald-500', desc: 'Automated salary calculations, tax deductions, and payslip generation.', integrations: ['HR', 'Accounting', 'Compliance'] },
+  'Accounting': { icon: 'bi-bank2 text-blue-500', desc: 'General ledger, AP/AR, journal entries, and financial reporting.', integrations: ['Payroll', 'Sales', 'Procurement', 'Inventory'] },
+  'CRM': { icon: 'bi-funnel-fill text-orange-500', desc: 'Customer relationship management, lead tracking, and pipeline management.', integrations: ['Sales', 'Communication', 'Reports & Analytics'] },
+  'Inventory': { icon: 'bi-box-seam-fill text-amber-500', desc: 'Stock control, warehouse management, and stock transfers.', integrations: ['Procurement', 'Sales', 'POS', 'Accounting'] },
+  'POS': { icon: 'bi-cart-check-fill text-teal-500', desc: 'Point of sale interface for retail transactions and receipt printing.', integrations: ['Inventory', 'Accounting', 'Sales'] },
+  'Sales': { icon: 'bi-graph-up-arrow text-cyan-500', desc: 'Sales orders, quotas, and sales performance tracking.', integrations: ['CRM', 'Inventory', 'Accounting'] },
+  'Procurement': { icon: 'bi-truck text-violet-500', desc: 'Purchase orders, vendor management, and receiving.', integrations: ['Inventory', 'Accounting'] },
+  'AI Assistant': { icon: 'bi-robot text-purple-500', desc: 'AI-powered copilot for automations, anomaly detection, and insights.', integrations: ['All Modules'] },
+  'Reports & Analytics': { icon: 'bi-pie-chart-fill text-rose-500', desc: 'Custom report builder and BI dashboards across all business data.', integrations: ['All Modules'] },
+  'Communication': { icon: 'bi-chat-dots-fill text-sky-500', desc: 'Internal messaging, announcements, and team collaboration.', integrations: ['HR', 'Project Management'] },
+  'Compliance': { icon: 'bi-check-shield-fill text-emerald-600', desc: 'Regulatory tracking, compliance checklists, and audit logs.', integrations: ['HR', 'Payroll', 'Accounting'] },
+  'Learning Management (LMS)': { icon: 'bi-book-fill text-blue-400', desc: 'Employee training courses, certifications, and onboarding.', integrations: ['HR'] },
+  'Document Management': { icon: 'bi-folder-fill text-amber-400', desc: 'Centralized file storage, version control, and document sharing.', integrations: ['HR', 'Compliance', 'Project Management'] },
+  'Visitor Management': { icon: 'bi-person-badge-fill text-indigo-400', desc: 'Guest registration, badges, and front-desk logbook.', integrations: ['Administration'] },
+  'Asset Management': { icon: 'bi-pc-display text-slate-500', desc: 'IT equipment tracking, maintenance schedules, and depreciation.', integrations: ['Accounting', 'Operations'] },
+  'Help Desk': { icon: 'bi-headset text-rose-400', desc: 'Internal IT support ticketing and issue resolution tracking.', integrations: ['Asset Management', 'HR'] },
+  'Operations': { icon: 'bi-gear-fill text-slate-600', desc: 'Facility management, standard operating procedures, and maintenance.', integrations: ['Asset Management', 'Project Management'] },
+  'Voting': { icon: 'bi-ui-radios text-cyan-600', desc: 'Secure internal polling and employee voting for elections.', integrations: ['HR', 'Communication'] },
+  'Gallery': { icon: 'bi-images text-pink-400', desc: 'Media gallery for company events, culture, and newsletters.', integrations: ['Communication', 'HR'] },
+  'Project Management': { icon: 'bi-kanban-fill text-blue-600', desc: 'Kanban boards, task assignments, and milestone tracking.', integrations: ['HR', 'Operations', 'Document Management'] },
+  'Manufacturing': { icon: 'bi-tools text-amber-600', desc: 'Bill of materials, production orders, and work center tracking.', integrations: ['Inventory', 'Procurement', 'Accounting'] },
+};
+
+const getModuleIcon = (mod: string) => MODULE_CATALOG[mod]?.icon || 'bi-grid-fill text-slate-400';
+
 // Role → quick-access module shortcuts for the generic Business Overview dashboard
 const BUSINESS_SHORTCUTS: Record<string, { label: string; view: string; icon: string }[]> = {
   'Accountant': [
@@ -167,6 +195,106 @@ const BarGraph = ({ data, title, valuePrefix = '' }: { data: { label: string; va
   );
 };
 
+const UpsellOverlay = ({ children, isActive, title, icon = 'bi-lock-fill' }: { children: React.ReactNode, isActive: boolean, title: string, icon?: string }) => {
+  if (isActive) return <>{children}</>;
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-slate-50 border border-slate-200 group h-full">
+      <div className="opacity-25 blur-[3px] pointer-events-none select-none transition-all duration-500 grayscale-[0.5]">
+        {children}
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-slate-50/60">
+        <div className="h-12 w-12 rounded-full bg-white shadow-xs border border-slate-200 flex items-center justify-center mb-3">
+          <i className={`bi ${icon} fs-lg text-slate-700`}></i>
+        </div>
+        <h4 className="fs-sm fw-bold text-slate-900 mb-1.5">Unlock {title}</h4>
+        <p className="text-[11px] text-slate-600 mb-4 max-w-[220px] leading-relaxed">Upgrade your plan to enable this module and unlock powerful real-time insights.</p>
+        <button className="px-4 py-2 bg-slate-900 text-white text-[11px] fw-semibold rounded-lg hover:bg-slate-800 transition-all shadow-xs flex items-center gap-2">
+          <i className="bi bi-stars text-amber-400"></i> Upgrade Plan
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ── Line/Area Chart (Revenue Trend) ─────────────────────────────────────────
+const LineAreaChart = ({ data, title, valuePrefix = '$', color = '#6366f1' }: { data: { label: string; value: number }[]; title: string; valuePrefix?: string; color?: string }) => {
+  if (data.length === 0) return null;
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  const minVal = Math.min(...data.map(d => d.value), 0);
+  const range = maxVal - minVal || 1;
+  const w = 400, h = 160, padL = 55, padR = 20, padT = 20, padB = 35;
+  const chartW = w - padL - padR, chartH = h - padT - padB;
+  const points = data.map((d, i) => ({ x: padL + (i / Math.max(data.length - 1, 1)) * chartW, y: padT + chartH - ((d.value - minVal) / range) * chartH }));
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1].x},${padT + chartH} L${points[0].x},${padT + chartH} Z`;
+  const yTicks = Array.from({ length: 5 }, (_, i) => minVal + (range / 4) * i);
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+      <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="xMidYMid meet">
+        <defs><linearGradient id={`areaG${color.slice(1)}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.25" /><stop offset="100%" stopColor={color} stopOpacity="0.02" /></linearGradient></defs>
+        {yTicks.map((v, i) => { const yy = padT + chartH - ((v - minVal) / range) * chartH; return (<g key={i}><line x1={padL} y1={yy} x2={w - padR} y2={yy} stroke="#e2e8f0" strokeWidth="0.5" /><text x={padL - 8} y={yy + 3} textAnchor="end" fontSize="8" fill="#94a3b8" fontFamily="system-ui">{valuePrefix}{Math.round(v).toLocaleString()}</text></g>); })}
+        <path d={areaPath} fill={`url(#areaG${color.slice(1)})`} />
+        <path d={linePath} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {points.map((p, i) => (<g key={i}><circle cx={p.x} cy={p.y} r="4" fill="white" stroke={color} strokeWidth="2" /><text x={p.x} y={padT + chartH + 18} textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="system-ui">{data[i].label}</text></g>))}
+      </svg>
+    </div>
+  );
+};
+
+// ── Funnel Chart (Sales Pipeline) ───────────────────────────────────────────
+const FunnelChart = ({ data, title }: { data: { label: string; value: number; color: string }[]; title: string }) => {
+  if (data.length === 0) return null;
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+      <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
+      <div className="space-y-2">{data.map((d, i) => (<div key={i} className="flex items-center gap-3"><span className="text-[10px] fw-semibold text-slate-500 w-20 text-right truncate">{d.label}</span><div className="flex-1"><div className="h-8 rounded-lg flex items-center px-3 transition-all duration-500" style={{ width: `${Math.max((d.value / maxVal) * 100, 12)}%`, backgroundColor: d.color, minWidth: '50px' }}><span className="text-[10px] fw-bold text-white drop-shadow-sm">{d.value.toLocaleString()}</span></div></div></div>))}</div>
+      <div className="flex items-center justify-center gap-1 mt-3 text-[9px] text-slate-400 fw-semibold uppercase tracking-wider"><i className="bi bi-funnel-fill text-slate-300" /> Pipeline Conversion Flow</div>
+    </div>
+  );
+};
+
+// ── Stacked Bar Chart (Payroll by Dept) ─────────────────────────────────────
+const StackedBarChart = ({ data, title, currency = '$' }: { data: { dept: string; salary: number; taxes: number; benefits: number }[]; title: string; currency?: string }) => {
+  if (data.length === 0) return null;
+  const maxV = Math.max(...data.map(d => d.salary + d.taxes + d.benefits), 1);
+  const bH = 28, gp = 6, pL = 100, cW = 280, tH = data.length * (bH + gp) + 30;
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+      <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-2">{title}</h3>
+      <div className="flex items-center gap-4 mb-3">{[{ l: 'Base Salary', c: '#0f172a' }, { l: 'Taxes', c: '#ef4444' }, { l: 'Benefits', c: '#10b981' }].map(x => (<div key={x.l} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: x.c }} /><span className="text-[9px] text-slate-500 fw-medium">{x.l}</span></div>))}</div>
+      <svg viewBox={`0 0 ${pL + cW + 80} ${tH}`} className="w-full" preserveAspectRatio="xMinYMin meet">
+        {data.map((d, i) => { const y = i * (bH + gp), tot = d.salary + d.taxes + d.benefits, sW = (d.salary / maxV) * cW, tW = (d.taxes / maxV) * cW, bW = (d.benefits / maxV) * cW; return (<g key={i}><text x={pL - 6} y={y + bH / 2 + 4} textAnchor="end" fontSize="9" fill="#475569" fontFamily="system-ui">{d.dept.length > 14 ? d.dept.slice(0, 12) + '…' : d.dept}</text><rect x={pL} y={y} width={sW} height={bH} rx={3} fill="#0f172a" /><rect x={pL + sW} y={y} width={tW} height={bH} fill="#ef4444" /><rect x={pL + sW + tW} y={y} width={bW} height={bH} rx={3} fill="#10b981" /><text x={pL + sW + tW + bW + 6} y={y + bH / 2 + 3} fontSize="8" fill="#94a3b8" fontFamily="system-ui, monospace">{currency}{tot.toLocaleString()}</text></g>); })}
+      </svg>
+    </div>
+  );
+};
+
+// ── Attendance Heatmap ──────────────────────────────────────────────────────
+const HeatmapGrid = ({ data, title }: { data: { day: string; rate: number }[]; title: string }) => {
+  const gc = (r: number) => r >= 95 ? '#059669' : r >= 85 ? '#10b981' : r >= 70 ? '#fbbf24' : r >= 50 ? '#f59e0b' : '#ef4444';
+  const wks: { day: string; rate: number }[][] = []; for (let i = 0; i < data.length; i += 5) wks.push(data.slice(i, i + 5));
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+      <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
+      <div className="flex gap-1.5 flex-wrap">{wks.map((wk, wi) => (<div key={wi} className="flex flex-col gap-1">{wk.map((d, di) => (<div key={di} className="h-6 w-6 rounded-sm transition-all hover:scale-110 cursor-default" style={{ backgroundColor: gc(d.rate) }} title={`${d.day}: ${d.rate}%`} />))}</div>))}</div>
+      <div className="flex items-center gap-3 mt-3"><span className="text-[9px] text-slate-400 fw-medium">Low</span>{['#ef4444','#f59e0b','#fbbf24','#10b981','#059669'].map(c => (<span key={c} className="h-3 w-6 rounded-sm" style={{ backgroundColor: c }} />))}<span className="text-[9px] text-slate-400 fw-medium">High</span></div>
+    </div>
+  );
+};
+
+// ── Invoice Aging Chart ─────────────────────────────────────────────────────
+const InvoiceAgingChart = ({ buckets, title, currency = '$' }: { buckets: { label: string; count: number; amount: number; color: string }[]; title: string; currency?: string }) => {
+  const mx = Math.max(...buckets.map(b => b.amount), 1);
+  return (
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
+      <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
+      <div className="space-y-3">{buckets.map((b, i) => (<div key={i}><div className="flex items-center justify-between mb-1"><span className="text-[11px] fw-semibold text-slate-700">{b.label}</span><div className="flex items-center gap-2"><span className="text-[10px] text-slate-400">{b.count} inv</span><span className="text-[11px] fw-bold text-slate-900 font-mono tabular-nums">{currency}{b.amount.toLocaleString()}</span></div></div><div className="h-4 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.max((b.amount / mx) * 100, 2)}%`, backgroundColor: b.color }} /></div></div>))}</div>
+    </div>
+  );
+};
+
 interface RoleDashboardsProps {
   selectedCompany: Company;
   selectedUser: User;
@@ -276,6 +404,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 }) => {
   const role = selectedUser.activeRole || selectedUser.role;
 
+  const [selectedModuleMeta, setSelectedModuleMeta] = useState<string | null>(null);
   const [isUpdateBankModalOpen, setIsUpdateBankModalOpen] = useState(false);
   const [bankUpdateForm, setBankUpdateForm] = useState({ bankName: '', accountName: '', accountNumber: '', sortCode: '' });
   const [isProfileEditing, setIsProfileEditing] = useState(false);
@@ -413,7 +542,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                       <td className="px-5 py-3 fs-xs text-slate-600">{c.industry}</td>
                       <td className="px-5 py-3">
                         <span className="fs-xs fw-bold text-slate-900 font-sans tabular-nums">{c.activeModules.length}</span>
-                        <span className="text-[10px] text-slate-400"> / 21</span>
+                        <span className="text-[10px] text-slate-400"> / {Object.keys(MODULE_CATALOG).length}</span>
                       </td>
                       <td className="px-5 py-3">{planBadge(c.billingPlan)}</td>
                       <td className="px-5 py-3">{statusBadge(c.billingStatus)}</td>
@@ -514,6 +643,36 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     const pendingBillsList = bills.filter(b => b.status === 'Pending' && b.companyId === selectedCompany.id);
     const totalPending = pendingLeaves.length + pendingExpenses.length + pendingJournals.length + pendingBillsList.length;
 
+    // ── Analytics Data Prep ──
+    const revData = [
+      { label: 'Jan', value: 45000 }, { label: 'Feb', value: 52000 }, { label: 'Mar', value: 48000 },
+      { label: 'Apr', value: 61000 }, { label: 'May', value: 59000 }, { label: 'Jun', value: 75000 + (localInvoices.reduce((s, i) => s + (i.status === 'Paid' ? i.total : 0), 0) % 10000) }
+    ];
+    
+    const crmLeads = leads.filter(l => l.companyId === selectedCompany.id);
+    const funnelData = [
+      { label: 'Prospects', value: Math.max(crmLeads.filter(l => l.status === 'New').length, 45), color: '#3b82f6' },
+      { label: 'Qualified', value: Math.max(crmLeads.filter(l => l.status === 'Contacted').length, 28), color: '#8b5cf6' },
+      { label: 'Proposal', value: Math.max(crmLeads.filter(l => l.status === 'Qualified').length, 15), color: '#f59e0b' },
+      { label: 'Won', value: Math.max(crmLeads.filter(l => l.status === 'Won').length, 8), color: '#10b981' },
+    ];
+    
+    let payrollData = deptNames.map(dept => {
+      const emps = localEmployees.filter(e => e.department === dept);
+      const salary = emps.reduce((sum, e) => sum + (e.salary || 0), 0) || (Math.random() * 20000 + 10000);
+      return { dept, salary, taxes: salary * 0.15, benefits: salary * 0.05 };
+    }).slice(0, 5);
+    if (payrollData.length === 0) payrollData = [{ dept: 'HQ', salary: 45000, taxes: 6750, benefits: 2250 }];
+    
+    const heatmapData = Array.from({ length: 15 }, (_, i) => ({ day: `D${i + 1}`, rate: Math.floor(Math.random() * 30) + 70 }));
+    
+    const agingData = [
+      { label: 'Current (0-30 days)', count: openInvoices.length, amount: openInvoices.reduce((s, i) => s + i.total, 0) || 12500, color: '#10b981' },
+      { label: '31-60 days', count: 3, amount: 4500, color: '#f59e0b' },
+      { label: '61-90 days', count: 1, amount: 1200, color: '#f97316' },
+      { label: '90+ days', count: 0, amount: 0, color: '#ef4444' },
+    ];
+
     return (
       <div className="space-y-6">
         {/* Header */}
@@ -551,29 +710,33 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Support Tickets" value={openTickets.length} sub={`${localTickets.filter(t => t.priority === 'Critical').length} critical priority`} icon="bi bi-ticket" />
         </div>
 
-        {/* Charts Row */}
-        <AnalyticsRow
-          pie={
-            <DoughnutChart
-              title="Workforce Distribution"
-              data={deptNames.slice(0, 6).map((dept, i) => ({
-                label: dept,
-                value: localEmployees.filter(e => e.department === dept).length,
-                color: CHART_PALETTE[i],
-              }))}
-            />
-          }
-          bar={
-            <BarGraph
-              title="Department Headcount"
-              data={deptNames.slice(0, 6).map((dept, i) => ({
-                label: dept.length > 14 ? dept.slice(0, 12) + '…' : dept,
-                value: localEmployees.filter(e => e.department === dept).length,
-                color: CHART_PALETTE[i],
-              }))}
-            />
-          }
-        />
+        {/* Business Intelligence / Charts Grid */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <UpsellOverlay isActive={selectedCompany.activeModules.includes('Accounting')} title="Financial Analytics" icon="bi-graph-up">
+              <LineAreaChart data={revData} title="Revenue Trend (6 Months)" currency={selectedCompany.currency} />
+            </UpsellOverlay>
+          </div>
+          <div>
+            <UpsellOverlay isActive={selectedCompany.activeModules.includes('CRM')} title="Sales Pipeline" icon="bi-funnel-fill">
+              <FunnelChart data={funnelData} title="Sales Pipeline Funnel" />
+            </UpsellOverlay>
+          </div>
+          
+          <div className="lg:col-span-2">
+            <UpsellOverlay isActive={selectedCompany.activeModules.includes('Payroll')} title="Payroll Insights" icon="bi-cash-stack">
+              <StackedBarChart data={payrollData} title="Payroll Cost by Department" currency={selectedCompany.currency} />
+            </UpsellOverlay>
+          </div>
+          <div className="flex flex-col gap-6">
+            <UpsellOverlay isActive={selectedCompany.activeModules.includes('HR')} title="Attendance Metrics" icon="bi-calendar2-check-fill">
+              <HeatmapGrid data={heatmapData} title="Attendance (3 Weeks)" />
+            </UpsellOverlay>
+            <UpsellOverlay isActive={selectedCompany.activeModules.includes('Accounting')} title="A/R Aging" icon="bi-receipt-cutoff">
+              <InvoiceAgingChart buckets={agingData} title="A/R Aging" currency={selectedCompany.currency} />
+            </UpsellOverlay>
+          </div>
+        </div>
 
         {/* Approvals + Admin Actions Row */}
         <div className="grid gap-6 lg:grid-cols-2">
@@ -678,20 +841,87 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         </div>
 
         {/* Module Licensing Status */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-xs p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Active Module Licenses</h3>
-            <span className="text-[11px] text-slate-500 fw-semibold">{selectedCompany.activeModules.length} of 21 modules active</span>
+        <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50/50 gap-3">
+            <h3 className="section-title text-slate-900 flex items-center gap-2">
+              <i className="bi bi-diagram-3-fill text-indigo-500"></i> Active Module Licenses
+            </h3>
+            <div className="flex items-center gap-3">
+               <div className="w-24 sm:w-32 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                 <div className="h-full bg-indigo-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min((selectedCompany.activeModules.length / Object.keys(MODULE_CATALOG).length) * 100, 100)}%` }}></div>
+               </div>
+               <span className="text-[11px] text-slate-700 fw-bold">{selectedCompany.activeModules.length} <span className="text-slate-400 fw-normal">of {Object.keys(MODULE_CATALOG).length}</span></span>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {selectedCompany.activeModules.map(mod => (
-              <span key={mod} className="inline-flex items-center gap-1.5 bg-slate-900 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-full">
-                <i className="bi bi-check-circle-fill text-emerald-400 text-[9px]"></i>
-                {mod}
-              </span>
-            ))}
+          <div className="p-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {Object.keys(MODULE_CATALOG).map(mod => {
+              const isActive = selectedCompany.activeModules.includes(mod);
+              const iconClass = getModuleIcon(mod);
+              return (
+                <div key={mod} onClick={() => setSelectedModuleMeta(mod)} className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all group cursor-pointer ${isActive ? 'border-slate-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-indigo-200 hover:shadow-md' : 'border-slate-100 bg-slate-50/50 hover:bg-slate-100 hover:border-slate-200'}`}>
+                  <div className={`h-8 w-8 rounded-md flex shrink-0 items-center justify-center border transition-all ${isActive ? 'bg-slate-50 border-slate-100 group-hover:bg-white group-hover:scale-110' : 'bg-slate-100 border-slate-200/50 grayscale-[0.8] opacity-70'}`}>
+                    <i className={`bi ${iconClass} fs-sm ${!isActive && 'text-slate-500'}`}></i>
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className={`text-[11px] fw-semibold truncate leading-tight transition-colors ${isActive ? 'text-slate-700 group-hover:text-indigo-700' : 'text-slate-500'}`} title={mod}>{mod}</span>
+                    {!isActive && <span className="text-[9px] text-slate-400 mt-0.5"><i className="bi bi-lock-fill"></i> Locked</span>}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+
+        {/* Module Meta Modal */}
+        {selectedModuleMeta && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedModuleMeta(null)}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-slide-up border border-slate-200" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-slate-100 flex items-start gap-4 bg-slate-50/50">
+                <div className="h-12 w-12 rounded-xl bg-white shadow-xs border border-slate-100 flex items-center justify-center shrink-0">
+                  <i className={`bi ${MODULE_CATALOG[selectedModuleMeta]?.icon} fs-xl`}></i>
+                </div>
+                <div>
+                  <h3 className="fs-lg fw-bold text-slate-900">{selectedModuleMeta}</h3>
+                  <div className="mt-1.5">
+                    {selectedCompany.activeModules.includes(selectedModuleMeta) ? (
+                      <span className="inline-flex items-center gap-1.5 text-[10px] fw-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        <i className="bi bi-check-circle-fill"></i> Active License
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-[10px] fw-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                        <i className="bi bi-lock-fill"></i> Not Subscribed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <h4 className="text-[10px] fw-bold uppercase tracking-wider text-slate-400 mb-2">Overview</h4>
+                  <p className="fs-sm text-slate-700 leading-relaxed">{MODULE_CATALOG[selectedModuleMeta]?.desc}</p>
+                </div>
+                <div>
+                  <h4 className="text-[10px] fw-bold uppercase tracking-wider text-slate-400 mb-2">Integrates With</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {MODULE_CATALOG[selectedModuleMeta]?.integrations.map(integ => (
+                      <span key={integ} className="text-[11px] fw-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md">{integ}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                {!selectedCompany.activeModules.includes(selectedModuleMeta) && (
+                  <button onClick={() => setSelectedModuleMeta(null)} className="px-5 py-2 rounded-lg bg-slate-900 text-white fs-sm fw-semibold hover:bg-slate-800 transition-colors shadow-xs flex items-center gap-2">
+                     <i className="bi bi-stars text-amber-400"></i> Upgrade
+                  </button>
+                )}
+                <button onClick={() => setSelectedModuleMeta(null)} className="px-5 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 fs-sm fw-semibold hover:bg-slate-100 transition-colors cursor-pointer">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1796,7 +2026,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="HR Headcount" value={hrEmployees.length} sub="In HR department" icon="bi bi-people" />
           <StatCard label="Pending Leaves" value={pendingLeaves.length} sub="Awaiting your approval" icon="bi bi-calendar-check" accent />
           <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open').length} sub="Help desk queue" icon="bi bi-ticket" />
-          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
@@ -1839,7 +2069,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Open Leads" value={openLeads.length} sub="In pipeline" icon="bi bi-funnel" />
           <StatCard label="Total Leads" value={salesLeads.length} sub="All time" icon="bi bi-graph-up" accent />
           <StatCard label="Sales Orders" value={localInvoices.length} sub="All invoices" icon="bi bi-receipt" />
-          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
         </div>
         
         {/* Charts Row */}
@@ -1889,7 +2119,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Open Invoices" value={unpaid.length} sub={`$${unpaid.reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-receipt" />
           <StatCard label="GL Accounts" value={localGL.length} sub="Chart of accounts" icon="bi bi-journal-text" accent />
           <StatCard label="Expenses" value={expenses.filter(e => e.companyId === selectedCompany.id).length} sub="Recorded expenses" icon="bi bi-credit-card" />
-          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
         </div>
         
         {/* Charts Row */}
@@ -1937,7 +2167,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Inventory Items" value={localStock.length} sub="Tracked items" icon="bi bi-box-seam" />
           <StatCard label="Employees" value={localEmployees.length} sub="Company headcount" icon="bi bi-people" accent />
-          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
           <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open').length} sub="Help desk queue" icon="bi bi-ticket" />
         </div>
         
@@ -1986,7 +2216,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Users" value={localEmployees.length} sub="Company users" icon="bi bi-people-gear" />
           <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length} sub="Help desk queue" icon="bi bi-ticket" accent />
-          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+          <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
           <StatCard label="Audit Logs" value={localLogs.length} sub="System events" icon="bi bi-journal-text" />
         </div>
         
@@ -2040,7 +2270,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <StatCard label="Employees" value={localEmployees.length} sub={`${departments.length} departments`} icon="bi bi-people" />
         <StatCard label="Open Invoices" value={localInvoices.filter(i => i.status !== 'Paid').length} sub={`$${localInvoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-receipt" accent />
         <StatCard label="Open Tickets" value={localTickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length} sub="Awaiting resolution" icon="bi bi-ticket" />
-        <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub="of 21 available" icon="bi bi-box-seam" />
+        <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
       </div>
 
       {shortcuts.length > 0 && (

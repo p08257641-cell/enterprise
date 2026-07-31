@@ -41,18 +41,44 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
         <div className="space-y-4">
           {canManage && <AddCourseForm selectedCompany={selectedCompany} onAddLmsCourse={onAddLmsCourse} />}
           <div className="grid gap-4 sm:grid-cols-2">
-            {lmsCourses.map(c => (
-              <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-slate-300 transition-all">
-                <div className="flex items-start justify-between mb-3">
-                  <div><div className="fs-sm fw-bold text-slate-900">{c.title}</div><div className="data-value text-slate-500 mt-0.5">{c.category} · {c.level} · {c.duration}</div></div>
-                  <Badge label={c.category} variant="info" />
+            {lmsCourses.map(c => {
+              const levelColor = c.level === 'Advanced' ? 'from-rose-500 to-orange-500' : c.level === 'Intermediate' ? 'from-amber-500 to-yellow-400' : 'from-emerald-500 to-teal-400';
+              const levelBg = c.level === 'Advanced' ? 'bg-rose-50 text-rose-700 border-rose-200' : c.level === 'Intermediate' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+              const levelIcon = c.level === 'Advanced' ? 'bi-mortarboard' : c.level === 'Intermediate' ? 'bi-book-half' : 'bi-book';
+              return (
+                <div key={c.id} className="group bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:border-indigo-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))` }}>
+                  </div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="fs-sm fw-bold text-slate-900 group-hover:text-indigo-900 transition-colors truncate">{c.title}</div>
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                        <span className={`inline-flex items-center gap-1 text-[10px] fw-bold px-2 py-0.5 rounded-full border ${levelBg}`}><i className={`bi ${levelIcon} text-[9px]`}></i> {c.level}</span>
+                        <span className="text-[10px] text-slate-400 font-sans">{c.duration}</span>
+                      </div>
+                    </div>
+                    <Badge label={c.category} variant="info" />
+                  </div>
+                  <div className="mb-2.5 flex justify-between text-[11px] text-slate-500">
+                    <span className="flex items-center gap-1"><i className="bi bi-people text-[10px] opacity-60"></i> {c.enrolled} enrolled</span>
+                    <span className="fw-bold text-slate-700 font-sans tabular-nums">{c.completion}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full bg-gradient-to-r ${levelColor} transition-all duration-700`} style={{ width: `${c.completion}%` }} />
+                  </div>
+                  <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full fs-xs fw-semibold border border-slate-200 text-slate-700 py-2.5 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 cursor-pointer transition-all duration-200 flex items-center justify-center gap-2">
+                    <i className="bi bi-play-circle text-[13px]"></i> Start Course
+                  </button>
                 </div>
-                <div className="mb-2 flex justify-between data-value text-slate-500"><span>{c.enrolled} enrolled</span><span>{c.completion}% avg completion</span></div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: `${c.completion}%` }} /></div>
-                <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full fs-xs fw-semibold border border-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-all">Start Course</button>
+              );
+            })}
+            {lmsCourses.length === 0 && (
+              <div className="sm:col-span-2 text-center py-16">
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-indigo-50 text-indigo-400 mb-4"><i className="bi bi-journal-bookmark text-2xl"></i></div>
+                <div className="fs-sm fw-bold text-slate-900 mb-1">No courses available yet</div>
+                <p className="fs-xs text-slate-400">Create your first course to start tracking employee learning progress.</p>
               </div>
-            ))}
-            {lmsCourses.length === 0 && <div className="sm:col-span-2 text-center fs-xs text-slate-400 py-8">No courses available yet.</div>}
+            )}
           </div>
         </div>
       )}
@@ -107,15 +133,20 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
               ) : (
                 localEmployees.slice(0, 6).map((emp, i) => {
                   const course = lmsCourses[i % lmsCourses.length] || { title: 'No course', category: 'General', level: 'Beginner', duration: '--' };
+                  const progressValues = [85, 62, 100, 40, 15, 0];
+                  const prog = progressValues[i] ?? 0;
+                  const progColor = prog === 100 ? 'from-emerald-500 to-teal-400' : prog >= 60 ? 'from-indigo-500 to-purple-500' : prog > 0 ? 'from-amber-500 to-yellow-400' : 'bg-slate-200';
+                  const statusLabel = prog === 100 ? 'Completed' : prog > 0 ? 'In Progress' : 'Not Started';
+                  const statusVariant = prog === 100 ? 'success' : prog > 0 ? 'info' : 'default';
                   return (
-                    <tr key={emp.id} className="hover:bg-slate-50/40">
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{course.title}</td>
-                      <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-slate-800 rounded-full" style={{ width: '0%' }} /></div><span className="text-[10px] font-sans tabular-nums text-slate-500 w-8">0%</span></div></td>
-                      <td className="px-4 py-3"><Badge label="Not Started" variant="default" /></td>
+                      <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${prog > 0 ? `bg-gradient-to-r ${progColor}` : 'bg-slate-200'}`} style={{ width: `${prog}%` }} /></div><span className="text-[10px] font-sans tabular-nums fw-bold text-slate-700 w-8">{prog}%</span></div></td>
+                      <td className="px-4 py-3"><Badge label={statusLabel} variant={statusVariant as any} /></td>
                       <td className="px-4 py-3 text-right">
                         <button
-                          onClick={(e) => { e.stopPropagation(); progressModal.open({ emp, course, prog: 0 }); }}
+                          onClick={(e) => { e.stopPropagation(); progressModal.open({ emp, course, prog }); }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
                           <i className="bi bi-eye text-[11px]"></i> View
