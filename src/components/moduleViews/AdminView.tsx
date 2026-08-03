@@ -46,6 +46,9 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const branchModal = useRowModal<typeof localBranches[0]>();
   const deptModal = useRowModal<typeof departments[0] & { managerName: string; parentName: string }>();
   const userModal = useRowModal<typeof localEmployees[0]>();
+  const [branchSearch, setBranchSearch] = useState('');
+  const [deptSearch, setDeptSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
 
   const [approvalPolicies, setApprovalPolicies] = useState<Record<string, string[]>>({
     'Leave Requests': ['HR Department Head', 'HR Manager', 'Company Admin'],
@@ -57,11 +60,13 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
     'Role Management': ['HR Manager', 'HR Department Head', 'HR Officer', 'Company Admin'],
   });
   const [approvalSaveSuccess, setApprovalSaveSuccess] = useState(false);
+  const [openWorkflowDropdown, setOpenWorkflowDropdown] = useState<string | null>(null);
 
   const [editDeptModal, setEditDeptModal] = useState<{ id: string; name: string; managerId: string; budget: number; parentId?: string } | null>(null);
   const [editDeptName, setEditDeptName] = useState('');
   const [editDeptManager, setEditDeptManager] = useState('');
   const [editDeptBudget, setEditDeptBudget] = useState('');
+  const [editDeptParent, setEditDeptParent] = useState('');
 
   // Roles are DB-backed via props.customRoles — filter to current company
   const customRoles = propCustomRoles.filter(r => r.companyId === selectedCompany.id);
@@ -139,21 +144,32 @@ const [deptParent, setDeptParent] = useState('');
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">Branch Locations</h3>
-              {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBranchName(''); setBranchLocation(''); setShowBranchModal(true); }}>Add Branch</PrimaryBtn>}
+              <div className="flex items-center gap-2.5">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
+                  <input type="text" placeholder="Search branches..." value={branchSearch} onChange={e => setBranchSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
+                </div>
+                {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBranchName(''); setBranchLocation(''); setShowBranchModal(true); }}>Add Branch</PrimaryBtn>}
+              </div>
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Branch Name' }, { label: 'Location' }, { label: 'Type' }, { label: 'Employees' }, { label: 'Status' }]} />
+              <TableHead cols={[{ label: 'Branch Name' }, { label: 'Location' }, { label: 'Type' }, { label: 'Employees' }, { label: 'Status' }, { label: '' }]} />
               <tbody className="divide-y divide-slate-100">
                 {localBranches.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center fs-xs text-slate-400">No branches yet. Click “Add Branch” to create one.</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-6 text-center fs-xs text-slate-400">No branches yet. Click “Add Branch” to create one.</td></tr>
                 )}
-                {localBranches.map(b => (
-                  <tr key={b.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => branchModal.open(b)}>
+                {localBranches.filter(b => !branchSearch || b.name.toLowerCase().includes(branchSearch.toLowerCase()) || b.location.toLowerCase().includes(branchSearch.toLowerCase())).map(b => (
+                  <tr key={b.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3.5"><div className="data-value fw-semibold text-slate-900">{b.name}</div></td>
                     <td className="px-4 py-3.5 data-value text-slate-500">{b.location}</td>
                     <td className="px-4 py-3.5"><Badge label={b.isMain ? 'Main HQ' : 'Regional'} /></td>
                     <td className="px-4 py-3.5 data-value font-sans tabular-nums text-slate-700">{localEmployees.filter(e => e.branch === b.name).length}</td>
                     <td className="px-4 py-3.5"><Badge label="Active" variant="success" /></td>
+                    <td className="px-4 py-3.5 text-right">
+                      <button type="button" onClick={() => branchModal.open(b)} className="h-8 w-8 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer ml-auto bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                        <i className="bi bi-eye fs-xs"></i>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -174,45 +190,51 @@ const [deptParent, setDeptParent] = useState('');
                     <h3 className="fs-sm fw-bold text-slate-900">Department Structure</h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">Configure reporting hierarchy and department assignments.</p>
                   </div>
-                  {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setDeptName(''); setDeptManager(''); setDeptParent(''); setShowDeptModal(true); }}>Add Department</PrimaryBtn>}
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative">
+                      <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
+                      <input type="text" placeholder="Search departments..." value={deptSearch} onChange={e => setDeptSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
+                    </div>
+                    {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setDeptName(''); setDeptManager(''); setDeptParent(''); setShowDeptModal(true); }}>Add Department</PrimaryBtn>}
+                  </div>
                 </div>
                 <table className="w-full text-left">
                   <TableHead cols={[{ label: 'Department' }, { label: 'Reports To' }, { label: 'Head Count' }, { label: 'Budget' }, { label: 'Manager' }, { label: '' }]} />
                   <tbody className="divide-y divide-slate-100">
-                    {companyDepts.map(dept => {
+                    {companyDepts.filter(d => !deptSearch || d.name.toLowerCase().includes(deptSearch.toLowerCase())).map(dept => {
                       const manager = localEmployees.find(e => e.userId === dept.managerId);
                       const parentName = getDeptName(dept.parentId);
                       return (
-                        <tr key={dept.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
+                        <tr key={dept.id} className="hover:bg-slate-50/40 transition-colors">
                           <td className="px-4 py-3.5">
                             <div className="flex flex-wrap items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full shrink-0 ${!dept.parentId ? 'bg-slate-900' : 'bg-slate-300'}`}></div>
+                              <div className={`h-7 w-7 rounded-md flex shrink-0 items-center justify-center border transition-all ${
+                                !dept.parentId 
+                                  ? 'bg-indigo-50 border-indigo-100/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)]' 
+                                  : 'bg-slate-50 border-slate-100/50'
+                              }`}>
+                                <i className={`fs-sm ${!dept.parentId ? 'bi bi-diagram-3 text-indigo-500' : 'bi bi-folder2 text-slate-400'}`}></i>
+                              </div>
                               <span className="fs-sm fw-semibold text-slate-900">{dept.name}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3.5">
-                            {isAdmin ? (
-                              <select
-                                value={dept.parentId || ''}
-                                onChange={(e) => onUpdateDepartment(dept.id, { parentId: e.target.value || undefined })}
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 fs-sm fw-medium text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 min-w-[130px]"
-                              >
-                                <option value="">— Root (Top Level)</option>
-                                {companyDepts.filter(d => d.id !== dept.id).map(d => (
-                                  <option key={d.id} value={d.id}>{d.name}</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="fs-sm text-slate-500">{parentName || '— Root'}</span>
-                            )}
+                            <span className="fs-sm text-slate-500">{parentName || '— Root'}</span>
                           </td>
                           <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
                           <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
                           <td className="px-4 py-3.5 fs-sm text-slate-600">
                             {manager ? `${manager.firstName} ${manager.lastName}` : '—'}
                           </td>
-                          <td className="px-4 py-3.5 text-right" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })}>
-                            {isAdmin && <button onClick={e => { e.stopPropagation(); setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); }} className="fs-sm fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer">Edit</button>}
+                          <td className="px-4 py-3.5 text-right flex items-center justify-end gap-1.5">
+                            <button type="button" onClick={() => deptModal.open({ ...dept, managerName: manager ? `${manager.firstName} ${manager.lastName}` : '—', parentName: parentName || '— Root' })} className="h-8 w-8 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                              <i className="bi bi-eye fs-xs"></i>
+                            </button>
+                            {isAdmin && (
+                              <button onClick={() => { setEditDeptModal({ id: dept.id, name: dept.name, managerId: dept.managerId || '', budget: dept.budget, parentId: dept.parentId }); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="h-8 w-8 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                                <i className="bi bi-pencil fs-xs"></i>
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -314,13 +336,14 @@ const [deptParent, setDeptParent] = useState('');
                     <div className="p-6 space-y-4">
                       <div><Label>Department Name *</Label><Input value={editDeptName} onChange={e => setEditDeptName(e.target.value)} /></div>
                       <div><Label>Manager</Label><Select value={editDeptManager} onChange={e => setEditDeptManager(e.target.value)}><option value="">Unassigned</option>{localEmployees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}</Select></div>
+                      <div><Label>Reports To</Label><Select value={editDeptParent} onChange={e => setEditDeptParent(e.target.value)}><option value="">Top Level (no parent)</option>{companyDepts.filter(d => editDeptModal ? d.id !== editDeptModal.id : true).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</Select></div>
                       <div><Label>Budget</Label><Input type="number" value={editDeptBudget} onChange={e => setEditDeptBudget(e.target.value)} /></div>
                     </div>
                     <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
                       <button type="button" onClick={() => setEditDeptModal(null)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
                       <button type="button" onClick={() => {
                         if (!editDeptName) return void modalAlert('Department name required', { variant: 'warning' });
-                        onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget) });
+                        onUpdateDepartment(editDeptModal.id, { name: editDeptName, managerId: editDeptManager || undefined, budget: Number(editDeptBudget), parentId: editDeptParent || undefined });
                         setEditDeptModal(null);
                       }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Save Changes</button>
                     </div>
@@ -466,13 +489,19 @@ const [deptParent, setDeptParent] = useState('');
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">System Users</h3>
-                {isAdmin && <PrimaryBtn icon="bi bi-person-plus" onClick={() => setShowInviteForm(true)}>Invite User</PrimaryBtn>}
+                <div className="flex items-center gap-2.5">
+                  <div className="relative">
+                    <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
+                    <input type="text" placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
+                  </div>
+                  {isAdmin && <PrimaryBtn icon="bi bi-person-plus" onClick={() => setShowInviteForm(true)}>Invite User</PrimaryBtn>}
+                </div>
               </div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'User' }, { label: 'Active Role' }, { label: 'All Roles' }, { label: 'Department' }, { label: 'Status' }, { label: 'Joined' }]} />
+                <TableHead cols={[{ label: 'User' }, { label: 'Active Role' }, { label: 'All Roles' }, { label: 'Department' }, { label: 'Status' }, { label: 'Joined' }, { label: '' }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localEmployees.slice(0, 8).map(emp => (
-                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors cursor-pointer" onClick={() => userModal.open(emp)}>
+                  {localEmployees.filter(e => !userSearch || `${e.firstName} ${e.lastName} ${e.email}`.toLowerCase().includes(userSearch.toLowerCase())).slice(0, 8).map(emp => (
+                    <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2.5">
                           <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center avatar-text text-slate-700">{emp.firstName[0]}{emp.lastName[0]}</div>
@@ -484,6 +513,11 @@ const [deptParent, setDeptParent] = useState('');
                       <td className="px-4 py-3.5 table-cell text-slate-600">{emp.department}</td>
                       <td className="px-4 py-3.5"><Badge label={emp.status} variant={emp.status === 'Active' ? 'success' : 'warning'} /></td>
                       <td className="px-4 py-3.5 table-cell-mono text-slate-400">{emp.joiningDate}</td>
+                      <td className="px-4 py-3.5 text-right">
+                        <button type="button" onClick={() => userModal.open(emp)} className="h-8 w-8 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer ml-auto bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                          <i className="bi bi-eye fs-xs"></i>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -675,24 +709,47 @@ const [deptParent, setDeptParent] = useState('');
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 max-w-xl">
-                      {availableRoles.map(roleOption => {
-                        const isSelected = (approvers as string[]).includes(roleOption);
-                        return (
-                          <button
-                            key={roleOption}
-                            type="button"
-                            onClick={() => toggleRole(roleOption)}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] fw-semibold transition-all border cursor-pointer select-none ${isSelected
-                              ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
-                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
-                              }`}
-                          >
-                            {isSelected && <i className="bi bi-check fs-xs"></i>}
-                            {roleOption}
+                    <div className="flex flex-wrap items-center gap-1.5 max-w-[280px] sm:max-w-md justify-end">
+                      {(approvers as string[]).map(role => (
+                        <div key={role} className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full text-[10px] fw-bold bg-slate-900 text-white shadow-xs">
+                          {role}
+                          <button type="button" onClick={() => toggleRole(role)} className="h-4 w-4 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors cursor-pointer text-white shrink-0">
+                            <i className="bi bi-x fs-[9px]"></i>
                           </button>
-                        );
-                      })}
+                        </div>
+                      ))}
+                      
+                      <div className="relative">
+                        <button type="button" onClick={() => setOpenWorkflowDropdown(openWorkflowDropdown === module ? null : module)} className="h-7 w-7 rounded-full border border-dashed border-slate-300 text-slate-400 hover:text-slate-600 hover:border-slate-400 hover:bg-slate-50 flex items-center justify-center transition-all cursor-pointer bg-white shrink-0">
+                          <i className="bi bi-plus-lg fs-xs"></i>
+                        </button>
+                        {openWorkflowDropdown === module && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setOpenWorkflowDropdown(null)}></div>
+                            <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1.5 max-h-64 overflow-y-auto">
+                              <div className="px-3 py-1.5 border-b border-slate-100 mb-1 flex items-center justify-between">
+                                <span className="fs-[10px] fw-bold text-slate-400 uppercase tracking-wider">Add Approver</span>
+                                <button type="button" onClick={() => setOpenWorkflowDropdown(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer h-5 w-5 flex items-center justify-center rounded hover:bg-slate-50"><i className="bi bi-x"></i></button>
+                              </div>
+                              {availableRoles.filter(r => !(approvers as string[]).includes(r)).length === 0 ? (
+                                <div className="px-3 py-2 fs-xs text-slate-500 italic">All roles added</div>
+                              ) : (
+                                availableRoles.filter(r => !(approvers as string[]).includes(r)).map(roleOption => (
+                                  <button
+                                    key={roleOption}
+                                    type="button"
+                                    onClick={() => { toggleRole(roleOption); setOpenWorkflowDropdown(null); }}
+                                    className="w-full text-left px-3 py-2 fs-xs fw-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer flex items-center gap-2"
+                                  >
+                                    <i className="bi bi-person-plus text-slate-400"></i>
+                                    {roleOption}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1093,6 +1150,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [evatSearch, setEvatSearch] = useState('');
   const [form, setForm] = useState({
     companyTin: '',
     companyName: '',
@@ -1217,9 +1275,15 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h3 className="fs-sm fw-bold text-slate-900">E-VAT Submission History</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">Recent submissions to GRA.</p>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div>
+            <h3 className="fs-sm fw-bold text-slate-900">E-VAT Submission History</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">Recent submissions to GRA.</p>
+          </div>
+          <div className="relative">
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
+            <input type="text" placeholder="Search IRN or number..." value={evatSearch} onChange={e => setEvatSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -1228,7 +1292,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
             </tr></thead>
             <tbody>
               {submissions.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-[11px] text-slate-400">No submissions yet.</td></tr>}
-              {submissions.map((s: any) => (
+              {submissions.filter((s: any) => !evatSearch || s.entityNumber.includes(evatSearch) || (s.irn || '').includes(evatSearch)).map((s: any) => (
                 <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50/40">
                   <td className="px-4 py-2.5 text-[11px] text-slate-600">{s.entityType}</td>
                   <td className="px-4 py-2.5 text-[11px] font-mono text-slate-900">{s.entityNumber}</td>
