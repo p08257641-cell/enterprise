@@ -5,7 +5,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
   const { activeView, selectedCompany, selectedUser, employees, salesOrders, salesCustomers, salesQuotations, salesTargets, budgets,
     onCreateSalesOrder, onUpdateSalesOrder, onCreateSalesCustomer, onUpdateSalesCustomer, onDeleteSalesCustomer,
     onCreateSalesQuotation, onUpdateSalesQuotation, onDeleteSalesQuotation,
-    onCreateSalesTarget, onUpdateSalesTarget, onDeleteSalesTarget } = props;
+    onCreateSalesTarget, onUpdateSalesTarget, onDeleteSalesTarget, searchTerm } = props;
 
   const salesTab: 'orders' | 'quotes' | 'customers' | 'targets' =
     activeView === 'sales' ? 'orders'
@@ -159,7 +159,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
             <TableHead cols={[{ label: 'Order ID' }, { label: 'Customer' }, { label: 'Items' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Priority' }, { label: 'Status' }, { label: 'Actions' }]} />
             <tbody className="divide-y divide-slate-100">
               {companyOrders.length === 0 && <EmptyRow cols={8} message="No sales orders yet. Create your first order to get started." />}
-              {companyOrders.map(o => (
+              {companyOrders.filter(o => !searchTerm || o.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) || o.customerName.toLowerCase().includes(searchTerm.toLowerCase())).map(o => (
                 <tr key={o.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{o.orderNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.customerName}</td>
@@ -190,7 +190,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
             <TableHead cols={[{ label: 'Quote ID' }, { label: 'Customer' }, { label: 'Items' }, { label: 'Valid Until' }, { label: 'Total', right: true }, { label: 'Status' }, { label: 'Actions' }]} />
             <tbody className="divide-y divide-slate-100">
               {companyQuotes.length === 0 && <EmptyRow cols={7} message="No quotations yet. Create your first quote to get started." />}
-              {companyQuotes.map(q => (
+              {companyQuotes.filter(q => !searchTerm || q.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) || q.customerName.toLowerCase().includes(searchTerm.toLowerCase())).map(q => (
                 <tr key={q.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{q.quoteNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{q.customerName}</td>
@@ -223,7 +223,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
             <TableHead cols={[{ label: 'Customer' }, { label: 'Company' }, { label: 'Email' }, { label: 'Orders' }, { label: 'Total Spend', right: true }, { label: 'Last Order' }, { label: 'Actions' }]} />
             <tbody className="divide-y divide-slate-100">
               {companyCustomers.length === 0 && <EmptyRow cols={7} message="No customers yet. Add your first customer to get started." />}
-              {companyCustomers.map(c => (
+              {companyCustomers.filter(c => !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || (c.company || '').toLowerCase().includes(searchTerm.toLowerCase())).map(c => (
                 <tr key={c.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{c.name}</td>
                   <td className="px-4 py-3 fs-xs text-slate-500">{c.company || '—'}</td>

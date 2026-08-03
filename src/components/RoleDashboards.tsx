@@ -118,12 +118,13 @@ const DoughnutChart = ({ data, title }: { data: { label: string; value: number; 
   const circumference = 2 * Math.PI * radius;
   let cumulativeValue = 0;
 
-  const slices = data.map(d => {
+  const slices: Array<typeof data[0] & { strokeDasharray: string, strokeDashoffset: number, percentage: string }> = [];
+  for (const d of data) {
     const strokeDasharray = `${(d.value / total) * circumference} ${circumference}`;
     const strokeDashoffset = -((cumulativeValue / total) * circumference);
     cumulativeValue += d.value;
-    return { ...d, strokeDasharray, strokeDashoffset, percentage: ((d.value / total) * 100).toFixed(1) };
-  });
+    slices.push({ ...d, strokeDasharray, strokeDashoffset, percentage: ((d.value / total) * 100).toFixed(1) });
+  }
 
   return (
     <div className="flex h-full flex-col rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
