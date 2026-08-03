@@ -44,6 +44,7 @@ export function usePagination<T>(url: string, options: UsePaginationOptions = {}
     }
   }, [url, page, limit, token]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   return { data, total, page, limit, totalPages, loading, error, setPage, setLimit, refresh: fetchData };

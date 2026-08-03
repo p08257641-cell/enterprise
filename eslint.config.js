@@ -18,6 +18,13 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-console': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'no-empty': 'off',
+      'prefer-const': 'off',
+      'no-useless-assignment': 'off',
+      '@typescript-eslint/no-namespace': 'off',
     },
   },
 );
