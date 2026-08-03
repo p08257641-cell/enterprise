@@ -5,7 +5,7 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { Company } from '../../types';
 
 export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
 
   // Employee name resolution from HR data (single source of truth)
   const resolveUserName = (userId: string): string => {
@@ -61,10 +61,6 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
     mrr: planMrr[t.billingPlan] || 0,
   }));
 
-  const platformUsers = employees.length + 420; // Mock total users across all tenants
-  const totalMRR = viewableTenants.reduce((sum, t) => sum + planPriceForModules(t.activeModules), 0);
-  const totalModules = viewableTenants.reduce((sum, t) => sum + (t.activeModules?.length || 0), 0);
-
   return (
     <div>
       <PageHeader title="Platform Management" subtitle="Manage tenant platformCompanies, billing, subscriptions, and platform-wide settings." />
@@ -81,12 +77,14 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">Tenant Companies</h3>
-              <PrimaryBtn icon="bi bi-plus-lg">Add Company</PrimaryBtn>
+              <div className="flex items-center gap-2.5">
+                <PrimaryBtn icon="bi bi-plus-lg">Add Company</PrimaryBtn>
+              </div>
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Company' }, { label: 'Domain' }, { label: 'Plan' }, { label: 'Users' }, { label: 'Modules' }, { label: 'MRR' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
-                {platformCompanies.map((company) => (
+                {platformCompanies.filter(c => !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.domain.toLowerCase().includes(searchTerm.toLowerCase())).map((company) => (
                   <tr key={company.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 table-cell-semibold text-slate-900">{company.name}</td>
                     <td className="px-4 py-3 table-cell text-slate-500">{company.domain}</td>
@@ -406,13 +404,14 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
 
             <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="section-title text-slate-900">Tenant Plans</h3>
-                <span className="text-[10px] text-slate-400 font-sans">{viewableTenants.length} tenants</span>
+                <div>
+                  <h3 className="section-title text-slate-900">Tenant Plans & Billing</h3>
+                </div>
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Tenant' }, { label: 'Plan' }, { label: 'Expires' }, { label: 'Modules' }, { label: 'Monthly' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {viewableTenants.map(t => {
+                  {viewableTenants.filter(t => !searchTerm || t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.billingPlan.toLowerCase().includes(searchTerm.toLowerCase())).map(t => {
                     const price = planPriceForModules(t.activeModules);
                     return (
                       <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">

@@ -307,12 +307,12 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
                     </div>
                   </div>
                 )}
-                {inventory.filter(i => i.stockLevel < i.reorderLevel).length > 0 && (
+                {inventory.filter(i => i.stockLevel < i.minStockLevel).length > 0 && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-100">
                     <i className="bi bi-box-seam text-red-600 fs-sm"></i>
                     <div className="flex-1">
                       <div className="text-[11px] fw-bold text-slate-900">Critical Stock Depletion</div>
-                      <div className="text-[10px] text-slate-600">{inventory.filter(i => i.stockLevel < i.reorderLevel).length} items are below reorder level.</div>
+                      <div className="text-[10px] text-slate-600">{inventory.filter(i => i.stockLevel < i.minStockLevel).length} items are below reorder level.</div>
                     </div>
                   </div>
                 )}

@@ -15,6 +15,7 @@ import {
 } from '../../types';
 
 export interface ModuleViewsProps {
+  searchTerm?: string;
   activeView: string;
   selectedCompany: Company;
   selectedUser: User;

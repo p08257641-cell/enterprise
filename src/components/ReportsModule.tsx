@@ -27,10 +27,12 @@ type ReportCategory = 'overview' | 'revenue' | 'workforce' | 'operations' | 'fin
 const StatCard = ({ label, value, sub, icon, trend, trendUp }: {
   label: string; value: string | number; sub?: string; icon: string; trend?: string; trendUp?: boolean;
 }) => (
-  <div className="bg-white border border-slate-200/80 rounded-xl p-5 flex flex-col gap-2 shadow-xs hover:shadow-sm transition-all">
+  <div className="bg-white border border-slate-200/80 rounded-xl p-5 flex flex-col gap-2 shadow-xs hover:shadow-sm transition-all group">
     <div className="flex items-center justify-between">
       <span className="fs-xs fw-semibold uppercase tracking-wider text-slate-500">{label}</span>
-      <i className={`${icon} fs-sm text-slate-300`}></i>
+      <div className={`h-8 w-8 rounded-md flex shrink-0 items-center justify-center border transition-all bg-slate-50 border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] group-hover:bg-white group-hover:border-slate-300 group-hover:shadow-sm group-hover:scale-105`}>
+        <i className={`${icon} fs-sm text-slate-500`}></i>
+      </div>
     </div>
     <div className="fs-2xl fw-bold tracking-tight tabular-nums text-slate-900">{value}</div>
     {sub && <p className="fs-xs leading-snug text-slate-500">{sub}</p>}

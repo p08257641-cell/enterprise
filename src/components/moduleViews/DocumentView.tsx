@@ -6,7 +6,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
   const {
     activeView, onNavigateView, selectedCompany, selectedUser,
     managedDocuments, onCreateDocument, onUpdateDocument, onDeleteDocument,
-    policyDocuments, onAcknowledgePolicy,
+    policyDocuments, onAcknowledgePolicy, searchTerm = '',
   } = props;
 
   const isAdmin = isAdminRole(selectedUser.activeRole);
@@ -130,7 +130,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
       {docTab === 'locker' && (
         <div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {localDocs.map(d => (
+            {localDocs.filter(d => !searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase())).map(d => (
               <div key={d.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all cursor-pointer group" onClick={() => docModal.open(d)}>
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
@@ -182,14 +182,16 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
           {/* Policy Documents section from HR */}
           {localPolicies.length > 0 && (
             <div className="mt-8 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100">
-                <h3 className="section-title text-slate-900">HR Policy Documents</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">Policies sourced from HR compliance module.</p>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <div>
+                  <h3 className="section-title text-slate-900">HR Policy Documents</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Policies sourced from HR compliance module.</p>
+                </div>
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Policy Title' }, { label: 'Category' }, { label: 'Version' }, { label: 'Due Date' }, { label: 'Acknowledgements' }, { label: 'Status' }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localPolicies.map(p => (
+                  {localPolicies.filter(p => !searchTerm || p.title.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
                     <tr key={p.id} className="hover:bg-slate-50/40">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{p.title}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{p.category}</td>
@@ -210,14 +212,16 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
       {docTab === 'esign' && (
         <div className="space-y-3">
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-            <div className="px-5 py-4 border-b border-slate-100">
-              <h3 className="section-title text-slate-900">eSign Requests</h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">Documents sent for digital signature.</p>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <div>
+                <h3 className="section-title text-slate-900">eSign Requests</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">Documents sent for digital signature.</p>
+              </div>
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Document Name' }, { label: 'Type' }, { label: 'Date' }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
               <tbody className="divide-y divide-slate-100">
-                {localDocs.filter(d => d.status === 'Pending Signature' || d.status === 'Signed').map(d => (
+                {localDocs.filter(d => (d.status === 'Pending Signature' || d.status === 'Signed') && (!searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase()))).map(d => (
                   <tr key={d.id} className="hover:bg-slate-50/40">
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{d.name}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.type}</td>

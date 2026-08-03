@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Company, User, CustomRole, PendingApproval } from '../types';
 import { ROLE_MODULES as rolePermissions, ROLE_SUBMENUS as submenuPermissions } from '../permissions';
+import { MODULE_CATALOG } from './RoleDashboards';
 
 interface SidebarProps {
   selectedCompany: Company;
@@ -110,6 +111,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
       return next;
     });
+  };
+
+  const getModuleIconWithColor = (modId: string, baseIcon: string) => {
+    const catIcon = MODULE_CATALOG[modId]?.icon;
+    if (!catIcon) return baseIcon;
+    const colorMatch = catIcon.match(/text-\w+-\d+/);
+    return colorMatch ? `${baseIcon} ${colorMatch[0]}` : baseIcon;
   };
 
   // Auto-expand the module whose sub-view is currently active
@@ -409,7 +417,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onSelectView(mod.viewId);
                         }
                       }}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 fs-sm fw-semibold transition-all cursor-pointer ${
+                      className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 fs-sm fw-semibold transition-all cursor-pointer group ${
                         isTopActive
                           ? 'bg-slate-900 text-white shadow-xs'
                           : expanded
@@ -417,8 +425,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      <span className="flex flex-wrap items-center gap-2">
-                        <i className={`${mod.iconClass} fs-sm`}></i>
+                      <span className="flex flex-wrap items-center gap-2.5">
+                        <div className={`h-7 w-7 rounded-md flex shrink-0 items-center justify-center border transition-all ${
+                          isTopActive 
+                            ? 'bg-white/10 border-white/20' 
+                            : 'bg-white border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] group-hover:border-slate-300 group-hover:shadow-sm group-hover:scale-105'
+                        }`}>
+                          <i className={`${getModuleIconWithColor(mod.id, mod.iconClass)} fs-sm ${isTopActive ? '!text-white' : ''}`}></i>
+                        </div>
                         {mod.label}
                       </span>
                       <span className="flex items-center gap-1.5">
@@ -437,30 +451,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <div className="ml-3 mt-0.5 border-l-2 border-slate-100 pl-3 space-y-0.5">
                         {accessibleSubMenus
                           .filter(sub => !sub.moduleId || selectedCompany.activeModules.includes(sub.moduleId))
-                          .map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() => onSelectView(sub.viewId)}
-                            className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 fs-xs fw-medium transition-all cursor-pointer ${
-                              activeView === sub.viewId ||
+                          .map((sub) => {
+                            const isSubActive = activeView === sub.viewId ||
                               (sub.id === 'proj-kanban' && (activeView === 'project' || activeView.startsWith('proj-'))) ||
                               (sub.id === 'proc-pos' && (activeView === 'procurement' || activeView.startsWith('proc-'))) ||
                               (sub.id === 'mfg-bom' && (activeView === 'manufacturing' || activeView.startsWith('mfg-'))) ||
                               (sub.id === 'asset-register' && (activeView === 'asset' || activeView.startsWith('asset-'))) ||
-                              (sub.id === 'doc-locker' && (activeView === 'document' || activeView.startsWith('doc-')))
-                                ? 'bg-slate-800 text-white'
+                              (sub.id === 'doc-locker' && (activeView === 'document' || activeView.startsWith('doc-')));
+                            
+                            return (
+                          <button
+                            key={sub.id}
+                            onClick={() => onSelectView(sub.viewId)}
+                            className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 fs-xs fw-medium transition-all cursor-pointer group ${
+                              isSubActive
+                                ? 'bg-slate-800 text-white shadow-xs'
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                             }`}
                           >
-                            <span className="flex flex-wrap items-center gap-2">
-                              <i className={`${sub.iconClass} fs-sm`}></i>
+                            <span className="flex flex-wrap items-center gap-2.5">
+                              <div className={`h-6 w-6 rounded-md flex shrink-0 items-center justify-center border transition-all ${
+                                isSubActive
+                                  ? 'bg-white/10 border-white/20'
+                                  : 'bg-white border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] group-hover:border-slate-300 group-hover:shadow-sm group-hover:scale-105'
+                              }`}>
+                                <i className={`${sub.iconClass} text-[11px] ${isSubActive ? '!text-white' : ''}`}></i>
+                              </div>
                               {isEmployee && employeeSubmenuLabelOverrides[sub.id] ? employeeSubmenuLabelOverrides[sub.id] : sub.label}
                             </span>
                             {sub.id === 'pending-approvals' && pendingApprovalCount > 0 && (
                               <span className="bg-amber-500 text-white rounded-full px-1.5 py-0.5 text-[9px] fw-bold leading-none">{pendingApprovalCount}</span>
                             )}
                           </button>
-                        ))}
+                        );
+                      })}
                       </div>
                     )}
                   </div>

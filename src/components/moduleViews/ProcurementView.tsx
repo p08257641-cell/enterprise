@@ -4,7 +4,7 @@ import { isAdminRole } from '../../permissions';
 
 export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
   const {
-    activeView, onNavigateView, selectedCompany, selectedUser,
+    searchTerm = '', activeView, onNavigateView, selectedCompany, selectedUser,
     vendors, purchaseOrders, rfqs, inventory,
     onCreateVendor, onUpdateVendor, onDeleteVendor,
     onCreatePurchaseOrder, onUpdatePurchaseOrder, onDeletePurchaseOrder,
@@ -57,8 +57,6 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
   const poModal = useRowModal<typeof localPOs[0]>();
   const rfqModal = useRowModal<typeof localRFQs[0]>();
   const vendorModal = useRowModal<typeof localVendors[0]>();
-  const [poSearch, setPoSearch] = useState('');
-  const [rfqSearch, setRfqSearch] = useState('');
 
   const totalPoValue = localPOs.reduce((s, o) => s + (o.total || 0), 0);
 
@@ -129,15 +127,11 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <h3 className="section-title text-slate-900">Purchase Orders</h3>
-            <div className="relative">
-              <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
-              <input type="text" placeholder="Search orders..." value={poSearch} onChange={e => setPoSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
-            </div>
           </div>
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'PO Number' }, { label: 'Vendor' }, { label: 'Item' }, { label: 'Date' }, { label: 'Total', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
             <tbody className="divide-y divide-slate-100">
-              {localPOs.filter(o => !poSearch || o.poNumber.toLowerCase().includes(poSearch.toLowerCase()) || o.vendorName.toLowerCase().includes(poSearch.toLowerCase()) || o.item.toLowerCase().includes(poSearch.toLowerCase())).map(o => (
+              {localPOs.filter(o => !searchTerm || o.poNumber.toLowerCase().includes(searchTerm.toLowerCase()) || o.vendorName.toLowerCase().includes(searchTerm.toLowerCase()) || o.item.toLowerCase().includes(searchTerm.toLowerCase())).map(o => (
                 <tr key={o.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-700">{o.poNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.vendorName}</td>
@@ -216,17 +210,13 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="section-title text-slate-900">Request for Quotation</h3>
               <div className="flex items-center gap-2.5">
-                <div className="relative">
-                  <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
-                  <input type="text" placeholder="Search RFQs..." value={rfqSearch} onChange={e => setRfqSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
-                </div>
                 {isAdmin && <PrimaryBtn icon="bi bi-send" onClick={() => { setRfqItem(''); setSelectedRfqInvId(''); setRfqVendorCount('3'); setShowRfqModal(true); }}>Send New RFQ</PrimaryBtn>}
               </div>
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'RFQ #' }, { label: 'Item' }, { label: 'Vendors Invited' }, { label: 'Sent On' }, { label: 'Quotes Received' }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
               <tbody className="divide-y divide-slate-100">
-                {localRFQs.filter(r => !rfqSearch || r.rfqNumber.toLowerCase().includes(rfqSearch.toLowerCase()) || r.item.toLowerCase().includes(rfqSearch.toLowerCase())).map(r => (
+                {localRFQs.filter(r => !searchTerm || r.rfqNumber.toLowerCase().includes(searchTerm.toLowerCase()) || r.item.toLowerCase().includes(searchTerm.toLowerCase())).map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{r.rfqNumber}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.item}</td>

@@ -5,7 +5,7 @@ import { parseActiveView } from '../../parseActiveView';
 
 export const AssetView: React.FC<ModuleViewsProps> = (props) => {
   const {
-    activeView, onNavigateView, selectedCompany, selectedUser,
+    searchTerm = '', activeView, onNavigateView, selectedCompany, selectedUser,
     fixedAssets, depreciationEntries, onCreateFixedAsset, onDisposeAsset, onRunDepreciation,
     maintenanceTasks, onCreateMaintenanceTask, onUpdateMaintenanceTask, onDeleteMaintenanceTask,
   } = props;
@@ -87,11 +87,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Asset Register</h3></div>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <h3 className="section-title text-slate-900">Asset Register</h3>
+              </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Purchase Price', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localAssets.map(a => (
+                  {localAssets.filter(a => !searchTerm || a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.assetCode.toLowerCase().includes(searchTerm.toLowerCase())).map(a => (
                     <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{a.assetCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{a.name}</td>
@@ -161,11 +163,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Maintenance Schedule</h3></div>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <h3 className="section-title text-slate-900">Maintenance Schedule</h3>
+              </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localMaintenance.map(m => (
+                  {localMaintenance.filter(m => !searchTerm || m.assetName.toLowerCase().includes(searchTerm.toLowerCase()) || m.task.toLowerCase().includes(searchTerm.toLowerCase())).map(m => (
                     <tr key={m.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{m.assetName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{m.task}</td>
@@ -245,11 +249,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           )}
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Depreciation Schedule (Straight-Line, 10% Salvage)</h3></div>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="section-title text-slate-900">Depreciation Schedule (Straight-Line, 10% Salvage)</h3>
+            </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Purchase Price', right: true }, { label: 'Life (yrs)' }, { label: 'Annual Dep.', right: true }, { label: 'Accumulated', right: true }, { label: 'Net Book Value', right: true }]} />
               <tbody className="divide-y divide-slate-100">
-                {depRows.map(r => (
+                {depRows.filter(r => !searchTerm || r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.assetCode.toLowerCase().includes(searchTerm.toLowerCase())).map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{r.assetCode}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.name}</td>

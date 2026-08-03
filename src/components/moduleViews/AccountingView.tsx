@@ -13,7 +13,7 @@ import { GLAccount, TaxCode, ComplianceCheck, FilingDeadline, TaxReturn } from '
 import { isFinanceDeptHead, isAdminRole, isAccountantRole } from '../../permissions';
 
 export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onUpdateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onUpdateTaxReturn, onDeleteTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onCreateComplianceCheck, onUpdateComplianceCheck, onDeleteComplianceCheck, onAcknowledgePolicy, onFileDeadline, onCreateFilingDeadline, onUpdateFilingDeadline, onDeleteFilingDeadline, onCreateTaxCode, onUpdateTaxCode, onDeleteTaxCode, tenants, onAssignPlan } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onUpdateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onUpdateTaxReturn, onDeleteTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onCreateComplianceCheck, onUpdateComplianceCheck, onDeleteComplianceCheck, onAcknowledgePolicy, onFileDeadline, onCreateFilingDeadline, onUpdateFilingDeadline, onDeleteFilingDeadline, onCreateTaxCode, onUpdateTaxCode, onDeleteTaxCode, tenants, onAssignPlan } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
@@ -150,7 +150,6 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
 
   const [accTab, setAccTab] = useState<'ledger' | 'invoices' | 'create' | 'expenses' | 'create-expense' | 'reports' | 'journal' | 'trial' | 'opening-balances' | 'fiscal-periods' | 'ap' | 'ar' | 'bank' | 'fixed-assets' | 'budgets' | 'cost-centers' | 'multi-currency' | 'tax' | 'tax-returns' | 'intercompany' | 'consolidation' | 'compliance' | 'audit-trail' | 'policies' | 'filing-deadlines' | 'reports-pl' | 'reports-bs' | 'reports-cf' | 'reports-aging'>('ledger');
   const [accGroup, setAccGroup] = useState<'gl' | 'invoices' | 'expenses' | 'ap' | 'ar' | 'bank' | 'assets' | 'tax' | 'reports'>('gl');
-  const [accSearch, setAccSearch] = useState('');
   const [accFilter, setAccFilter] = useState('All');
   const [invClient, setInvClient] = useState(''); const [invSubtotal, setInvSubtotal] = useState('15000');
   const [invTax, setInvTax] = useState('1200'); const [invSuccess, setInvSuccess] = useState(false);
@@ -373,8 +372,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="section-title text-slate-500">Chart of Accounts</h3>
-                  <div className="flex flex-wrap gap-2">
-                    <input type="text" placeholder="Search accounts..." className="px-3 py-1.5 border border-slate-200 rounded-lg fs-xs data-value focus:outline-none focus:ring-1 focus:ring-slate-300" value={accSearch} onChange={(e) => setAccSearch(e.target.value)} />
+                  <div className="flex items-center gap-2">
+                    <select className="px-2 py-1.5 border border-slate-200 rounded-lg fs-xs data-value bg-white focus:outline-none" value={accFilter} onChange={(e) => setAccFilter(e.target.value)}>
+                      {['All', 'Asset', 'Liability', 'Revenue', 'Expense', 'Equity'].map(type => <option key={type} value={type}>{type}</option>)}
+                    </select>
                   </div>
                 </div>
                 <div className="flex gap-2 mb-4">
@@ -385,7 +386,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <table className="w-full text-left">
                   <TableHead cols={[{ label: 'Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Balance', right: true }, { label: 'Actions', right: true }]} />
                   <tbody className="divide-y divide-slate-100">
-                    {localGL.filter(acc => accFilter === 'All' || acc.type === accFilter).filter(acc => acc.name.toLowerCase().includes(accSearch.toLowerCase()) || acc.code.toLowerCase().includes(accSearch.toLowerCase())).map(acc => (
+                    {localGL.filter(acc => accFilter === 'All' || acc.type === accFilter).filter(acc => !searchTerm || acc.name.toLowerCase().includes(searchTerm.toLowerCase()) || acc.code.toLowerCase().includes(searchTerm.toLowerCase())).map(acc => (
                       <tr key={acc.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{acc.code}</td>
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{acc.name}</td>
@@ -398,7 +399,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         </td>
                       </tr>
                     ))}
-                    {localGL.filter(acc => accFilter === 'All' || acc.type === accFilter).filter(acc => acc.name.toLowerCase().includes(accSearch.toLowerCase()) || acc.code.toLowerCase().includes(accSearch.toLowerCase())).length === 0 && <EmptyRow cols={5} message="No accounts found matching criteria." />}
+                    {localGL.filter(acc => accFilter === 'All' || acc.type === accFilter).filter(acc => !searchTerm || acc.name.toLowerCase().includes(searchTerm.toLowerCase()) || acc.code.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && <EmptyRow cols={5} message="No accounts found matching criteria." />}
                   </tbody>
                 </table>
               </div>

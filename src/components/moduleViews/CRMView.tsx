@@ -5,7 +5,7 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { CRMLead } from '../../types';
 
 export const CRMView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onGenerateLeads, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onGenerateLeads, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
 
   const localLeads = leads.filter(l => l.companyId === selectedCompany.id);
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
@@ -23,7 +23,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
     activeView === 'crm' ? 'pipeline'
       : activeView.startsWith('crm-') ? (activeView.slice(4) as 'contacts' | 'activities' | 'tasks' | 'emails' | 'reports')
         : 'pipeline';
-  const [crmSearch, setCrmSearch] = useState(''); const [crmFilter, setCrmFilter] = useState('All');
+  const [crmFilter, setCrmFilter] = useState('All');
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [crmFirst, setCrmFirst] = useState(''); const [crmLast, setCrmLast] = useState('');
   const [crmEmail, setCrmEmail] = useState(''); const [crmPhone, setCrmPhone] = useState('');
@@ -112,8 +112,9 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
       Lost: 'border-rose-200 bg-rose-50/30',
     };
     const presetColors = ['#64748b','#3b82f6','#f59e0b','#a855f7','#10b981','#f43f5e','#06b6d4','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#0ea5e9','#e11d48','#7c3aed'];
+    const searchStr = searchTerm.toLowerCase();
     const filtered = localLeads.filter(l => crmFilter === 'All' || l.status === crmFilter)
-      .filter(l => `${l.firstName} ${l.lastName} ${l.companyName}`.toLowerCase().includes(crmSearch.toLowerCase()));
+      .filter(l => `${l.firstName} ${l.lastName} ${l.companyName}`.toLowerCase().includes(searchStr));
     const pipelineValue = localLeads.filter(l => l.status !== 'Lost').reduce((s, l) => s + l.value, 0);
     const crmTabTitles: Record<string, string> = {
       pipeline: 'Lead Pipeline',
@@ -131,6 +132,10 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
           subtitle="Track prospects, manage the sales funnel, score leads with AI and dispatch follow-ups."
           action={
             <div className="flex gap-2.5">
+              <select value={crmFilter} onChange={e => setCrmFilter(e.target.value)} className="fs-xs rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 outline-none transition-all shadow-xs cursor-pointer">
+                <option value="All">All Stages</option>
+                {stages.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
               {onGenerateLeads && (
                 <>
                   <button

@@ -6,7 +6,7 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies } = props;
 
   const isAdmin = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
 
@@ -46,9 +46,6 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const branchModal = useRowModal<typeof localBranches[0]>();
   const deptModal = useRowModal<typeof departments[0] & { managerName: string; parentName: string }>();
   const userModal = useRowModal<typeof localEmployees[0]>();
-  const [branchSearch, setBranchSearch] = useState('');
-  const [deptSearch, setDeptSearch] = useState('');
-  const [userSearch, setUserSearch] = useState('');
 
   const [approvalPolicies, setApprovalPolicies] = useState<Record<string, string[]>>({
     'Leave Requests': ['HR Department Head', 'HR Manager', 'Company Admin'],
@@ -145,10 +142,6 @@ const [deptParent, setDeptParent] = useState('');
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="section-title text-slate-900">Branch Locations</h3>
               <div className="flex items-center gap-2.5">
-                <div className="relative">
-                  <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
-                  <input type="text" placeholder="Search branches..." value={branchSearch} onChange={e => setBranchSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
-                </div>
                 {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBranchName(''); setBranchLocation(''); setShowBranchModal(true); }}>Add Branch</PrimaryBtn>}
               </div>
             </div>
@@ -158,7 +151,7 @@ const [deptParent, setDeptParent] = useState('');
                 {localBranches.length === 0 && (
                   <tr><td colSpan={6} className="px-4 py-6 text-center fs-xs text-slate-400">No branches yet. Click “Add Branch” to create one.</td></tr>
                 )}
-                {localBranches.filter(b => !branchSearch || b.name.toLowerCase().includes(branchSearch.toLowerCase()) || b.location.toLowerCase().includes(branchSearch.toLowerCase())).map(b => (
+                {localBranches.filter(b => !searchTerm || b.name.toLowerCase().includes(searchTerm.toLowerCase()) || (b.location || '').toLowerCase().includes(searchTerm.toLowerCase())).map(b => (
                   <tr key={b.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3.5"><div className="data-value fw-semibold text-slate-900">{b.name}</div></td>
                     <td className="px-4 py-3.5 data-value text-slate-500">{b.location}</td>
@@ -191,17 +184,13 @@ const [deptParent, setDeptParent] = useState('');
                     <p className="text-[11px] text-slate-500 mt-0.5">Configure reporting hierarchy and department assignments.</p>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <div className="relative">
-                      <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
-                      <input type="text" placeholder="Search departments..." value={deptSearch} onChange={e => setDeptSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
-                    </div>
                     {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setDeptName(''); setDeptManager(''); setDeptParent(''); setShowDeptModal(true); }}>Add Department</PrimaryBtn>}
                   </div>
                 </div>
                 <table className="w-full text-left">
                   <TableHead cols={[{ label: 'Department' }, { label: 'Reports To' }, { label: 'Head Count' }, { label: 'Budget' }, { label: 'Manager' }, { label: '' }]} />
                   <tbody className="divide-y divide-slate-100">
-                    {companyDepts.filter(d => !deptSearch || d.name.toLowerCase().includes(deptSearch.toLowerCase())).map(dept => {
+                    {companyDepts.filter(d => !searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase())).map(dept => {
                       const manager = localEmployees.find(e => e.userId === dept.managerId);
                       const parentName = getDeptName(dept.parentId);
                       return (
@@ -490,17 +479,13 @@ const [deptParent, setDeptParent] = useState('');
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">System Users</h3>
                 <div className="flex items-center gap-2.5">
-                  <div className="relative">
-                    <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
-                    <input type="text" placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
-                  </div>
-                  {isAdmin && <PrimaryBtn icon="bi bi-person-plus" onClick={() => setShowInviteForm(true)}>Invite User</PrimaryBtn>}
+                  {isAdmin && <PrimaryBtn icon="bi bi-person-plus" onClick={() => { setInviteName(''); setInviteEmail(''); setInviteRole('Employee'); setInviteRoles(['Employee']); setInviteDept('Engineering'); setInviteBranch('HQ'); setInviteSuccess(false); setShowInviteForm(true); }}>Invite User</PrimaryBtn>}
                 </div>
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'User' }, { label: 'Active Role' }, { label: 'All Roles' }, { label: 'Department' }, { label: 'Status' }, { label: 'Joined' }, { label: '' }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localEmployees.filter(e => !userSearch || `${e.firstName} ${e.lastName} ${e.email}`.toLowerCase().includes(userSearch.toLowerCase())).slice(0, 8).map(emp => (
+                  {localEmployees.filter(e => !searchTerm || `${e.firstName} ${e.lastName} ${e.email}`.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 8).map(emp => (
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2.5">
@@ -951,7 +936,7 @@ const [deptParent, setDeptParent] = useState('');
         )}
 
         {adminTab === 'evat' && (
-          <EvatSettingsView selectedCompany={selectedCompany} />
+          <EvatSettingsView selectedCompany={selectedCompany} searchTerm={searchTerm} />
         )}
 
         {/* ── Add/Edit Role Modal ──────────────────────────────────── */}
@@ -1143,14 +1128,13 @@ const [deptParent, setDeptParent] = useState('');
   );
 };
 
-const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany }) => {
+const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> = ({ selectedCompany, searchTerm }) => {
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
-  const [evatSearch, setEvatSearch] = useState('');
   const [form, setForm] = useState({
     companyTin: '',
     companyName: '',
@@ -1280,10 +1264,6 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
             <h3 className="fs-sm fw-bold text-slate-900">E-VAT Submission History</h3>
             <p className="text-[11px] text-slate-500 mt-0.5">Recent submissions to GRA.</p>
           </div>
-          <div className="relative">
-            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 fs-xs"></i>
-            <input type="text" placeholder="Search IRN or number..." value={evatSearch} onChange={e => setEvatSearch(e.target.value)} className="pl-8 pr-3 py-1.5 fs-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-300 focus:ring-2 focus:ring-slate-100 outline-none transition-all w-64 text-slate-700" />
-          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -1292,7 +1272,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any }> = ({ selectedCompany 
             </tr></thead>
             <tbody>
               {submissions.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-[11px] text-slate-400">No submissions yet.</td></tr>}
-              {submissions.filter((s: any) => !evatSearch || s.entityNumber.includes(evatSearch) || (s.irn || '').includes(evatSearch)).map((s: any) => (
+              {submissions.filter((s: any) => !searchTerm || s.entityNumber.includes(searchTerm) || (s.irn || '').includes(searchTerm)).map((s: any) => (
                 <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50/40">
                   <td className="px-4 py-2.5 text-[11px] text-slate-600">{s.entityType}</td>
                   <td className="px-4 py-2.5 text-[11px] font-mono text-slate-900">{s.entityNumber}</td>

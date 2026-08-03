@@ -7,7 +7,7 @@ import { isAdminRole, isHRRole } from '../../permissions';
 import { CommunicationAnnouncement, EmailTemplate } from '../../types';
 
 export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement, emailTemplates, onAddEmailTemplate, chatMessages, chatGroups, onCreateChatGroup, onUpdateChatGroupMembers, onSendChatMessage, chatReads, onMarkThreadRead } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, announcements, onAddAnnouncement, emailTemplates, onAddEmailTemplate, chatMessages, chatGroups, onCreateChatGroup, onUpdateChatGroupMembers, onSendChatMessage, chatReads, onMarkThreadRead } = props;
 
   type CommTab = 'feed' | 'compose' | 'chat' | 'email';
   const commTabFromView = (): CommTab =>
@@ -29,7 +29,6 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
   type ChatRecipient = { type: 'team' | 'person' | 'custom_group'; id: string; name: string };
   const [chatRecipient, setChatRecipient] = useState<ChatRecipient | null>(null);
   const [chatInput, setChatInput] = useState('');
-  const [chatSearch, setChatSearch] = useState('');
   const canManage = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole);
   const [showAddTemplate, setShowAddTemplate] = useState(false);
   const [tplName, setTplName] = useState('');
@@ -147,13 +146,13 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
           {/* Left: Recipients */}
           <div className="w-64 border-r border-slate-200 flex flex-col shrink-0">
             <div className="px-4 py-3 border-b border-slate-100">
-              <Input placeholder="Search…" value={chatSearch} onChange={e => setChatSearch(e.target.value)} />
+              <Input placeholder="Search…" value={searchTerm} readOnly />
             </div>
             <div className="flex-1 overflow-y-auto">
               {/* Teams */}
               <div className="px-4 pt-3 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400">Teams</div>
               {departments.filter(d => d.companyId === selectedCompany.id && d.name === myDeptName)
-                .filter(d => !chatSearch || d.name.toLowerCase().includes(chatSearch.toLowerCase()))
+                .filter(d => !searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .sort((a, b) => getThreadLastMessageTime(b.id) - getThreadLastMessageTime(a.id))
                 .map(d => {
                   const unread = getUnreadCount({ type: 'team', id: d.id, name: d.name });
@@ -178,7 +177,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                 }} className="hover:text-slate-600"><i className="bi bi-plus-lg"></i></button>
               </div>
               {(chatGroups || []).filter(g => g.companyId === selectedCompany.id && g.members.includes(selectedUser.id))
-                .filter(g => !chatSearch || g.name.toLowerCase().includes(chatSearch.toLowerCase()))
+                .filter(g => !searchTerm || g.name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .sort((a, b) => getThreadLastMessageTime(b.id) - getThreadLastMessageTime(a.id))
                 .map(g => {
                   const unread = getUnreadCount({ type: 'custom_group', id: g.id, name: g.name });
@@ -194,7 +193,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
               {/* People */}
               <div className="px-4 pt-4 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400">People</div>
               {employees.filter(e => e.companyId === selectedCompany.id)
-                .filter(e => !chatSearch || `${e.firstName} ${e.lastName}`.toLowerCase().includes(chatSearch.toLowerCase()) || e.department?.toLowerCase().includes(chatSearch.toLowerCase()))
+                .filter(e => !searchTerm || `${e.firstName} ${e.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) || e.department?.toLowerCase().includes(searchTerm.toLowerCase()))
                 .sort((a, b) => {
                   const tidA = [selectedUser.id, a.userId || a.id].sort().join('::dm::');
                   const tidB = [selectedUser.id, b.userId || b.id].sort().join('::dm::');

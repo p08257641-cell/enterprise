@@ -7,7 +7,7 @@ import { SupportTicket, KBArticle } from '../../types';
 import { parseActiveView } from '../../parseActiveView';
 
 export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onUpdateTicket, kbArticles, onAddKbArticle } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onUpdateTicket, kbArticles, onAddKbArticle } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   
@@ -83,10 +83,13 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
       )}
       {hdTab === 'queue' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <h3 className="section-title text-slate-900">Ticket Queue</h3>
+          </div>
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Subject' }, { label: 'Category' }, { label: 'Priority' }, { label: 'Status' }, { label: 'Created' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
-              {localTickets.map(t => (
+              {localTickets.filter(t => !searchTerm || t.subject.toLowerCase().includes(searchTerm.toLowerCase()) || t.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) || t.customerName.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
                 <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.customerName}</td>
@@ -141,7 +144,6 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           </div>
 
-          {/* Ticket Queue Sidebar */}
           <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -197,10 +199,13 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Avg Response" value={localTickets.length ? `${Math.round((localTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length / localTickets.length) * 100)}%` : '--'} icon="bi bi-stopwatch" sub="Resolution rate" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="section-title text-slate-900">SLA Monitoring</h3>
+            </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Ticket #' }, { label: 'Customer' }, { label: 'Priority' }, { label: 'Elapsed' }, { label: 'Target' }, { label: 'SLA' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
-                {localTickets.map(t => {
+                {localTickets.filter(t => !searchTerm || t.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) || t.customerName.toLowerCase().includes(searchTerm.toLowerCase())).map(t => {
                   const s = slaStatus(t);
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/40">

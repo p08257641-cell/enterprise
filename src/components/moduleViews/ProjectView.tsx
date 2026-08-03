@@ -4,7 +4,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { isAdminRole } from '../../permissions';
 
 export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, onNavigateView, selectedCompany, selectedUser, employees, attendance, projectTasks: dbTasks, projectMilestones: dbMilestones, onCreateProjectTask, onUpdateProjectTask, onDeleteProjectTask, onCreateProjectMilestone, onUpdateProjectMilestone, onDeleteProjectMilestone } = props;
+  const { searchTerm = '', activeView, onNavigateView, selectedCompany, selectedUser, employees, attendance, projectTasks: dbTasks, projectMilestones: dbMilestones, onCreateProjectTask, onUpdateProjectTask, onDeleteProjectTask, onCreateProjectMilestone, onUpdateProjectMilestone, onDeleteProjectMilestone } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localTasks = dbTasks.filter(t => t.companyId === selectedCompany.id);
@@ -231,11 +231,13 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Overdue Tasks" value={overdueTasks} icon="bi bi-exclamation-triangle" sub="Past due, not done" color="text-rose-600" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Time Log — This Week</h3></div>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="section-title text-slate-900">Time Log — This Week</h3>
+            </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Team Member' }, { label: 'Task' }, { label: 'Due' }, { label: 'Hours Logged', right: true }, { label: 'Priority' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
-                {localTasks.slice(0, 8).map((task, i) => {
+                {localTasks.filter(t => !searchTerm || t.title.toLowerCase().includes(searchTerm.toLowerCase()) || (t.assigneeName || '').toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 8).map((task, i) => {
                   const hours = [6.5, 8, 4, 7.5, 5, 6, 3, 7][i] ?? 5;
                   const billable = [true, true, false, true, true, true, false, true][i];
                   return (
@@ -271,11 +273,13 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Available Capacity" value={`${localEmployees.length ? Math.round(((localEmployees.length - attendance.filter(a => a.companyId === selectedCompany.id && a.status === 'Present').length) / localEmployees.length) * 100) : 100}%`} icon="bi bi-person-check" sub="Unallocated bandwidth" color="text-emerald-600" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-            <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Team Resource Allocation</h3></div>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="section-title text-slate-900">Team Resource Allocation</h3>
+            </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Team Member' }, { label: 'Department' }, { label: 'Role' }, { label: 'Utilisation', right: true }, { label: 'Tasks Assigned', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
-                {localEmployees.slice(0, 8).map((emp, i) => {
+                {localEmployees.filter(e => !searchTerm || `${e.firstName} ${e.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) || e.department.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 8).map((emp, i) => {
                   const utils = [92, 78, 45, 100, 65, 80, 55, 72];
                   const u = utils[i] ?? 70;
                   const empTaskCount = localTasks.filter(t => t.assignee === emp.id || t.assigneeName?.includes(emp.firstName)).length;

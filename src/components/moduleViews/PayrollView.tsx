@@ -51,7 +51,7 @@ function payslipPDFBody(slip: { employeeName: string; employeeId: string; depart
 }
 
 export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, payrollGroups, salaryBands, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onCreatePayrollGroup, onDeletePayrollGroup, onCreateSalaryBand, onUpdateSalaryBand, onDeleteSalaryBand, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onNavigateView, payrollTaxConfig, onUpdatePayrollTaxConfig } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, payrollGroups, salaryBands, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onCreatePayrollGroup, onDeletePayrollGroup, onCreateSalaryBand, onUpdateSalaryBand, onDeleteSalaryBand, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onNavigateView, payrollTaxConfig, onUpdatePayrollTaxConfig } = props;
 
   const taxCfg = payrollTaxConfig || { customTaxes: [], customBenefits: [] };
   const [draftCfg, setDraftCfg] = useState(taxCfg);
@@ -69,6 +69,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const [payrollStep, setPayrollStep] = useState<'idle' | 'review' | 'done'>('idle');
   const [paySalaryStructure, setPaySalaryStructure] = useState('Standard');
   const [payMonth, setPayMonth] = useState('July 2026');
+  const [payrollModalData, setPayrollModalData] = useState<{ open: boolean; date: string; run?: any }>({ open: false, date: '' });
   const [selectedSlipId, setSelectedSlipId] = useState<string | null>(null);
 
   // Payslips tab: pick period, defaulting to the latest available for the company
@@ -849,12 +850,16 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Employees with OT" value={attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length} icon="bi bi-people" sub="Claimed overtime this month" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-              <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Overtime Log</h3></div>
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="section-title text-slate-900">Overtime Log</h3>
+              </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Employee' }, { label: 'Dept' }, { label: 'Regular Hours', right: true }, { label: 'OT Hours', right: true }, { label: 'OT Rate', right: true }, { label: 'OT Pay', right: true }, { label: 'Approved By' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
-                  {localEmployees.slice(0, 4).map((emp, i) => {
-                    const otHours = [12, 8, 18, 6][i] ?? 5;
+                  {localEmployees.slice(0, 4)
+                    .map((emp, i) => ({ emp, otHours: [12, 8, 18, 6][i] ?? 5 }))
+                    .filter(({ emp }) => !searchTerm || `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) || emp.department.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map(({ emp, otHours }) => {
                     const otRate = Math.round((emp.salary / 160) * 1.5);
                     return (
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">

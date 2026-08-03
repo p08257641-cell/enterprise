@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, Expense, JournalEntry, Bill } from '../types';
 import { OrgChart } from './OrgChart';
 
-const MODULE_CATALOG: Record<string, { icon: string; desc: string; integrations: string[] }> = {
+export const MODULE_CATALOG: Record<string, { icon: string; desc: string; integrations: string[] }> = {
   'Administration': { icon: 'bi-shield-lock-fill text-indigo-500', desc: 'Core system administration, user management, and security settings.', integrations: ['All Modules'] },
   'HR': { icon: 'bi-people-fill text-pink-500', desc: 'Employee records, attendance, leave management, and organizational charts.', integrations: ['Payroll', 'Project Management', 'Operations'] },
   'Payroll': { icon: 'bi-cash-stack text-emerald-500', desc: 'Automated salary calculations, tax deductions, and payslip generation.', integrations: ['HR', 'Accounting', 'Compliance'] },
@@ -332,12 +332,18 @@ interface RoleDashboardsProps {
 const StatCard = ({ label, value, sub, accent = false, icon }: {
   label: string; value: string | number; sub?: string; accent?: boolean; icon: string;
 }) => (
-  <div className={`rounded-xl border p-5 flex flex-col gap-3 shadow-xs hover:shadow-sm transition-all duration-200 ${
+  <div className={`rounded-xl border p-5 flex flex-col gap-3 shadow-xs hover:shadow-sm transition-all duration-200 group ${
     accent ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200/80'
   }`}>
     <div className="flex items-center justify-between">
       <span className={`text-[10px] fw-bold uppercase tracking-widest ${accent ? 'text-slate-400' : 'text-slate-400'}`}>{label}</span>
-      <i className={`${icon} fs-sm ${accent ? 'text-slate-400' : 'text-slate-300'}`}></i>
+      <div className={`h-8 w-8 rounded-md flex shrink-0 items-center justify-center border transition-all ${
+        accent 
+          ? 'bg-white/10 border-white/20' 
+          : 'bg-slate-50 border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] group-hover:bg-white group-hover:border-slate-300 group-hover:shadow-sm group-hover:scale-105'
+      }`}>
+        <i className={`${icon} fs-sm ${accent ? 'text-slate-200' : 'text-slate-500'}`}></i>
+      </div>
     </div>
     <div className={`fs-2xl fw-bold tracking-tight font-sans tabular-nums ${accent ? 'text-white' : 'text-slate-900'}`}>{value}</div>
     {sub && <p className={`text-[11px] leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
@@ -714,7 +720,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <UpsellOverlay isActive={selectedCompany.activeModules.includes('Accounting')} title="Financial Analytics" icon="bi-graph-up">
-              <LineAreaChart data={revData} title="Revenue Trend (6 Months)" currency={selectedCompany.currency} />
+              <LineAreaChart data={revData} title="Revenue Trend (6 Months)" valuePrefix={selectedCompany.currency === 'GHS' ? '₵' : '$'} />
             </UpsellOverlay>
           </div>
           <div>

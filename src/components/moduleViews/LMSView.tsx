@@ -7,7 +7,7 @@ import { isAdminRole, isHRRole } from '../../permissions';
 import { LMSCourse } from '../../types';
 
 export const LMSView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, lmsCourses, onAddLmsCourse } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, lmsCourses = [], onAddLmsCourse } = props;
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const canManage = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole);
@@ -41,7 +41,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
         <div className="space-y-4">
           {canManage && <AddCourseForm selectedCompany={selectedCompany} onAddLmsCourse={onAddLmsCourse} />}
           <div className="grid gap-4 sm:grid-cols-2">
-            {lmsCourses.map(c => {
+            {lmsCourses.filter(c => !searchTerm || c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.category.toLowerCase().includes(searchTerm.toLowerCase())).map(c => {
               const levelColor = c.level === 'Advanced' ? 'from-rose-500 to-orange-500' : c.level === 'Intermediate' ? 'from-amber-500 to-yellow-400' : 'from-emerald-500 to-teal-400';
               const levelBg = c.level === 'Advanced' ? 'bg-rose-50 text-rose-700 border-rose-200' : c.level === 'Intermediate' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
               const levelIcon = c.level === 'Advanced' ? 'bi-mortarboard' : c.level === 'Intermediate' ? 'bi-book-half' : 'bi-book';
@@ -131,7 +131,7 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
               {lmsCourses.length === 0 ? (
                 <tr><td colSpan={5} className="px-4 py-10 text-center fs-xs text-slate-400">No courses available. Add courses to track employee progress.</td></tr>
               ) : (
-                localEmployees.slice(0, 6).map((emp, i) => {
+                localEmployees.filter(emp => !searchTerm || `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 6).map((emp, i) => {
                   const course = lmsCourses[i % lmsCourses.length] || { title: 'No course', category: 'General', level: 'Beginner', duration: '--' };
                   const progressValues = [85, 62, 100, 40, 15, 0];
                   const prog = progressValues[i] ?? 0;

@@ -3,7 +3,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { modalAlert } from '../../utils/modal';
 
 export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
-  const { activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
 
   const localStock = inventory.filter(s => s.companyId === selectedCompany.id);
 
@@ -23,7 +23,6 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
     { id: 'valuation', label: 'Valuation' },
     { id: 'adjust', label: 'Adjustments' },
   ];
-  const [invSearch, setInvSearch] = useState('');
   const [adjItem, setAdjItem] = useState(''); const [adjQty, setAdjQty] = useState('100');
   const [transfers, setTransfers] = useState<{ id: string; item: string; from: string; to: string; qty: number; status: string }[]>([
     { id: 'TRF-1001', item: localStock[0]?.name ?? 'Steel Bracket', from: 'Warehouse A', to: 'Main Store', qty: 50, status: 'Completed' },
@@ -41,7 +40,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
 
   const lowStock = localStock.filter(i => i.stockLevel <= i.minStockLevel);
   const totalVal = localStock.reduce((s, i) => s + i.stockLevel * i.unitPrice, 0);
-  const filteredStock = localStock.filter(i => i.name.toLowerCase().includes(invSearch.toLowerCase()) || i.sku.toLowerCase().includes(invSearch.toLowerCase()));
+  const filteredStock = localStock.filter(i => !searchTerm || i.name.toLowerCase().includes(searchTerm.toLowerCase()) || i.sku.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div>
@@ -61,9 +60,6 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
       )}
       {invTab === 'stock' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <Input placeholder="Search by SKU or product name…" value={invSearch} onChange={e => setInvSearch(e.target.value)} />
-          </div>
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'SKU' }, { label: 'Product' }, { label: 'Category' }, { label: 'Warehouse' }, { label: 'Stock', right: true }, { label: 'Min', right: true }, { label: 'Unit Price', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">

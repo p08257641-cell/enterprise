@@ -3396,6 +3396,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
             <AIAssistant selectedCompany={selectedCompany} activeView={activeView} />
           ) : (
             <ModuleViews
+              searchTerm={searchTerm}
               activeView={activeView}
               onNavigateView={setActiveView}
               selectedCompany={selectedCompany}
