@@ -6,6 +6,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User, PendingApproval } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { isEmployeeRole } from '../permissions';
 
 interface HeaderProps {
   selectedUser: User;
@@ -72,7 +73,8 @@ export const Header: React.FC<HeaderProps> = ({
   const totalCount = notificationCount + pendingApprovalCount;
 
   // Filter to current company's pending approvals
-  const companyApprovals = pendingApprovals.filter(
+  const isEmployee = isEmployeeRole(selectedUser.activeRole || selectedUser.role);
+  const companyApprovals = isEmployee ? [] : pendingApprovals.filter(
     a => a.status === 'Pending' && (!selectedCompanyId || a.companyId === selectedCompanyId)
   );
 
