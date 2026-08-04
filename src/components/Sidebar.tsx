@@ -398,6 +398,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   return null;
                 }
 
+                if (mod.id === 'Learning Management (LMS)' && userRole !== 'Employee') {
+                  return null;
+                }
+
                 // For non-Super Admin, hide module if not installed
                 // Employee always sees HR module for self-service leave/attendance
                 if (!isSuperAdmin && !isInstalled && !(isEmployee && mod.id === 'HR')) {

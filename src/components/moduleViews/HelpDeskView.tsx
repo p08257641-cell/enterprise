@@ -55,7 +55,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
   const [replyBusy, setReplyBusy] = useState(false);
   const isAdmin = isAdminRole(selectedUser.activeRole);
   const isHR = isHRRole(selectedUser.activeRole);
-  const canManage = isAdmin || isHR;
+  const canManage = isAdmin || isHR || isHDAdmin;
 
   const ticketFields: { label: string; key: string; mono?: boolean; format?: (v: any) => React.ReactNode; icon?: string; section?: string; full?: boolean }[] = [
     { label: 'Ticket #', key: 'ticketNumber', mono: true, icon: 'bi bi-hash' },
@@ -103,7 +103,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                       onClick={(e) => { e.stopPropagation(); ticketModal.open(t); }}
                       className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                     >
-                      <i className="bi bi-eye text-[11px]"></i> View
+                      <i className={`bi ${canManage ? 'bi-pencil' : 'bi-eye'} text-[11px]`}></i> {canManage ? 'Edit' : 'View'}
                     </button>
                   </td>
                 </tr>
