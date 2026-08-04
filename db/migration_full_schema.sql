@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS bom_items (
 );
 
 CREATE TABLE IF NOT EXISTS quality_checks (
-  id text PRIMARY KEY, "companyId" text, check text, result text, date text,
+  id text PRIMARY KEY, "companyId" text, "check" text, result text, date text,
   inspector text, notes text, "createdAt" text
 );
 
