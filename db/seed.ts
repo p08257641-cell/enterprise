@@ -128,7 +128,8 @@ async function seed() {
 
   console.log('Inserting seed data…');
   await db.insert(schema.companies).values(INITIAL_COMPANIES);
-  await db.insert(schema.users).values(INITIAL_USERS);
+  const defaultPasswordHash = '$2b$10$OKxWi75nb4ZDTkvG5Qis9.Vw1cEI1eWJ5AtLhJU8HGM35daJT0TLu'; // 'password123'
+  await db.insert(schema.users).values(INITIAL_USERS.map(u => ({ ...u, passwordHash: defaultPasswordHash })));
   await db.insert(schema.departments).values(INITIAL_DEPARTMENTS);
   await db.insert(schema.branches).values(INITIAL_BRANCHES);
   await db.insert(schema.employees).values(INITIAL_EMPLOYEES.map(emp => ({
