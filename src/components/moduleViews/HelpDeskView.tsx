@@ -260,12 +260,21 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="bg-slate-50 rounded-xl p-3 fs-xs text-slate-700">{t.description}</div>
 
                 {canManage && (
-                  <div>
-                    <Label>Direct To Department</Label>
-                    <Select value={t.department || ''} onChange={async e => { await onUpdateTicket(t.id, { department: e.target.value }); }}>
-                      <option value="">Unassigned</option>
-                      {localDepartments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Direct To Department</Label>
+                      <Select value={t.department || ''} onChange={async e => { await onUpdateTicket(t.id, { department: e.target.value }); }}>
+                        <option value="">Unassigned</option>
+                        {localDepartments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Assign To</Label>
+                      <Select value={t.assignedTo || ''} onChange={async e => { await onUpdateTicket(t.id, { assignedTo: e.target.value }); }}>
+                        <option value="">Unassigned</option>
+                        {localEmployees.filter(emp => emp.status === 'Active' && (emp.department === 'Support' || emp.department === 'IT' || emp.department === 'Operations')).map(emp => <option key={emp.id} value={emp.userId || emp.id}>{emp.firstName} {emp.lastName} ({emp.department})</option>)}
+                      </Select>
+                    </div>
                   </div>
                 )}
 

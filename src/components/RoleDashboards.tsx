@@ -1948,7 +1948,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   // ════════════════════════════════════════════════════════════════════════════
   // SUPPORT / HELP DESK DASHBOARD — Support Agent
   // ════════════════════════════════════════════════════════════════════════════
-  if (role === 'Support Agent') {
+  if (role === 'Support Agent' || role === 'Help Desk Admin') {
     return (
     <div className="space-y-6">
       <div className="flex items-start justify-between pb-4 border-b border-slate-200">
