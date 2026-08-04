@@ -5754,8 +5754,7 @@ process.on('unhandledRejection', (reason: any) => {
 
 async function runMigrations() {
   const fs = await import('fs');
-  const { fileURLToPath } = await import('url');
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const baseDir = process.cwd();
 
   const migrationFiles = [
     'migration_full_schema.sql',
@@ -5773,7 +5772,7 @@ async function runMigrations() {
   ];
 
   for (const fileName of migrationFiles) {
-    const migrationPath = path.join(__dirname, 'db', fileName);
+    const migrationPath = path.join(baseDir, 'db', fileName);
     if (!fs.existsSync(migrationPath)) continue;
 
     const sql = fs.readFileSync(migrationPath, 'utf-8');
