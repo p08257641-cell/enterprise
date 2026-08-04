@@ -2049,7 +2049,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
           const isClockedIn = !!myAttToday?.checkIn;
           const isClockedOut = !!myAttToday?.checkOut;
           return (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 flex items-center justify-between">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
           <div>
             <div className="section-title text-slate-500 mb-1">Today's Status</div>
             <div className="fs-2xl fw-bold text-slate-900">{isClockedOut ? 'Shift Complete' : isClockedIn ? 'Clocked In' : 'Not Clocked In'}</div>
@@ -2083,7 +2083,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
         })()}
 
         {/* Weekly view */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
           <div className="px-5 py-4 border-b border-slate-100">
             <h3 className="fs-sm fw-bold text-slate-900">This Week</h3>
           </div>
