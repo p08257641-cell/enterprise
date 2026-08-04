@@ -129,6 +129,7 @@ const asyncHandler = (fn: (req: express.Request, res: express.Response, next: ex
     Promise.resolve(fn(req, res, next)).catch(next);
 
 const app = express();
+app.set('trust proxy', 1); // Allow rate limiting to work correctly behind Netlify proxy
 const PORT = 3000;
 
 app.use(express.json({ limit: '1mb' }));
@@ -5608,6 +5609,14 @@ app.post('/api/ai/chat', asyncHandler(async (req, res) => {
 
 
 // ── Profile Update Requests ───────────────────────────────────────────────
+app.get('/api/bank-account-updates', asyncHandler(async (req, res) => {
+  res.json([]);
+}));
+
+app.post('/api/bank-account-updates', asyncHandler(async (req, res) => {
+  res.status(201).json({ id: `bau-${Date.now()}`, ...req.body, status: 'Pending', createdAt: new Date().toISOString() });
+}));
+
 app.get('/api/profile-update-requests', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   const all = await dbAll<any>(schema.profileUpdateRequests);
