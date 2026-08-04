@@ -63,3 +63,5 @@ CREATE TABLE IF NOT EXISTS bank_account_updates (
   status text,
   "requestedAt" text
 );
+
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS "photoUrl" text;

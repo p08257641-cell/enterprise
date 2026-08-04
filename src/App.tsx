@@ -503,8 +503,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       } catch (e) { console.error('Failed to load chat data:', e); }
     };
     loadChat();
-    // Poll every 5 seconds to surface messages sent by other users
-    const interval = setInterval(loadChat, 5000);
+    // Poll every 60 seconds to surface messages sent by other users
+    const interval = setInterval(loadChat, 60000);
     return () => { cancelled = true; clearInterval(interval); };
   }, [selectedCompany, selectedUser]);
 
