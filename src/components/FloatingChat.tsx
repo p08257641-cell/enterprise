@@ -139,7 +139,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[440px] h-[540px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+        <div className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[440px] h-[75vh] sm:h-[540px] max-h-[800px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-800">
             <div className="flex items-center gap-2.5">
@@ -201,7 +201,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
           {/* Body */}
           <div className="flex-1 flex overflow-hidden">
             {/* Left: Recipients */}
-            <div className="w-48 border-r border-slate-100 flex flex-col shrink-0">
+            <div className={`w-full sm:w-48 border-r border-slate-100 flex-col shrink-0 ${chatRecipient ? 'hidden sm:flex' : 'flex'}`}>
               <div className="px-3 py-2 border-b border-slate-100">
                 <input
                   placeholder="Search…"
@@ -327,11 +327,16 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
             </div>
 
             {/* Right: Chat */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className={`flex-1 flex-col min-w-0 ${!chatRecipient ? 'hidden sm:flex' : 'flex'}`}>
               {chatRecipient ? (
                 <>
                   <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2.5 bg-white">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] fw-bold text-white ${
+                    {/* Mobile Back Button */}
+                    <button onClick={() => setChatRecipient(null)} className="sm:hidden w-7 h-7 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer shrink-0">
+                      <i className="bi bi-chevron-left text-[12px]"></i>
+                    </button>
+                    
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] fw-bold text-white shrink-0 ${
                       chatRecipient.type === 'group' ? 'bg-violet-600' : 'bg-slate-900'
                     }`}>
                       {chatRecipient.type === 'group' ? <i className="bi bi-people-fill text-[9px]"></i> :
