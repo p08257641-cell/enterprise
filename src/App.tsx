@@ -1425,7 +1425,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
-  const handleUpdateTicket = async (id: string, updates: { status?: string; department?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => {
+  const handleUpdateTicket = async (id: string, updates: { status?: string; department?: string; assignedTo?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => {
     try {
       const res = await fetch(`/api/tickets/${id}`, {
         method: 'PUT',

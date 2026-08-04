@@ -64,7 +64,7 @@ export interface ModuleViewsProps {
   onPayInvoice: (invId: string) => void;
   onAdjustStock: (itemId: string, qty: number) => void;
   onAddTicket: (ticket: Omit<SupportTicket, 'id' | 'ticketNumber' | 'status' | 'assignedTo' | 'createdAt'>) => void;
-  onUpdateTicket: (id: string, updates: { status?: string; department?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => void;
+  onUpdateTicket: (id: string, updates: { status?: string; department?: string; assignedTo?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => void;
   onInviteUser: (usr: { name: string; email: string; role: string; roles?: string[]; department: string; branch: string }) => void;
   onGenerateAPIKey: (name: string, permissions: 'Read Only' | 'Full Access') => void;
   onAddExpense?: (exp: { description: string; category: string; department: string; amount: number; createdBy?: string }) => void;
