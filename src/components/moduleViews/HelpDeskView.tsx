@@ -314,7 +314,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
 
                 <div className="border-t border-slate-100 pt-4">
                   <Label>Status</Label>
-                  {(canManage || t.assignedTo === selectedUser.id || t.assignedTo === selectedUser.name) ? (
+                  {isHelpDeskAdmin(selectedUser.activeRole) ? (
                     <Select value={t.status} onChange={async e => {
                       const newStatus = e.target.value as SupportTicket['status'];
                       setReplyBusy(true);
