@@ -116,13 +116,6 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right side controls */}
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Logged-in user name */}
-        <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2 md:pl-4">
-          <i className="bi bi-person-circle text-slate-400 fs-xs"></i>
-          <span className="fs-xs fw-semibold text-slate-700 max-w-[100px] sm:max-w-[180px] truncate">
-            {selectedUser.name}
-          </span>
-        </div>
 
         {/* Multi-Role Switcher */}
         {selectedUser.roles && selectedUser.roles.length > 1 && (
