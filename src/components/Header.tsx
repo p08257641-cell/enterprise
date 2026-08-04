@@ -126,15 +126,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Multi-Role Switcher */}
         {selectedUser.roles && selectedUser.roles.length > 1 && (
-          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2 md:pl-4">
-            <i className="bi bi-arrow-repeat text-slate-400 fs-xs"></i>
-            <div className="relative">
+          <div className="flex items-center pl-2 md:pl-4 border-l border-slate-200">
+            <div className="relative group">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full transition-all cursor-pointer border border-indigo-100 shadow-xs">
+                <i className="bi bi-shield-check text-[11px] text-indigo-500"></i>
+                <span className="fs-xs fw-bold max-w-[80px] sm:max-w-[150px] truncate">{selectedUser.activeRole}</span>
+                <i className="bi bi-chevron-down text-[10px] text-indigo-400 group-hover:text-indigo-600 transition-colors"></i>
+              </div>
               <select
                 value={selectedUser.activeRole}
                 onChange={(e) => {
                   if (onSwitchRole) onSwitchRole(selectedUser.id, e.target.value);
                 }}
-                className="rounded-md border border-slate-200 bg-slate-50/50 hover:bg-slate-50 py-1.5 pl-2 pr-8 fs-xs fw-medium text-slate-700 outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer max-w-[80px] sm:max-w-[150px] truncate"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                title="Switch Role"
               >
                 {selectedUser.roles.map((role) => (
                   <option key={role} value={role}>{role}</option>
