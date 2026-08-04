@@ -1,5 +1,5 @@
 -- Full schema migration: creates all missing tables and adds missing columns.
--- Uses IF NOT EXISTS for safety; re-runnable.
+-- Uses IF NOT EXISTS for safety - re-runnable.
 
 -- Core
 CREATE TABLE IF NOT EXISTS companies (
