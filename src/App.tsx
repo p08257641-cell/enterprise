@@ -539,7 +539,15 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
-  const handleUpdateCompanySettings = async (companyId: string, updates: Record<string, any>) => {
+  const handleUpdateUserSignature = async (id: string, signatureUrl: string) => {
+      try {
+        const res = await fetch(`/api/users/${id}/signature`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signatureUrl, ...actorBody() }) });
+        const updated = await safeJson(res);
+        if (selectedUser?.id === id) { setSelectedUser(updated); }
+      } catch (err) { console.error(err); }
+    };
+
+    const handleUpdateCompanySettings = async (companyId: string, updates: Record<string, any>) => {
     try {
       const res = await fetch(`/api/companies/${companyId}`, {
         method: 'PUT',
@@ -3650,6 +3658,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onApproveExitRequest={handleApproveExitRequest}
               onRejectExitRequest={handleRejectExitRequest}
               onUpdateCompanySettings={handleUpdateCompanySettings}
+                onUpdateUserSignature={handleUpdateUserSignature}
               onCreateRole={handleCreateRole}
               onUpdateRole={handleUpdateRole}
               onDeleteRole={handleDeleteRole}
@@ -3803,3 +3812,5 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     </>
   );
 }
+
+

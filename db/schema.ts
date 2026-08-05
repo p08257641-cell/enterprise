@@ -41,6 +41,7 @@ export const users = pgTable('users', {
   department: text('department'),
   branch: text('branch'),
   avatar: text('avatar'),
+    signatureUrl: text('signatureUrl'),
   permissions: text('permissions').array(),
   status: text('status'),
   createdAt: text('createdAt'),
@@ -1346,3 +1347,4 @@ export const evatSubmissions = pgTable('evat_submissions', {
   validatedAt: text('validatedAt'),
   createdAt: text('createdAt'),
 });
+

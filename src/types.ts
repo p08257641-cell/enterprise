@@ -34,6 +34,7 @@ export interface User {
   department?: string;
   branch?: string;
   avatar?: string;
+    signatureUrl?: string;
   permissions: string[];
   status: 'Active' | 'Inactive';
   loginEnabled: boolean; // HR can toggle to block/unblock employee login
@@ -275,7 +276,8 @@ export interface LeadComment {
   leadId: string;
   userId: string;
   userName: string;
-  userAvatar?: string;
+  useravatar?: string;
+    signatureUrl?: string;
   content: string;
   timestamp: string;
 }
@@ -1525,4 +1527,5 @@ export interface EvatValidationResult {
   name?: string;
   message?: string;
 }
+
 

@@ -328,7 +328,8 @@ interface RoleDashboardsProps {
   bankAccountUpdates?: import('../types').BankAccountUpdateRequest[];
   onRequestBankAccountUpdate?: (input: { companyId: string; employeeId: string; employeeName: string; bankName: string; accountName: string; accountNumber: string; sortCode?: string; routingNumber?: string }) => void;
   profileUpdateRequests?: import('../types').ProfileUpdateRequest[];
-  onSubmitProfileUpdate?: (input: { companyId: string; employeeId: string; employeeName: string; department: string; field: string; label: string; currentValue: string; newValue: string }) => void;
+  onUpdateUserSignature?: (id: string, signatureUrl: string) => void;
+    onSubmitProfileUpdate?: (input: { companyId: string; employeeId: string; employeeName: string; department: string; field: string; label: string; currentValue: string; newValue: string }) => void;
 }
 
 // ── Shared stat card component ──────────────────────────────────────────────
@@ -2355,4 +2356,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     </div>
   );
 };
+
+
+
 
