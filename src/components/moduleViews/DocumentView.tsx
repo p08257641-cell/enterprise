@@ -29,6 +29,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
   // New document form
   const [newDocName, setNewDocName] = useState('');
   const [newDocType, setNewDocType] = useState('PDF');
+  const [newDocStatus, setNewDocStatus] = useState('Draft');
   const [showDocModal, setShowDocModal] = useState(false);
   const [newDocVisibility, setNewDocVisibility] = useState<'everyone' | 'only_me' | 'specific' | 'department'>('everyone');
   const [newDocSharedWith, setNewDocSharedWith] = useState<string[]>([]);
@@ -106,7 +107,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
       <PageHeader
         title="Document Management"
         subtitle="Centralise company documents, send eSign requests and run OCR extraction."
-        action={isAdmin ? <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setShowDocModal(true); }}>Upload Document</PrimaryBtn> : undefined}
+        action={isAdmin ? <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Draft'); setShowDocModal(true); }}>Upload Document</PrimaryBtn> : undefined}
       />
 
       {/* Tab Bar */}
@@ -230,6 +231,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                 <h3 className="section-title text-slate-900">eSign Requests</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">Documents sent for digital signature.</p>
               </div>
+              {isAdmin && <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Pending Signature'); setShowDocModal(true); }}>Upload for eSign</PrimaryBtn>}
             </div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Document Name' }, { label: 'Type' }, { label: 'Date' }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
@@ -267,6 +269,11 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
             <p className="fs-xs text-slate-400 max-w-sm mx-auto mb-4">
               Automatically extract text, tables, and structured data from scanned documents, invoices and receipts. Select a document from the locker to begin.
             </p>
+            {isAdmin && (
+              <div className="mb-6">
+                <SecBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Draft'); setShowDocModal(true); }}>Upload Document for OCR</SecBtn>
+              </div>
+            )}
             <div className="space-y-2 max-w-xl mx-auto">
               {localDocs.slice(0, 5).map(d => (
                 <div key={d.id} className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all cursor-pointer text-left" onClick={() => handleExtractOcr(d)}>
@@ -341,7 +348,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
               <SecBtn onClick={() => { setShowDocModal(false); setNewDocVisibility('everyone'); setNewDocSharedWith([]); }}>Cancel</SecBtn>
               <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => {
                 if (!newDocName.trim()) return;
-                onCreateDocument({ name: newDocName, type: newDocType, visibility: newDocVisibility, sharedWith: newDocSharedWith });
+                onCreateDocument({ name: newDocName, type: newDocType, visibility: newDocVisibility, sharedWith: newDocSharedWith, status: newDocStatus });
                 setShowDocModal(false); setNewDocName(''); setNewDocVisibility('everyone'); setNewDocSharedWith([]);
               }}>Upload</PrimaryBtn>
             </div>

@@ -2844,7 +2844,7 @@ app.post('/api/sales-quotations', asyncHandler(async (req, res) => {
     tax: Number(tax),
     total,
     validUntil: validUntil || '',
-    status: 'Draft',
+    status: req.body.status || 'Draft',
     assignedTo: assignedTo || '',
     assignedToName: assignedToName || '',
     notes: notes || '',
@@ -3023,7 +3023,7 @@ app.post('/api/journal-entries', asyncHandler(async (req, res) => {
     })),
     totalDebit,
     totalCredit,
-    status: 'Draft',
+    status: req.body.status || 'Draft',
     createdBy,
     createdByName,
     createdAt: new Date().toISOString()
@@ -3522,7 +3522,7 @@ app.post('/api/depreciation-entries/run', asyncHandler(async (req, res) => {
       depreciationAmount: monthlyDep,
       accumulatedDepreciation: Number(asset.accumulatedDepreciation) + monthlyDep,
       bookValue: Number(asset.currentBookValue) - monthlyDep,
-      status: 'Draft', createdAt: new Date().toISOString()
+      status: req.body.status || 'Draft', createdAt: new Date().toISOString()
     };
     await dbInsert(schema.depreciationEntries, entry);
     newEntries.push(entry);
@@ -3560,7 +3560,7 @@ app.post('/api/budgets', asyncHandler(async (req, res) => {
   const newBudget: Budget = {
     id: `bud-${Date.now()}`, companyId, name, fiscalYear, glAccountId, accountCode, accountName,
     budgetAmount: Number(budgetAmount), actualAmount: 0, variance: Number(budgetAmount),
-    variancePercent: 100, period, status: 'Draft', items: items || [],
+    variancePercent: 100, period, status: req.body.status || 'Draft', items: items || [],
     createdBy,
     createdAt: new Date().toISOString()
   };
@@ -3689,7 +3689,7 @@ app.post('/api/tax-returns', asyncHandler(async (req, res) => {
     id: `tr-${Date.now()}`, companyId, period, taxCodeId, taxCodeName,
     taxableAmount: Number(taxableAmount), taxAmount: Number(taxAmount),
     taxableIncome: Number(taxableIncome || taxableAmount), taxDue: Number(taxDue || taxAmount), netPayable: Number(netPayable || 0),
-    status: 'Draft', dueDate, createdBy, createdAt: new Date().toISOString()
+    status: req.body.status || 'Draft', dueDate, createdBy, createdAt: new Date().toISOString()
   };
   await dbInsert(schema.taxReturns, newReturn);
   logAudit(companyId, createdBy, 'System', 'CREATE_TAX_RETURN', 'Accounting', `Created tax return for ${period}: $${taxAmount}`);
@@ -5387,7 +5387,7 @@ app.post('/api/documents', asyncHandler(async (req, res) => {
     name,
     type,
     size: size || '0 KB',
-    status: 'Draft',
+    status: req.body.status || 'Draft',
     date: new Date().toISOString().split('T')[0],
     uploadedBy: userId,
     uploadedByName: userName || '',
@@ -5928,3 +5928,4 @@ async function start() {
 
 start();
 // Trigger restart
+
