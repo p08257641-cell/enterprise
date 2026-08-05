@@ -68,7 +68,9 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { logout } = useAuth();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const roleRef = useRef<HTMLDivElement>(null);
 
   const totalCount = notificationCount + pendingApprovalCount;
 
@@ -122,24 +124,47 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Multi-Role Switcher */}
         {selectedUser.roles && selectedUser.roles.length > 1 && (
           <div className="flex items-center pl-2 md:pl-4 border-l border-slate-200">
-            <div className="relative group">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full transition-all cursor-pointer border border-indigo-100 shadow-xs">
-                <i className="bi bi-shield-check text-[11px] text-indigo-500"></i>
-                <span className="fs-xs fw-bold max-w-[80px] sm:max-w-[150px] truncate">{selectedUser.activeRole}</span>
-                <i className="bi bi-chevron-down text-[10px] text-indigo-400 group-hover:text-indigo-600 transition-colors"></i>
-              </div>
-              <select
-                value={selectedUser.activeRole}
-                onChange={(e) => {
-                  if (onSwitchRole) onSwitchRole(selectedUser.id, e.target.value);
-                }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                title="Switch Role"
+            <div className="relative" ref={roleRef}>
+              <div 
+                onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white rounded-full transition-all cursor-pointer shadow-md ring-1 ring-white/10"
               >
-                {selectedUser.roles.map((role) => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </select>
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white/20">
+                  <i className="bi bi-person-badge text-[10px] text-white"></i>
+                </div>
+                <span className="fs-xs fw-bold max-w-[80px] sm:max-w-[150px] truncate">{selectedUser.activeRole}</span>
+                <i className={`bi bi-chevron-down text-[10px] text-slate-300 transition-transform duration-200 ${roleMenuOpen ? 'rotate-180' : ''}`}></i>
+              </div>
+              
+              {/* Dropdown Menu */}
+              {roleMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-3 pb-2 mb-2 border-b border-slate-100">
+                    <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {selectedUser.roles.map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => {
+                          if (onSwitchRole) onSwitchRole(selectedUser.id, role);
+                          setRoleMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 fs-xs flex items-center justify-between transition-colors ${
+                          selectedUser.activeRole === role 
+                            ? 'bg-indigo-50 text-indigo-700 fw-bold' 
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <i className={`bi ${selectedUser.activeRole === role ? 'bi-check2-circle text-indigo-600' : 'bi-circle text-slate-300'}`}></i>
+                          <span className="truncate">{role}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
