@@ -1549,7 +1549,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     const department = empRecord ? empRecord.department : 'General Operations';
 
     return (
-      <div className="space-y-6">
+      <><div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -2355,3 +2355,4 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     </div>
   );
 };
+
