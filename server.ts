@@ -5768,6 +5768,7 @@ async function runMigrations() {
   const migrationFiles = [
     'migration_full_schema.sql',
       'migration_add_signature_url.sql',
+      'migration_add_doc_url.sql',
     'migration_profile_fields.sql',
     'migration_attendance_settings.sql',
     'migration_budget_items.sql',
@@ -5929,5 +5930,7 @@ async function start() {
 
 start();
 // Trigger restart
+
+
 
 

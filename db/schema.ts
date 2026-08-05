@@ -1170,6 +1170,7 @@ export const managedDocuments = pgTable('managed_documents', {
   uploadedByName: text('uploadedByName'),
   visibility: text('visibility'),
   sharedWith: text('sharedWith'),
+    fileUrl: text('fileUrl'),
   createdAt: text('createdAt'),
 });
 
@@ -1347,4 +1348,5 @@ export const evatSubmissions = pgTable('evat_submissions', {
   validatedAt: text('validatedAt'),
   createdAt: text('createdAt'),
 });
+
 
