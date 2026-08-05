@@ -34,6 +34,8 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
   const [showDocModal, setShowDocModal] = useState(false);
   const [newDocVisibility, setNewDocVisibility] = useState<'everyone' | 'only_me' | 'specific' | 'department'>('everyone');
   const [newDocSharedWith, setNewDocSharedWith] = useState<string[]>([]);
+  const [newDocSigners, setNewDocSigners] = useState<string[]>([]);
+  const [newDocCC, setNewDocCC] = useState<string[]>([]);
 
   // OCR modal state
   const [showOcrModal, setShowOcrModal] = useState(false);
@@ -232,10 +234,10 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                 <h3 className="section-title text-slate-900">eSign Requests</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">Documents sent for digital signature.</p>
               </div>
-              {isAdmin && <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Pending Signature'); setShowDocModal(true); }}>Upload for eSign</PrimaryBtn>}
+              <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Pending Signature'); setShowDocModal(true); }}>Upload for eSign</PrimaryBtn>
             </div>
             <table className="w-full text-left">
-              <TableHead cols={[{ label: 'Document Name' }, { label: 'Type' }, { label: 'Date' }, { label: 'Status' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
+              <TableHead cols={[{ label: 'Document Name' }, { label: 'Type' }, { label: 'Date' }, { label: 'Status' }, { label: 'Signers' }, { label: 'CC' }, ...(isAdmin ? [{ label: '', right: true }] : [])]} />
               <tbody className="divide-y divide-slate-100">
                 {localDocs.filter(d => (d.status === 'Pending Signature' || d.status === 'Signed') && (!searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase()))).map(d => (
                   <tr key={d.id} className="hover:bg-slate-50/40">
@@ -253,7 +255,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                   </tr>
                 ))}
                 {localDocs.filter(d => d.status === 'Pending Signature' || d.status === 'Signed').length === 0 && (
-                  <EmptyRow cols={isAdmin ? 5 : 4} message="No eSign requests. Upload a document and send it for signature." />
+                  <EmptyRow cols={isAdmin ? 7 : 6} message="No eSign requests. Upload a document and send it for signature." />
                 )}
               </tbody>
             </table>
@@ -364,8 +366,8 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
               <SecBtn onClick={() => { setShowDocModal(false); setNewDocVisibility('everyone'); setNewDocSharedWith([]); }}>Cancel</SecBtn>
               <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => {
                 if (!newDocName.trim()) return;
-                onCreateDocument({ name: newDocName, type: newDocType, visibility: newDocVisibility, sharedWith: newDocSharedWith, status: newDocStatus, fileUrl: newDocFileUrl });
-                setShowDocModal(false); setNewDocName(''); setNewDocVisibility('everyone'); setNewDocSharedWith([]);
+                onCreateDocument({ name: newDocName, type: newDocType, visibility: newDocVisibility, sharedWith: newDocSharedWith, status: newDocStatus, fileUrl: newDocFileUrl, signers: newDocSigners, cc: newDocCC });
+                setShowDocModal(false); setNewDocName(''); setNewDocVisibility('everyone'); setNewDocSharedWith([]); setNewDocSigners([]); setNewDocCC([]);
               }}>Upload</PrimaryBtn>
             </div>
           </div>

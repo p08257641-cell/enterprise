@@ -5380,7 +5380,7 @@ app.get('/api/documents', asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/documents', asyncHandler(async (req, res) => {
-  const { companyId, name, type, size, userId, userName, visibility, sharedWith } = req.body;
+  const { companyId, name, type, size, userId, userName, visibility, sharedWith, signers, cc, fileUrl } = req.body;
   const doc = {
     id: `doc-${Date.now()}`,
     companyId,
@@ -5769,6 +5769,7 @@ async function runMigrations() {
     'migration_full_schema.sql',
       'migration_add_signature_url.sql',
       'migration_add_doc_url.sql',
+      'migration_add_esign_fields.sql',
     'migration_profile_fields.sql',
     'migration_attendance_settings.sql',
     'migration_budget_items.sql',
@@ -5930,6 +5931,9 @@ async function start() {
 
 start();
 // Trigger restart
+
+
+
 
 
 
