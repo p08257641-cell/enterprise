@@ -37,6 +37,9 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
   const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set());
 
+  const [editingUtil, setEditingUtil] = useState<string | null>(null);
+  const [newUtil, setNewUtil] = useState<number>(0);
+
   const timeModal = useRowModal<typeof localTasks[0] & { hours: number; billable: boolean }>();
   const resourceModal = useRowModal<typeof localEmployees[0] & { util: number; taskCount: number }>();
   const taskModal = useRowModal<typeof localTasks[0]>();
@@ -280,8 +283,7 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
               <TableHead cols={[{ label: 'Team Member' }, { label: 'Department' }, { label: 'Role' }, { label: 'Utilisation', right: true }, { label: 'Tasks Assigned', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
                 {localEmployees.filter(e => !searchTerm || `${e.firstName} ${e.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) || e.department.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 8).map((emp, i) => {
-                  const utils = [92, 78, 45, 100, 65, 80, 55, 72];
-                  const u = utils[i] ?? 70;
+                  const u = emp.utilisation ?? 70;
                   const empTaskCount = localTasks.filter(t => t.assignee === emp.id || t.assigneeName?.includes(emp.firstName)).length;
                   return (
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
@@ -289,10 +291,51 @@ export const ProjectView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs text-slate-500">{emp.department}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{emp.designation}</td>
                       <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${u >= 90 ? 'bg-rose-400' : u >= 70 ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${u}%` }} /></div>
-                          <span className="text-[10px] font-sans tabular-nums text-slate-600">{u}%</span>
-                        </div>
+                        {editingUtil === emp.id ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              className="w-16 h-7 text-xs border border-slate-300 rounded px-2"
+                              value={newUtil}
+                              onChange={e => setNewUtil(Number(e.target.value))}
+                              onClick={e => e.stopPropagation()}
+                            />
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (props.onUpdateEmployee) {
+                                  await props.onUpdateEmployee(emp.id, { utilisation: newUtil });
+                                }
+                                setEditingUtil(null);
+                              }}
+                              className="h-7 w-7 flex items-center justify-center bg-emerald-500 text-white rounded cursor-pointer"
+                            >
+                              <i className="bi bi-check2"></i>
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setEditingUtil(null); }}
+                              className="h-7 w-7 flex items-center justify-center bg-slate-100 text-slate-600 rounded cursor-pointer hover:bg-slate-200"
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2 group">
+                            <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${u >= 90 ? 'bg-rose-400' : u >= 70 ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${u}%` }} /></div>
+                            <span className="text-[10px] font-sans tabular-nums text-slate-600 w-6 text-right">{u}%</span>
+                            {isAdmin && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingUtil(emp.id); setNewUtil(u); }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-600 ml-1 cursor-pointer"
+                                title="Edit Utilisation"
+                              >
+                                <i className="bi bi-pencil-square text-[10px]"></i>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{empTaskCount}</td>
                       <td className="px-4 py-3 text-right">

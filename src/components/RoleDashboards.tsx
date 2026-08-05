@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, Expense, JournalEntry, Bill } from '../types';
+import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, Expense, JournalEntry, Bill, ProjectTask, CommunicationAnnouncement } from '../types';
 import { OrgChart } from './OrgChart';
 
 export const MODULE_CATALOG: Record<string, { icon: string; desc: string; integrations: string[] }> = {
@@ -315,6 +315,8 @@ interface RoleDashboardsProps {
   expenses: Expense[];
   journalEntries: JournalEntry[];
   bills: Bill[];
+  projectTasks?: ProjectTask[];
+  announcements?: CommunicationAnnouncement[];
   onApproveLeave: (empId: string) => void;
   onRejectLeave: (empId: string) => void;
   onApproveExpense: (id: string) => void;
@@ -396,6 +398,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
   expenses,
   journalEntries,
   bills,
+  projectTasks = [],
+  announcements = [],
   onApproveLeave,
   onRejectLeave,
   onApproveExpense,
@@ -1086,9 +1090,9 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                         <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
                           Reject
                         </button>
-              </div>
-            </div>
-          </div>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -1135,8 +1139,6 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 );
               })}
             </div>
-
-
 
             {/* AI Recruiter Banner */}
             <div className="mt-4 p-4 bg-slate-900 rounded-xl text-white">
@@ -1547,7 +1549,6 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     const department = empRecord ? empRecord.department : 'General Operations';
 
     return (
-      <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
@@ -1576,29 +1577,87 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Active OKRs / Tasks" value={`${okrs.filter(o => o.employeeId === empRecord?.id && o.status !== 'Completed').length} Active`} sub="Performance cycle" icon="bi bi-graph-up" />
         </div>
 
-        {/* Charts Row — Pie Chart + Bar Graph */}
-        <AnalyticsRow
-          pie={
-            <DoughnutChart
-              title="Team by Department"
-              data={([...new Set(localEmployees.map(e => e.department))] as string[]).map((d, i) => ({
-                label: d,
-                value: localEmployees.filter(e => e.department === d).length,
-                color: CHART_PALETTE[i],
-              }))}
-            />
-          }
-          bar={
-            <BarGraph
-              title="Payroll Cost by Department"
-              data={([...new Set(localEmployees.map(e => e.department))] as string[]).map((d, i) => ({
-                label: d.length > 14 ? d.slice(0, 12) + '…' : d,
-                value: localEmployees.filter(e => e.department === d).reduce((s, e) => s + (e.salary || 0), 0),
-                color: CHART_PALETTE[i],
-              }))}
-            />
-          }
-        />
+        {/* Dashboard Widgets */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* My Active Tasks */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">My Active Tasks</h3>
+              <div className="text-[10px] fw-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
+                Utilisation: {empRecord?.utilisation || 0}%
+              </div>
+            </div>
+            <div className="space-y-3 flex-1">
+              {projectTasks.filter(t => t.companyId === selectedCompany.id && (t.assignee === empRecord?.id || t.assigneeName === `${empRecord?.firstName} ${empRecord?.lastName}`) && t.status !== 'Done').map(t => (
+                <div key={t.id} className="p-3 border border-slate-100 bg-slate-50 rounded-lg">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="fs-xs fw-bold text-slate-900">{t.title}</div>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] fw-bold ${t.priority === 'Critical' ? 'bg-rose-100 text-rose-700' : t.priority === 'High' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{t.priority}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-[10px] text-slate-500">
+                    <div><i className="bi bi-clock"></i> Due: {t.due || 'No date'}</div>
+                    <div className="fw-semibold text-slate-700">{t.status}</div>
+                  </div>
+                </div>
+              ))}
+              {projectTasks.filter(t => t.companyId === selectedCompany.id && (t.assignee === empRecord?.id || t.assigneeName === `${empRecord?.firstName} ${empRecord?.lastName}`) && t.status !== 'Done').length === 0 && (
+                <div className="text-center py-6 text-slate-400 text-xs italic bg-slate-50/50 rounded-lg border border-slate-100">
+                  <i className="bi bi-clipboard2-check text-slate-300 text-xl block mb-2"></i>
+                  No active tasks assigned to you right now.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* My OKRs */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col h-full">
+            <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">My Objectives (OKRs)</h3>
+            <div className="space-y-3 flex-1">
+              {okrs.filter(o => o.employeeId === empRecord?.id && o.status !== 'Completed').map(o => (
+                <div key={o.id} className="p-3 border border-slate-100 bg-slate-50 rounded-lg">
+                  <div className="fs-xs fw-bold text-slate-900 mb-1">{o.objective}</div>
+                  <div className="text-[10px] text-slate-500 mb-2">{o.keyResult}</div>
+                  <div className="flex items-center gap-3 text-[10px]">
+                    <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${o.progress}%` }}></div>
+                    </div>
+                    <span className="fw-bold text-slate-700">{o.progress}%</span>
+                  </div>
+                </div>
+              ))}
+              {okrs.filter(o => o.employeeId === empRecord?.id && o.status !== 'Completed').length === 0 && (
+                <div className="text-center py-6 text-slate-400 text-xs italic bg-slate-50/50 rounded-lg border border-slate-100">
+                  <i className="bi bi-target text-slate-300 text-xl block mb-2"></i>
+                  No active OKRs assigned to you right now.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Announcements */}
+          <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs lg:col-span-2">
+            <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">Recent Announcements</h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {announcements.filter(a => a.companyId === selectedCompany.id && a.targetAudience !== 'External').slice(0, 3).map(a => (
+                <div key={a.id} className="p-4 border border-slate-100 bg-white rounded-xl shadow-xs relative overflow-hidden">
+                  <div className={`absolute top-0 left-0 w-1 h-full ${a.type === 'Important' ? 'bg-rose-500' : a.type === 'Event' ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`inline-flex items-center gap-1 text-[10px] fw-bold px-2 py-0.5 rounded-full ${a.type === 'Important' ? 'bg-rose-50 text-rose-600' : a.type === 'Event' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'}`}>{a.type}</span>
+                    <span className="text-[9px] text-slate-400 font-medium tracking-wide uppercase">{new Date(a.date).toLocaleDateString()}</span>
+                  </div>
+                  <h4 className="fs-sm fw-bold text-slate-900 mb-1">{a.title}</h4>
+                  <p className="text-xs text-slate-600 line-clamp-2">{a.content}</p>
+                </div>
+              ))}
+              {announcements.filter(a => a.companyId === selectedCompany.id && a.targetAudience !== 'External').length === 0 && (
+                <div className="col-span-full text-center py-6 text-slate-400 text-xs italic bg-slate-50/50 rounded-lg border border-slate-100">
+                  <i className="bi bi-megaphone text-slate-300 text-xl block mb-2"></i>
+                  No recent announcements.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Secondary Row: My Profile */}
         <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs">

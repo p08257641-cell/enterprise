@@ -133,6 +133,7 @@ export interface Employee {
   phone?: string;
   dateOfBirth?: string;
   gender?: string;
+  utilisation?: number;
   maritalStatus?: string;
   nationality?: string;
   address?: string;

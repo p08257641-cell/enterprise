@@ -2616,32 +2616,30 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         </div>
 
                         {/* Quick actions */}
-                        {!isEmployee && (
-                          <div>
-                            <h4 className="fs-xs fw-bold text-slate-500 uppercase tracking-wider mb-2">Quick Actions</h4>
-                            <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-                              {[
-                                { label: 'Mark as On Track', pct: null, status: 'On Track', icon: 'bi bi-check-circle', color: 'text-emerald-600 hover:bg-emerald-50', disabled: okr.status === 'On Track' },
-                                { label: 'Mark as At Risk', pct: null, status: 'At Risk', icon: 'bi bi-exclamation-triangle', color: 'text-amber-600 hover:bg-amber-50', disabled: okr.status === 'At Risk' },
-                                { label: 'Mark Complete (100%)', pct: 100, status: 'Completed', icon: 'bi bi-trophy', color: 'text-blue-600 hover:bg-blue-50', disabled: okr.progress === 100 },
-                              ].map(act => (
-                                <button
-                                  key={act.label}
-                                  disabled={act.disabled}
-                                  onClick={() => {
-                                    if (act.pct !== null) {
-                                      onUpdateOKRProgress(okr.id, act.pct);
-                                    }
-                                    setExpandedOkr(null);
-                                  }}
-                                  className={`w-full text-left px-3 py-2 rounded-lg fs-xs fw-semibold flex items-center gap-2 transition-colors cursor-pointer border border-transparent ${act.disabled ? 'text-slate-300 bg-slate-50 cursor-not-allowed' : act.color}`}
-                                >
-                                  <i className={act.icon}></i> {act.label}
-                                </button>
-                              ))}
-                            </div>
+                        <div>
+                          <h4 className="fs-xs fw-bold text-slate-500 uppercase tracking-wider mb-2">Quick Actions</h4>
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+                            {[
+                              { label: 'Mark as On Track', pct: null, status: 'On Track', icon: 'bi bi-check-circle', color: 'text-emerald-600 hover:bg-emerald-50', disabled: okr.status === 'On Track' },
+                              { label: 'Mark as At Risk', pct: null, status: 'At Risk', icon: 'bi bi-exclamation-triangle', color: 'text-amber-600 hover:bg-amber-50', disabled: okr.status === 'At Risk' },
+                              { label: 'Mark Complete (100%)', pct: 100, status: 'Completed', icon: 'bi bi-trophy', color: 'text-blue-600 hover:bg-blue-50', disabled: okr.progress === 100 },
+                            ].map(act => (
+                              <button
+                                key={act.label}
+                                disabled={act.disabled}
+                                onClick={() => {
+                                  if (act.pct !== null) {
+                                    onUpdateOKRProgress(okr.id, act.pct);
+                                  }
+                                  setExpandedOkr(null);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg fs-xs fw-semibold flex items-center gap-2 transition-colors cursor-pointer border border-transparent ${act.disabled ? 'text-slate-300 bg-slate-50 cursor-not-allowed' : act.color}`}
+                              >
+                                <i className={act.icon}></i> {act.label}
+                              </button>
+                            ))}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
