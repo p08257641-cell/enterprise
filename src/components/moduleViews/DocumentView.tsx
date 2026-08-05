@@ -30,7 +30,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
   const [newDocName, setNewDocName] = useState('');
   const [newDocType, setNewDocType] = useState('PDF');
   const [showDocModal, setShowDocModal] = useState(false);
-  const [newDocVisibility, setNewDocVisibility] = useState<'everyone' | 'only_me' | 'specific'>('everyone');
+  const [newDocVisibility, setNewDocVisibility] = useState<'everyone' | 'only_me' | 'specific' | 'department'>('everyone');
   const [newDocSharedWith, setNewDocSharedWith] = useState<string[]>([]);
 
   // OCR modal state
@@ -38,6 +38,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
   const [ocrDoc, setOcrDoc] = useState<typeof localDocs[0] | null>(null);
 
   const docModal = useRowModal<typeof localDocs[0]>();
+  const policyModal = useRowModal<typeof localPolicies[0]>();
 
   const signPending = localDocs.filter(d => d.status === 'Pending Signature').length;
   const totalDocs = localDocs.length;
@@ -142,11 +143,13 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                       <span className={`shrink-0 text-[9px] fw-bold px-1.5 py-0.5 rounded-full ${
                         d.visibility === 'only_me' ? 'bg-amber-50 text-amber-600' :
                         d.visibility === 'specific' ? 'bg-blue-50 text-blue-600' :
+                        d.visibility === 'department' ? 'bg-indigo-50 text-indigo-600' :
                         'bg-slate-100 text-slate-400'
-                      }`} title={d.visibility === 'only_me' ? 'Only you can see this' : d.visibility === 'specific' ? `Shared with ${(d.sharedWith || []).length} people` : 'Visible to everyone'}>
+                      }`} title={d.visibility === 'only_me' ? 'Only you can see this' : d.visibility === 'specific' ? `Shared with ${(d.sharedWith || []).length} people` : d.visibility === 'department' ? 'Visible to department' : 'Visible to everyone'}>
                         <i className={`bi ${
                           d.visibility === 'only_me' ? 'bi-lock-fill' :
                           d.visibility === 'specific' ? 'bi-people-fill' :
+                          d.visibility === 'department' ? 'bi-building' :
                           'bi-globe'
                         }`}></i>
                       </span>
@@ -189,7 +192,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
               <table className="w-full text-left">
-                <TableHead cols={[{ label: 'Policy Title' }, { label: 'Category' }, { label: 'Version' }, { label: 'Due Date' }, { label: 'Acknowledgements' }, { label: 'Status' }]} />
+                <TableHead cols={[{ label: 'Policy Title' }, { label: 'Category' }, { label: 'Version' }, { label: 'Due Date' }, { label: 'Acknowledgements' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                 <tbody className="divide-y divide-slate-100">
                   {localPolicies.filter(p => !searchTerm || p.title.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
                     <tr key={p.id} className="hover:bg-slate-50/40">
@@ -199,6 +202,16 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{p.dueDate || '—'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600">{(p.acknowledgedBy || []).length} / {p.totalEmployees || '—'}</td>
                       <td className="px-4 py-3"><Badge label={p.status || 'Active'} variant="success" /></td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <button onClick={() => policyModal.open(p)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-[10px] fw-semibold transition-all duration-150 cursor-pointer mr-2">
+                          View
+                        </button>
+                        {isAdmin && (
+                          <button onClick={() => alert('Editing Policy: ' + p.title)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 text-blue-600 rounded-md text-[10px] fw-semibold transition-all duration-150 cursor-pointer">
+                            Edit
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -284,6 +297,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex gap-2 mt-1">
                   {[
                     { value: 'everyone' as const, label: 'Everyone', icon: 'bi-globe', desc: 'All company members' },
+                    { value: 'department' as const, label: 'My Department', icon: 'bi-building', desc: 'Your department only' },
                     { value: 'specific' as const, label: 'Specific People', icon: 'bi-people', desc: 'Choose who sees it' },
                     { value: 'only_me' as const, label: 'Only Me', icon: 'bi-lock', desc: 'Private to you' },
                   ].map(opt => (
@@ -392,8 +406,31 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
           ]}
           title={r => r.name} subtitle={r => `${r.type} Document`}
+          actions={r => <PrimaryBtn icon="bi bi-box-arrow-up-right" onClick={() => window.open('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '_blank')}>View Document</PrimaryBtn>}
           onClose={docModal.close} />
+      )}
+
+      {/* Policy Row Modal */}
+      {policyModal.selected && (
+        <RowModal row={policyModal.selected}
+          icon="bi bi-file-earmark-text" accentColor="#0ea5e9"
+          fields={[
+            { label: 'Policy Title', key: 'title', icon: 'bi bi-file-earmark' },
+            { label: 'Category', key: 'category', icon: 'bi bi-tag', section: 'Details' },
+            { label: 'Version', key: 'version', mono: true, icon: 'bi bi-hash', section: 'Details' },
+            { label: 'Due Date', key: 'dueDate', mono: true, icon: 'bi bi-calendar-event', section: 'Details' },
+            { label: 'Content', key: 'content', icon: 'bi bi-text-paragraph', full: true },
+          ]}
+          title={r => r.title} subtitle={r => `${r.category} Policy`}
+          actions={r => (
+             <div className="flex gap-2">
+               {isAdmin && <SecBtn onClick={() => { alert('Editing Policy: ' + r.title); }}>Edit Policy</SecBtn>}
+               <PrimaryBtn icon="bi bi-check2-circle" onClick={() => { onAcknowledgePolicy?.(r.id); policyModal.close(); }}>Acknowledge</PrimaryBtn>
+             </div>
+          )}
+          onClose={policyModal.close} />
       )}
     </div>
   );
 };
+

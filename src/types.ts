@@ -1401,7 +1401,7 @@ export interface ManagedDocument {
   date: string;
   uploadedBy?: string;
   uploadedByName?: string;
-  visibility?: 'everyone' | 'only_me' | 'specific';
+  visibility?: 'everyone' | 'only_me' | 'specific' | 'department';
   sharedWith?: string[];
   createdAt: string;
 }
@@ -1525,3 +1525,4 @@ export interface EvatValidationResult {
   name?: string;
   message?: string;
 }
+
