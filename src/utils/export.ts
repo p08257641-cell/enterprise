@@ -28,7 +28,7 @@ export async function downloadPDF(
   filename: string,
   title: string,
   htmlBody: string,
-  company?: { name: string; logo?: string }
+  company?: { name: string; logo?: string; companySignature?: string }
 ) {
   const win = window.open('', '_blank');
   if (!win) {
@@ -44,11 +44,15 @@ export async function downloadPDF(
     ? `<div style="display:flex;align-items:center;gap:14px;"><img src="${company.logo}" alt="" style="height:44px;object-fit:contain;" /><div style="border-left:2px solid #e2e8f0;padding-left:14px;"><div style="font-size:15px;font-weight:700;color:#0f172a;letter-spacing:-0.01em;">${companyName}</div><div style="font-size:10px;color:#94a3b8;margin-top:1px;">${title}</div></div></div>`
     : `<div><div style="font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-0.02em;">${companyName}</div><div style="font-size:10px;color:#94a3b8;margin-top:2px;">${title}</div></div>`;
 
+  const signatureImageHtml = company?.companySignature 
+    ? `<img src="${company.companySignature}" style="max-height: 48px; object-fit: contain; margin-bottom: 6px;" />` 
+    : `<div style="font-family:'Georgia','Times New Roman',serif;font-size:22px;color:#0f172a;font-style:italic;padding-bottom:6px;margin-bottom:6px;">${companyName || 'Authorized'}</div>`;
+
   const signatureHtml = `
     <div style="margin-top:60px;display:flex;justify-content:flex-end;">
       <div style="text-align:center;min-width:220px;">
-        <div style="font-family:'Georgia','Times New Roman',serif;font-size:22px;color:#0f172a;font-style:italic;padding-bottom:6px;border-bottom:1.5px solid #cbd5e1;margin-bottom:6px;">
-          ${companyName || 'Authorized'}
+        <div style="border-bottom:1.5px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: center;">
+          ${signatureImageHtml}
         </div>
         <div style="font-size:10px;color:#64748b;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Authorized Signatory</div>
         <div style="font-size:9px;color:#94a3b8;margin-top:3px;">Date: ${dateStr}</div>

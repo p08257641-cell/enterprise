@@ -8,44 +8,80 @@ import { isAdminRole, isSuperAdminRole, isHRRole, isFinanceDeptHead } from '../.
 
 function payslipPDFBody(slip: { employeeName: string; employeeId: string; department: string; period: string; baseSalary: number; gross: number; deductions: number; net: number; status: string; customBenefitsTotal?: number; breakdown?: { name: string; amount: number; type: string }[] }) {
   const earnings = slip.breakdown?.filter(b => b.type === 'Benefit') || [];
-  const deductions = slip.breakdown?.filter(b => b.type === 'Deduction') || [];
+  const deductions = slip.breakdown?.filter(b => b.type === 'Deduction' || b.type === 'Tax') || [];
   const baseSalary = slip.baseSalary || slip.gross;
 
   return `
-    <div class="summary-grid">
-      <div class="summary-box"><div class="label">Employee</div><div style="font-size:13px;font-weight:700;color:#0f172a;">${slip.employeeName}</div><div style="font-size:10px;color:#64748b;">${slip.employeeId} · ${slip.department}</div></div>
-      <div class="summary-box"><div class="label">Pay Period</div><div class="value">${slip.period}</div></div>
-      <div class="summary-box"><div class="label">Net Pay</div><div class="value" style="color:#059669;">$${(slip.net || 0).toLocaleString()}</div></div>
-      <div class="summary-box"><div class="label">Status</div><div style="font-size:11px;font-weight:700;color:${slip.status === 'Paid' ? '#059669' : '#d97706'};">${slip.status}</div></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+    <div style="background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center;">
       <div>
-        <div class="section-heading">Earnings</div>
-        <table>
-          <thead><tr><th style="background:#059669;">Component</th><th style="background:#059669;text-align:right;">Amount</th></tr></thead>
-          <tbody>
-            <tr><td>Base Salary</td><td class="right">$${baseSalary.toLocaleString()}</td></tr>
-            ${earnings.map(e => `<tr><td>${e.name}</td><td class="right" style="color:#059669;">+$${e.amount.toLocaleString()}</td></tr>`).join('')}
-            <tr class="total-row"><td><strong>Gross Pay</strong></td><td class="right"><strong>$${(slip.gross || 0).toLocaleString()}</strong></td></tr>
-          </tbody>
-        </table>
+        <div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Employee Details</div>
+        <div style="font-size:16px; font-weight:700; color:#0f172a;">${slip.employeeName}</div>
+        <div style="font-size:11px; color:#475569; margin-top:2px;">ID: ${slip.employeeId} &nbsp;·&nbsp; Dept: ${slip.department}</div>
       </div>
-      <div>
-        <div class="section-heading">Deductions</div>
-        <table>
-          <thead><tr><th style="background:#dc2626;">Component</th><th style="background:#dc2626;text-align:right;">Amount</th></tr></thead>
-          <tbody>
-            ${deductions.length > 0 ? deductions.map(d => `<tr><td>${d.name}</td><td class="right" style="color:#dc2626;">-$${d.amount.toLocaleString()}</td></tr>`).join('') : '<tr><td colspan="2" style="color:#94a3b8;font-style:italic;">No deductions</td></tr>'}
-            <tr class="total-row"><td><strong>Total Deductions</strong></td><td class="right" style="color:#dc2626;"><strong>-$${(slip.deductions || 0).toLocaleString()}</strong></td></tr>
-          </tbody>
-        </table>
+      <div style="text-align:right;">
+        <div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Pay Period</div>
+        <div style="font-size:14px; font-weight:600; color:#0f172a; margin-bottom:6px;">${slip.period}</div>
+        <div>
+          <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; background:${slip.status === 'Paid' ? '#dcfce7' : '#fef3c7'}; color:${slip.status === 'Paid' ? '#166534' : '#92400e'};">
+            ${slip.status}
+          </span>
+        </div>
       </div>
     </div>
 
-    <div style="margin-top:20px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
-      <div><div style="font-size:9px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.06em;">Net Pay</div><div style="font-size:22px;font-weight:800;color:#15803d;font-family:monospace;">$${(slip.net || 0).toLocaleString()}</div></div>
-      <div style="text-align:right;"><div style="font-size:9px;color:#166534;">This amount will be credited to your registered bank account.</div><div style="font-size:9px;color:#16a34a;margin-top:2px;">${slip.period}</div></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:10px;">
+      <!-- Earnings Section -->
+      <div>
+        <div style="font-size:12px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.05em; padding-bottom:10px; border-bottom:1px solid #e2e8f0; margin-bottom:12px;">
+          Earnings Breakdown
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
+          <span>Base Salary</span>
+          <span style="font-family:monospace; font-weight:600; color:#0f172a;">$${baseSalary.toLocaleString()}</span>
+        </div>
+        ${earnings.map(e => `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
+          <span>${e.name}</span>
+          <span style="font-family:monospace; font-weight:600; color:#16a34a;">+$${e.amount.toLocaleString()}</span>
+        </div>
+        `).join('')}
+        
+        <div style="display:flex; justify-content:space-between; padding:12px 0 0 0; margin-top:12px; border-top:1px dashed #cbd5e1; font-size:13px; font-weight:700; color:#0f172a;">
+          <span>Gross Earnings</span>
+          <span style="font-family:monospace;">$${(slip.gross || 0).toLocaleString()}</span>
+        </div>
+      </div>
+
+      <!-- Deductions Section -->
+      <div>
+        <div style="font-size:12px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.05em; padding-bottom:10px; border-bottom:1px solid #e2e8f0; margin-bottom:12px;">
+          Deductions & Taxes
+        </div>
+        ${deductions.length > 0 ? deductions.map(d => `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
+          <span>${d.name}</span>
+          <span style="font-family:monospace; font-weight:600; color:#dc2626;">-$${d.amount.toLocaleString()}</span>
+        </div>
+        `).join('') : '<div style="padding:6px 0; font-size:12px; color:#94a3b8; font-style:italic;">No deductions for this period.</div>'}
+        
+        <div style="display:flex; justify-content:space-between; padding:12px 0 0 0; margin-top:12px; border-top:1px dashed #cbd5e1; font-size:13px; font-weight:700; color:#0f172a;">
+          <span>Total Deductions</span>
+          <span style="font-family:monospace; color:#dc2626;">-$${(slip.deductions || 0).toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Net Pay Highlight -->
+    <div style="margin-top:40px; background:linear-gradient(to right, #0f172a, #1e293b); border-radius:12px; padding:24px; color:white; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Total Net Pay</div>
+        <div style="font-size:11px; color:#cbd5e1; max-width:220px; line-height:1.5;">This amount will be directly deposited into your registered bank account.</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:28px; font-weight:800; font-family:monospace; letter-spacing:-0.02em;">
+          $${(slip.net || 0).toLocaleString()}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -71,6 +107,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const [payMonth, setPayMonth] = useState('July 2026');
   const [payrollModalData, setPayrollModalData] = useState<{ open: boolean; date: string; run?: any }>({ open: false, date: '' });
   const [selectedSlipId, setSelectedSlipId] = useState<string | null>(null);
+  const [showSlipsValues, setShowSlipsValues] = useState(false);
 
   // Payslips tab: pick period, defaulting to the latest available for the company
   const companySlipPeriods = Array.from(
@@ -557,7 +594,12 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                       <div>
                         <h3 className="section-title text-slate-900">My Payslip — {activeSlip.period}</h3>
-                        <p className="data-value-small text-slate-400 mt-0.5">Status: {activeSlip.status}</p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <p className="data-value-small text-slate-400 m-0">Status: {activeSlip.status}</p>
+                          <button onClick={() => setShowSlipsValues(!showSlipsValues)} className="text-xs text-blue-600 hover:text-blue-700 underline cursor-pointer">
+                            {showSlipsValues ? 'Hide Figures' : 'View Figures'}
+                          </button>
+                        </div>
                       </div>
                       <PrimaryBtn icon="bi bi-download" onClick={() => downloadPDF(`payslip-${activeSlip.id}`, `Payslip — ${activeSlip.period}`, payslipPDFBody({
                         employeeName: activeSlip.employeeName,
@@ -580,17 +622,17 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center py-1.5">
                             <span className="data-value text-slate-600">Base Salary</span>
-                            <span className="data-value font-sans tabular-nums text-slate-900">${(activeSlip.baseSalary || activeSlip.gross).toLocaleString()}</span>
+                            <span className="data-value font-sans tabular-nums text-slate-900">{showSlipsValues ? `$${(activeSlip.baseSalary || activeSlip.gross).toLocaleString()}` : '****'}</span>
                           </div>
                           {activeSlip.breakdown?.filter((b: any) => b.type === 'Benefit').map((b: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center py-1.5">
                               <span className="data-value text-slate-600">{b.name}</span>
-                              <span className="data-value font-sans tabular-nums text-emerald-600">+${b.amount.toLocaleString()}</span>
+                              <span className="data-value font-sans tabular-nums text-emerald-600">{showSlipsValues ? `+$${b.amount.toLocaleString()}` : '****'}</span>
                             </div>
                           ))}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                             <span className="table-cell-semibold text-slate-900">Total Gross Earnings</span>
-                            <span className="table-cell-semibold font-sans tabular-nums text-slate-900">${activeSlip.gross.toLocaleString()}</span>
+                            <span className="table-cell-semibold font-sans tabular-nums text-slate-900">{showSlipsValues ? `$${activeSlip.gross.toLocaleString()}` : '****'}</span>
                           </div>
                         </div>
                       </div>
@@ -602,12 +644,12 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           {activeSlip.breakdown?.filter((b: any) => b.type === 'Tax').map((b: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center py-1.5">
                               <span className="data-value text-slate-600">{b.name}</span>
-                              <span className="data-value font-sans tabular-nums text-rose-600">-${b.amount.toLocaleString()}</span>
+                              <span className="data-value font-sans tabular-nums text-rose-600">{showSlipsValues ? `-$${b.amount.toLocaleString()}` : '****'}</span>
                             </div>
                           ))}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                             <span className="table-cell-semibold text-slate-900">Total Deductions</span>
-                            <span className="table-cell-semibold font-sans tabular-nums text-rose-600">-${activeSlip.deductions.toLocaleString()}</span>
+                            <span className="table-cell-semibold font-sans tabular-nums text-rose-600">{showSlipsValues ? `-$${activeSlip.deductions.toLocaleString()}` : '****'}</span>
                           </div>
                         </div>
                       </div>
@@ -618,7 +660,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="table-cell-semibold text-emerald-800">Net Pay</div>
                           <div className="data-value-small text-emerald-600">Direct Deposited</div>
                         </div>
-                        <div className="fs-2xl fw-bold font-sans tabular-nums text-emerald-700">${activeSlip.net.toLocaleString()}</div>
+                        <div className="fs-2xl fw-bold font-sans tabular-nums text-emerald-700">{showSlipsValues ? `$${activeSlip.net.toLocaleString()}` : '****'}</div>
                       </div>
                     </div>
                   </div>
@@ -634,9 +676,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         {mySlips.map(slip => (
                           <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors ${activeSlip.id === slip.id ? 'bg-slate-50' : ''}`}>
                             <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{slip.period}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{showSlipsValues ? `$${slip.gross.toLocaleString()}` : '****'}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">{showSlipsValues ? `-$${slip.deductions.toLocaleString()}` : '****'}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{showSlipsValues ? `$${slip.net.toLocaleString()}` : '****'}</td>
                             <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               <button onClick={(e) => { 
