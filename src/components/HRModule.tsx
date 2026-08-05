@@ -143,14 +143,22 @@ const AVATAR_COLORS = [
   'from-slate-600 to-slate-800',
 ];
 
-const Avatar = ({ first, last, index = 0, size = 'md' }: {
-  first: string; last: string; index?: number; size?: 'sm' | 'md' | 'lg';
+const Avatar = ({ first, last, index = 0, size = 'md', photoUrl }: {
+  first: string; last: string; index?: number; size?: 'sm' | 'md' | 'lg'; photoUrl?: string;
 }) => {
   const sizeClass = size === 'sm' ? 'h-7 w-7 fs-xs' : size === 'lg' ? 'h-12 w-12 fs-base' : 'h-9 w-9 fs-sm';
+  if (photoUrl) {
+    return <img src={photoUrl} className={`${sizeClass} rounded-full object-cover shrink-0`} alt={`${first} ${last}`} />;
+  }
+  const seed = encodeURIComponent(`${first} ${last}`);
+  const bgColors = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'ffdfbf'];
+  const bg = bgColors[index % bgColors.length];
   return (
-    <div className={`${sizeClass} rounded-full bg-gradient-to-br ${AVATAR_COLORS[index % AVATAR_COLORS.length]} flex items-center justify-center fw-bold text-white shrink-0`}>
-      {first[0]}{last[0]}
-    </div>
+    <img 
+      src={`https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${bg}`} 
+      className={`${sizeClass} rounded-full object-cover shrink-0 bg-slate-50`} 
+      alt={`${first} ${last}`} 
+    />
   );
 };
 
@@ -208,6 +216,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   }
 
   // ── Form state ───────────────────────────────────────────────────────────────
+  const [visibleSalaries, setVisibleSalaries] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -1147,8 +1156,18 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       </span>
                     </td>
                     {isHRorAdmin && (
-                      <td className="px-4 py-3 text-right">
-                        <span className="fs-sm fw-semibold text-slate-900 font-mono tabular-nums">GHS {(emp.salary ?? 0).toLocaleString()}</span>
+                      <td className="px-4 py-3 text-right group">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="fs-sm fw-semibold text-slate-900 font-mono tabular-nums">
+                            {visibleSalaries.includes(emp.id) ? `GHS ${(emp.salary ?? 0).toLocaleString()}` : '******'}
+                          </span>
+                          <button 
+                            onClick={() => setVisibleSalaries(prev => prev.includes(emp.id) ? prev.filter(id => id !== emp.id) : [...prev, emp.id])}
+                            className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                          >
+                            <i className={`bi ${visibleSalaries.includes(emp.id) ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                          </button>
+                        </div>
                       </td>
                     )}
                     <td className="px-4 py-3">
