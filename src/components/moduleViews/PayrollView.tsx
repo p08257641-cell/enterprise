@@ -684,7 +684,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                               <button onClick={(e) => { 
                                 e.stopPropagation(); 
                                 setSelectedSlipId(slip.id); 
-                                window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                                document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' }); 
                               }} className="text-blue-600 hover:text-blue-800 data-value-small fw-semibold cursor-pointer mr-3">
                                 View Details
                               </button>
