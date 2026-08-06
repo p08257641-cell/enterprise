@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 import { isAdminRole } from '../../permissions';
 import { parseActiveView } from '../../parseActiveView';
 
@@ -38,12 +38,14 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
   const [newAssetLife, setNewAssetLife] = useState('5');
   const [newAssetCode, setNewAssetCode] = useState('');
   const [newPurchaseDate, setNewPurchaseDate] = useState('');
+  const [showAddAsset, setShowAddAsset] = useState(false);
 
   // Maintenance form
   const [maintAssetId, setMaintAssetId] = useState('');
   const [maintTask, setMaintTask] = useState('');
   const [maintDue, setMaintDue] = useState('');
   const [maintOwner, setMaintOwner] = useState('');
+  const [showAddMaint, setShowAddMaint] = useState(false);
 
   const assetModal = useRowModal<typeof localAssets[0]>();
   const maintModal = useRowModal<typeof localMaintenance[0]>();
@@ -85,10 +87,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Active" value={localAssets.filter(a => a.status === 'Active').length} icon="bi bi-check-circle" sub="Running normally" />
             <StatCard label="Disposed" value={localAssets.filter(a => a.status === 'Disposed').length} icon="bi bi-trash" sub="Retired assets" />
           </div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="grid gap-6">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">Asset Register</h3>
+                {isAdmin && (
+                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowAddAsset(true)}>Register Asset</PrimaryBtn>
+                )}
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Asset Code' }, { label: 'Asset Name' }, { label: 'Category' }, { label: 'Location' }, { label: 'Purchase Price', right: true }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
@@ -122,32 +127,34 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                 </tbody>
               </table>
             </div>
-            {isAdmin && (
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-                <h3 className="section-title text-slate-500 mb-5">Register New Asset</h3>
-                <div className="space-y-3">
+            {isAdmin && showAddAsset && (
+              <ViewModal title="Register New Asset" onClose={() => setShowAddAsset(false)}>
+                <div className="p-6 space-y-4">
                   <div><Label>Asset Code *</Label><Input value={newAssetCode} onChange={e => setNewAssetCode(e.target.value)} placeholder="AST-001" /></div>
                   <div><Label>Asset Name *</Label><Input value={newAssetName} onChange={e => setNewAssetName(e.target.value)} placeholder="Dell Workstation" /></div>
                   <div><Label>Category</Label><Select value={newAssetCat} onChange={e => setNewAssetCat(e.target.value)}><option>IT Hardware</option><option>Heavy Machinery</option><option>Logistics</option><option>Furniture</option><option>Vehicles</option></Select></div>
                   <div><Label>Location</Label><Input value={newAssetLoc} onChange={e => setNewAssetLoc(e.target.value)} placeholder="NYC HQ" /></div>
                   <div><Label>Purchase Date</Label><Input type="date" value={newPurchaseDate} onChange={e => setNewPurchaseDate(e.target.value)} /></div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-4">
                     <div><Label>Purchase Value ($)</Label><Input type="number" value={newAssetVal} onChange={e => setNewAssetVal(e.target.value)} /></div>
                     <div><Label>Useful Life (yrs)</Label><Input type="number" value={newAssetLife} onChange={e => setNewAssetLife(e.target.value)} /></div>
                   </div>
-                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
-                    if (!newAssetName.trim() || !newAssetCode.trim()) return;
-                    onCreateFixedAsset({
-                      companyId: selectedCompany.id, assetCode: newAssetCode, name: newAssetName,
-                      description: '', category: newAssetCat, purchaseDate: newPurchaseDate,
-                      purchasePrice: Number(newAssetVal), salvageValue: Number(newAssetVal) * 0.1,
-                      usefulLifeYears: Number(newAssetLife), depreciationMethod: 'Straight-Line',
-                      location: newAssetLoc,
-                    });
-                    setNewAssetName(''); setNewAssetCode(''); setNewAssetLoc(''); setNewAssetVal('1000'); setNewAssetLife('5'); setNewPurchaseDate('');
-                  }}>Register Asset</PrimaryBtn>
+                  <div className="pt-4 flex justify-end">
+                    <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
+                      if (!newAssetName.trim() || !newAssetCode.trim()) return;
+                      onCreateFixedAsset({
+                        companyId: selectedCompany.id, assetCode: newAssetCode, name: newAssetName,
+                        description: '', category: newAssetCat, purchaseDate: newPurchaseDate,
+                        purchasePrice: Number(newAssetVal), salvageValue: Number(newAssetVal) * 0.1,
+                        usefulLifeYears: Number(newAssetLife), depreciationMethod: 'Straight-Line',
+                        location: newAssetLoc,
+                      });
+                      setNewAssetName(''); setNewAssetCode(''); setNewAssetLoc(''); setNewAssetVal('1000'); setNewAssetLife('5'); setNewPurchaseDate('');
+                      setShowAddAsset(false);
+                    }}>Register Asset</PrimaryBtn>
+                  </div>
                 </div>
-              </div>
+              </ViewModal>
             )}
           </div>
         </>
@@ -161,10 +168,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Overdue" value={localMaintenance.filter(m => new Date(m.due) < new Date() && m.status !== 'Completed').length} icon="bi bi-exclamation-triangle" sub="Past due date" accent />
             <StatCard label="Completed" value={localMaintenance.filter(m => m.status === 'Completed').length} icon="bi bi-check-circle" sub="Tasks done" />
           </div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+          <div className="grid gap-6">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">Maintenance Schedule</h3>
+                {isAdmin && (
+                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowAddMaint(true)}>Schedule Task</PrimaryBtn>
+                )}
               </div>
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Asset' }, { label: 'Task' }, { label: 'Due' }, { label: 'Owner' }, { label: 'Status' }, ...(isAdmin ? [{ label: 'Actions', right: true }] : [])]} />
@@ -198,10 +208,9 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                 </tbody>
               </table>
             </div>
-            {isAdmin && (
-              <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-                <h3 className="section-title text-slate-500 mb-5">Schedule Maintenance</h3>
-                <div className="space-y-3">
+            {isAdmin && showAddMaint && (
+              <ViewModal title="Schedule Maintenance" onClose={() => setShowAddMaint(false)}>
+                <div className="p-6 space-y-4">
                   <div>
                     <Label>Asset</Label>
                     <Select value={maintAssetId} onChange={e => {
@@ -212,24 +221,27 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                     </Select>
                   </div>
                   <div><Label>Task Description *</Label><Input value={maintTask} onChange={e => setMaintTask(e.target.value)} placeholder="e.g. Annual inspection" /></div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-4">
                     <div><Label>Due Date</Label><Input type="date" value={maintDue} onChange={e => setMaintDue(e.target.value)} /></div>
                     <div><Label>Owner / Team</Label><Input value={maintOwner} onChange={e => setMaintOwner(e.target.value)} placeholder="Engineering" /></div>
                   </div>
-                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
-                    if (!maintTask.trim()) return;
-                    const asset = localAssets.find(a => a.id === maintAssetId);
-                    onCreateMaintenanceTask({
-                      assetId: maintAssetId,
-                      assetName: asset ? asset.name : 'General',
-                      task: maintTask,
-                      due: maintDue || new Date().toISOString().split('T')[0],
-                      owner: maintOwner || 'Unassigned',
-                    });
-                    setMaintTask(''); setMaintOwner(''); setMaintAssetId(''); setMaintDue('');
-                  }}>Add Task</PrimaryBtn>
+                  <div className="pt-4 flex justify-end">
+                    <PrimaryBtn icon="bi bi-plus-lg" onClick={() => {
+                      if (!maintTask.trim()) return;
+                      const asset = localAssets.find(a => a.id === maintAssetId);
+                      onCreateMaintenanceTask({
+                        assetId: maintAssetId,
+                        assetName: asset ? asset.name : 'General',
+                        task: maintTask,
+                        due: maintDue || new Date().toISOString().split('T')[0],
+                        owner: maintOwner || 'Unassigned',
+                      });
+                      setMaintTask(''); setMaintOwner(''); setMaintAssetId(''); setMaintDue('');
+                      setShowAddMaint(false);
+                    }}>Add Task</PrimaryBtn>
+                  </div>
                 </div>
-              </div>
+              </ViewModal>
             )}
           </div>
         </>
