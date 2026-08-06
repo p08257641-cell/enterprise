@@ -3446,6 +3446,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               users={users}
               customRoles={customRoles}
               employees={employees}
+              applicants={applicants}
               bankAccountUpdates={bankAccountUpdates}
               onRequestBankAccountUpdate={handleRequestBankAccountUpdate}
               onApproveBankAccountUpdate={handleApproveBankAccountUpdate}
