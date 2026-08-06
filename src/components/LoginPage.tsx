@@ -19,6 +19,24 @@ export const LoginPage: React.FC = () => {
   const [whisperCompanyId, setWhisperCompanyId] = useState('');
   const [companies, setCompanies] = useState<any[]>([]);
 
+  // Splash screen state
+  const [showSplash, setShowSplash] = useState(true);
+  const [bgIndex, setBgIndex] = useState(0);
+  const splashImages = ['/splash1.jpg', '/splash2.jpg'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBgIndex(prev => (prev + 1) % splashImages.length);
+    }, 3000);
+    const timeout = setTimeout(() => {
+      setShowSplash(false);
+    }, 6000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, []);
+
   useEffect(() => {
     if (showWhisper) {
       fetch('/api/companies')
@@ -90,15 +108,49 @@ export const LoginPage: React.FC = () => {
     );
   }
 
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 overflow-hidden">
+        {splashImages.map((img, idx) => (
+          <div
+            key={idx}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-40' : 'opacity-0'}`}
+          >
+            <img src={img} alt="Splash Background" className="w-full h-full object-cover" />
+          </div>
+        ))}
+        
+        <div className="relative z-10 flex flex-col items-center justify-center animate-fade-in-up">
+          <div className="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-md p-4 mb-8 shadow-2xl border border-white/20 flex items-center justify-center overflow-hidden">
+            <img src="/logo.jpg" alt="Core360 Logo" className="w-full h-full object-contain rounded-xl" />
+          </div>
+          <h1 className="text-5xl font-black text-white tracking-tight mb-4 drop-shadow-lg">Core<span className="text-blue-400">360</span></h1>
+          <p className="text-xl text-slate-300 font-medium tracking-wide mb-12 text-center max-w-md drop-shadow-md">
+            {bgIndex === 0 ? 'Empowering Modern Enterprise' : 'Seamless Supply Chain & ERP'}
+          </p>
+          
+          <div className="flex items-center gap-2">
+            {splashImages.map((_, idx) => (
+              <div 
+                key={idx}
+                className={`h-1.5 rounded-full transition-all duration-500 ${idx === bgIndex ? 'w-8 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]' : 'w-2 bg-white/20'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 animate-fade-in">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 text-white fs-2xl mb-4 shadow-lg">
-            ⚡
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-white shadow-sm border border-slate-200 mb-5 overflow-hidden p-2">
+            <img src="/logo.jpg" alt="Core360 Logo" className="w-full h-full object-contain rounded-xl" />
           </div>
-          <h1 className="text-2xl fw-bold text-slate-900 tracking-tight">Enterprise ERP</h1>
+          <h1 className="text-2xl fw-bold text-slate-900 tracking-tight">Core360</h1>
           <p className="fs-sm text-slate-500 mt-1">Sign in to your account</p>
         </div>
 
