@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage, CustomRole, ApprovalPolicy, PendingApproval, ChatGroup } from './types';
+import { Company, User, Employee, Applicant, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, APIKey, ERPWorkflow, Department, Branch, POSProduct, POSCustomer, POSSale, POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance, Bill, BillPayment, CustomerPayment, BankAccount, BankTransaction, BankReconciliation, FixedAsset, DepreciationEntry, Budget, CostCenter, CurrencyRate, TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline, OnboardingRecord, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, WorkflowTrigger, EmailTemplate, ProjectTask, ProjectMilestone, Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest, Poll, PollOption, PollVote, CompanyImage, CustomRole, ApprovalPolicy, PendingApproval, ChatGroup } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
@@ -44,6 +44,7 @@ export default function App() {
 
   // Core database tables
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
 const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
@@ -159,10 +160,11 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     if (authLoading || !token) return;
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
+        const [cRes, uRes, eRes, appRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
+            fetch('/api/applicants'),
           fetch('/api/departments'),
           fetch('/api/branches'),
           fetch('/api/leads'),
@@ -604,7 +606,32 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
-  const handleAddEmployee = async (empInput: Omit<Employee, 'id' | 'employeeNumber' | 'status' | 'joiningDate'>) => {
+  const handleAddApplicant = async (appInput: Partial<Applicant>) => {
+      try {
+        const res = await fetch('/api/applicants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyId: selectedCompany.id, ...appInput })
+        });
+        const data = await safeJson(res);
+        setApplicants([...applicants, data]);
+        toast('Applicant added successfully', 'success', 'Added');
+      } catch (err) { console.error(err); toast('Failed to add applicant', 'error', 'Error'); }
+    };
+
+    const handleUpdateApplicant = async (id: string, updates: Partial<Applicant>) => {
+      try {
+        const res = await fetch(`/api/applicants/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        const data = await safeJson(res);
+        setApplicants(applicants.map(a => a.id === id ? data : a));
+      } catch (err) { console.error(err); toast('Failed to update applicant', 'error', 'Error'); }
+    };
+
+    const handleAddEmployee = async (empInput: Omit<Employee, Applicant, 'id' | 'employeeNumber' | 'status' | 'joiningDate'>) => {
     try {
       const res = await fetch('/api/employees', {
         method: 'POST',
@@ -1130,10 +1157,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const [lRes, eRes, logRes] = await Promise.all([
         fetch('/api/leaves'),
         fetch('/api/employees'),
+            fetch('/api/applicants'),
         fetch('/api/audit-logs')
       ]);
       setLeaves(await safeJson(lRes));
       setEmployees(await safeJson(eRes));
+        setApplicants(await safeJson(appRes));
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
@@ -1157,10 +1186,12 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       const [lRes, eRes, logRes] = await Promise.all([
         fetch('/api/leaves'),
         fetch('/api/employees'),
+            fetch('/api/applicants'),
         fetch('/api/audit-logs')
       ]);
       setLeaves(await safeJson(lRes));
       setEmployees(await safeJson(eRes));
+        setApplicants(await safeJson(appRes));
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
@@ -3815,5 +3846,9 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     </>
   );
 }
+
+
+
+
 
 

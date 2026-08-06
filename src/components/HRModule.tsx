@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ViewModal, TableHead, EmptyRow } from './moduleViews/shared';
-import { Company, User, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord, ExitRequest } from '../types';
+import { Company, User, Applicant, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord, ExitRequest } from '../types';
 import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole } from '../permissions';
 import { downloadCSV } from '../utils/export';
 import { modalAlert, modalConfirm } from '../utils/modal';
@@ -21,6 +21,7 @@ interface HRModuleProps {
   selectedUser: User;
   users: User[];
   employees: Employee[];
+  applicants?: Applicant[];
   departments: Department[];
   branches: Branch[];
   leaves: LeaveRequest[];
@@ -368,12 +369,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
   const [editOnbTasks, setEditOnbTasks] = useState('');
   const [editOnbStatus, setEditOnbStatus] = useState<'In Progress' | 'Completed' | 'Pending'>('In Progress');
   const STAGES = ['Applications', 'Screening', 'Interview', 'Offer Sent', 'Hired'];
-  const [applicants, setApplicants] = useState<{ name: string; role: string; dept: string; stage: string; applied: string; avatar: string }[]>([
-    { name: 'Kofi Asante', role: 'Senior Software Engineer', dept: 'Engineering', stage: 'Interview', applied: '3 days ago', avatar: 'KA' },
-    { name: 'Ama Boateng', role: 'Financial Analyst', dept: 'Finance', stage: 'Screening', applied: '5 days ago', avatar: 'AB' },
-    { name: 'Kwame Mensah', role: 'Sales Representative', dept: 'Sales', stage: 'Applications', applied: '1 day ago', avatar: 'KM' },
-    { name: 'Akosua Darko', role: 'HR Officer', dept: 'HR', stage: 'Offer Sent', applied: '8 days ago', avatar: 'AD' },
-  ]);
+
 
   const uniqueDepts = ['All', ...Array.from(new Set(localEmployees.map(e => e.department)))];
 
@@ -3513,6 +3509,13 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
     </div>
   );
 };
+
+
+
+
+
+
+
 
 
 

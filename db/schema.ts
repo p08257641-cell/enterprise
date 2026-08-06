@@ -1351,3 +1351,17 @@ export const evatSubmissions = pgTable('evat_submissions', {
 
 
 
+
+export const applicants = pgTable('applicants', {
+  id: text('id').primaryKey(),
+  companyId: text('company_id'),
+  name: text('name'),
+  email: text('email'),
+  role: text('role'),
+  department: text('department'),
+  stage: text('stage'),
+  appliedDate: text('applied_date'),
+  cvText: text('cv_text'),
+  aiScore: integer('ai_score'),
+  aiSummary: text('ai_summary')
+});

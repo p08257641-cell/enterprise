@@ -977,9 +977,90 @@ app.post('/api/branches', asyncHandler(async (req, res) => {
   await dbInsert(schema.branches, newBranch);
   logAudit(companyId, 'u-acme-admin', 'Marcus Chen', 'BRANCH_CREATE', 'Administration', `Created branch "${name}"`);
   res.status(201).json(newBranch);
-    }));
+  }));
 
-// 3. HR & Employees
+  // 2.9 Applicants & Recruitment
+  app.get('/api/applicants', asyncHandler(async (req, res) => {
+    const { companyId } = req.query;
+    const all = await dbAll<any>(schema.applicants);
+    res.json(companyId ? all.filter((a: any) => a.companyId === companyId) : all);
+  }));
+
+  app.post('/api/applicants', asyncHandler(async (req, res) => {
+    const { companyId, name, email, role, department, cvText, aiScore, aiSummary } = req.body;
+    const newApplicant = {
+      id: `app-${Date.now()}`,
+      companyId,
+      name,
+      email: email || '',
+      role,
+      department: department || 'General',
+      stage: 'Applications',
+      appliedDate: new Date().toISOString().split('T')[0],
+      cvText: cvText || '',
+      aiScore: aiScore || null,
+      aiSummary: aiSummary || ''
+    };
+    await dbInsert(schema.applicants, newApplicant);
+    res.status(201).json(newApplicant);
+  }));
+
+  app.put('/api/applicants/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const body = req.body;
+    const appRecord = await dbById<any>(schema.applicants, id);
+    if (!appRecord) return res.status(404).json({ error: 'Applicant not found' });
+    const updated = await dbUpdate(schema.applicants, id, body);
+    res.json(updated);
+  }));
+
+  app.post('/api/screen-cv', asyncHandler(async (req, res) => {
+    const { cvText, jobRole } = req.body;
+    if (!cvText || !jobRole) return res.status(400).json({ error: 'Missing cvText or jobRole' });
+
+    const ai = getAIClient();
+    if (!ai) {
+      // Mock response if AI is not configured
+      return res.json({
+        score: Math.floor(Math.random() * 40) + 60,
+        summary: `(MOCKED) The candidate's CV for ${jobRole} looks decent but lacks deep technical details.`
+      });
+    }
+
+    const prompt = `You are an expert HR recruiter. Evaluate the following CV against the job role: "${jobRole}".
+Return a strict JSON object with exactly two keys:
+1. "score": an integer from 0 to 100 representing how well the CV matches the role.
+2. "summary": a short paragraph (2-3 sentences) evaluating the candidate's strengths and weaknesses.
+
+CV Text:
+${cvText}
+`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: prompt,
+      });
+      const text = response.text() || '{}';
+      
+      // Attempt to parse JSON from response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        res.json({
+          score: parsed.score || 0,
+          summary: parsed.summary || 'No summary provided.'
+        });
+      } else {
+        res.json({ score: 50, summary: "AI provided an invalid format." });
+      }
+    } catch (err) {
+      logError("Gemini CV Screening Error:", err);
+      res.status(500).json({ error: 'Failed to screen CV.' });
+    }
+  }));
+
+  // 3. HR & Employees
 app.get('/api/employees', asyncHandler(async (req, res) => {
   const { companyId, page, limit } = req.query;
   if (page) {

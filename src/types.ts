@@ -1531,3 +1531,16 @@ export interface EvatValidationResult {
 
 
 
+export interface Applicant {
+  id: string;
+  companyId: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  stage: string;
+  appliedDate: string;
+  cvText?: string;
+  aiScore?: number;
+  aiSummary?: string;
+}
