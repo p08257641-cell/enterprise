@@ -538,14 +538,25 @@ export const HRModule: React.FC<HRModuleProps> = ({
           <ViewModal title={`${selectedEmp.firstName} ${selectedEmp.lastName}`} subtitle={`${selectedEmp.designation} · ${selectedEmp.department}`} onClose={() => setSelectedEmp(null)} size="3xl">
             {/* Profile Header */}
             <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }} className="rounded-xl px-6 py-6 -mx-1">
-              <div className="flex items-start gap-5">
-                <div className="h-16 w-16 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center fs-2xl fw-bold text-white shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
+                <div className="flex items-center gap-4 sm:hidden mb-2">
+                   <div className="h-16 w-16 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center fs-2xl fw-bold text-white shrink-0">
+                     {selectedEmp.firstName[0]}{selectedEmp.lastName[0]}
+                   </div>
+                   <div>
+                     <h1 className="fs-xl fw-bold text-white tracking-tight">{selectedEmp.firstName} {selectedEmp.lastName}</h1>
+                     <p className="text-slate-400 mt-0.5 fs-sm">{selectedEmp.designation}</p>
+                   </div>
+                </div>
+                <div className="hidden sm:flex h-16 w-16 rounded-2xl bg-white/10 border-2 border-white/20 items-center justify-center fs-2xl fw-bold text-white shrink-0">
                   {selectedEmp.firstName[0]}{selectedEmp.lastName[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="fs-xl fw-bold text-white tracking-tight">{selectedEmp.firstName} {selectedEmp.lastName}</h1>
-                  <p className="text-slate-400 mt-0.5 fs-sm">{selectedEmp.designation} · {selectedEmp.department}</p>
-                  <div className="flex items-center gap-3 mt-3">
+                  <div className="hidden sm:block">
+                    <h1 className="fs-xl fw-bold text-white tracking-tight">{selectedEmp.firstName} {selectedEmp.lastName}</h1>
+                    <p className="text-slate-400 mt-0.5 fs-sm">{selectedEmp.designation} · {selectedEmp.department}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-0 sm:mt-3">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 fs-xs fw-semibold text-white">
                       <i className="bi bi-person-badge"></i> {selectedEmp.employeeNumber}
                     </span>
@@ -558,9 +569,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   </div>
                 </div>
                 {isHRorAdmin && (
-                  <div className="text-right shrink-0">
-                    <div className="fs-2xl fw-bold text-white tabular-nums">${(selectedEmp.salary || 0).toLocaleString()}</div>
-                    <div className="fs-xs text-slate-400 mt-0.5">Monthly Gross</div>
+                  <div className="text-left sm:text-right shrink-0 mt-3 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-white/10 flex sm:block items-center justify-between">
+                    <div>
+                      <div className="fs-2xl fw-bold text-white tabular-nums">${(selectedEmp.salary || 0).toLocaleString()}</div>
+                      <div className="fs-xs text-slate-400 mt-0.5">Monthly Gross</div>
+                    </div>
                     <button
                       onClick={() => {
                         const emp = selectedEmp;
