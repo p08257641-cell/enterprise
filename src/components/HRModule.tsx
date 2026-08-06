@@ -2081,22 +2081,24 @@ export const HRModule: React.FC<HRModuleProps> = ({
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <div className="text-center px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="flex-1 md:flex-none text-center px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
               <div className="fs-lg fw-bold text-emerald-700 tabular-nums">{myAttToday?.checkIn || '—'}</div>
               <div className="fs-xs text-emerald-600">Check In</div>
             </div>
-            <div className="text-center px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex-1 md:flex-none text-center px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl">
               <div className="fs-lg fw-bold text-slate-400 tabular-nums">{myAttToday?.checkOut || '—'}</div>
               <div className="fs-xs text-slate-400">Check Out</div>
             </div>
           </div>
-          {!isClockedIn ? (
-            <PrimaryBtn onClick={() => onClockIn('Office')} icon="bi bi-box-arrow-in-right">Clock In</PrimaryBtn>
-          ) : !isClockedOut ? (
-            <PrimaryBtn onClick={() => onClockOut()} icon="bi bi-box-arrow-right">Clock Out</PrimaryBtn>
-          ) : (
-            <span className="fs-xs fw-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-lg"><i className="bi bi-check-circle-fill mr-1"></i>Done for today</span>
-          )}
+          <div className="w-full md:w-auto flex mt-4 md:mt-0">
+            {!isClockedIn ? (
+              <PrimaryBtn className="w-full justify-center" onClick={() => onClockIn('Office')} icon="bi bi-box-arrow-in-right">Clock In</PrimaryBtn>
+            ) : !isClockedOut ? (
+              <PrimaryBtn className="w-full justify-center" onClick={() => onClockOut()} icon="bi bi-box-arrow-right">Clock Out</PrimaryBtn>
+            ) : (
+              <span className="w-full text-center fs-xs fw-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-lg"><i className="bi bi-check-circle-fill mr-1"></i>Done for today</span>
+            )}
+          </div>
         </div>
           );
         })()}

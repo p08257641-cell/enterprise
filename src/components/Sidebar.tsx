@@ -64,16 +64,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Employee-specific label overrides to make ESS feel distinct
   const employeeLabelOverrides: Record<string, string> = {
-    'HR': 'My Workspace',
-    'Payroll': 'My Compensation',
+    'HR': 'Workspace',
+    'Payroll': 'Compensation',
   };
   const employeeSubmenuLabelOverrides: Record<string, string> = {
     'hr-employees': 'Company Directory',
-    'hr-attendance': 'My Attendance',
-    'hr-leave': 'My Leaves',
-    'hr-performance': 'My Goals & OKRs',
+    'hr-attendance': 'Attendance',
+    'hr-leave': 'Leaves',
+    'hr-performance': 'Goals & OKRs',
     'hr-orgchart': 'Org Chart',
-    'payroll-slips': 'My Payslips',
+    'payroll-slips': 'Payslips',
   };
   const employeeIconOverrides: Record<string, string> = {
     'HR': 'bi bi-person-workspace',
@@ -175,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ]
         },
         {
-          id: 'HR', label: isEmployee ? 'My Workspace' : 'HR & Directory', iconClass: isEmployee ? 'bi bi-person-workspace' : 'bi bi-people', viewId: 'hr',
+          id: 'HR', label: isEmployee ? 'Workspace' : 'HR & Directory', iconClass: isEmployee ? 'bi bi-person-workspace' : 'bi bi-people', viewId: 'hr',
           subMenus: [
             { id: 'hr-employees', label: 'Employees', viewId: 'hr', iconClass: 'bi bi-person-badge' },
             { id: 'hr-attendance', label: 'Attendance', viewId: 'hr-attendance', iconClass: 'bi bi-clock-history' },
@@ -192,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ]
         },
         {
-          id: 'Payroll', label: isEmployee ? 'My Compensation' : 'Payroll & Salary', iconClass: isEmployee ? 'bi bi-wallet2' : 'bi bi-cash-stack', viewId: isEmployee ? 'payroll-slips' : 'payroll',
+          id: 'Payroll', label: isEmployee ? 'Compensation' : 'Payroll & Salary', iconClass: isEmployee ? 'bi bi-wallet2' : 'bi bi-cash-stack', viewId: isEmployee ? 'payroll-slips' : 'payroll',
           subMenus: [
             { id: 'payroll-run', label: 'Run Payroll', viewId: 'payroll', iconClass: 'bi bi-play-circle' },
             { id: 'payroll-slips', label: 'Payslips', viewId: 'payroll-slips', iconClass: 'bi bi-receipt-cutoff' },

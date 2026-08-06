@@ -142,9 +142,9 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
         </div>
       )}
       {commTab === 'chat' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex" style={{ height: '72vh' }}>
+        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col md:flex-row" style={{ height: '72vh' }}>
           {/* Left: Recipients */}
-          <div className="w-64 border-r border-slate-200 flex flex-col shrink-0">
+          <div className={md:w-64 md:border-r border-slate-200 flex flex-col shrink-0 }>
             <div className="px-4 py-3 border-b border-slate-100">
               <Input placeholder="Search…" value={searchTerm} readOnly />
             </div>
@@ -218,11 +218,14 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           </div>
           {/* Right: Chat */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className={lex-1 flex flex-col min-w-0 }>
             {chatRecipient ? (
               <>
                 <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] fw-bold">{chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
+                  <button onClick={() => setChatRecipient(null)} className="md:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full">
+                    <i className="bi bi-arrow-left"></i>
+                  </button>
+                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] fw-bold shrink-0">{chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
                   <div>
                     <div className="fs-sm fw-bold text-slate-900">{chatRecipient.name}</div>
                     <div className="text-[10px] text-slate-400">{chatRecipient.type === 'team' ? 'Department channel' : chatRecipient.type === 'custom_group' ? 'Custom Group' : 'Direct message'}</div>
