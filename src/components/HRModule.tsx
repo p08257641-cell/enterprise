@@ -848,7 +848,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                             if (file) {
                               try {
                                 const { uploadFile } = await import('../lib/supabase');
-                                const url = await uploadFile(file, 'avatars');
+                                const url = await uploadFile(file, 'avatars', selectedCompany.id);
                                 if (url) {
                                   setEditPhotoUrl(url);
                                 } else {

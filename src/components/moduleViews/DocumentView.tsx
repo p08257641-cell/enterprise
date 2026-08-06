@@ -308,7 +308,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                   if (!file) return;
                   try {
                     const { uploadFile } = await import('../../lib/supabase');
-                    const url = await uploadFile(file, 'documents');
+                    const url = await uploadFile(file, 'documents', selectedCompany.id);
                     if (url) setNewDocFileUrl(url); else alert('Failed to upload.');
                   } catch (err) {
                     console.error(err);
