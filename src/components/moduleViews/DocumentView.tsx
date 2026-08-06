@@ -303,19 +303,21 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
               <div><Label>Document Name *</Label><Input value={newDocName} onChange={e => setNewDocName(e.target.value)} placeholder="Q4 Sales Contract.pdf" /></div>
               <div>
                 <Label>Upload File</Label>
-                <input type="file" className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800" onChange={(e) => {
+                <input type="file" className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      if (reader.result) {
-                        setNewDocFileUrl(reader.result as string);
+                    try {
+                      const { uploadFile } = await import('../../lib/supabase');
+                      const url = await uploadFile(file, 'documents', selectedCompany.id);
+                      if (url) {
+                        setNewDocFileUrl(url);
+                      } else {
+                        alert('Failed to upload document to Supabase storage.');
                       }
-                    };
-                    reader.onerror = () => {
-                      alert('Error reading file.');
-                    };
-                    reader.readAsDataURL(file);
+                    } catch (err) {
+                      console.error('Upload error:', err);
+                      alert('Error uploading document.');
+                    }
                   }} />
               </div>
               <div><Label>File Type</Label><Select value={newDocType} onChange={e => setNewDocType(e.target.value)}><option>PDF</option><option>DOCX</option><option>XLSX</option><option>PPTX</option><option>PNG</option><option>JPG</option><option>ZIP</option></Select></div>
