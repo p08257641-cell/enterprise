@@ -1041,7 +1041,7 @@ ${cvText}
         model: 'gemini-3.5-flash',
         contents: prompt,
       });
-      const text = response.text() || '{}';
+      const text = response.text || '{}';
       
       // Attempt to parse JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);

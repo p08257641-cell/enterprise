@@ -160,7 +160,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     if (authLoading || !token) return;
     async function loadData() {
       try {
-        const [cRes, uRes, eRes, appRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
+        const [cRes, uRes, eRes,  dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -631,7 +631,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       } catch (err) { console.error(err); toast('Failed to update applicant', 'error', 'Error'); }
     };
 
-    const handleAddEmployee = async (empInput: Omit<Employee, Applicant, 'id' | 'employeeNumber' | 'status' | 'joiningDate'>) => {
+    const handleAddEmployee = async (empInput: Omit<Employee, 'id' | 'employeeNumber' | 'status' | 'joiningDate'>) => {
     try {
       const res = await fetch('/api/employees', {
         method: 'POST',
@@ -1162,7 +1162,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       ]);
       setLeaves(await safeJson(lRes));
       setEmployees(await safeJson(eRes));
-        setApplicants(await safeJson(appRes));
+        
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
@@ -1191,7 +1191,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       ]);
       setLeaves(await safeJson(lRes));
       setEmployees(await safeJson(eRes));
-        setApplicants(await safeJson(appRes));
+        
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
@@ -3692,7 +3692,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onApproveExitRequest={handleApproveExitRequest}
               onRejectExitRequest={handleRejectExitRequest}
               onUpdateCompanySettings={handleUpdateCompanySettings}
-                onUpdateUserSignature={handleUpdateUserSignature}
+                
               onCreateRole={handleCreateRole}
               onUpdateRole={handleUpdateRole}
               onDeleteRole={handleDeleteRole}

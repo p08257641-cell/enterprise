@@ -49,7 +49,7 @@ export function LoginPage() {
         {splashImages.map((img, idx) => (
           <div
             key={idx}
-            className={bsolute inset-0 transition-opacity duration-1000 ease-in-out }
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${bgIndex === idx ? 'opacity-100' : 'opacity-0'}`}
           >
             <img src={img} alt="Splash Background" className="w-full h-full object-cover" />
           </div>
@@ -68,7 +68,7 @@ export function LoginPage() {
             {splashImages.map((_, idx) => (
               <div 
                 key={idx}
-                className={h-1.5 rounded-full transition-all duration-500 }
+                className={`h-1.5 rounded-full transition-all duration-500 ${bgIndex === idx ? 'w-8 bg-blue-500' : 'w-2 bg-white/30'}`}
               />
             ))}
           </div>

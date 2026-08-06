@@ -274,7 +274,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
             </p>
             {isAdmin && (
               <div className="mb-6">
-                <SecBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Draft'); setShowDocModal(true); }}>Upload Document for OCR</SecBtn>
+                <SecBtn  onClick={() => { setNewDocName(''); setNewDocStatus('Draft'); setShowDocModal(true); }}>Upload Document for OCR</SecBtn>
               </div>
             )}
             <div className="space-y-2 max-w-xl mx-auto">
@@ -370,7 +370,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
               <SecBtn onClick={() => { setShowDocModal(false); setNewDocVisibility('everyone'); setNewDocSharedWith([]); }}>Cancel</SecBtn>
               <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => {
                 if (!newDocName.trim()) return;
-                onCreateDocument({ name: newDocName, type: newDocType, visibility: newDocVisibility, sharedWith: newDocSharedWith, status: newDocStatus, fileUrl: newDocFileUrl, signers: newDocSigners, cc: newDocCC });
+                onCreateDocument({ name: newDocName, type: newDocType, visibility: newDocVisibility, sharedWith: newDocSharedWith });
                 setShowDocModal(false); setNewDocName(''); setNewDocVisibility('everyone'); setNewDocSharedWith([]); setNewDocSigners([]); setNewDocCC([]);
               }}>Upload</PrimaryBtn>
             </div>
@@ -435,7 +435,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
           ]}
           title={r => r.name} subtitle={r => `${r.type} Document`}
-          actions={r => <PrimaryBtn icon="bi bi-box-arrow-up-right" onClick={() => window.open(r.fileUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '_blank')}>View Document</PrimaryBtn>}
+          actions={r => <PrimaryBtn icon="bi bi-box-arrow-up-right" onClick={() => window.open((r as any).fileUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '_blank')}>View Document</PrimaryBtn>}
           onClose={docModal.close} />
       )}
 
@@ -454,7 +454,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
           actions={r => (
              <div className="flex gap-2">
                {isAdmin && <SecBtn onClick={() => { alert('Editing Policy: ' + r.title); }}>Edit Policy</SecBtn>}
-               <PrimaryBtn icon="bi bi-check2-circle" onClick={() => { onAcknowledgePolicy?.(r.id); policyModal.close(); }}>Acknowledge</PrimaryBtn>
+               <PrimaryBtn icon="bi bi-check2-circle" onClick={() => { onAcknowledgePolicy?.(r.id, ''); policyModal.close(); }}>Acknowledge</PrimaryBtn>
              </div>
           )}
           onClose={policyModal.close} />

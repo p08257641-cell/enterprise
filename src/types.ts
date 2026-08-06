@@ -194,6 +194,7 @@ export interface OnboardingRecord {
 }
 
 export interface OKRRecord {
+  objective?: string;
   id: string;
   companyId: string;
   employeeId: string;
@@ -487,6 +488,9 @@ export interface LMSCourse {
 }
 
 export interface CommunicationAnnouncement {
+  targetAudience?: string;
+  type?: string;
+  content?: string;
   id: string;
   companyId: string;
   title: string;
@@ -1532,6 +1536,8 @@ export interface EvatValidationResult {
 
 
 export interface Applicant {
+  dept?: string;
+  applied?: string;
   id: string;
   companyId: string;
   name: string;

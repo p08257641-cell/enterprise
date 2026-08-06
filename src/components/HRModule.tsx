@@ -79,7 +79,7 @@ const Badge = ({ label, variant = 'default' }: {
     default: 'bg-slate-50 text-slate-600 border-slate-200',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] fw-semibold border ${s[variant]}`}>
+    <span >
       {label}
     </span>
   );
@@ -88,13 +88,13 @@ const Badge = ({ label, variant = 'default' }: {
 const StatCard = ({ label, value, sub, icon, accent = false, color = '' }: {
   label: string; value: string | number; sub?: string; icon: string; accent?: boolean; color?: string;
 }) => (
-  <div className={`rounded-xl border p-5 flex flex-col gap-2 shadow-xs hover:shadow-sm transition-all ${accent ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'}`}>
+  <div >
     <div className="flex items-center justify-between">
-      <span className={`fs-xs fw-semibold uppercase tracking-wider ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
-      <i className={`${icon} fs-sm ${accent ? 'text-slate-500' : 'text-slate-300'}`}></i>
+      <span >{label}</span>
+      <i ></i>
     </div>
-    <div className={`fs-2xl fw-bold tracking-tight tabular-nums ${accent ? 'text-white' : color || 'text-slate-900'}`}>{value}</div>
-    {sub && <p className={`fs-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
+    <div >{value}</div>
+    {sub && <p >{sub}</p>}
   </div>
 );
 
@@ -109,11 +109,11 @@ const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: 
 );
 
 const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-sm text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 ${props.className ?? ''}`} />
+  <input {...props}  />
 );
 
 const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => (
-  <select {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 ${props.className ?? ''}`} />
+  <select {...props}  />
 );
 
 const Label = ({ children }: { children: React.ReactNode }) => (
@@ -121,10 +121,10 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 );
 
 const PrimaryBtn = ({ onClick, icon, children, type = 'button' }: {
-  onClick?: () => void; icon?: string; children: React.ReactNode; type?: 'button' | 'submit';
+  onClick?: () => void; icon?: string; children: React.ReactNode; type?: 'button' | 'submit'; className?: string;
 }) => (
   <button type={type} onClick={onClick} className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white fw-semibold fs-xs px-4 py-2 rounded-lg transition-all cursor-pointer shadow-xs">
-    {icon && <i className={`${icon} fs-xs`}></i>}{children}
+    {icon && <i ></i>}{children}
   </button>
 );
 
@@ -149,7 +149,7 @@ const Avatar = ({ first, last, index = 0, size = 'md', photoUrl }: {
 }) => {
   const sizeClass = size === 'sm' ? 'h-7 w-7 fs-xs' : size === 'lg' ? 'h-12 w-12 fs-base' : 'h-9 w-9 fs-sm';
   if (photoUrl) {
-    return <img src={photoUrl} className={`${sizeClass} rounded-full object-cover shrink-0`} alt={`${first} ${last}`} />;
+    return <img src={photoUrl}  alt={`${first} ${last}`} />;
   }
   const seed = encodeURIComponent(`${first} ${last}`);
   const bgColors = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'ffdfbf'];
@@ -157,7 +157,7 @@ const Avatar = ({ first, last, index = 0, size = 'md', photoUrl }: {
   return (
     <img 
       src={`https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${bg}`} 
-      className={`${sizeClass} rounded-full object-cover shrink-0 bg-slate-50`} 
+       
       alt={`${first} ${last}`} 
     />
   );
@@ -166,7 +166,7 @@ const Avatar = ({ first, last, index = 0, size = 'md', photoUrl }: {
 // ── Progress Bar ──────────────────────────────────────────────────────────────
 const ProgressBar = ({ value, color = 'bg-slate-800' }: { value: number; color?: string }) => (
   <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-    <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${value}%` }} />
+    <div  style={{ width: `${value}%` }} />
   </div>
 );
 
@@ -174,7 +174,7 @@ const ProgressBar = ({ value, color = 'bg-slate-800' }: { value: number; color?:
 // MAIN HR MODULE
 // ══════════════════════════════════════════════════════════════════════════════
 
-export const HRModule: React.FC<HRModuleProps> = ({
+export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateApplicant?: any }> = ({ applicants, onUpdateApplicant,
   activeView, selectedCompany, selectedUser, users,
   employees, departments, branches,
   leaves, attendance, okrs,
@@ -556,9 +556,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 fs-xs fw-semibold text-white">
                       <i className="bi bi-person-badge"></i> {selectedEmp.employeeNumber}
                     </span>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full fs-xs fw-semibold border ${
-                      selectedEmp.status === 'Active' ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300' : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
-                    }`}>
+                    <span >
                       <span className="h-1.5 w-1.5 rounded-full bg-current mr-1.5 animate-pulse"></span>
                       {selectedEmp.status}
                     </span>
@@ -677,7 +675,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 { icon: 'bi bi-diagram-3', label: selectedEmp.department },
               ].map((item) => (
                 <div key={item.label} className="bg-slate-50 rounded-lg px-3 py-2 flex items-center gap-2">
-                  <i className={`${item.icon} text-slate-400 fs-sm`}></i>
+                  <i ></i>
                   <span className="fs-xs text-slate-700 truncate">{item.label}</span>
                 </div>
               ))}
@@ -700,7 +698,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     ].map(item => (
                       <div key={item.label} className="flex items-center justify-between">
                         <span className="fs-xs text-slate-500">{item.label}</span>
-                        <span className={`fs-xs fw-semibold text-slate-900 ${item.mono ? 'font-mono' : ''}`}>{item.value}</span>
+                        <span >{item.value}</span>
                       </div>
                     ))}
                     {isHRorAdmin && (
@@ -746,8 +744,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           { label: 'Late', value: 1, color: 'text-amber-600', bg: 'bg-amber-100' },
                           { label: 'Rate', value: '95.5%', color: 'text-blue-600', bg: 'bg-blue-100' },
                         ].map(s => (
-                          <div key={s.label} className={`${s.bg} rounded-lg p-2.5 text-center`}>
-                            <div className={`fs-lg fw-bold tabular-nums ${s.color}`}>{s.value}</div>
+                          <div key={s.label} >
+                            <div >{s.value}</div>
                             <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
                           </div>
                         ))}
@@ -1168,7 +1166,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     ...(isHRorAdmin ? ['Salary', 'Status'] : ['Status']),
                     'Actions',
                   ].map(col => (
-                    <th key={col} className={`px-4 py-3 section-title text-slate-400 ${col === 'Salary' || col === 'Actions' ? 'text-right' : ''}`}>{col}</th>
+                    <th key={col} >{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -1211,7 +1209,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                             onClick={() => setVisibleSalaries(prev => prev.includes(emp.id) ? prev.filter(id => id !== emp.id) : [...prev, emp.id])}
                             className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                           >
-                            <i className={`bi ${visibleSalaries.includes(emp.id) ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                            <i ></i>
                           </button>
                         </div>
                       </td>
@@ -1262,14 +1260,14 @@ export const HRModule: React.FC<HRModuleProps> = ({
         {/* ATS Pipeline */}
         <div className="grid gap-4 sm:grid-cols-4">
           {[
-            { stage: 'Applications', count: applicants.filter(a => a.stage === 'Applications').length, icon: 'bi bi-inbox', color: 'bg-blue-50 border-blue-100', text: 'text-blue-700' },
-            { stage: 'Screening', count: applicants.filter(a => a.stage === 'Screening').length, icon: 'bi bi-funnel', color: 'bg-violet-50 border-violet-100', text: 'text-violet-700' },
-            { stage: 'Interview', count: applicants.filter(a => a.stage === 'Interview').length, icon: 'bi bi-camera-video', color: 'bg-amber-50 border-amber-100', text: 'text-amber-700' },
-            { stage: 'Offer Sent', count: applicants.filter(a => a.stage === 'Offer Sent').length, icon: 'bi bi-envelope-check', color: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700' },
+            { stage: 'Applications', count: (applicants || []).filter(a => a.stage === 'Applications').length, icon: 'bi bi-inbox', color: 'bg-blue-50 border-blue-100', text: 'text-blue-700' },
+            { stage: 'Screening', count: (applicants || []).filter(a => a.stage === 'Screening').length, icon: 'bi bi-funnel', color: 'bg-violet-50 border-violet-100', text: 'text-violet-700' },
+            { stage: 'Interview', count: (applicants || []).filter(a => a.stage === 'Interview').length, icon: 'bi bi-camera-video', color: 'bg-amber-50 border-amber-100', text: 'text-amber-700' },
+            { stage: 'Offer Sent', count: (applicants || []).filter(a => a.stage === 'Offer Sent').length, icon: 'bi bi-envelope-check', color: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700' },
           ].map(s => (
-            <div key={s.stage} className={`${s.color} border rounded-xl p-5`}>
-              <i className={`${s.icon} ${s.text} fs-lg block mb-2`}></i>
-              <div className={`fs-2xl fw-bold tabular-nums ${s.text}`}>{s.count}</div>
+            <div key={s.stage} >
+              <i ></i>
+              <div >{s.count}</div>
               <div className="fs-sm text-slate-600 mt-0.5">{s.stage}</div>
             </div>
           ))}
@@ -1305,7 +1303,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 )}
             </div>
             <div className="divide-y divide-slate-100">
-              {applicants.map((app, i) => (
+              {(applicants || []).map((app, i) => (
                 <div key={app.name} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                   <div className="flex flex-wrap items-center gap-3">
                     <Avatar first={app.name.split(' ')[0]} last={app.name.split(' ')[1] || 'X'} index={i} />
@@ -1324,7 +1322,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <button onClick={() => {
                         const idx = STAGES.indexOf(app.stage);
                         const next = idx >= 0 && idx < STAGES.length - 1 ? STAGES[idx + 1] : app.stage;
-                        setApplicants(prev => prev.map((a, j) => j === i ? { ...a, stage: next } : a));
+                        onUpdateApplicant!(prev => prev.map((a, j) => j === i ? { ...a, stage: next } : a));
                         if (next === 'Hired') {
                           const nameParts = app.name.split(' ');
                           const firstName = nameParts[0] || app.name;
@@ -1587,7 +1585,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 const remaining = Math.max(0, q.total - used);
                 return (
                   <div key={type} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-                    <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${q.color} flex items-center justify-center text-white mb-3`}>
+                    <div >
                       <i className={q.icon}></i>
                     </div>
                     <div className="fs-sm fw-bold text-slate-900 mb-1">{type}</div>
@@ -1740,7 +1738,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <h3 className="fs-sm fw-bold text-slate-900">Leave Requests</h3>
             <div className="flex flex-wrap gap-2">
               {['All', 'Pending', 'Approved', 'Rejected'].map(f => (
-                <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} className={`fs-xs fw-semibold border px-3 py-1.5 rounded-lg cursor-pointer transition-all ${leaveFilter === f ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <button key={f} onClick={() => setLeaveFilter(f as typeof leaveFilter)} >
                   {f}
                 </button>
               ))}
@@ -1842,7 +1840,27 @@ export const HRModule: React.FC<HRModuleProps> = ({
 
     if (isHRorAdmin) {
       const dateFilteredAttendance = companyAttendance.filter(a => !attDateFilter || a.date === attDateFilter);
-      const filteredAttendance = dateFilteredAttendance.filter(a => attStatusFilter === 'All' || a.status === attStatusFilter);
+      
+      const absentRecords: any[] = [];
+      if (attDateFilter) {
+        localEmployees.forEach(emp => {
+          const hasRecord = dateFilteredAttendance.some(a => a.employeeId === emp.id);
+          if (!hasRecord) {
+            absentRecords.push({
+              id: `absent-${emp.id}-${attDateFilter}`,
+              companyId: selectedCompany.id,
+              employeeId: emp.id,
+              date: attDateFilter,
+              status: 'Absent',
+              checkIn: undefined,
+              locationType: undefined,
+            });
+          }
+        });
+      }
+      
+      const combinedAttendance = [...dateFilteredAttendance, ...absentRecords];
+      const filteredAttendance = combinedAttendance.filter(a => attStatusFilter === 'All' || a.status === attStatusFilter);
 
       const todayPresent = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Present').length;
       const todayLate = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Late').length;
@@ -1870,7 +1888,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div className="fs-xs text-slate-400">Configure late penalties, grace periods and escalation rules</div>
                 </div>
               </div>
-              <i className={`bi bi-chevron-${showAttSettings ? 'up' : 'down'} text-slate-400`}></i>
+              <i ></i>
             </button>
 
             {showAttSettings && (
@@ -1915,14 +1933,10 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       { value: 'custom', label: 'Custom Rule', icon: 'bi bi-pencil-square', desc: 'Define your own' },
                     ] as const).map(opt => (
                       <button key={opt.value} onClick={() => setAttSettings({ ...attSettings, penaltyType: opt.value })}
-                        className={`p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                          attSettings.penaltyType === opt.value
-                            ? 'border-slate-900 bg-slate-900 text-white'
-                            : 'border-slate-200 hover:border-slate-300 bg-white'
-                        }`}>
-                        <i className={`${opt.icon} ${attSettings.penaltyType === opt.value ? 'text-white' : 'text-slate-400'} mb-2 block`}></i>
-                        <div className={`fs-xs fw-semibold ${attSettings.penaltyType === opt.value ? 'text-white' : 'text-slate-900'}`}>{opt.label}</div>
-                        <div className={`text-[10px] mt-0.5 ${attSettings.penaltyType === opt.value ? 'text-slate-300' : 'text-slate-400'}`}>{opt.desc}</div>
+                        >
+                        <i ></i>
+                        <div >{opt.label}</div>
+                        <div >{opt.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -1965,12 +1979,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     </div>
                     <div className="flex items-center gap-3 pt-6">
                       <button onClick={() => setAttSettings({ ...attSettings, escalateAfterWarnings: !attSettings.escalateAfterWarnings })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
-                          attSettings.escalateAfterWarnings ? 'bg-slate-900' : 'bg-slate-200'
-                        }`}>
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          attSettings.escalateAfterWarnings ? 'translate-x-6' : 'translate-x-1'
-                        }`}></span>
+                        >
+                        <span ></span>
                       </button>
                       <div>
                         <div className="fs-xs fw-semibold text-slate-700">Auto-escalate penalties</div>
@@ -2010,20 +2020,10 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     { label: 'Absent', icon: 'bi-x-circle-fill', color: 'rose', count: dateFilteredAttendance.filter(a => a.status === 'Absent').length },
                   ] as const).map(item => (
                     <button key={item.label} onClick={() => setAttStatusFilter(item.label)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full fs-xs fw-semibold transition-all cursor-pointer ${
-                        attStatusFilter === item.label
-                          ? item.color === 'emerald' ? 'bg-emerald-500 text-white shadow-sm'
-                            : item.color === 'amber' ? 'bg-amber-500 text-white shadow-sm'
-                            : item.color === 'blue' ? 'bg-blue-500 text-white shadow-sm'
-                            : item.color === 'rose' ? 'bg-rose-500 text-white shadow-sm'
-                            : 'bg-white text-slate-900 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
-                      }`}>
-                      <i className={`bi ${item.icon} text-[10px]`}></i>
+                      >
+                      <i ></i>
                       <span className="hidden sm:inline">{item.label}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                        attStatusFilter === item.label ? 'bg-white/20' : 'bg-slate-200/60'
-                      }`}>{item.count}</span>
+                      <span >{item.count}</span>
                     </button>
                   ))}
                 </div>
@@ -2072,10 +2072,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                         <td className="px-4 py-3.5 fs-sm font-mono text-slate-400">{a.checkOut || '—'}</td>
                         <td className="px-4 py-3.5 fs-sm font-mono text-slate-600">{hrs}</td>
                         <td className="px-4 py-3.5">
-                          <span className={`inline-flex items-center gap-1.5 fs-xs fw-medium ${
-                            a.locationType === 'Remote' ? 'text-blue-600' : a.locationType === 'GPS' ? 'text-emerald-600' : 'text-slate-600'
-                          }`}>
-                            <i className={`bi bi-${a.locationType === 'Remote' ? 'laptop' : a.locationType === 'GPS' ? 'geo-alt' : 'building'}`}></i>
+                          <span >
+                            <i ></i>
                             {a.locationType || 'Office'}
                           </span>
                         </td>
@@ -2190,8 +2188,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <td className="px-4 py-3 fs-sm font-mono text-slate-600">{hrs}</td>
                       <td className="px-4 py-3">
                         {att?.locationType ? (
-                          <span className={`fs-xs fw-medium flex items-center gap-1 ${att.locationType === 'Remote' ? 'text-blue-600' : 'text-slate-600'}`}>
-                            <i className={`bi bi-${att.locationType === 'Remote' ? 'laptop' : 'building'}`}></i>{att.locationType}
+                          <span >
+                            <i ></i>{att.locationType}
                           </span>
                         ) : <span className="text-slate-300 fs-xs">—</span>}
                       </td>
@@ -2301,12 +2299,12 @@ export const HRModule: React.FC<HRModuleProps> = ({
                     {o.tasks.map((task, ti) => {
                       const done = o.completedTasks.includes(task);
                       return (
-                        <div key={task} className={`flex items-center gap-2 fs-xs ${done ? 'text-slate-700' : 'text-slate-400'}`}>
+                        <div key={task} >
                           <button onClick={() => {
                             const newCompleted = done ? o.completedTasks.filter(t => t !== task) : [...o.completedTasks, task];
                             onUpdateOnboarding(o.id, { completedTasks: newCompleted, status: newCompleted.length === o.tasks.length ? 'Completed' : 'In Progress' });
                           }} className="cursor-pointer">
-                            <i className={`bi bi-${done ? 'check-circle-fill text-emerald-500' : 'circle text-slate-200'} fs-sm`}></i>
+                            <i ></i>
                           </button>
                           {task}
                         </div>
@@ -2432,7 +2430,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 const p = okr.progress;
                 const isAwaitingReview = okr.status === 'Awaiting Review';
                 return (
-                  <div key={okr.id} className={`p-5 transition-colors ${isAwaitingReview ? 'bg-amber-50/40 hover:bg-amber-50/60 border-l-4 border-l-amber-400' : 'hover:bg-slate-50/30'}`}>
+                  <div key={okr.id} >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex flex-wrap items-center gap-3">
                         { (() => { const empObj = localEmployees.find(e => e.id === okr.employeeId); return <Avatar first={okr.employeeName.split(' ')[0]} last={okr.employeeName.split(' ')[1] || 'X'} photoUrl={empObj?.photoUrl} index={i} size="sm" />; })() }
@@ -2525,8 +2523,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   { label: 'On Track', count: myOnTrack.length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                   { label: 'At Risk', count: myAtRisk.length, color: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map(s => (
-                  <div key={s.label} className={`${s.bg} rounded-lg px-3 py-1.5 flex items-center gap-1.5`}>
-                    <span className={`fs-sm fw-bold tabular-nums ${s.color}`}>{s.count}</span>
+                  <div key={s.label} >
+                    <span >{s.count}</span>
                     <span className="text-[10px] text-slate-500">{s.label}</span>
                   </div>
                 ))}
@@ -2554,7 +2552,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             const progressColor = okr.progress >= 90 ? 'bg-blue-500' : okr.progress >= 70 ? 'bg-emerald-500' : okr.progress >= 40 ? 'bg-amber-500' : 'bg-rose-500';
             const progressTextColor = okr.progress >= 90 ? 'text-blue-600' : okr.progress >= 70 ? 'text-emerald-600' : okr.progress >= 40 ? 'text-amber-600' : 'text-rose-600';
             return (
-              <div key={okr.id} className={`bg-white border rounded-2xl shadow-xs overflow-hidden transition-all ${isExpanded ? 'border-slate-300 shadow-sm' : 'border-slate-200'}`}>
+              <div key={okr.id} >
                 {/* Card header — always visible */}
                 <div
                   className="p-5 cursor-pointer hover:bg-slate-50/40 transition-colors"
@@ -2573,8 +2571,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-4">
-                      <div className={`fs-lg fw-bold tabular-nums ${progressTextColor}`}>{okr.progress}%</div>
-                      <i className={`bi ${isExpanded ? 'bi-chevron-up' : 'bi-chevron-down'} text-slate-400 fs-xs transition-transform`}></i>
+                      <div >{okr.progress}%</div>
+                      <i ></i>
                     </div>
                   </div>
                   <ProgressBar value={okr.progress} color={progressColor} />
@@ -2597,7 +2595,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                               { label: 'Status', value: okr.status, icon: 'bi bi-flag' },
                             ].map(item => (
                               <div key={item.label} className="flex items-start gap-2">
-                                <i className={`${item.icon} text-slate-400 fs-xs mt-0.5`}></i>
+                                <i ></i>
                                 <div>
                                   <div className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">{item.label}</div>
                                   <div className="fs-xs text-slate-800 fw-medium">{item.value}</div>
@@ -2618,13 +2616,13 @@ export const HRModule: React.FC<HRModuleProps> = ({
                               { pct: 100, label: 'Completed', reached: okr.progress >= 100 },
                             ].map(ms => (
                               <div key={ms.pct} className="flex flex-wrap items-center gap-3">
-                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${ms.reached ? 'bg-emerald-100 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                                <div >
                                   {ms.reached ? <i className="bi bi-check"></i> : ms.pct}
                                 </div>
                                 <div className="flex-1">
-                                  <div className={`fs-xs fw-medium ${ms.reached ? 'text-slate-800' : 'text-slate-400'}`}>{ms.label}</div>
+                                  <div >{ms.label}</div>
                                 </div>
-                                <span className={`text-[10px] font-mono tabular-nums ${ms.reached ? 'text-emerald-600' : 'text-slate-300'}`}>{ms.pct}%</span>
+                                <span >{ms.pct}%</span>
                               </div>
                             ))}
                           </div>
@@ -2638,7 +2636,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           <div className="bg-white rounded-xl border border-slate-200 p-4">
                             <div className="flex items-center justify-between mb-3">
                               <span className="fs-xs text-slate-600">Drag slider or enter value:</span>
-                              <span className={`fs-lg fw-bold tabular-nums ${progressTextColor}`}>{progressSlider}%</span>
+                              <span >{progressSlider}%</span>
                             </div>
                             <input
                               type="range"
@@ -2678,7 +2676,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                                   }
                                   setExpandedOkr(null);
                                 }}
-                                className={`w-full text-left px-3 py-2 rounded-lg fs-xs fw-semibold flex items-center gap-2 transition-colors cursor-pointer border border-transparent ${act.disabled ? 'text-slate-300 bg-slate-50 cursor-not-allowed' : act.color}`}
+                                
                               >
                                 <i className={act.icon}></i> {act.label}
                               </button>
@@ -3054,7 +3052,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             const color = deptColors[idx % deptColors.length];
             const managerName = dept.managerId ? employees.find(e => e.id === dept.managerId) : null;
             return (
-              <div key={dept.id} className={`border rounded-2xl p-5 hover:shadow-md transition-all cursor-default ${color}`}>
+              <div key={dept.id} >
                 <div className="flex items-start justify-between mb-3">
                   <div className="fs-3xl">{icon}</div>
                   <span className="fs-lg fw-bold tabular-nums text-slate-700">{count}</span>
@@ -3449,10 +3447,10 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
           { key: 'appointment', label: 'Appointment Letter', icon: 'bi bi-person-check', desc: 'For new hire onboarding' },
           { key: 'confirmation', label: 'Confirmation Letter', icon: 'bi bi-patch-check', desc: 'Post-probation confirmation' },
         ] as const).map(lt => (
-          <button key={lt.key} onClick={() => { setLetterType(lt.key); setShowPreview(false); setLetterContent(''); }} className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${letterType === lt.key ? 'bg-slate-900 border-slate-900 text-white shadow-md' : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'}`}>
-            <i className={`${lt.icon} fs-lg mb-2 block ${letterType === lt.key ? 'text-white' : 'text-slate-500'}`}></i>
+          <button key={lt.key} onClick={() => { setLetterType(lt.key); setShowPreview(false); setLetterContent(''); }} >
+            <i ></i>
             <div className="fs-xs fw-bold">{lt.label}</div>
-            <div className={`text-[10px] mt-0.5 ${letterType === lt.key ? 'text-slate-300' : 'text-slate-400'}`}>{lt.desc}</div>
+            <div >{lt.desc}</div>
           </button>
         ))}
       </div>
@@ -3467,7 +3465,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
             ))}
           </Select>
         </div>
-        <button onClick={handleGenerate} disabled={!selectedEmpId} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg fs-xs fw-semibold shadow-xs transition-all ${selectedEmpId ? 'bg-slate-900 text-white hover:bg-slate-700 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}><i className="bi bi-file-earmark-text"></i>Generate Letter</button>
+        <button onClick={handleGenerate} disabled={!selectedEmpId} ><i className="bi bi-file-earmark-text"></i>Generate Letter</button>
       </div>
 
       {showPreview && letterContent && (

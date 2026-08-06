@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import {
+import { Applicant, 
   Company, User, Employee, CRMLead, CRMActivityLog, CRMTask, CRMEmailLog, GLAccount, Invoice,
   InventoryItem, SupportTicket, AuditLog, APIKey, Department, Branch, CustomRole, ApprovalPolicy, PendingApproval,
   LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, PayrollGroup, SalaryBand, JournalEntry, Expense, FiscalPeriod, OpeningBalance,
@@ -12,7 +12,7 @@ import {
   TaxCode, TaxReturn, IntercompanyTransaction, ConsolidationRule, ComplianceCheck, AuditSnapshot, PolicyDocument, FilingDeadline,   OnboardingRecord,
   POSCategory, POSTerminal, POSShift, POSDiscount, POSReturn, POSDailyReport, POSProduct, POSCustomer, POSSale, SalesOrder, SalesCustomer, SalesQuotation, SalesTarget, PayrollTaxConfig, AttendanceSettings, KBArticle, LMSCourse, CommunicationAnnouncement, EmailTemplate, ProjectTask, ProjectMilestone,
   Vendor, PurchaseOrder, RFQ, WorkOrder, BOMItem, QualityCheck, MaintenanceTask, ManagedDocument, ExitRequest, BankAccountUpdateRequest
-} from '../../types';
+ } from '../../types';
 
 export interface ModuleViewsProps {
   searchTerm?: string;
@@ -22,7 +22,7 @@ export interface ModuleViewsProps {
   users: User[];
   customRoles: CustomRole[];
   employees: Employee[];
-  applicants?: Applicant[];
+  applicants?: any[];
   departments: Department[];
   branches: Branch[];
   leads: CRMLead[];
@@ -67,6 +67,9 @@ export interface ModuleViewsProps {
   onAddTicket: (ticket: Omit<SupportTicket, 'id' | 'ticketNumber' | 'status' | 'assignedTo' | 'createdAt'>) => void;
   onUpdateTicket: (id: string, updates: { status?: string; department?: string; assignedTo?: string; reply?: { message: string }; repliedBy?: string; repliedByRole?: 'Customer' | 'Agent' | 'Admin' }) => void;
   onInviteUser: (usr: { name: string; email: string; role: string; roles?: string[]; department: string; branch: string }) => void;
+  onUpdateUserSignature?: any;
+  onAddApplicant?: any;
+  onUpdateApplicant?: any;
   onGenerateAPIKey: (name: string, permissions: 'Read Only' | 'Full Access') => void;
   onAddExpense?: (exp: { description: string; category: string; department: string; amount: number; createdBy?: string }) => void;
   onApproveLeave: (id: string) => void;
