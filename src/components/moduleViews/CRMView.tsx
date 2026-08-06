@@ -804,7 +804,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     <div><Label>Title</Label><Input value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="e.g. Follow-up call" required /></div>
                     <div><Label>Description</Label><textarea value={taskDesc} onChange={e => setTaskDesc(e.target.value)} rows={2} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 resize-none" /></div>
                     <div><Label>Assign To</Label><Select value={taskAssignee} onChange={e => setTaskAssignee(e.target.value)}><option value="">Select employee...</option>{localEmployees.filter(e => e.status === 'Active').map(emp => <option key={emp.id} value={emp.userId || emp.id}>{emp.firstName} {emp.lastName} ({emp.department})</option>)}</Select></div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><Label>Type</Label><Select value={taskType} onChange={e => setTaskType(e.target.value as any)}>{['Follow-up', 'Call', 'Email', 'Meeting', 'Proposal', 'Other'].map(t => <option key={t}>{t}</option>)}</Select></div>
                       <div><Label>Priority</Label><Select value={taskPriority} onChange={e => setTaskPriority(e.target.value as any)}>{['Low', 'Medium', 'High', 'Urgent'].map(p => <option key={p}>{p}</option>)}</Select></div>
                     </div>

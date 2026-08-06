@@ -273,7 +273,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
               </Select>
             </div>
             <div><Label>Item Description *</Label><Input value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="e.g. CNC Drill Bits x50" /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Quantity</Label><Input type="number" value={newQty} onChange={e => setNewQty(e.target.value)} /></div>
               <div><Label>Unit Price (USD)</Label><Input type="number" value={newUnitPrice} onChange={e => setNewUnitPrice(e.target.value)} /></div>
             </div>

@@ -368,7 +368,7 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
   const accent = accentColor || '#0f172a';
   const sections = Array.from(new Set(fields.map(f => f.section || '')));
   const renderField = (f: any) => (
-    <div key={f.key} className={`rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5 ${f.full ? 'col-span-2 sm:col-span-3' : ''}`}>
+    <div key={f.key} className={`rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5 ${f.full ? 'col-span-1 sm:col-span-2 md:col-span-3' : ''}`}>
       <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1">
         {f.icon && <i className={`${f.icon} text-[10px]`} />}{f.label}
       </div>
@@ -395,11 +395,11 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
         </div>
       </div>
       {sections.length === 1
-        ? <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{fields.map(renderField)}</div>
+        ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">{fields.map(renderField)}</div>
         : sections.map(sec => (
             <div key={sec} className="mb-5 last:mb-0">
               {sec && <h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: accent }} />{sec}</h3>}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {fields.filter(f => (f.section || '') === sec).map(renderField)}
               </div>
             </div>

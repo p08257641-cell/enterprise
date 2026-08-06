@@ -291,7 +291,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
           <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
             <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-cart-plus text-slate-800 mr-1.5"></i> New Sales Order</h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Customer Name</Label><Input value={form.customerName} onChange={e => setForm({ ...form, customerName: e.target.value })} placeholder="e.g. Acme Corp" /></div>
                 <div><Label>Priority</Label><Select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value as any })}>
                   <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Urgent">Urgent</option>
@@ -309,11 +309,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">${((Number(form.itemQty) || 0) * (Number(form.itemPrice) || 0)).toLocaleString()}</div></div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Tax ($)</Label><Input type="number" value={form.tax} onChange={e => setForm({ ...form, tax: e.target.value })} /></div>
                 <div><Label>Discount ($)</Label><Input type="number" value={form.discount} onChange={e => setForm({ ...form, discount: e.target.value })} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Expected Delivery</Label><Input type="date" value={form.expectedDelivery} onChange={e => setForm({ ...form, expectedDelivery: e.target.value })} /></div>
                 <div><Label>Notes</Label><Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Internal notes" /></div>
               </div>
@@ -332,11 +332,11 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
           <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
             <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-person-plus text-slate-800 mr-1.5"></i> New Customer</h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Full Name</Label><Input value={custForm.name} onChange={e => setCustForm({ ...custForm, name: e.target.value })} placeholder="e.g. Richard Hendricks" /></div>
                 <div><Label>Company</Label><Input value={custForm.company} onChange={e => setCustForm({ ...custForm, company: e.target.value })} placeholder="e.g. Pied Piper" /></div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Email</Label><Input value={custForm.email} onChange={e => setCustForm({ ...custForm, email: e.target.value })} placeholder="email@example.com" /></div>
                 <div><Label>Phone</Label><Input value={custForm.phone} onChange={e => setCustForm({ ...custForm, phone: e.target.value })} placeholder="+1-555-0100" /></div>
               </div>
@@ -357,7 +357,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
           <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-2xl relative">
             <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-5"><i className="bi bi-file-earmark-check text-slate-800 mr-1.5"></i> New Quotation</h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Customer Name</Label><Input value={quoteForm.customerName} onChange={e => setQuoteForm({ ...quoteForm, customerName: e.target.value })} placeholder="e.g. Acme Corp" /></div>
                 <div><Label>Valid Until</Label><Input type="date" value={quoteForm.validUntil} onChange={e => setQuoteForm({ ...quoteForm, validUntil: e.target.value })} /></div>
               </div>
@@ -396,7 +396,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="fs-xs fw-semibold text-slate-500">Subtotal: <span className="text-slate-900">${(quoteForm.items.reduce((s, it) => s + (Number(it.itemQty) || 0) * (Number(it.itemPrice) || 0), 0)).toLocaleString()}</span></div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Tax ($)</Label><Input type="number" value={quoteForm.tax} onChange={e => setQuoteForm({ ...quoteForm, tax: e.target.value })} /></div>
                 <div><Label>Notes</Label><Input value={quoteForm.notes} onChange={e => setQuoteForm({ ...quoteForm, notes: e.target.value })} placeholder="Internal notes" /></div>
               </div>
@@ -422,7 +422,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   return <option key={e.id} value={name}>{name} — {e.department}</option>;
                 })}
               </Select></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><Label>Month</Label><Select value={targetForm.month} onChange={e => setTargetForm({ ...targetForm, month: e.target.value })}>
                   {['January','February','March','April','May','June','July','August','September','October','November','December'].map(m => <option key={m} value={m}>{m}</option>)}
                 </Select></div>

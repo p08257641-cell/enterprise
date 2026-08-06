@@ -291,7 +291,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                 </Select>
               </div>
               <div><Label>Product *</Label><Input value={woProduct} onChange={e => setWoProduct(e.target.value)} placeholder="Pneumatic Actuator" /></div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><Label>Quantity</Label><Input type="number" value={woQty} onChange={e => setWoQty(e.target.value)} /></div>
                 <div><Label>Production Line</Label><Input value={woLine} onChange={e => setWoLine(e.target.value)} placeholder="Assembly Line A" /></div>
               </div>
@@ -387,7 +387,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
 
             <div className="p-6 space-y-4">
               <div><Label>Check Description *</Label><Input value={qcCheck} onChange={e => setQcCheck(e.target.value)} placeholder="Dimensional Tolerance Verification" /></div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><Label>Result</Label><Select value={qcResult} onChange={e => setQcResult(e.target.value)}><option>Passed</option><option>Failed</option><option>Pending</option></Select></div>
                 <div><Label>Inspector</Label><Input value={qcInspector} onChange={e => setQcInspector(e.target.value)} placeholder="QC Team A" /></div>
               </div>

@@ -337,7 +337,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             {/* Body */}
             <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { label: 'Status', value: checkModal.selected.status, icon: 'bi bi-flag' },
                   { label: 'Category', value: checkModal.selected.category, icon: 'bi bi-tag' },
@@ -414,7 +414,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
               </div>
               {/* Body */}
               <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
                     { label: 'Version', value: pol.version, icon: 'bi bi-hash' },
                     { label: 'Category', value: pol.category, icon: 'bi bi-bookmark' },

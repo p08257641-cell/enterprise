@@ -2296,7 +2296,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div className="mb-4">
                     <ProgressBar value={pct} color={pct === 100 ? 'bg-emerald-500' : pct > 60 ? 'bg-blue-500' : 'bg-amber-500'} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {o.tasks.map((task, ti) => {
                       const done = o.completedTasks.includes(task);
                       return (

@@ -135,7 +135,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                   <div><Label>Category</Label><Select value={newAssetCat} onChange={e => setNewAssetCat(e.target.value)}><option>IT Hardware</option><option>Heavy Machinery</option><option>Logistics</option><option>Furniture</option><option>Vehicles</option></Select></div>
                   <div><Label>Location</Label><Input value={newAssetLoc} onChange={e => setNewAssetLoc(e.target.value)} placeholder="NYC HQ" /></div>
                   <div><Label>Purchase Date</Label><Input type="date" value={newPurchaseDate} onChange={e => setNewPurchaseDate(e.target.value)} /></div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><Label>Purchase Value ($)</Label><Input type="number" value={newAssetVal} onChange={e => setNewAssetVal(e.target.value)} /></div>
                     <div><Label>Useful Life (yrs)</Label><Input type="number" value={newAssetLife} onChange={e => setNewAssetLife(e.target.value)} /></div>
                   </div>
@@ -221,7 +221,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                     </Select>
                   </div>
                   <div><Label>Task Description *</Label><Input value={maintTask} onChange={e => setMaintTask(e.target.value)} placeholder="e.g. Annual inspection" /></div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><Label>Due Date</Label><Input type="date" value={maintDue} onChange={e => setMaintDue(e.target.value)} /></div>
                     <div><Label>Owner / Team</Label><Input value={maintOwner} onChange={e => setMaintOwner(e.target.value)} placeholder="Engineering" /></div>
                   </div>

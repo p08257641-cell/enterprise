@@ -260,7 +260,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="bg-slate-50 rounded-xl p-3 fs-xs text-slate-700">{t.description}</div>
 
                 {canManage && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>Direct To Department</Label>
                       <Select value={t.department || ''} onChange={async e => { await onUpdateTicket(t.id, { department: e.target.value }); }}>

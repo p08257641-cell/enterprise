@@ -362,7 +362,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="p-6 space-y-4">
                     <div className="space-y-3">
                       <div><Label>Band Name</Label><Input value={newBandName} onChange={e => setNewBandName(e.target.value)} placeholder="e.g. Senior" /></div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div><Label>Min Salary ($)</Label><Input type="number" value={newBandMin} onChange={e => setNewBandMin(e.target.value)} placeholder="5000" /></div>
                         <div><Label>Max Salary ($)</Label><Input type="number" value={newBandMax} onChange={e => setNewBandMax(e.target.value)} placeholder="8000" /></div>
                       </div>

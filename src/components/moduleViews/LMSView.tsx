@@ -220,7 +220,7 @@ const AddCourseForm: React.FC<{ selectedCompany: { id: string }, onAddLmsCourse:
         </div>
         <div className="space-y-3 p-5">
           <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Course title" /></div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Category</Label>
               <Select value={category} onChange={e => setCategory(e.target.value)}>
                 {['General', 'Compliance', 'Safety', 'Finance', 'IT', 'HR'].map(c => <option key={c} value={c}>{c}</option>)}

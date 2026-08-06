@@ -1077,7 +1077,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
           <p className="text-[11px] text-slate-500 mt-0.5">Configure your Ghana Revenue Authority E-VAT API credentials.</p>
         </div>
         <div className="p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Company TIN *</Label>
               <Input type="text" value={form.companyTin} onChange={e => setForm(f => ({ ...f, companyTin: e.target.value }))} placeholder="e.g. C000123456789" />
