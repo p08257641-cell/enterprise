@@ -1183,7 +1183,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   >
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-3">
-                        <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
+                        <Avatar first={emp.firstName} last={emp.lastName} photoUrl={emp.photoUrl} index={i} size="sm" />
                         <div>
                           <div className="fs-sm fw-semibold text-slate-900 transition-colors">{emp.firstName} {emp.lastName}</div>
                           <div className="fs-xs text-slate-400">{emp.email}</div>
@@ -1765,7 +1765,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
               <div key={req.id} className="p-5 hover:bg-slate-50/30 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} index={i} />
+                    <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} photoUrl={emp?.photoUrl} index={i} />
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="fs-sm fw-semibold text-slate-900">{empName}</span>
@@ -2067,7 +2067,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
-                            <Avatar first={emp.firstName} last={emp.lastName} index={i} size="sm" />
+                            <Avatar first={emp.firstName} last={emp.lastName} photoUrl={emp.photoUrl} index={i} size="sm" />
                             <div>
                               <div className="fs-sm fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</div>
                               <div className="fs-xs text-slate-400">{emp.department}</div>
@@ -2290,7 +2290,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <div key={o.id} className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex flex-wrap items-center gap-3">
-                      <Avatar first={o.employeeName.split(' ')[0]} last={o.employeeName.split(' ')[1] || ''} index={idx} />
+                      { (() => { const empObj = localEmployees.find(e => e.id === o.employeeId); return <Avatar first={o.employeeName.split(' ')[0]} last={o.employeeName.split(' ')[1] || ''} photoUrl={empObj?.photoUrl} index={idx} />; })() }
                       <div>
                         <div className="fs-sm fw-semibold text-slate-900">{o.employeeName}</div>
                         <div className="fs-xs text-slate-500">{o.role} · {o.department} · Day {daysSinceStart}</div>
@@ -2442,7 +2442,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                   <div key={okr.id} className={`p-5 transition-colors ${isAwaitingReview ? 'bg-amber-50/40 hover:bg-amber-50/60 border-l-4 border-l-amber-400' : 'hover:bg-slate-50/30'}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex flex-wrap items-center gap-3">
-                        <Avatar first={okr.employeeName.split(' ')[0]} last={okr.employeeName.split(' ')[1] || 'X'} index={i} size="sm" />
+                        { (() => { const empObj = localEmployees.find(e => e.id === okr.employeeId); return <Avatar first={okr.employeeName.split(' ')[0]} last={okr.employeeName.split(' ')[1] || 'X'} photoUrl={empObj?.photoUrl} index={i} size="sm" />; })() }
                         <div>
                           <div className="fs-sm fw-semibold text-slate-900">{okr.employeeName}</div>
                           <div className="fs-xs text-slate-500">{okr.department}</div>
@@ -2905,7 +2905,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 <div key={req.id} className="p-5 hover:bg-slate-50/30 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} index={i} />
+                      <Avatar first={empName.split(' ')[0]} last={empName.split(' ')[1] || 'X'} photoUrl={emp?.photoUrl} index={i} />
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="fs-sm fw-semibold text-slate-900">{empName}</span>
@@ -3516,5 +3516,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
     </div>
   );
 };
+
+
 
 
