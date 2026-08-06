@@ -281,7 +281,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               {/* Footer */}
-              {(companyApprovals.length > 0 || notificationCount > 0) && (
+              {!isEmployeeRole(selectedUser.activeRole) && (companyApprovals.length > 0 || notificationCount > 0) && (
                 <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/60">
                   <button
                     onClick={() => {
