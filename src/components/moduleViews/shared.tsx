@@ -309,19 +309,19 @@ export const ViewModal = ({ title, subtitle, onClose, size = '2xl', actions, chi
 }) => {
   const sizeMap = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', '2xl': 'max-w-2xl', '3xl': 'max-w-3xl' };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fade-in">
-      <div className={`w-full ${sizeMap[size]} rounded-xl border border-slate-200 bg-white shadow-2xl max-h-[90vh] flex flex-col`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-          <div>
-            <h2 className="fs-sm fw-semibold text-slate-900">{title}</h2>
-            {subtitle && <p className="fs-xs text-slate-500 mt-0.5">{subtitle}</p>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-xs animate-fade-in overflow-hidden">
+      <div className={`w-full min-w-0 ${sizeMap[size]} max-w-[calc(100vw-1.5rem)] rounded-xl border border-slate-200 bg-white shadow-2xl max-h-[90vh] flex flex-col`}>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100 shrink-0">
+          <div className="min-w-0">
+            <h2 className="fs-sm fw-semibold text-slate-900 truncate">{title}</h2>
+            {subtitle && <p className="fs-xs text-slate-500 mt-0.5 truncate">{subtitle}</p>}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 shrink-0 ml-3">
             {actions && <div>{actions}</div>}
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600 cursor-pointer"><i className="bi bi-x-lg fs-lg"></i></button>
           </div>
         </div>
-        <div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">{children}</div>
+        <div className="overflow-y-auto px-4 sm:px-6 py-5 space-y-5 flex-1">{children}</div>
       </div>
     </div>
   );
