@@ -856,13 +856,9 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <div className="mt-1 flex items-center gap-2">
                         <label className="cursor-pointer bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                           <i className="bi bi-upload mr-1.5"></i> Upload Image
-                          <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              try {
-                                const { uploadFile } = await import('../lib/supabase');
-                                const url = await uploadFile(file, 'avatars', selectedCompany.id);
-                                if (url) {
                                   setEditPhotoUrl(url);
                                 } else {
                                   alert('Failed to upload avatar to Supabase.');
