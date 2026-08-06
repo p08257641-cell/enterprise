@@ -859,14 +859,13 @@ export const HRModule: React.FC<HRModuleProps> = ({
                           <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                                  setEditPhotoUrl(url);
-                                } else {
-                                  alert('Failed to upload avatar to Supabase.');
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                if (reader.result) {
+                                  setEditPhotoUrl(reader.result as string);
                                 }
-                              } catch (err) {
-                                console.error('Upload error:', err);
-                                alert('Error uploading avatar.');
-                              }
+                              };
+                              reader.readAsDataURL(file);
                             }
                           }} />
                         </label>
