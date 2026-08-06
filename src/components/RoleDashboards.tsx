@@ -1573,7 +1573,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard label="Leave Balance" value={`${21 - leaves.filter(l => l.employeeId === empRecord?.id && l.status === 'Approved').reduce((s, l) => s + l.days, 0)} Days`} sub="Annual leave remaining" icon="bi bi-calendar-range" />
+          <StatCard label="Leave Balance" value={`${25 - leaves.filter(l => l.employeeId === empRecord?.id && l.status === 'Approved').reduce((s, l) => s + l.days, 0)} Days`} sub="Annual leave remaining" icon="bi bi-calendar-range" />
           <StatCard label="Clock-In Status" value={(() => { const today = new Date().toISOString().split('T')[0]; const rec = attendance.find(a => a.employeeId === empRecord?.id && a.date === today); return rec?.checkIn || 'Not clocked in'; })()} sub={(() => { const today = new Date().toISOString().split('T')[0]; const rec = attendance.find(a => a.employeeId === empRecord?.id && a.date === today); return rec?.checkOut ? `Clocked out at ${rec.checkOut}` : 'Clocked in today'; })()} icon="bi bi-clock-history" accent />
           <StatCard label="Active OKRs / Tasks" value={`${okrs.filter(o => o.employeeId === empRecord?.id && o.status !== 'Completed').length} Active`} sub="Performance cycle" icon="bi bi-graph-up" />
         </div>
