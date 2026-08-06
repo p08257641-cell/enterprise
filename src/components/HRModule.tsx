@@ -1845,11 +1845,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
     const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     if (isHRorAdmin) {
-      const filteredAttendance = companyAttendance.filter(a => {
-        if (attDateFilter && a.date !== attDateFilter) return false;
-        if (attStatusFilter !== 'All' && a.status !== attStatusFilter) return false;
-        return true;
-      });
+      const dateFilteredAttendance = companyAttendance.filter(a => !attDateFilter || a.date === attDateFilter);
+      const filteredAttendance = dateFilteredAttendance.filter(a => attStatusFilter === 'All' || a.status === attStatusFilter);
 
       const todayPresent = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Present').length;
       const todayLate = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Late').length;
@@ -1861,7 +1858,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
             <StatCard label="Present Today" value={todayPresent} icon="bi bi-person-check-fill" sub="Clocked in" color="text-emerald-600" />
             <StatCard label="Late Today" value={todayLate} icon="bi bi-clock-history" sub="After 9:00 AM" accent />
             <StatCard label="On Leave" value={onLeave.length} icon="bi bi-calendar-x" sub="Approved absence" />
-            <StatCard label="Total Records" value={filteredAttendance.length} icon="bi bi-list-check" sub="Filtered results" />
+            <StatCard label="Total Records" value={dateFilteredAttendance.length} icon="bi bi-list-check" sub="Filtered results" />
           </div>
 
           {/* Attendance Settings Panel */}
@@ -2010,11 +2007,11 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-100/80 rounded-full px-1.5 py-1">
                   {([
-                    { label: 'All', icon: 'bi-grid-3x3-gap', color: 'slate', count: filteredAttendance.length },
-                    { label: 'Present', icon: 'bi-check-circle-fill', color: 'emerald', count: companyAttendance.filter(a => a.status === 'Present').length },
-                    { label: 'Late', icon: 'bi-clock-fill', color: 'amber', count: companyAttendance.filter(a => a.status === 'Late').length },
-                    { label: 'On Leave', icon: 'bi-calendar-x-fill', color: 'blue', count: companyAttendance.filter(a => a.status === 'On Leave').length },
-                    { label: 'Absent', icon: 'bi-x-circle-fill', color: 'rose', count: companyAttendance.filter(a => a.status === 'Absent').length },
+                    { label: 'All', icon: 'bi-grid-3x3-gap', color: 'slate', count: dateFilteredAttendance.length },
+                    { label: 'Present', icon: 'bi-check-circle-fill', color: 'emerald', count: dateFilteredAttendance.filter(a => a.status === 'Present').length },
+                    { label: 'Late', icon: 'bi-clock-fill', color: 'amber', count: dateFilteredAttendance.filter(a => a.status === 'Late').length },
+                    { label: 'On Leave', icon: 'bi-calendar-x-fill', color: 'blue', count: dateFilteredAttendance.filter(a => a.status === 'On Leave').length },
+                    { label: 'Absent', icon: 'bi-x-circle-fill', color: 'rose', count: dateFilteredAttendance.filter(a => a.status === 'Absent').length },
                   ] as const).map(item => (
                     <button key={item.label} onClick={() => setAttStatusFilter(item.label)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full fs-xs fw-semibold transition-all cursor-pointer ${
@@ -2051,7 +2048,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredAttendance.length === 0 ? (
+                {dateFilteredAttendance.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-8 text-center fs-sm text-slate-400">No attendance records found for the selected filters.</td></tr>
                 ) : (
                   filteredAttendance.map((a, i) => {
@@ -3516,6 +3513,8 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
     </div>
   );
 };
+
+
 
 
 
