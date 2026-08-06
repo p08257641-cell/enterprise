@@ -22,7 +22,7 @@ export const LoginPage: React.FC = () => {
   // Splash screen state
   const [showSplash, setShowSplash] = useState(true);
   const [bgIndex, setBgIndex] = useState(0);
-  const splashImages = ['/splash1.jpg', '/splash2.jpg'];
+  const splashImages = ['/splash1.jpg', '/splash2.jpg', '/splash3.jpg'];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,7 +30,7 @@ export const LoginPage: React.FC = () => {
     }, 3000);
     const timeout = setTimeout(() => {
       setShowSplash(false);
-    }, 6000);
+    }, 9000);
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
@@ -110,33 +110,42 @@ export const LoginPage: React.FC = () => {
 
   if (showSplash) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 overflow-hidden">
-        {splashImages.map((img, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-40' : 'opacity-0'}`}
-          >
-            <img src={img} alt="Splash Background" className="w-full h-full object-cover" />
-          </div>
-        ))}
-        
-        <div className="relative z-10 flex flex-col items-center justify-center animate-fade-in-up">
-          <div className="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-md p-4 mb-8 shadow-2xl border border-white/20 flex items-center justify-center overflow-hidden">
-            <img src="/logo.jpg" alt="Core360 Logo" className="w-full h-full object-contain rounded-xl" />
-          </div>
-          <h1 className="text-5xl font-black text-white tracking-tight mb-4 drop-shadow-lg">Core<span className="text-blue-400">360</span></h1>
-          <p className="text-xl text-slate-300 font-medium tracking-wide mb-12 text-center max-w-md drop-shadow-md">
-            {bgIndex === 0 ? 'Empowering Modern Enterprise' : 'Seamless Supply Chain & ERP'}
-          </p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 overflow-hidden p-4 sm:p-8">
+        <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24 animate-fade-in-up">
           
-          <div className="flex items-center gap-2">
-            {splashImages.map((_, idx) => (
-              <div 
-                key={idx}
-                className={`h-1.5 rounded-full transition-all duration-500 ${idx === bgIndex ? 'w-8 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]' : 'w-2 bg-white/20'}`}
-              />
-            ))}
+          {/* Text Content */}
+          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left z-10">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-white p-4 mb-8 shadow-xl border border-slate-100 flex items-center justify-center overflow-hidden">
+              <img src="/logo.jpg" alt="Core360 Logo" className="w-full h-full object-contain rounded-xl" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight mb-4">Core<span className="text-blue-600">360</span></h1>
+            <p className="text-lg sm:text-xl text-slate-600 font-medium tracking-wide mb-10 max-w-md">
+              {bgIndex === 0 ? 'Empowering Modern Enterprise' : bgIndex === 1 ? 'Seamless Supply Chain & ERP' : 'Next-Generation Workforce Management'}
+            </p>
+            
+            <div className="flex items-center justify-center lg:justify-start gap-2">
+              {splashImages.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${idx === bgIndex ? 'w-8 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]' : 'w-2 bg-slate-300'}`}
+                />
+              ))}
+            </div>
           </div>
+
+          {/* Image Container */}
+          <div className="flex-1 w-full max-w-2xl relative aspect-[4/3] lg:aspect-[3/4] xl:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white">
+            {splashImages.map((img, idx) => (
+              <div
+                key={idx}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <img src={img} alt="Splash Content" className="w-full h-full object-cover" />
+              </div>
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-50 pointer-events-none"></div>
+          </div>
+
         </div>
       </div>
     );
