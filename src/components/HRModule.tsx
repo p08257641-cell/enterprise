@@ -332,6 +332,7 @@ export const HRModule: React.FC<HRModuleProps> = ({
     }
   }, [attendanceSettings]);
   const [editFirst, setEditFirst] = useState(''); const [editLast, setEditLast] = useState('');
+  const [editPhotoUrl, setEditPhotoUrl] = useState('');
   const [editDept, setEditDept] = useState(''); const [editDesignation, setEditDesignation] = useState(''); const [editBranch, setEditBranch] = useState(''); const [editSalary, setEditSalary] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -769,7 +770,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
                       <div className="flex gap-2 pt-2 border-t border-slate-200">
                         <PrimaryBtn icon="bi bi-pencil" onClick={() => {
                           setEditEmp(selectedEmp);
-                          setEditFirst(selectedEmp.firstName);
+                          setEditPhotoUrl(selectedEmp.photoUrl || '');
+                            setEditFirst(selectedEmp.firstName);
                           setEditLast(selectedEmp.lastName);
                           setEditEmail(selectedEmp.email);
                           setEditPhone(selectedEmp.phone || '');
@@ -828,6 +830,38 @@ export const HRModule: React.FC<HRModuleProps> = ({
               {/* Personal & Contact Section */}
               <div>
                 <h4 className="fs-xs fw-bold text-slate-400 uppercase tracking-wider mb-3">Personal & Contact Info</h4>
+                  <div className="mb-4 flex items-center gap-4">
+                    <div className="h-16 w-16 shrink-0 rounded-full overflow-hidden bg-slate-100 border border-slate-200">
+                      {editPhotoUrl ? (
+                        <img src={editPhotoUrl} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-slate-400"><i className="bi bi-person text-2xl"></i></div>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Profile Picture</Label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <label className="cursor-pointer bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                          <i className="bi bi-upload mr-1.5"></i> Upload Image
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setEditPhotoUrl(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }} />
+                        </label>
+                        {editPhotoUrl && (
+                          <button type="button" onClick={() => setEditPhotoUrl('')} className="text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1.5 transition-colors">
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div><Label>First Name *</Label><Input value={editFirst} onChange={e => setEditFirst(e.target.value)} required /></div>
                   <div><Label>Last Name *</Label><Input value={editLast} onChange={e => setEditLast(e.target.value)} required /></div>
@@ -989,7 +1023,8 @@ export const HRModule: React.FC<HRModuleProps> = ({
               <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
                 if (!editEmp) return;
                 onUpdateEmployee(editEmp.id, {
-                  firstName: editFirst,
+                  photoUrl: editPhotoUrl,
+                    firstName: editFirst,
                   lastName: editLast,
                   email: editEmail,
                   phone: editPhone,
