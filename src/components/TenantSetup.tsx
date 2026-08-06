@@ -71,6 +71,12 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 fs-xs text-slate-900 outline-hidden focus:border-slate-950 focus:ring-1 focus:ring-slate-950 transition-all font-sans"
               required
             />
+            {name && (
+              <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1.5">
+                <i className="bi bi-globe text-slate-400"></i>
+                Portal URL: <span className="fw-semibold text-slate-700">{name.toLowerCase().replace(/[^a-z0-9]/g, '')}.core360.site</span>
+              </div>
+            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">

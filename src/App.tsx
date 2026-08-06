@@ -437,10 +437,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           setProfileUpdateRequests(await safeJson(purRes));
         } catch (e) { console.error('Failed to load profile update requests:', e); }
 
-        // Select default tenant matching the logged-in user's company
+        // Select default tenant matching the subdomain (e.g. companyA.core360.site)
+        // Fall back to the logged-in user's company, or the first company.
         if (cData.length > 0) {
+          const hostname = window.location.hostname;
+          const subdomainCompany = cData.find((c: any) => c.domain === hostname);
           const userCompany = authUser ? cData.find((c: any) => c.id === authUser.companyId) : null;
-          setSelectedCompany(userCompany || cData[0]);
+          setSelectedCompany(subdomainCompany || userCompany || cData[0]);
         }
         // Set selectedUser to the logged-in user
         if (authUser && uData.length > 0) {

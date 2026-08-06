@@ -466,10 +466,11 @@ app.get('/api/companies', asyncHandler(async (req, res) => {
 app.post('/api/companies', asyncHandler(async (req, res) => {
   const { name, industry, currency, timezone, language, billingPlan } = req.body;
   const id = `c-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  const subdomain = name.toLowerCase().replace(/[^a-z0-9]/g, '');
   const newCompany: Company = {
     id,
     name,
-    domain: `${id.substring(2)}.com`,
+    domain: `${subdomain}.core360.site`,
     logo: '🏢',
     industry,
     currency,

@@ -144,11 +144,11 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
       {commTab === 'chat' && (
         <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col md:flex-row" style={{ height: '72vh' }}>
           {/* Left: Recipients */}
-          <div className={md:w-64 md:border-r border-slate-200 flex flex-col shrink-0 }>
+          <div className={`md:w-64 md:border-r border-slate-200 flex flex-col shrink-0 ${chatRecipient ? 'hidden md:flex' : 'w-full h-full'}`}>
             <div className="px-4 py-3 border-b border-slate-100">
               <Input placeholder="Search…" value={searchTerm} readOnly />
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
               {/* Teams */}
               <div className="px-4 pt-3 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400">Teams</div>
               {departments.filter(d => d.companyId === selectedCompany.id && d.name === myDeptName)
@@ -218,7 +218,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
             </div>
           </div>
           {/* Right: Chat */}
-          <div className={lex-1 flex flex-col min-w-0 }>
+          <div className={`flex-1 flex flex-col min-w-0 ${!chatRecipient ? 'hidden md:flex' : 'h-full'}`}>
             {chatRecipient ? (
               <>
                 <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3">
