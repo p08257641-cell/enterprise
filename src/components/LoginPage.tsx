@@ -95,10 +95,10 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [imagesPreloaded, activeImages.length]);
 
-  // Show splash until everything is ready (min 2.5s to show splash background)
+  // Show splash until everything is ready (min 8s to show splash background)
   useEffect(() => {
     if (dataLoaded && imagesPreloaded) {
-      setTimeout(() => setShowSplash(false), 2500);
+      setTimeout(() => setShowSplash(false), 8000);
     }
   }, [dataLoaded, imagesPreloaded]);
 
@@ -170,27 +170,42 @@ export const LoginPage: React.FC = () => {
   if (showSplash) {
     const defaultImages = ['/splash1.jpg', '/splash2.jpg', '/splash3.jpg'];
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 overflow-hidden">
-        {/* Background Carousel for Splash Screen */}
-        {defaultImages.map((img, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-          >
-            <img src={img} alt={`Splash Background ${idx}`} className="w-full h-full object-cover opacity-60" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 overflow-hidden p-4 sm:p-8">
+        <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24 animate-fade-in-up">
+          
+          {/* Text Content */}
+          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left z-10">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-white p-4 mb-8 shadow-xl border border-slate-100 flex items-center justify-center overflow-hidden">
+              <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Core360 Logo" className="w-full h-full object-contain rounded-xl" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight mb-4">Core<span className="text-blue-600">360</span></h1>
+            <p className="text-lg sm:text-xl text-slate-600 font-medium tracking-wide mb-10 max-w-md">
+              {bgIndex === 0 ? 'Empowering Modern Enterprise' : bgIndex === 1 ? 'Seamless Supply Chain & ERP' : 'Next-Generation Workforce Management'}
+            </p>
+            
+            <div className="flex items-center justify-center lg:justify-start gap-2">
+              {defaultImages.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${idx === bgIndex ? 'w-8 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]' : 'w-2 bg-slate-300'}`}
+                />
+              ))}
+            </div>
           </div>
-        ))}
-        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
 
-        <div className="flex flex-col items-center gap-6 animate-fade-in relative z-10">
-          <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-white/10 backdrop-blur-md p-4 shadow-xl border border-white/20 flex items-center justify-center overflow-hidden">
-            <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Logo" className="w-full h-full object-contain rounded-xl" />
+          {/* Image Container */}
+          <div className="flex-1 w-full max-w-2xl relative aspect-[4/3] lg:aspect-[3/4] xl:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white">
+            {defaultImages.map((img, idx) => (
+              <div
+                key={idx}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <img src={img} alt="Splash Content" className="w-full h-full object-cover" />
+              </div>
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-50 pointer-events-none"></div>
           </div>
-          <div className="flex gap-2">
-            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
+
         </div>
       </div>
     );
