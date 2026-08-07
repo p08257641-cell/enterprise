@@ -549,11 +549,12 @@ app.post('/api/companies/:id/subscription', asyncHandler(async (req, res) => {
 // Update company settings (e.g. notice period)
 app.put('/api/companies/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { noticePeriodDays, companyLogo, companySignature, userId, userName, billingStatus, subscriptionExpiresAt, billingPlan } = req.body;
+  const { noticePeriodDays, companyLogo, companySignature, userId, userName, billingStatus, subscriptionExpiresAt, billingPlan, currency } = req.body;
   const updates: any = {};
   if (noticePeriodDays !== undefined) updates.noticePeriodDays = noticePeriodDays;
   if (companyLogo !== undefined) updates.companyLogo = companyLogo;
   if (companySignature !== undefined) updates.companySignature = companySignature;
+  if (currency !== undefined) updates.currency = currency;
   if (billingStatus !== undefined) updates.billingStatus = billingStatus;
   if (subscriptionExpiresAt !== undefined) updates.subscriptionExpiresAt = subscriptionExpiresAt;
   if (billingPlan !== undefined) updates.billingPlan = billingPlan;

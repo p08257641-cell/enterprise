@@ -741,6 +741,29 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
                 </div>
 
+            {/* Regional Settings */}
+            <div>
+              <h3 className="section-title text-slate-900 mb-4">Regional Settings</h3>
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5 max-w-2xl">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label>System Currency</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Default currency for all financial transactions.</p>
+                    <Select 
+                      value={selectedCompany.currency || 'GHS'} 
+                      onChange={(e) => onUpdateCompanySettings(selectedCompany.id, { currency: e.target.value })}
+                    >
+                      <option value="GHS">GHS - Ghana Cedi</option>
+                      <option value="USD">USD - US Dollar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="GBP">GBP - British Pound</option>
+                      <option value="NGN">NGN - Nigerian Naira</option>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* System Settings */}
             <div>
               <h3 className="section-title text-slate-900 mb-4">System Settings</h3>
