@@ -379,6 +379,18 @@ app.put('/api/whisper-reports/:id', asyncHandler(async (req, res) => {
   res.json(updated);
 }));
 
+// Public endpoint to list tenant companies for the login page (Whistleblower form)
+app.get('/api/public/companies', asyncHandler(async (req, res) => {
+  const allCompanies = await dbAll<any>(schema.companies);
+  const publicData = allCompanies.map(c => ({
+    id: c.id,
+    name: c.name,
+    domain: c.domain,
+    logo: c.logo
+  }));
+  res.json(publicData);
+}));
+
 // Apply auth to all subsequent /api routes
 app.use('/api', authenticate);
 

@@ -42,7 +42,7 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (showWhisper) {
-      fetch('/api/companies')
+      fetch('/api/public/companies')
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
