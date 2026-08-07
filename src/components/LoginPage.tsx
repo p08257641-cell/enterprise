@@ -185,43 +185,45 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-stretch bg-white animate-fade-in overflow-hidden">
+    <div className="min-h-screen flex items-stretch bg-slate-50 animate-fade-in overflow-hidden">
       {/* Left Side - Image Carousel */}
-      <div className="hidden md:flex md:w-1/2 xl:w-[55%] relative overflow-hidden bg-slate-900 shadow-2xl z-10">
-        {activeImages.map((img, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
-          >
-            <img src={img} alt={`Slide ${idx}`} className="w-full h-full object-cover object-center" />
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent"></div>
-        <div className="absolute inset-0 bg-slate-900/10"></div>
+      <div className="hidden md:flex md:w-1/2 xl:w-[55%] p-4 lg:p-8 relative z-10">
+        <div className="w-full h-full relative overflow-hidden rounded-3xl bg-slate-900 shadow-2xl">
+          {activeImages.map((img, idx) => (
+            <div
+              key={idx}
+              className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
+            >
+              <img src={img} alt={`Slide ${idx}`} className="w-full h-full object-cover object-center" />
+            </div>
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent"></div>
+          <div className="absolute inset-0 bg-slate-900/10"></div>
 
-        <div className="absolute bottom-12 left-10 right-10 lg:bottom-16 lg:left-16 lg:right-16 z-20">
-          <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md p-3 mb-6 shadow-xl border border-white/20 flex items-center justify-center overflow-hidden">
-            <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Logo" className="w-full h-full object-contain" />
-          </div>
-          <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-md">
-            {matchedCompany ? matchedCompany.name : 'Core360'}
-          </h2>
-          <p className="text-lg text-white/90 font-medium max-w-lg mb-8 drop-shadow">
-            {matchedCompany ? 'Welcome back to your workspace.' : 'Next-Generation Enterprise Management System.'}
-          </p>
-          <div className="flex items-center gap-2">
-            {activeImages.map((_, idx) => (
-              <div 
-                key={idx}
-                className={`h-1.5 rounded-full transition-all duration-500 ${idx === bgIndex ? 'w-8 bg-white' : 'w-3 bg-white/30'}`}
-              />
-            ))}
+          <div className="absolute bottom-10 left-10 right-10 lg:bottom-16 lg:left-12 lg:right-12 z-20">
+            <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md p-3 mb-6 shadow-xl border border-white/20 flex items-center justify-center overflow-hidden">
+              <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+            <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-md">
+              {matchedCompany ? matchedCompany.name : 'Core360'}
+            </h2>
+            <p className="text-lg text-white/90 font-medium max-w-lg mb-8 drop-shadow">
+              {matchedCompany ? 'Welcome back to your workspace.' : 'Next-Generation Enterprise Management System.'}
+            </p>
+            <div className="flex items-center gap-2">
+              {activeImages.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${idx === bgIndex ? 'w-8 bg-white' : 'w-3 bg-white/30'}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-24 bg-slate-50 relative overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-24 relative overflow-y-auto">
         <div className="w-full max-w-md mx-auto relative z-10 py-12">
           <div className="text-center lg:text-left mb-8">
             <div className="lg:hidden inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white shadow-sm border border-slate-200 mb-5 overflow-hidden p-2">
