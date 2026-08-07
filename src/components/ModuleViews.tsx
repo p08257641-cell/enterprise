@@ -31,6 +31,7 @@ import { ReportsView } from './moduleViews/ReportsView';
 import { SuperAdminView } from './moduleViews/SuperAdminView';
 import { ApiKeysView } from './moduleViews/ApiKeysView';
 import { PendingApprovalsView } from './moduleViews/PendingApprovalsView';
+import { LegalView } from './moduleViews/LegalView';
 
 export const ModuleViews: React.FC<ModuleViewsProps> = (props) => {
   const { activeView } = props;
@@ -61,6 +62,7 @@ export const ModuleViews: React.FC<ModuleViewsProps> = (props) => {
   if (activeView === 'superadmin') return <SuperAdminView {...props} />;
   if (activeView === 'pending-approvals') return <PendingApprovalsView {...props} />;
   if (activeView === 'apikeys') return <ApiKeysView {...props} />;
+  if (activeView === 'privacy' || activeView === 'terms') return <LegalView type={activeView} />;
 
   return (
     <p className="fs-sm text-slate-400">The view <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded fs-xs">{activeView}</code> is not registered.</p>

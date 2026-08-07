@@ -519,7 +519,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
       </div>
-    </aside>
-  </>
+
+        {/* Legal Links Footer */}
+        <div className="mt-auto px-4 py-3 border-t border-slate-100 flex gap-3 justify-center">
+          <button onClick={() => onSelectView('privacy')} className={`fs-[10px] fw-medium transition-colors cursor-pointer ${activeView === 'privacy' ? 'text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}>Privacy Policy</button>
+          <span className="text-slate-300 fs-[10px]">•</span>
+          <button onClick={() => onSelectView('terms')} className={`fs-[10px] fw-medium transition-colors cursor-pointer ${activeView === 'terms' ? 'text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}>Terms of Service</button>
+        </div>
+      </aside>
+    </>
   );
 };
