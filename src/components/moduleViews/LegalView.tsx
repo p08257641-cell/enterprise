@@ -1,8 +1,13 @@
 import React from 'react';
 
-export const LegalView = ({ type }: { type: 'privacy' | 'terms' }) => {
+export const LegalView = ({ type, onBack }: { type: 'privacy' | 'terms'; onBack?: () => void }) => {
   return (
-    <div className="w-full max-w-4xl mx-auto py-8 px-4 animate-fade-in">
+    <div className="w-full max-w-4xl mx-auto py-8 px-4 animate-fade-in relative">
+      {onBack && (
+        <button onClick={onBack} className="absolute top-10 left-8 text-slate-400 hover:text-slate-600 cursor-pointer flex items-center gap-2 text-sm font-medium transition-colors">
+          <i className="bi bi-arrow-left"></i> Back
+        </button>
+      )}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12">
         <div className="flex flex-col items-center justify-center mb-10 text-center">
           <img src="/logo.jpg" alt="Oheneba Media Logo" className="h-16 rounded-xl object-contain mb-6 shadow-sm border border-slate-100" />

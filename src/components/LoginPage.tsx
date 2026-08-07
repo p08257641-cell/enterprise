@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { modalAlert, toast } from '../utils/modal';
+import { LegalView } from './moduleViews/LegalView';
 
 export const LoginPage: React.FC = () => {
   const { login, isLoading } = useAuth();
@@ -18,6 +19,7 @@ export const LoginPage: React.FC = () => {
   const [whisperSuccess, setWhisperSuccess] = useState(false);
   const [whisperCompanyId, setWhisperCompanyId] = useState('');
   const [companies, setCompanies] = useState<any[]>([]);
+  const [showLegal, setShowLegal] = useState<'privacy' | 'terms' | null>(null);
 
   // Splash screen state
   const [showSplash, setShowSplash] = useState(true);
@@ -96,6 +98,14 @@ export const LoginPage: React.FC = () => {
     }
     setWhisperSubmitting(false);
   };
+
+  if (showLegal) {
+    return (
+      <div className="min-h-screen bg-slate-50 overflow-y-auto">
+        <LegalView type={showLegal} onBack={() => setShowLegal(null)} />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -383,6 +393,13 @@ export const LoginPage: React.FC = () => {
                 </div>
               </form>
             )}
+          </div>
+          
+          {/* Legal Links Footer */}
+          <div className="mt-8 flex justify-center gap-4 text-slate-400">
+            <button type="button" onClick={() => setShowLegal('privacy')} className="fs-xs fw-medium hover:text-slate-600 transition-colors cursor-pointer">Privacy Policy</button>
+            <span className="fs-xs">•</span>
+            <button type="button" onClick={() => setShowLegal('terms')} className="fs-xs fw-medium hover:text-slate-600 transition-colors cursor-pointer">Terms of Service</button>
           </div>
         </div>
       )}
