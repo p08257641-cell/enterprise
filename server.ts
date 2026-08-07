@@ -6042,6 +6042,8 @@ async function start() {
 
   try {
     // Fix live DB for testing
+    await pool.query('ALTER TABLE companies ADD COLUMN IF NOT EXISTS "loginImages" text[]');
+    
     await dbUpdate(schema.companies, 'c-acme', { domain: 'acme.core360.site' });
     const hash = await hashPassword('password123');
     await dbUpdate(schema.users, 'u-super', { passwordHash: hash });
