@@ -95,10 +95,10 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [imagesPreloaded, activeImages.length]);
 
-  // Show splash until everything is ready
+  // Show splash until everything is ready (min 2.5s to show splash background)
   useEffect(() => {
     if (dataLoaded && imagesPreloaded) {
-      setTimeout(() => setShowSplash(false), 300);
+      setTimeout(() => setShowSplash(false), 2500);
     }
   }, [dataLoaded, imagesPreloaded]);
 
@@ -168,16 +168,28 @@ export const LoginPage: React.FC = () => {
   }
 
   if (showSplash) {
+    const defaultImages = ['/splash1.jpg', '/splash2.jpg', '/splash3.jpg'];
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 overflow-hidden">
-        <div className="flex flex-col items-center gap-6 animate-fade-in">
-          <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-white p-4 shadow-xl border border-slate-100 flex items-center justify-center overflow-hidden">
+        {/* Background Carousel for Splash Screen */}
+        {defaultImages.map((img, idx) => (
+          <div
+            key={idx}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          >
+            <img src={img} alt={`Splash Background ${idx}`} className="w-full h-full object-cover opacity-60" />
+          </div>
+        ))}
+        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+
+        <div className="flex flex-col items-center gap-6 animate-fade-in relative z-10">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-white/10 backdrop-blur-md p-4 shadow-xl border border-white/20 flex items-center justify-center overflow-hidden">
             <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Logo" className="w-full h-full object-contain rounded-xl" />
           </div>
           <div className="flex gap-2">
-            <div className="w-2 h-2 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 rounded-full bg-white/50 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
