@@ -386,7 +386,8 @@ app.get('/api/public/companies', asyncHandler(async (req, res) => {
     id: c.id,
     name: c.name,
     domain: c.domain,
-    logo: c.logo
+    logo: c.logo,
+    loginImages: c.loginImages
   }));
   res.json(publicData);
 }));
