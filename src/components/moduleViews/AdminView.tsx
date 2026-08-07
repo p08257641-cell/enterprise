@@ -741,6 +741,63 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
                 </div>
 
+            {/* Login Slider Images */}
+            <div>
+              <h3 className="section-title text-slate-900 mb-4">Login Screen Carousel</h3>
+              <p className="fs-xs text-slate-500 mb-4">Upload custom images to display a sliding carousel on the login page for this subdomain.</p>
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5">
+                <div className="flex flex-wrap gap-4 mb-4">
+                  {(selectedCompany.loginImages || []).map((imgUrl: string, idx: number) => (
+                    <div key={idx} className="relative h-24 w-40 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden group">
+                      <img src={imgUrl} alt={`Slide ${idx + 1}`} className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={() => {
+                            const newImages = (selectedCompany.loginImages || []).filter((_: any, i: number) => i !== idx);
+                            onUpdateCompanySettings(selectedCompany.id, { loginImages: newImages });
+                          }}
+                          className="h-8 w-8 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="h-24 w-40 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-100 transition-colors">
+                    <i className="bi bi-plus-lg fs-xl text-slate-400"></i>
+                    <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const current = selectedCompany.loginImages || [];
+                          onUpdateCompanySettings(selectedCompany.id, { loginImages: [...current, reader.result as string] });
+                        };
+                        reader.readAsDataURL(file);
+                      }} 
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 max-w-md">
+                  <input type="text" placeholder="Or paste an image URL..." id="loginImgUrl" className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
+                  <PrimaryBtn onClick={() => {
+                    const input = document.getElementById('loginImgUrl') as HTMLInputElement;
+                    const url = input?.value;
+                    if (url) {
+                      const current = selectedCompany.loginImages || [];
+                      onUpdateCompanySettings(selectedCompany.id, { loginImages: [...current, url] });
+                      input.value = '';
+                    }
+                  }} icon="bi bi-plus-lg">Add URL</PrimaryBtn>
+                </div>
+              </div>
+            </div>
+
             {/* Regional Settings */}
             <div>
               <h3 className="section-title text-slate-900 mb-4">Regional Settings</h3>

@@ -752,9 +752,9 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
             onClose={companyModal.close}
             actions={(row) => selectedUser.role === 'Super Admin' && props.onUpdateTenantContract ? (
               <div className="flex gap-2 w-full mt-2">
-                <SecBtn icon="bi bi-x-circle" onClick={() => {
+                <SecBtn onClick={() => {
                   if (confirm(`Are you sure you want to end the contract for ${row.name}?`)) {
-                    props.onUpdateTenantContract!(row.id, { billingStatus: 'Inactive' });
+                    props.onUpdateTenantContract!(row.id, { billingStatus: 'Past Due' });
                     companyModal.close();
                   }
                 }}>End Contract</SecBtn>

@@ -20,6 +20,7 @@ export interface Company {
   noticePeriodDays?: number;
   companyLogo?: string;
   companySignature?: string;
+  loginImages?: string[];
   createdAt: string;
 }
 
