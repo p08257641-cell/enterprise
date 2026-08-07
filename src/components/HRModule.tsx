@@ -149,7 +149,7 @@ const Avatar = ({ first, last, index = 0, size = 'md', photoUrl }: {
 }) => {
   const sizeClass = size === 'sm' ? 'h-7 w-7 fs-xs' : size === 'lg' ? 'h-12 w-12 fs-base' : 'h-9 w-9 fs-sm';
   if (photoUrl) {
-    return <img src={photoUrl}  alt={`${first} ${last}`} />;
+    return <img src={photoUrl} className={`${sizeClass} rounded-full object-cover shrink-0 border border-slate-200`} alt={`${first} ${last}`} />;
   }
   const seed = encodeURIComponent(`${first} ${last}`);
   const bgColors = ['b6e3f4', 'c0aede', 'd1d4f9', 'ffd5dc', 'ffdfbf'];
@@ -157,7 +157,7 @@ const Avatar = ({ first, last, index = 0, size = 'md', photoUrl }: {
   return (
     <img 
       src={`https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${bg}`} 
-       
+      className={`${sizeClass} rounded-full object-cover shrink-0 border border-slate-200`}
       alt={`${first} ${last}`} 
     />
   );
