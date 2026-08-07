@@ -187,8 +187,8 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-stretch bg-slate-50 animate-fade-in overflow-hidden">
       {/* Left Side - Image Carousel */}
-      <div className="hidden md:flex md:w-1/2 xl:w-[55%] p-4 lg:p-8 relative z-10">
-        <div className="w-full h-full relative overflow-hidden rounded-3xl bg-slate-900 shadow-2xl">
+      <div className="hidden md:flex md:w-1/2 xl:w-[55%] p-4 sm:p-6 lg:p-8 relative z-10">
+        <div className="w-full h-full relative overflow-hidden rounded-t-[2.5rem] rounded-bl-[4rem] rounded-br-2xl bg-slate-900 shadow-2xl">
           {activeImages.map((img, idx) => (
             <div
               key={idx}
