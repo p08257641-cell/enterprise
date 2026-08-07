@@ -396,17 +396,6 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Legal Links Footer */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 text-slate-500 z-10">
-        <button type="button" onClick={() => setShowLegal('privacy')} className="text-sm font-semibold hover:text-blue-600 transition-colors cursor-pointer bg-white/50 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200">
-          Privacy Policy
-        </button>
-        <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-        <button type="button" onClick={() => setShowLegal('terms')} className="text-sm font-semibold hover:text-blue-600 transition-colors cursor-pointer bg-white/50 px-4 py-2 rounded-full backdrop-blur-sm border border-slate-200/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200">
-          Terms of Service
-        </button>
-      </div>
     </div>
   );
 };
