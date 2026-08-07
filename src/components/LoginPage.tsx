@@ -49,7 +49,13 @@ export const LoginPage: React.FC = () => {
             setCompanies(data);
             
             const currentHost = window.location.hostname;
-            const found = data.find((c: any) => c.domain === currentHost);
+            const subdomain = currentHost.split('.')[0].toLowerCase();
+            
+            const found = data.find((c: any) => 
+              c.domain === currentHost || 
+              c.id === `c-${subdomain}` ||
+              c.domain?.toLowerCase().startsWith(subdomain)
+            );
             
             if (found) {
               setMatchedCompany(found);
