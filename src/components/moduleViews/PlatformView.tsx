@@ -736,21 +736,41 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
           </div>
         </div>
       )}
-      {companyModal.selected && (
-        <RowModal row={companyModal.selected}
-          icon="bi bi-buildings" accentColor="#0f172a"
-          fields={[
-            { label: 'Company', key: 'name', icon: 'bi bi-building' },
-            { label: 'Domain', key: 'domain', mono: true, icon: 'bi bi-globe', section: 'Details' },
-            { label: 'Plan', key: 'plan', icon: 'bi bi-star', section: 'Details' },
-            { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
-            { label: 'Users', key: 'users', icon: 'bi bi-people', section: 'Usage' },
-            { label: 'Modules', key: 'modules', icon: 'bi bi-grid-1x2', section: 'Usage' },
-            { label: 'MRR', key: 'mrr', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Usage' },
-          ]}
-          title={r => r.name} subtitle={r => r.domain}
-          onClose={companyModal.close} />
-      )}
+        {companyModal.selected && (
+          <RowModal row={companyModal.selected}
+            icon="bi bi-buildings" accentColor="#0f172a"
+            fields={[
+              { label: 'Company', key: 'name', icon: 'bi bi-building' },
+              { label: 'Domain', key: 'domain', mono: true, icon: 'bi bi-globe', section: 'Details' },
+              { label: 'Plan', key: 'plan', icon: 'bi bi-star', section: 'Details' },
+              { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
+              { label: 'Users', key: 'users', icon: 'bi bi-people', section: 'Usage' },
+              { label: 'Modules', key: 'modules', icon: 'bi bi-grid-1x2', section: 'Usage' },
+              { label: 'MRR', key: 'mrr', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Usage' },
+            ]}
+            title={r => r.name} subtitle={r => r.domain}
+            onClose={companyModal.close}
+            actions={(row) => selectedUser.role === 'Super Admin' && props.onUpdateTenantContract ? (
+              <div className="flex gap-2 w-full mt-2">
+                <SecBtn icon="bi bi-x-circle" onClick={() => {
+                  if (confirm(`Are you sure you want to end the contract for ${row.name}?`)) {
+                    props.onUpdateTenantContract!(row.id, { billingStatus: 'Inactive' });
+                    companyModal.close();
+                  }
+                }}>End Contract</SecBtn>
+                <PrimaryBtn icon="bi bi-arrow-repeat" onClick={() => {
+                  const newExpiry = new Date();
+                  newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+                  props.onUpdateTenantContract!(row.id, { 
+                    billingStatus: 'Active', 
+                    subscriptionExpiresAt: newExpiry.toISOString().split('T')[0] 
+                  });
+                  companyModal.close();
+                }}>Renew Contract</PrimaryBtn>
+              </div>
+            ) : undefined}
+          />
+        )}
       {billingModal.selected && (
         <RowModal row={billingModal.selected}
           icon="bi bi-credit-card" accentColor="#059669"

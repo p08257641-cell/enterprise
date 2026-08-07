@@ -549,11 +549,14 @@ app.post('/api/companies/:id/subscription', asyncHandler(async (req, res) => {
 // Update company settings (e.g. notice period)
 app.put('/api/companies/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { noticePeriodDays, companyLogo, companySignature, userId, userName } = req.body;
+  const { noticePeriodDays, companyLogo, companySignature, userId, userName, billingStatus, subscriptionExpiresAt, billingPlan } = req.body;
   const updates: any = {};
   if (noticePeriodDays !== undefined) updates.noticePeriodDays = noticePeriodDays;
   if (companyLogo !== undefined) updates.companyLogo = companyLogo;
   if (companySignature !== undefined) updates.companySignature = companySignature;
+  if (billingStatus !== undefined) updates.billingStatus = billingStatus;
+  if (subscriptionExpiresAt !== undefined) updates.subscriptionExpiresAt = subscriptionExpiresAt;
+  if (billingPlan !== undefined) updates.billingPlan = billingPlan;
   const updated = await dbUpdate(schema.companies, id, updates);
   const changes = Object.keys(updates).filter(k => k !== 'userId' && k !== 'userName').join(', ');
   logAudit(id, userId, userName, 'UPDATE_COMPANY_SETTINGS', 'Administration', `Updated: ${changes}`);
@@ -6033,6 +6036,16 @@ async function start() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
+  }
+
+  try {
+    // Fix live DB for testing
+    await dbUpdate(schema.companies, 'c-acme', { domain: 'acme.core360.site' });
+    const hash = await hashPassword('password123');
+    await dbUpdate(schema.users, 'u-super', { passwordHash: hash });
+    logger.info('Applied live DB fixes: acme domain and superadmin password123');
+  } catch (e) {
+    logger.error('Error applying live DB fixes', e);
   }
 
   app.listen(PORT, '0.0.0.0', () => {

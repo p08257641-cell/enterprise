@@ -166,6 +166,7 @@ export interface ModuleViewsProps {
   // Super Admin plan assignment
   tenants: Company[];
   onAssignPlan: (companyId: string, moduleIds: string[], billingPlan: Company['billingPlan']) => void;
+  onUpdateTenantContract?: (tenantId: string, updates: Partial<Company>) => void;
   // POS data
   posProducts: POSProduct[];
   posCustomers: POSCustomer[];

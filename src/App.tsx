@@ -606,6 +606,22 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     }
   };
 
+  const handleUpdateTenantContract = async (companyId: string, updates: Partial<Company>) => {
+    if (!selectedUser) return;
+    try {
+      const res = await fetch(`/api/companies/${companyId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...updates, userId: selectedUser.id, userName: selectedUser.name })
+      });
+      const updated = await safeJson(res);
+      setCompanies(companies.map(c => (c.id === companyId ? updated : c)));
+      if (selectedCompany && selectedCompany.id === companyId) setSelectedCompany(updated);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleAddApplicant = async (appInput: Partial<Applicant>) => {
       try {
         const res = await fetch('/api/applicants', {
@@ -3588,6 +3604,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               onDeleteTaxCode={handleDeleteTaxCode}
               tenants={companies}
               onAssignPlan={handleAssignPlan}
+              onUpdateTenantContract={handleUpdateTenantContract}
               posProducts={posProducts}
               posCustomers={posCustomers}
               posSales={posSales}
