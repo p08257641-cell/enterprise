@@ -19,6 +19,7 @@ export const LoginPage: React.FC = () => {
   const [whisperSuccess, setWhisperSuccess] = useState(false);
   const [whisperCompanyId, setWhisperCompanyId] = useState('');
   const [companies, setCompanies] = useState<any[]>([]);
+  const [matchedCompany, setMatchedCompany] = useState<any>(null);
   const [showLegal, setShowLegal] = useState<'privacy' | 'terms' | null>(null);
 
   // Splash screen state
@@ -46,7 +47,17 @@ export const LoginPage: React.FC = () => {
         .then(data => {
           if (Array.isArray(data)) {
             setCompanies(data);
-            if (data.length > 0) setWhisperCompanyId(data[0].id);
+            
+            const currentHost = window.location.hostname;
+            const found = data.find((c: any) => c.domain === currentHost);
+            
+            if (found) {
+              setMatchedCompany(found);
+              setWhisperCompanyId(found.id);
+            } else if (data.length > 0) {
+              setMatchedCompany(null);
+              setWhisperCompanyId(data[0].id);
+            }
           }
         })
         .catch(err => console.error(err));
@@ -297,18 +308,27 @@ export const LoginPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div>
-                  <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">Company</label>
-                  <select
-                    value={whisperCompanyId}
-                    onChange={(e) => setWhisperCompanyId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer"
-                  >
-                    {companies.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {matchedCompany ? (
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">Reporting to</label>
+                    <div className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm text-slate-700 fw-medium flex items-center">
+                      <i className="bi bi-building me-2 text-violet-600"></i> {matchedCompany.name}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">Company</label>
+                    <select
+                      value={whisperCompanyId}
+                      onChange={(e) => setWhisperCompanyId(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 cursor-pointer"
+                    >
+                      {companies.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">Category</label>
