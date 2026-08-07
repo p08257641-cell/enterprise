@@ -132,6 +132,23 @@ const app = express();
 app.set('trust proxy', 1); // Allow rate limiting to work correctly behind Netlify proxy
 const PORT = 3000;
 
+// Auto-migrate tables
+pool.query(`
+CREATE TABLE IF NOT EXISTS applicants (
+  id TEXT PRIMARY KEY,
+  company_id TEXT,
+  name TEXT,
+  email TEXT,
+  role TEXT,
+  department TEXT,
+  stage TEXT,
+  applied_date TEXT,
+  cv_text TEXT,
+  ai_score INTEGER,
+  ai_summary TEXT
+);
+`).then(() => console.log('Applicants table initialized')).catch(console.error);
+
 app.use(express.json({ limit: '10mb' }));
 
 // Security middleware
@@ -6013,6 +6030,8 @@ async function start() {
 
 start();
 // Trigger restart
+
+
 
 
 
