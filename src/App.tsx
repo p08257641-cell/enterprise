@@ -160,7 +160,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     if (authLoading || !token) return;
     async function loadData() {
       try {
-        const [cRes, uRes, eRes,  dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
+        const [cRes, uRes, eRes, appRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/users'),
           fetch('/api/employees'),
@@ -3847,6 +3847,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     </>
   );
 }
+
 
 
 
