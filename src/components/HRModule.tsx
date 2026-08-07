@@ -88,13 +88,13 @@ const Badge = ({ label, variant = 'default' }: {
 const StatCard = ({ label, value, sub, icon, accent = false, color = '' }: {
   label: string; value: string | number; sub?: string; icon: string; accent?: boolean; color?: string;
 }) => (
-  <div >
-    <div className="flex items-center justify-between">
-      <span >{label}</span>
-      <i ></i>
+  <div className={`p-4 rounded-xl border ${accent ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white shadow-sm'}`}>
+    <div className="flex items-center justify-between mb-2">
+      <span className="fs-sm fw-medium text-slate-600">{label}</span>
+      <i className={`${icon} ${color || (accent ? 'text-amber-500' : 'text-slate-400')} fs-base`}></i>
     </div>
-    <div >{value}</div>
-    {sub && <p >{sub}</p>}
+    <div className={`text-2xl fw-bold ${color || 'text-slate-800'}`}>{value}</div>
+    {sub && <p className="fs-xs text-slate-500 mt-1">{sub}</p>}
   </div>
 );
 
