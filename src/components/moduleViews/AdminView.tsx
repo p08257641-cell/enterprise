@@ -957,6 +957,43 @@ const [deptParent, setDeptParent] = useState('');
           </div>
         </ViewModal>
       )}
+    
+      {/* Branch Modal */}
+      {showBranchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowBranchModal(false)}>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                    <i className="bi bi-building text-blue-600 fs-xs"></i>
+                  </div>
+                  <h3 className="fs-sm fw-bold text-slate-900">Add Branch</h3>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new company location, office or facility.</p>
+              </div>
+              <button type="button" onClick={() => setShowBranchModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+                <i className="bi bi-x fs-xl"></i>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div><Label>Branch Name *</Label><Input value={branchName} onChange={e => setBranchName(e.target.value)} placeholder="Accra Branch" /></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><Label>Location</Label><Input value={branchLocation} onChange={e => setBranchLocation(e.target.value)} placeholder="Accra, Ghana" /></div>
+                <div><Label>Type</Label><Select value={branchType} onChange={e => setBranchType(e.target.value)}><option>Main HQ</option><option>Regional</option><option>Plant</option><option>Warehouse</option></Select></div>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button type="button" onClick={() => setShowBranchModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
+              <button type="button" onClick={() => {
+                if (!branchName) return void modalAlert('Branch name required', { variant: 'warning' });
+                onAddBranch({ companyId: selectedCompany.id, name: branchName, location: branchLocation, isMain: branchType === 'Main HQ' });
+                setShowBranchModal(false); setBranchName('');
+              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Branch</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1126,43 +1163,6 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
       </div>
     </div>
 
-      {/* Branch Modal */}
-      {showBranchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setShowBranchModal(false)}>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <div className="h-7 w-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <i className="bi bi-building text-blue-600 fs-xs"></i>
-                  </div>
-                  <h3 className="fs-sm fw-bold text-slate-900">Add Branch</h3>
-                </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new company location, office or facility.</p>
-              </div>
-              <button type="button" onClick={() => setShowBranchModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                <i className="bi bi-x fs-xl"></i>
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div><Label>Branch Name *</Label><Input value={branchName} onChange={e => setBranchName(e.target.value)} placeholder="Accra Branch" /></div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div><Label>Location</Label><Input value={branchLocation} onChange={e => setBranchLocation(e.target.value)} placeholder="Accra, Ghana" /></div>
-                <div><Label>Type</Label><Select value={branchType} onChange={e => setBranchType(e.target.value)}><option>Main HQ</option><option>Regional</option><option>Plant</option><option>Warehouse</option></Select></div>
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <button type="button" onClick={() => setShowBranchModal(false)} className="fs-xs fw-semibold border border-slate-200 text-slate-600 px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-100 bg-white transition-all">Cancel</button>
-              <button type="button" onClick={() => {
-                if (!branchName) return void modalAlert('Branch name required', { variant: 'warning' });
-                onAddBranch({ companyId: selectedCompany.id, name: branchName, location: branchLocation, isMain: branchType === 'Main HQ' });
-                setShowBranchModal(false); setBranchName('');
-              }} className="fs-xs fw-semibold bg-slate-900 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs">Create Branch</button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      
   );
 };
-
