@@ -218,7 +218,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               ))}
               {localProducts.length === 0 && <div className="col-span-3 fs-xs text-slate-400 text-center py-8">No products configured.</div>}
             </div>
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
               <div className="px-4 py-3 border-b border-slate-100">
                 <div className="section-title text-slate-500">Current Order</div>
               </div>
@@ -276,7 +276,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Active Products" value={localProducts.filter(p => p.isActive !== false).length} icon="bi bi-check-circle" sub="Available for sale" />
             <StatCard label="Low Stock" value={localProducts.filter(p => p.stockLevel <= p.reorderLevel).length} icon="bi bi-exclamation-triangle" sub="Need reorder" color="text-amber-600" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'SKU' }, { label: 'Name' }, { label: 'Category' }, { label: 'Price', right: true }, { label: 'Stock', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -305,7 +305,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Total Revenue" value={`$${localCustomers.reduce((s, c) => s + (c.totalSpent || 0), 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="All customers" accent />
             <StatCard label="Loyalty Members" value={localCustomers.filter(c => (c.loyaltyPoints || 0) > 0).length} icon="bi bi-star" sub="With points" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Name' }, { label: 'Email' }, { label: 'Phone' }, { label: 'Tier' }, { label: 'Lifetime Spend', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -328,7 +328,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
       )}
 
       {tab === 'sessions' && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
           <table className="w-full text-left">
             <TableHead cols={[{ label: 'Terminal' }, { label: 'Location' }, { label: 'Status' }, { label: 'Last Sync' }, { label: 'Actions', right: true }]} />
             <tbody className="divide-y divide-slate-100">
@@ -356,7 +356,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Returns" value={localReturns.length} icon="bi bi-arrow-return-left" sub="All returns" />
             <StatCard label="Open Shifts" value={localShifts.filter(s => s.status === 'Open').length} icon="bi bi-lock" sub="Currently active" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Recent Sales</h3></div>
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Total', right: true }, { label: 'Actions', right: true }]} />
@@ -385,7 +385,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Open Shifts" value={localShifts.filter(s => s.status === 'Open').length} icon="bi bi-lock" sub="Currently active" />
             <StatCard label="Closed Shifts" value={localShifts.filter(s => s.status === 'Closed').length} icon="bi bi-unlock" sub="Completed" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Shift ID' }, { label: 'Terminal' }, { label: 'Cashier' }, { label: 'Status' }, { label: 'Opened', right: true }, { label: 'Closed', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -418,7 +418,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Revenue" value={`$${localSales.reduce((s, x) => s + (x.total || 0), 0).toFixed(2)}`} icon="bi bi-currency-dollar" sub="Gross total" accent />
             <StatCard label="Average Sale" value={`$${localSales.length > 0 ? (localSales.reduce((s, x) => s + (x.total || 0), 0) / localSales.length).toFixed(2) : '0.00'}`} icon="bi bi-bar-chart" sub="Per transaction" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Reference' }, { label: 'Payment' }, { label: 'Status' }, { label: 'Items' }, { label: 'Total', right: true }, { label: 'Date', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -451,7 +451,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Active" value={localDiscounts.filter(d => d.isActive !== false).length} icon="bi bi-check-circle" sub="Available" />
             <StatCard label="Inactive" value={localDiscounts.filter(d => d.isActive === false).length} icon="bi bi-pause-circle" sub="Disabled" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Name' }, { label: 'Type' }, { label: 'Value' }, { label: 'Usage' }, { label: 'Max Usage' }, { label: 'Status' }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
@@ -484,7 +484,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             <StatCard label="Processed" value={localReturns.filter(r => r.refundStatus === 'Processed').length} icon="bi bi-check-circle" sub="Completed" />
             <StatCard label="Pending" value={localReturns.filter(r => r.refundStatus === 'Pending').length} icon="bi bi-hourglass" sub="Awaiting" />
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
               <TableHead cols={[{ label: 'Return #' }, { label: 'Original Sale' }, { label: 'Reason' }, { label: 'Refund Method' }, { label: 'Status' }, { label: 'Date', right: true }, { label: 'Actions', right: true }]} />
               <tbody className="divide-y divide-slate-100">
