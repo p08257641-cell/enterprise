@@ -187,19 +187,19 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-stretch bg-white animate-fade-in overflow-hidden">
       {/* Left Side - Image Carousel */}
-      <div className="hidden lg:flex w-[55%] relative overflow-hidden bg-slate-900 shadow-2xl z-10">
+      <div className="hidden md:flex md:w-1/2 xl:w-[55%] relative overflow-hidden bg-slate-900 shadow-2xl z-10">
         {activeImages.map((img, idx) => (
           <div
             key={idx}
             className={`absolute inset-0 transition-all duration-1000 ease-in-out ${idx === bgIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           >
-            <img src={img} alt={`Slide ${idx}`} className="w-full h-full object-cover" />
+            <img src={img} alt={`Slide ${idx}`} className="w-full h-full object-cover object-center" />
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"></div>
-        <div className="absolute inset-0 bg-slate-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent"></div>
+        <div className="absolute inset-0 bg-slate-900/10"></div>
 
-        <div className="absolute bottom-12 left-12 right-12 z-20">
+        <div className="absolute bottom-12 left-10 right-10 lg:bottom-16 lg:left-16 lg:right-16 z-20">
           <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md p-3 mb-6 shadow-xl border border-white/20 flex items-center justify-center overflow-hidden">
             <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Logo" className="w-full h-full object-contain" />
           </div>
