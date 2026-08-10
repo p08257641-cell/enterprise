@@ -6,7 +6,7 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
-  const { searchTerm = '', activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies } = props;
+  const { searchTerm = '', activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies, approvalPolicies: propApprovalPolicies = [] } = props;
 
   const isAdmin = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
 
@@ -56,6 +56,21 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
     'Asset Requests': ['Company Admin', 'Operations Department Head'],
     'Role Management': ['HR Manager', 'HR Department Head', 'HR Officer', 'Company Admin'],
   });
+
+  useEffect(() => {
+    if (propApprovalPolicies && propApprovalPolicies.length > 0) {
+      setApprovalPolicies(prev => {
+        const next = { ...prev };
+        for (const p of propApprovalPolicies) {
+          if (p.companyId === selectedCompany.id) {
+            next[p.module] = p.approverRoles || [];
+          }
+        }
+        return next;
+      });
+    }
+  }, [propApprovalPolicies, selectedCompany.id]);
+
   const [approvalSaveSuccess, setApprovalSaveSuccess] = useState(false);
   const [openWorkflowDropdown, setOpenWorkflowDropdown] = useState<string | null>(null);
 
