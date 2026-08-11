@@ -166,7 +166,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           subMenus: [
             { id: 'admin-branches', label: 'Branches', viewId: 'admin-branches', iconClass: 'bi bi-geo-alt' },
             { id: 'admin-departments', label: 'Departments', viewId: 'admin-departments', iconClass: 'bi bi-diagram-3' },
-            { id: 'admin-users', label: 'Users', viewId: 'admin-users', iconClass: 'bi bi-people' },
             { id: 'admin-roles', label: 'Roles', viewId: 'admin-roles', iconClass: 'bi bi-shield-lock' },
             { id: 'admin-approvals', label: 'Approval Workflows', viewId: 'admin-approvals', iconClass: 'bi bi-check2-square' },
             { id: 'admin-settings', label: 'Settings', viewId: 'admin-settings', iconClass: 'bi bi-toggles' },

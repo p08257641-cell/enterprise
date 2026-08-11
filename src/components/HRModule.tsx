@@ -8,9 +8,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { formatCurrency } from '../utils/currency';
 import { ViewModal, TableHead, EmptyRow } from './moduleViews/shared';
 import { Company, User, Applicant, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord, ExitRequest } from '../types';
-import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole } from '../permissions';
+import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole, hasCrudPermission } from '../permissions';
 import { downloadCSV } from '../utils/export';
 import { modalAlert, modalConfirm } from '../utils/modal';
 import { OrgChart } from './OrgChart';
@@ -334,6 +335,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   }, [attendanceSettings]);
   const [editFirst, setEditFirst] = useState(''); const [editLast, setEditLast] = useState('');
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
+    const [editSignatureUrl, setEditSignatureUrl] = useState('');
   const [editDept, setEditDept] = useState(''); const [editDesignation, setEditDesignation] = useState(''); const [editBranch, setEditBranch] = useState(''); const [editSalary, setEditSalary] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -778,6 +780,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         <PrimaryBtn icon="bi bi-pencil" onClick={() => {
                           setEditEmp(selectedEmp);
                           setEditPhotoUrl(selectedEmp.photoUrl || '');
+                            setEditSignatureUrl(selectedEmp.signatureUrl || '');
                             setEditFirst(selectedEmp.firstName);
                           setEditLast(selectedEmp.lastName);
                           setEditEmail(selectedEmp.email);
@@ -981,7 +984,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                             if (e.target.checked) setEditTaxes([...editTaxes, tax.id]);
                             else setEditTaxes(editTaxes.filter(id => id !== tax.id));
                           }} />
-                          {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : `$${tax.value}`})
+                          {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : formatCurrency(tax.value, selectedCompany?.currency)})
                         </label>
                       ))}
                     </div>
@@ -1001,7 +1004,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                             if (e.target.checked) setEditBenefits([...editBenefits, ben.id]);
                             else setEditBenefits(editBenefits.filter(id => id !== ben.id));
                           }} />
-                          {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : `$${ben.value}`})
+                          {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : formatCurrency(ben.value, selectedCompany?.currency)})
                         </label>
                       ))}
                     </div>
@@ -1033,6 +1036,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                 if (!editEmp) return;
                 onUpdateEmployee(editEmp.id, {
                   photoUrl: editPhotoUrl,
+                    signatureUrl: editSignatureUrl,
                     firstName: editFirst,
                   lastName: editLast,
                   email: editEmail,
@@ -1499,7 +1503,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                               if (e.target.checked) setHrTaxes([...hrTaxes, tax.id]);
                               else setHrTaxes(hrTaxes.filter(id => id !== tax.id));
                             }} />
-                            {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : `$${tax.value}`})
+                            {tax.name} ({tax.type === 'Percentage' ? `${(tax.value * 100).toFixed(1)}%` : formatCurrency(tax.value, selectedCompany?.currency)})
                           </label>
                         ))}
                       </div>
@@ -1520,7 +1524,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                               if (e.target.checked) setHrBenefits([...hrBenefits, ben.id]);
                               else setHrBenefits(hrBenefits.filter(id => id !== ben.id));
                             }} />
-                            {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : `$${ben.value}`})
+                            {ben.name} ({ben.type === 'Percentage' ? `${(ben.value * 100).toFixed(1)}%` : formatCurrency(ben.value, selectedCompany?.currency)})
                           </label>
                         ))}
                       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { modalAlert, toast } from '../utils/modal';
 import { LegalView } from './moduleViews/LegalView';
@@ -22,15 +22,23 @@ export const LoginPage: React.FC = () => {
   const [matchedCompany, setMatchedCompany] = useState<any>(null);
   const [showLegal, setShowLegal] = useState<'privacy' | 'terms' | null>(null);
 
+  const [authView, setAuthView] = useState<'login' | 'forgot'>('login');
+  const [resetContact, setResetContact] = useState('');
+  const [resetMethod, setResetMethod] = useState<'email' | 'sms'>('email');
+  const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   
   const [showSplash, setShowSplash] = useState(true);
   const [bgIndex, setBgIndex] = useState(0);
 
-  const activeImages = matchedCompany?.loginImages?.length > 0 
-    ? matchedCompany.loginImages 
-    : ['/splash1.jpg', '/splash2.jpg', '/splash3.jpg'];
+  const activeImages = useMemo(() => {
+    return matchedCompany?.loginImages?.length > 0 
+      ? matchedCompany.loginImages 
+      : ['/splash1.jpg', '/splash2.jpg', '/splash3.jpg'];
+  }, [matchedCompany]);
 
   useEffect(() => {
     fetch('/api/public/companies')
@@ -95,10 +103,10 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [imagesPreloaded, activeImages.length]);
 
-  // Show splash until everything is ready (min 8s to show splash background)
+  // Show splash until everything is ready (min 1.5s to show splash background)
   useEffect(() => {
     if (dataLoaded && imagesPreloaded) {
-      setTimeout(() => setShowSplash(false), 8000);
+      setTimeout(() => setShowSplash(false), 1500);
     }
   }, [dataLoaded, imagesPreloaded]);
 
@@ -111,6 +119,16 @@ export const LoginPage: React.FC = () => {
     if (result.error) {
       setError(result.error);
     }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetContact.trim()) return;
+    setResetSubmitting(true);
+    // Simulate API call for password reset via Email/SMS
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setResetSubmitting(false);
+    setResetSuccess(true);
   };
 
   const handleWhisperSubmit = async (e: React.FormEvent) => {
@@ -256,12 +274,17 @@ export const LoginPage: React.FC = () => {
             <div className="lg:hidden inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white shadow-sm border border-slate-200 mb-5 overflow-hidden p-2">
               <img src={matchedCompany?.companyLogo || "/logo.jpg"} alt="Logo" className="w-full h-full object-contain rounded-xl" />
             </div>
-            <h1 className="text-2xl sm:text-3xl fw-bold text-slate-900 tracking-tight">Sign in to your account</h1>
-            <p className="fs-sm text-slate-500 mt-2">Enter your credentials to access the platform.</p>
+            <h1 className="text-2xl sm:text-3xl fw-bold text-slate-900 tracking-tight">
+              {authView === 'login' ? 'Sign in to your account' : 'Reset your password'}
+            </h1>
+            <p className="fs-sm text-slate-500 mt-2">
+              {authView === 'login' ? 'Enter your credentials to access the platform.' : 'Enter your email or phone number to receive reset instructions.'}
+            </p>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 p-6 sm:p-8 mb-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            {authView === 'login' ? (
+              <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 fs-xs text-red-700 fw-semibold">
                 <i className="bi bi-exclamation-triangle-fill"></i>
@@ -282,7 +305,16 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block fs-xs fw-semibold text-slate-700">Password</label>
+                <button
+                  type="button"
+                  onClick={() => setAuthView('forgot')}
+                  className="text-blue-600 hover:text-blue-700 text-xs font-semibold cursor-pointer"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -321,6 +353,83 @@ export const LoginPage: React.FC = () => {
               )}
             </button>
           </form>
+          ) : (
+            <div className="space-y-5 animate-fade-in">
+              {resetSuccess ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i className="bi bi-check-circle-fill"></i>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Instructions Sent</h3>
+                  <p className="text-sm text-slate-500 mb-6">
+                    If an account matches that {resetMethod}, we've sent reset instructions to you.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthView('login'); setResetSuccess(false); setResetContact(''); }}
+                    className="w-full rounded-lg bg-slate-100 text-slate-700 px-4 py-2.5 fs-sm fw-semibold hover:bg-slate-200 transition-all cursor-pointer"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleResetSubmit} className="space-y-5">
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-2">Reset via</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setResetMethod('email')}
+                        className={`py-2 px-3 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 cursor-pointer transition-all ${resetMethod === 'email' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+                      >
+                        <i className="bi bi-envelope"></i> Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setResetMethod('sms')}
+                        className={`py-2 px-3 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 cursor-pointer transition-all ${resetMethod === 'sms' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+                      >
+                        <i className="bi bi-phone"></i> SMS
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-1.5">
+                      {resetMethod === 'email' ? 'Email address' : 'Phone number'}
+                    </label>
+                    <input
+                      type={resetMethod === 'email' ? 'email' : 'tel'}
+                      value={resetContact}
+                      onChange={(e) => setResetContact(e.target.value)}
+                      placeholder={resetMethod === 'email' ? 'you@company.com' : '+1 (555) 000-0000'}
+                      required
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={resetSubmitting}
+                    className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-white fs-sm fw-semibold hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {resetSubmitting ? (
+                      <><i className="bi bi-arrow-repeat animate-spin"></i> Sending...</>
+                    ) : (
+                      'Send Reset Link'
+                    )}
+                  </button>
+                  <div className="text-center mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setAuthView('login')}
+                      className="text-slate-500 hover:text-slate-700 text-sm font-medium cursor-pointer transition-colors"
+                    >
+                      Back to sign in
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Whisper Reporting Link */}

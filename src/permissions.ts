@@ -220,7 +220,7 @@ export const canAccessSubmenu = (role: Role, submenuId: string): boolean => {
 
 /** All available top-level module IDs for the role editor UI. */
 export const ALL_MODULES = [
-  'Platform Management', 'Administration', 'HR', 'Payroll', 'CRM', 'Accounting',
+  'Administration', 'HR', 'Payroll', 'CRM', 'Accounting',
   'Sales', 'Operations', 'Help Desk', 'POS', 'Intelligence', 'Visitor Management',
   'Compliance', 'Communication', 'Voting', 'Gallery', 'Learning Management (LMS)',
 ];
@@ -338,3 +338,5 @@ export const ALL_SUBMENUS: Record<string, { id: string; label: string }[]> = {
     { id: 'ai-insights', label: 'AI Smart Insights' },
   ],
 };
+
+export { hasCrudPermission } from './utils/crud';

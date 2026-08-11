@@ -62,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('erp_user');
     setToken(null);
     setUser(null);
+    window.location.href = '/';
   };
 
   return (

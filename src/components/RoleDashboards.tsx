@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { formatCurrency } from '../utils/currency';
 import { Company, User, Employee, CRMLead, GLAccount, Invoice, InventoryItem, SupportTicket, AuditLog, Department, LeaveRequest, AttendanceRecord, OKRRecord, PayslipRecord, Expense, JournalEntry, Bill, ProjectTask, CommunicationAnnouncement } from '../types';
 import { OrgChart } from './OrgChart';
 
@@ -46,7 +47,7 @@ const BUSINESS_SHORTCUTS: Record<string, { label: string; view: string; icon: st
   'Finance Manager': [
     { label: 'General Ledger', view: 'accounting', icon: 'bi bi-journal-text' },
     { label: 'Invoices', view: 'acc-invoices', icon: 'bi bi-receipt' },
-    { label: 'User Management', view: 'admin-users', icon: 'bi bi-people' },
+
     { label: 'Financial Reports', view: 'acc-reports', icon: 'bi bi-graph-up' },
   ],
   'Sales Manager': [
@@ -96,7 +97,7 @@ const BUSINESS_SHORTCUTS: Record<string, { label: string; view: string; icon: st
     { label: 'Fixed Assets', view: 'asset-register', icon: 'bi bi-collection' },
   ],
   'IT Department Head': [
-    { label: 'Users', view: 'admin-users', icon: 'bi bi-people-gear' },
+
     { label: 'Roles', view: 'admin-roles', icon: 'bi bi-shield-lock' },
     { label: 'Help Desk', view: 'hd-tickets', icon: 'bi bi-headset' },
     { label: 'Settings', view: 'admin-settings', icon: 'bi bi-toggles' },
@@ -493,7 +494,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         {/* KPI Row */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Active Tenants" value={activeCount} sub={`${trialCount} on trial · ${companies.length} total registered`} icon="bi bi-building" />
-          <StatCard label="Monthly Recurring" value={`$${totalMRR.toLocaleString()}`} sub="Based on active billing plans" icon="bi bi-currency-dollar" accent />
+          <StatCard label="Monthly Recurring" value={formatCurrency(totalMRR, selectedCompany?.currency)} sub="Based on active billing plans" icon="bi bi-currency-dollar" accent />
           <StatCard label="System Events" value={auditLogs.length} sub="Recorded in audit log" icon="bi bi-activity" />
           <StatCard label="Avg Modules / Tenant" value={avgModules} sub={`Across ${companies.length} tenant orgs`} icon="bi bi-grid" />
         </div>
@@ -1351,7 +1352,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Leads" value={localLeads.length} sub="All stages in pipeline" icon="bi bi-funnel" />
-          <StatCard label="Pipeline Value" value={`$${pipelineValue.toLocaleString()}`} sub="Weighted funnel total" icon="bi bi-currency-dollar" />
+          <StatCard label="Pipeline Value" value={formatCurrency(pipelineValue, selectedCompany?.currency)} sub="Weighted funnel total" icon="bi bi-currency-dollar" />
           <StatCard label="Qualified Leads" value={qualifiedLeads.length} sub="Ready for proposal stage" icon="bi bi-star" accent />
           <StatCard label="Deals Won" value={wonLeads.length} sub={`$${wonLeads.reduce((s, l) => s + l.value, 0).toLocaleString()} closed`} icon="bi bi-trophy" />
         </div>
@@ -1475,7 +1476,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           </button>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Stock Valuation" value={`$${totalValue.toLocaleString()}`} sub="Total warehoused asset capital" icon="bi bi-currency-dollar" />
+          <StatCard label="Stock Valuation" value={formatCurrency(totalValue, selectedCompany?.currency)} sub="Total warehoused asset capital" icon="bi bi-currency-dollar" />
           <StatCard label="SKU Count" value={localStock.length} sub="Distinct products tracked" icon="bi bi-box-seam" />
           <StatCard label="Low Stock Alerts" value={lowStock.length} sub="Below minimum threshold" icon="bi bi-exclamation-triangle" accent />
           <StatCard label="Warehouses" value={[...new Set(localStock.map(i => i.warehouse))].length} sub="Active storage locations" icon="bi bi-building" />
@@ -2278,7 +2279,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">IT Command Center</h1>
             <p className="fs-sm text-slate-500 mt-0.5">User management, help desk and POS administration.</p>
           </div>
-          <button onClick={() => onNavigateView('admin-users')} className="flex items-center gap-1.5 bg-slate-900 text-white fw-semibold fs-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-people-gear fs-xs"></i> User Management</button>
+
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Users" value={localEmployees.length} sub="Company users" icon="bi bi-people-gear" />

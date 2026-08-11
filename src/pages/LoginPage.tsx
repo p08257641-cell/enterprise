@@ -23,10 +23,10 @@ export function LoginPage() {
       setBgIndex(prev => (prev + 1) % splashImages.length);
     }, 3000);
     
-    // Hide splash screen after 6 seconds
+    // Hide splash screen after 1.5 seconds
     const timeout = setTimeout(() => {
       setShowSplash(false);
-    }, 6000);
+    }, 1500);
 
     return () => {
       clearInterval(interval);

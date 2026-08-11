@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
-import { isAdminRole } from '../../permissions';
+import { isAdminRole, hasCrudPermission } from '../../permissions';
 import { parseActiveView } from '../../parseActiveView';
 
 export const AssetView: React.FC<ModuleViewsProps> = (props) => {
@@ -11,6 +11,10 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
   } = props;
 
   const isAdmin = isAdminRole(selectedUser.activeRole);
+  const userRole = selectedUser.activeRole || selectedUser.role;
+  const canCreate = isAdmin || hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['Operations', activeView], 'Create');
+  const canUpdate = isAdmin || hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['Operations', activeView], 'Update');
+  const canDelete = isAdmin || hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['Operations', activeView], 'Delete');
   const localAssets = fixedAssets.filter(a => a.companyId === selectedCompany.id);
   const localMaintenance = maintenanceTasks.filter(m => m.companyId === selectedCompany.id);
   const localDepEntries = depreciationEntries.filter(d => d.companyId === selectedCompany.id);
@@ -91,7 +95,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">Asset Register</h3>
-                {isAdmin && (
+                {canCreate && (
                   <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowAddAsset(true)}>Register Asset</PrimaryBtn>
                 )}
               </div>
@@ -172,7 +176,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 className="section-title text-slate-900">Maintenance Schedule</h3>
-                {isAdmin && (
+                {canCreate && (
                   <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowAddMaint(true)}>Schedule Task</PrimaryBtn>
                 )}
               </div>

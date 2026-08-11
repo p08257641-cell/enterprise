@@ -122,6 +122,7 @@ export interface Employee {
   firstName: string;
   lastName: string;
   photoUrl?: string;
+  signatureUrl?: string;
   email: string;
   department: string;
   designation: string;
@@ -1410,6 +1411,8 @@ export interface ManagedDocument {
   uploadedByName?: string;
   visibility?: 'everyone' | 'only_me' | 'specific' | 'department';
   sharedWith?: string[];
+  assigneeId?: string;
+  signedAt?: string;
   createdAt: string;
 }
 

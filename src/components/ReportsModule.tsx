@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { formatCurrency } from '../utils/currency';
 import { Company, User, Employee, CRMLead, Invoice, PayslipRecord, SupportTicket, Expense, BankTransaction } from '../types';
 import { downloadCSV } from '../utils/export';
 import { ViewModal, useRowModal, RowModal } from './moduleViews/shared';
@@ -166,9 +167,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       {activeCategory === 'overview' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="From invoices" />
+            <StatCard label="Total Revenue" value={formatCurrency(totalRevenue, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="From invoices" />
             <StatCard label="Workforce" value={companyEmployees.length} icon="bi bi-people" sub="Active employees" />
-            <StatCard label="Pipeline Value" value={`$${companyLeads.reduce((s, l) => s + l.value, 0).toLocaleString()}`} icon="bi bi-funnel" sub={`${companyLeads.length} leads`} />
+            <StatCard label="Pipeline Value" value={formatCurrency(companyLeads.reduce((s, l) => s + l.value, 0), selectedCompany?.currency)} icon="bi bi-funnel" sub={`${companyLeads.length} leads`} />
             <StatCard label="Open Tickets" value={openTickets} icon="bi bi-headset" sub={avgTicketResolution + ' avg'} />
           </div>
 
@@ -250,9 +251,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       {activeCategory === 'revenue' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="From all invoices" />
+            <StatCard label="Total Revenue" value={formatCurrency(totalRevenue, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="From all invoices" />
             <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon="bi bi-bullseye" sub={`${closedDeals} deals won`} />
-            <StatCard label="Avg Deal Size" value={`$${companyLeads.length > 0 ? Math.round(companyLeads.reduce((s, l) => s + l.value, 0) / companyLeads.length).toLocaleString() : 0}`} icon="bi bi-cash-coin" sub="Per lead" />
+            <StatCard label="Avg Deal Size" value={formatCurrency(companyLeads.length > 0 ? Math.round(companyLeads.reduce((s, l) => s + l.value, 0) / companyLeads.length) : 0, selectedCompany?.currency)} icon="bi bi-cash-coin" sub="Per lead" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
@@ -295,8 +296,8 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           <div className="grid gap-4 sm:grid-cols-4">
             <StatCard label="Total Employees" value={companyEmployees.length} icon="bi bi-people" sub="Active workforce" />
             <StatCard label="Departments" value={deptBreakdown.length} icon="bi bi-diagram-3" sub="Organizational units" />
-            <StatCard label="Avg Salary" value={`$${companyEmployees.length > 0 ? Math.round(companyEmployees.reduce((s, e) => s + e.salary, 0) / companyEmployees.length).toLocaleString() : 0}`} icon="bi bi-cash-stack" sub="Monthly average" />
-            <StatCard label="Total Payroll" value={`$${totalPayroll.toLocaleString()}`} icon="bi bi-wallet2" sub="Monthly obligation" />
+            <StatCard label="Avg Salary" value={formatCurrency(companyEmployees.length > 0 ? Math.round(companyEmployees.reduce((s, e) => s + e.salary, 0) / companyEmployees.length) : 0, selectedCompany?.currency)} icon="bi bi-cash-stack" sub="Monthly average" />
+            <StatCard label="Total Payroll" value={formatCurrency(totalPayroll, selectedCompany?.currency)} icon="bi bi-wallet2" sub="Monthly obligation" />
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
@@ -370,10 +371,10 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
       {activeCategory === 'financial' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-4">
-            <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon="bi bi-arrow-up-right" sub="Inflows" />
-            <StatCard label="Total Expenses" value={`$${totalExpenses.toLocaleString()}`} icon="bi bi-arrow-down-right" sub="Operating costs" />
-            <StatCard label="Payroll" value={`$${totalPayroll.toLocaleString()}`} icon="bi bi-people" sub="Monthly payroll" />
-            <StatCard label="Net Income" value={`$${(totalRevenue - totalPayroll - totalExpenses).toLocaleString()}`} icon="bi bi-graph-up" sub="Profit/Loss" trend={totalRevenue - totalPayroll - totalExpenses >= 0 ? '+Profit' : '-Loss'} trendUp={totalRevenue - totalPayroll - totalExpenses >= 0} />
+            <StatCard label="Total Revenue" value={formatCurrency(totalRevenue, selectedCompany?.currency)} icon="bi bi-arrow-up-right" sub="Inflows" />
+            <StatCard label="Total Expenses" value={formatCurrency(totalExpenses, selectedCompany?.currency)} icon="bi bi-arrow-down-right" sub="Operating costs" />
+            <StatCard label="Payroll" value={formatCurrency(totalPayroll, selectedCompany?.currency)} icon="bi bi-people" sub="Monthly payroll" />
+            <StatCard label="Net Income" value={formatCurrency((totalRevenue - totalPayroll - totalExpenses), selectedCompany?.currency)} icon="bi bi-graph-up" sub="Profit/Loss" trend={totalRevenue - totalPayroll - totalExpenses >= 0 ? '+Profit' : '-Loss'} trendUp={totalRevenue - totalPayroll - totalExpenses >= 0} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -432,9 +433,9 @@ export const ReportsModule: React.FC<ReportsModuleProps> = ({
           { label: 'Customer ID', key: 'customerId', mono: true },
           { label: 'Issue Date', key: 'issueDate', mono: true },
           { label: 'Due Date', key: 'dueDate', mono: true },
-          { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}` },
-          { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}` },
-          { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}` },
+          { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency) },
+          { label: 'Tax', key: 'tax', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency) },
+          { label: 'Total', key: 'total', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency) },
           { label: 'Status', key: 'status' },
           { label: 'ID', key: 'id', mono: true },
         ]}

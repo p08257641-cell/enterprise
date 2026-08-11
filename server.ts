@@ -6050,7 +6050,7 @@ async function start() {
     await dbUpdate(schema.users, 'u-super', { passwordHash: hash });
     logger.info('Applied live DB fixes: acme domain and superadmin password123');
   } catch (e) {
-    logger.error('Error applying live DB fixes', e);
+    logger.error({ err: e }, 'Error applying live DB fixes');
   }
 
   app.listen(PORT, '0.0.0.0', () => {
