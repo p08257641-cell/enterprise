@@ -3,6 +3,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { modalAlert, toast } from '../../utils/modal';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
+import { MODULE_HIERARCHY } from '../../data/moduleHierarchy';
 import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
@@ -96,6 +97,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [roleFormName, setRoleFormName] = useState('');
   const [roleFormDesc, setRoleFormDesc] = useState('');
   const [roleFormModules, setRoleFormModules] = useState<string[]>([]);
+  const [roleFormSubmenus, setRoleFormSubmenus] = useState<string[]>([]);
   const [roleFormCrudPermissions, setRoleFormCrudPermissions] = useState<string[]>([]);
   const [showBranchModal, setShowBranchModal] = useState(false);
   const [branchName, setBranchName] = useState('');
@@ -112,12 +114,14 @@ const [deptParent, setDeptParent] = useState('');
       setRoleFormName(roleToEdit.name);
       setRoleFormDesc(roleToEdit.description);
       setRoleFormModules(roleToEdit.modules || []);
+      setRoleFormSubmenus(roleToEdit.submenus || []);
       setRoleFormCrudPermissions(roleToEdit.crudPermissions || []);
     } else {
       setEditingRole(null);
       setRoleFormName('');
       setRoleFormDesc('');
       setRoleFormModules([]);
+      setRoleFormSubmenus([]);
       setRoleFormCrudPermissions([]);
     }
     setShowRoleModal(true);
@@ -132,6 +136,7 @@ const [deptParent, setDeptParent] = useState('');
         name: roleFormName.trim(),
         description: roleFormDesc,
         modules: roleFormModules,
+        submenus: roleFormSubmenus,
         crudPermissions: roleFormCrudPermissions,
       });
     } else {
@@ -139,8 +144,8 @@ const [deptParent, setDeptParent] = useState('');
         name: roleFormName.trim(),
         description: roleFormDesc,
         modules: roleFormModules,
+        submenus: roleFormSubmenus,
         crudPermissions: roleFormCrudPermissions,
-        submenus: [],
       });
     }
     setShowRoleModal(false);
@@ -908,74 +913,133 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
 
                   <div>
-                    <Label>Module Access</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Select which ERP modules this role can access.</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      {['HR', 'Accounting', 'CRM', 'Operations', 'Administration', 'Help Desk', 'Payroll', 'Sales', 'Procurement', 'Compliance'].map(mod => {
-                        const hasModule = roleFormModules.includes(mod);
-                        return (
-                          <label
-                            key={mod}
-                            className={`p-3 rounded-xl border flex items-center gap-2.5 cursor-pointer transition-all ${hasModule
-                              ? 'bg-slate-50 border-slate-900/40 text-slate-900'
-                              : 'bg-white border-slate-100 hover:border-slate-200 text-slate-600'
-                              }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={hasModule}
-                              onChange={() => {
-                                setRoleFormModules(prev =>
-                                  prev.includes(mod)
-                                    ? prev.filter(m => m !== mod)
-                                    : [...prev, mod]
-                                );
-                              }}
-                              className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/50"
-                            />
-                            <div className="text-[11px] fw-bold">{mod}</div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>CRUD Permissions</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Select any combination of Create, Read, Update, Delete per module.</p>
-                    <div className="space-y-1.5">
-                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above first.</p>}
-                      {roleFormModules.map(mod => {
+                    <Label>Module Access & Submodule Permissions</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-3">Select main modules, toggle submodules, and assign granular CRUD permissions.</p>
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                      {MODULE_HIERARCHY.map(mod => {
+                        const hasModule = roleFormModules.includes(mod.id);
                         const crudActions = ['Create', 'Read', 'Update', 'Delete'];
+
+                        const toggleModule = () => {
+                          if (hasModule) {
+                            setRoleFormModules(prev => prev.filter(m => m !== mod.id));
+                            if (mod.subModules) {
+                              const subIds = mod.subModules.map(s => s.id);
+                              setRoleFormSubmenus(prev => prev.filter(s => !subIds.includes(s)));
+                            }
+                          } else {
+                            setRoleFormModules(prev => [...prev, mod.id]);
+                            if (mod.subModules) {
+                              const subIds = mod.subModules.map(s => s.id);
+                              setRoleFormSubmenus(prev => Array.from(new Set([...prev, ...subIds])));
+                            }
+                          }
+                        };
+
+                        const toggleSubmenu = (subId: string) => {
+                          setRoleFormSubmenus(prev =>
+                            prev.includes(subId) ? prev.filter(s => s !== subId) : [...prev, subId]
+                          );
+                        };
+
+                        const toggleCrud = (targetKeys: string[], action: string) => {
+                          const permKey = `${targetKeys[0]}.${action}`;
+                          const isAlreadySet = roleFormCrudPermissions.includes(permKey);
+                          
+                          setRoleFormCrudPermissions(prev => {
+                            let next = [...prev];
+                            for (const tk of targetKeys) {
+                              const k = `${tk}.${action}`;
+                              if (isAlreadySet) {
+                                next = next.filter(p => p !== k);
+                              } else {
+                                if (!next.includes(k)) next.push(k);
+                              }
+                            }
+                            return next;
+                          });
+                        };
+
                         return (
-                          <div key={mod} className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 bg-white">
-                            <span className="text-[10px] fw-bold text-slate-700 w-20 shrink-0">{mod}</span>
-                            <div className="flex gap-1">
-                              {crudActions.map(action => {
-                                const perm = `${mod}.${action}`;
-                                const checked = roleFormCrudPermissions.includes(perm);
-                                return (
-                                  <label
-                                    key={perm}
-                                    className={`px-2 py-0.5 rounded border text-[9px] fw-semibold cursor-pointer transition-all ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={checked}
-                                      onChange={() => {
-                                        setRoleFormCrudPermissions(prev =>
-                                          prev.includes(perm)
-                                            ? prev.filter(p => p !== perm)
-                                            : [...prev, perm]
-                                        );
-                                      }}
-                                      className="sr-only"
-                                    />
-                                    {action}
-                                  </label>
-                                );
-                              })}
+                          <div key={mod.id} className={`rounded-xl border transition-all ${hasModule ? 'bg-slate-50/50 border-slate-300' : 'bg-white border-slate-200'}`}>
+                            {/* Main Module Header */}
+                            <div className="p-3 flex items-center justify-between">
+                              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={hasModule}
+                                  onChange={toggleModule}
+                                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <i className={`${mod.icon} text-slate-500 text-sm`}></i>
+                                  <span className="fs-xs fw-bold text-slate-900">{mod.label}</span>
+                                </div>
+                              </label>
+
+                              {/* Main Module level CRUD if no submodules */}
+                              {hasModule && (!mod.subModules || mod.subModules.length === 0) && (
+                                <div className="flex items-center gap-1">
+                                  {crudActions.map(action => {
+                                    const checked = roleFormCrudPermissions.includes(`${mod.id}.${action}`);
+                                    return (
+                                      <button
+                                        key={action}
+                                        type="button"
+                                        onClick={() => toggleCrud([mod.id], action)}
+                                        className={`px-2 py-0.5 rounded border text-[9px] fw-semibold transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                      >
+                                        {action}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
+
+                            {/* Submodules List if module is enabled */}
+                            {hasModule && mod.subModules && mod.subModules.length > 0 && (
+                              <div className="px-3 pb-3 pt-1 border-t border-slate-200/60 divide-y divide-slate-100/80">
+                                {mod.subModules.map(sub => {
+                                  const isSubActive = roleFormSubmenus.includes(sub.id);
+                                  return (
+                                    <div key={sub.id} className="py-2 flex items-center justify-between gap-2">
+                                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input
+                                          type="checkbox"
+                                          checked={isSubActive}
+                                          onChange={() => toggleSubmenu(sub.id)}
+                                          className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                        />
+                                        <span className={`text-[11px] ${isSubActive ? 'fw-semibold text-slate-800' : 'text-slate-400'}`}>
+                                          {sub.label}
+                                        </span>
+                                      </label>
+
+                                      {/* Submodule CRUD permissions */}
+                                      {isSubActive && (
+                                        <div className="flex items-center gap-1">
+                                          {crudActions.map(action => {
+                                            const checked = roleFormCrudPermissions.includes(`${sub.id}.${action}`) || roleFormCrudPermissions.includes(`${mod.id}.${sub.id}.${action}`);
+                                            return (
+                                              <button
+                                                key={action}
+                                                type="button"
+                                                onClick={() => toggleCrud([sub.id, `${mod.id}.${sub.id}`, sub.label], action)}
+                                                className={`px-2 py-0.5 rounded border text-[9px] fw-semibold transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                                title={`${action} ${sub.label}`}
+                                              >
+                                                {action[0]}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
                         );
                       })}

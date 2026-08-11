@@ -11,6 +11,7 @@ import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../..
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { GLAccount, TaxCode, ComplianceCheck, FilingDeadline, TaxReturn } from '../../types';
 import { isFinanceDeptHead, isAdminRole, isAccountantRole } from '../../permissions';
+import { formatCurrency } from '../../utils/currency';
 
 export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onUpdateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onUpdateTaxReturn, onDeleteTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onCreateComplianceCheck, onUpdateComplianceCheck, onDeleteComplianceCheck, onAcknowledgePolicy, onFileDeadline, onCreateFilingDeadline, onUpdateFilingDeadline, onDeleteFilingDeadline, onCreateTaxCode, onUpdateTaxCode, onDeleteTaxCode, tenants, onAssignPlan } = props;
@@ -362,10 +363,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <PageHeader title="General Ledger" subtitle="Chart of accounts, journal entries and financial reporting."
               action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`chart-of-accounts-${selectedCompany.id}`, ['Code', 'Name', 'Type', 'Balance'], localGL.map(a => [a.code, a.name, a.type, a.balance ?? 0]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setEditingGLAccount(null); setGlFormCode(''); setGlFormName(''); setGlFormType('Asset'); setShowGLModal(true); }}>Add Account</PrimaryBtn></>} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
-              <StatCard label="Cash & Bank" value={`$${(cashAcc?.balance ?? 0).toLocaleString()}`} icon="bi bi-bank" sub="GL Account 1010" />
-              <StatCard label="Revenue YTD" value={`$${(revAcc?.balance ?? 0).toLocaleString()}`} icon="bi bi-graph-up" sub="GL Account 4010" color="text-emerald-600" />
-              <StatCard label="Open Invoices" value={openInv.length} icon="bi bi-file-earmark-text" sub={`$${openInv.reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} accent />
-              <StatCard label="Net Income" value={`$${((revAcc?.balance ?? 0) - totalExpenses).toLocaleString()}`} icon="bi bi-pie-chart" sub="Revenue minus expenses" />
+              <StatCard label="Cash & Bank" value={formatCurrency(cashAcc?.balance ?? 0, selectedCompany?.currency)} icon="bi bi-bank" sub="GL Account 1010" />
+              <StatCard label="Revenue YTD" value={formatCurrency(revAcc?.balance ?? 0, selectedCompany?.currency)} icon="bi bi-graph-up" sub="GL Account 4010" color="text-emerald-600" />
+              <StatCard label="Open Invoices" value={openInv.length} icon="bi bi-file-earmark-text" sub={`${formatCurrency(openInv.reduce((s, i) => s + i.total, 0), selectedCompany?.currency)} outstanding`} accent />
+              <StatCard label="Net Income" value={formatCurrency((revAcc?.balance ?? 0) - totalExpenses, selectedCompany?.currency)} icon="bi bi-pie-chart" sub="Revenue minus expenses" />
             </div>
 
             <div className="space-y-6">

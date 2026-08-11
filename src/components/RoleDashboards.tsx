@@ -1205,7 +1205,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Cash & Bank" value={`${selectedCompany.currency} ${(cashAccount?.balance ?? 0).toLocaleString()}`} sub="Operating account GL-1010" icon="bi bi-bank" />
           <StatCard label="Accounts Receivable" value={`${selectedCompany.currency} ${(arAccount?.balance ?? 0).toLocaleString()}`} sub="Outstanding customer balances" icon="bi bi-receipt" />
           <StatCard label="Revenue YTD" value={`${selectedCompany.currency} ${(revenueAccount?.balance ?? 0).toLocaleString()}`} sub="Total sales revenue GL-4010" icon="bi bi-graph-up" accent />
-          <StatCard label="Overdue Invoices" value={overdueInvoices.length} sub={`$${overdueInvoices.reduce((s, i) => s + i.total, 0).toLocaleString()} at risk`} icon="bi bi-exclamation-triangle" />
+          <StatCard label="Overdue Invoices" value={overdueInvoices.length} sub={`${formatCurrency(overdueInvoices.reduce((s, i) => s + i.total, 0), selectedCompany?.currency)} at risk`} icon="bi bi-exclamation-triangle" />
         </div>
 
         {/* Charts Row — Pie Chart + Bar Graph */}
@@ -1354,7 +1354,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <StatCard label="Total Leads" value={localLeads.length} sub="All stages in pipeline" icon="bi bi-funnel" />
           <StatCard label="Pipeline Value" value={formatCurrency(pipelineValue, selectedCompany?.currency)} sub="Weighted funnel total" icon="bi bi-currency-dollar" />
           <StatCard label="Qualified Leads" value={qualifiedLeads.length} sub="Ready for proposal stage" icon="bi bi-star" accent />
-          <StatCard label="Deals Won" value={wonLeads.length} sub={`$${wonLeads.reduce((s, l) => s + l.value, 0).toLocaleString()} closed`} icon="bi bi-trophy" />
+          <StatCard label="Deals Won" value={wonLeads.length} sub={`${formatCurrency(wonLeads.reduce((s, l) => s + l.value, 0), selectedCompany?.currency)} closed`} icon="bi bi-trophy" />
         </div>
 
         {/* Charts Row — Pie Chart + Bar Graph */}
@@ -2184,7 +2184,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <button onClick={() => onNavigateView('accounting')} className="flex items-center gap-1.5 bg-slate-900 text-white fw-semibold fs-xs px-4 py-2 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shadow-xs"><i className="bi bi-journal-bookmark fs-xs"></i> General Ledger</button>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Open Invoices" value={unpaid.length} sub={`$${unpaid.reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-receipt" />
+          <StatCard label="Open Invoices" value={unpaid.length} sub={`${formatCurrency(unpaid.reduce((s, i) => s + i.total, 0), selectedCompany?.currency)} outstanding`} icon="bi bi-receipt" />
           <StatCard label="GL Accounts" value={localGL.length} sub="Chart of accounts" icon="bi bi-journal-text" accent />
           <StatCard label="Expenses" value={expenses.filter(e => e.companyId === selectedCompany.id).length} sub="Recorded expenses" icon="bi bi-credit-card" />
           <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
@@ -2336,7 +2336,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Employees" value={localEmployees.length} sub={`${departments.length} departments`} icon="bi bi-people" />
-        <StatCard label="Open Invoices" value={localInvoices.filter(i => i.status !== 'Paid').length} sub={`$${localInvoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.total, 0).toLocaleString()} outstanding`} icon="bi bi-receipt" accent />
+        <StatCard label="Open Invoices" value={localInvoices.filter(i => i.status !== 'Paid').length} sub={`${formatCurrency(localInvoices.filter(i => i.status !== 'Paid').reduce((s, i) => s + i.total, 0), selectedCompany?.currency)} outstanding`} icon="bi bi-receipt" accent />
         <StatCard label="Open Tickets" value={localTickets.filter(t => t.status !== 'Resolved' && t.status !== 'Closed').length} sub="Awaiting resolution" icon="bi bi-ticket" />
         <StatCard label="Active Modules" value={selectedCompany.activeModules.length} sub={`of ${Object.keys(MODULE_CATALOG).length} available`} icon="bi bi-box-seam" />
       </div>
