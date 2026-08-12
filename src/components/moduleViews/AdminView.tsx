@@ -370,7 +370,7 @@ const [deptParent, setDeptParent] = useState('');
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">Role Management</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Define roles and assign granular CRUD permissions.</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Define roles and assign granular permissions (Create, View, Edit, Delete).</p>
               </div>
               {isAdmin && (
                 <button
@@ -420,8 +420,8 @@ const [deptParent, setDeptParent] = useState('');
                                 <span className="text-[9px] font-mono fw-bold text-slate-500">{mod}</span>
                                 <span className="text-slate-300">|</span>
                                 <div className="flex gap-0.5">
-                                  {['Create','Read','Update','Delete'].map(a => (
-                                    <span key={a} className={`text-[9px] px-1 py-0 rounded-sm fw-semibold ${actions.includes(a) ? 'text-slate-900 bg-slate-200/60' : 'text-slate-300'}`}>{a[0]}</span>
+                                  {[{k:'Create',l:'Create'},{k:'Read',l:'View'},{k:'Update',l:'Edit'},{k:'Delete',l:'Delete'}].map(a => (
+                                    <span key={a.k} className={`text-[9px] px-1.5 py-0.5 rounded-md fw-semibold ${actions.includes(a.k) ? 'text-slate-900 bg-slate-200/80' : 'text-slate-300'}`}>{a.l}</span>
                                   ))}
                                 </div>
                               </div>
@@ -674,10 +674,10 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
 
                   <div>
-                    <Label>CRUD Permissions</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose one CRUD action per module (or none).</p>
+                    <Label>Action Permissions (Create, View, Edit, Delete)</Label>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose permissions per module (Create, View, Edit, Delete).</p>
                     <div className="space-y-2">
-                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above to configure CRUD permissions.</p>}
+                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above to configure permissions.</p>}
                       {roleFormModules.map(mod => {
                         const crudActions = ['Create', 'Read', 'Update', 'Delete'];
                         const current = crudActions.find(a => roleFormCrudPermissions.includes(`${mod}.${a}`));
@@ -723,7 +723,7 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
 
                   <div>
-                    <Label>CRUD Permissions</Label>
+                    <Label>Action Permissions (Create, View, Edit, Delete)</Label>
                     <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose one action per module (or None).</p>
                     <div className="space-y-1.5">
                       {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above first.</p>}
@@ -885,7 +885,7 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                     <div>
                       <h3 className="fs-sm fw-bold text-slate-900">{editingRole ? `Edit ${editingRole.name}` : 'Create Custom Role'}</h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{editingRole ? 'Modify modules and CRUD permissions.' : 'Define a new role with custom access scopes.'}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{editingRole ? 'Modify modules and action permissions (Create, View, Edit, Delete).' : 'Define a new role with custom access scopes.'}</p>
                     </div>
                   </div>
                   <button type="button" onClick={() => setShowRoleModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><i className="bi bi-x fs-xl"></i></button>
@@ -915,7 +915,7 @@ const [deptParent, setDeptParent] = useState('');
 
                   <div>
                     <Label>Module Access & Submodule Permissions</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-3">Select main modules, toggle submodules, and assign granular CRUD permissions.</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 mb-3">Select main modules, toggle submodules, and assign action permissions (Create, View, Edit, Delete).</p>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                       {MODULE_HIERARCHY.map(mod => {
                         const hasModule = roleFormModules.includes(mod.id);
@@ -990,7 +990,7 @@ const [deptParent, setDeptParent] = useState('');
                                         onClick={() => toggleCrud([mod.id], action)}
                                         className={`px-2 py-0.5 rounded border text-[9px] fw-semibold transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                                       >
-                                        {action}
+                                        {action === 'Read' ? 'View' : action === 'Update' ? 'Edit' : action}
                                       </button>
                                     );
                                   })}
@@ -1030,7 +1030,7 @@ const [deptParent, setDeptParent] = useState('');
                                                 className={`px-2 py-0.5 rounded border text-[9px] fw-semibold transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                                                 title={`${action} ${sub.label}`}
                                               >
-                                                {action[0]}
+                                                {action === 'Read' ? 'View' : action === 'Update' ? 'Edit' : action}
                                               </button>
                                             );
                                           })}

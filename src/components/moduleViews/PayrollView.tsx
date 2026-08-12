@@ -910,7 +910,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs text-slate-500">{emp.department}</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">160h</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{otHours}h</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${otRate}/hr</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">{formatCurrency(otRate, selectedCompany?.currency)}/hr</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">{formatCurrency((otHours * otRate), selectedCompany?.currency)}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">HR Manager</td>
                         <td className="px-4 py-3 text-right">

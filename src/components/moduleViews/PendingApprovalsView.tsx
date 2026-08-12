@@ -121,7 +121,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
             )}
             {data.changes.crudPermissions && (
               <div className="p-3 bg-slate-50 rounded-lg">
-                <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">CRUD Permissions</div>
+                <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">Module Actions (Create, View, Edit, Delete)</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {data.changes.crudPermissions.from?.map((p: string) => (
                     <span key={p} className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-red-100 text-red-600 line-through">{p}</span>
