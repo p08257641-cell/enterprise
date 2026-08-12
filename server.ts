@@ -6047,8 +6047,11 @@ async function start() {
     
     await dbUpdate(schema.companies, 'c-acme', { domain: 'acme.core360.site' });
     const hash = await hashPassword('password123');
-    await dbUpdate(schema.users, 'u-super', { passwordHash: hash });
-    logger.info('Applied live DB fixes: acme domain and superadmin password123');
+    const acmeUserIds = ['u-super', 'u-acme-admin', 'u-acme-hr', 'u-acme-sales', 'u-acme-finance', 'u-acme-finmgr'];
+    for (const uid of acmeUserIds) {
+      await dbUpdate(schema.users, uid, { passwordHash: hash });
+    }
+    logger.info('Applied live DB fixes: acme domain and role accounts password123');
   } catch (e) {
     logger.error({ err: e }, 'Error applying live DB fixes');
   }
