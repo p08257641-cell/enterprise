@@ -1,4 +1,7 @@
 import { hasCrudPermission } from '../../permissions';
+import { sendSMS } from '../../utils/sms';
+import { sendEmail } from '../../utils/email';
+import { modalPrompt, modalAlert, toast } from '../../utils/modal';
 import { formatCurrency } from '../../utils/currency';
 import React, { useState } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, ViewModal } from './shared';
@@ -208,6 +211,20 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                         <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Accepted' })} className="fs-xs fw-semibold text-emerald-500 hover:text-emerald-700 cursor-pointer">Accept</button>
                         <button onClick={() => onUpdateSalesQuotation(q.id, { status: 'Rejected' })} className="fs-xs fw-semibold text-rose-500 hover:text-rose-700 cursor-pointer">Reject</button>
                       </>}
+                      <button title="SMS quotation to customer" onClick={async () => {
+                        const cust = companyCustomers.find(c => c.name === q.customerName);
+                        const mobile = await modalPrompt(`SMS Quotation ${q.quoteNumber} to ${q.customerName}. Phone:`, { placeholder: cust?.phone || '+233240000000', variant: 'info' });
+                        if (!mobile) return;
+                        const res = await sendSMS({ company: selectedCompany, to: mobile, message: `[${selectedCompany.name}] Quotation ${q.quoteNumber} | Total: ${formatCurrency(q.total, selectedCompany?.currency)} | Valid Until: ${q.validUntil || 'N/A'}. Reply to confirm.` });
+                        if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
+                      }} className="text-[10px] text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"><i className="bi bi-chat-left-dots"></i></button>
+                      <button title="Email quotation to customer" onClick={async () => {
+                        const cust = companyCustomers.find(c => c.name === q.customerName);
+                        const emailAddr = await modalPrompt(`Email Quotation ${q.quoteNumber} to ${q.customerName}. Email:`, { placeholder: cust?.email || 'customer@example.com', variant: 'info' });
+                        if (!emailAddr) return;
+                        const res = await sendEmail({ company: selectedCompany, to: emailAddr, subject: `Quotation ${q.quoteNumber} from ${selectedCompany.name}`, htmlBody: `<div style="font-family:sans-serif;padding:20px;border:1px solid #e2e8f0;border-radius:12px;max-width:560px;"><h2>${selectedCompany.name}</h2><h3>Quotation: ${q.quoteNumber}</h3><p>Dear ${q.customerName},</p><table style="width:100%;border-collapse:collapse;margin-top:12px;">${q.items.map((i) => `<tr><td style="padding:6px 4px;border-bottom:1px solid #f1f5f9;">${i.name} x${i.quantity}</td><td style="text-align:right;padding:6px 4px;border-bottom:1px solid #f1f5f9;">${formatCurrency(i.unitPrice * i.quantity, selectedCompany?.currency)}</td></tr>`).join('')}</table><p style="font-weight:700;margin-top:12px;">Total: ${formatCurrency(q.total, selectedCompany?.currency)}</p><p style="color:#64748b;">Valid Until: ${q.validUntil || 'N/A'}</p><p style="color:#94a3b8;font-size:12px;">Please reply to confirm. Thank you!</p></div>` });
+                        if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
+                      }} className="text-[10px] text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><i className="bi bi-envelope"></i></button>
                       <button onClick={() => onDeleteSalesQuotation(q.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
                   </td>
@@ -236,6 +253,20 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <button onClick={() => setViewCust(c)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
+                      {c.phone && <button title="Send SMS to customer" onClick={async () => {
+                        const msg = await modalPrompt(`SMS message to ${c.name}:`, { placeholder: `Hi ${c.name}, ...`, variant: 'info' });
+                        if (!msg) return;
+                        const res = await sendSMS({ company: selectedCompany, to: c.phone, message: `[${selectedCompany.name}] ${msg}` });
+                        if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
+                      }} className="text-[10px] text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"><i className="bi bi-chat-left-dots"></i></button>}
+                      {c.email && <button title="Send Email to customer" onClick={async () => {
+                        const subject = await modalPrompt(`Email subject to ${c.name}:`, { placeholder: `Update from ${selectedCompany.name}`, variant: 'info' });
+                        if (!subject) return;
+                        const body = await modalPrompt('Message body:', { placeholder: 'Dear customer, ...', variant: 'info' });
+                        if (!body) return;
+                        const res = await sendEmail({ company: selectedCompany, to: c.email, subject, htmlBody: `<div style="font-family:sans-serif;padding:20px;">${body.replace(/\n/g,'<br>')}<br><br><span style="color:#94a3b8;font-size:12px;">— ${selectedCompany.name}</span></div>` });
+                        if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
+                      }} className="text-[10px] text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><i className="bi bi-envelope"></i></button>}
                       <button onClick={() => onDeleteSalesCustomer(c.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
                   </td>

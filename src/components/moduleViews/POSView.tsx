@@ -1,3 +1,6 @@
+import { sendSMS } from '../../utils/sms';
+import { sendEmail } from '../../utils/email';
+import { modalPrompt, modalAlert, toast } from '../../utils/modal';
 import { formatCurrency } from '../../utils/currency';
 import React, { useState } from 'react';
 import { ModuleViewsProps, PageHeader, Badge, TableHead, PrimaryBtn, SecBtn, StatCard, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
@@ -205,7 +208,31 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             )}
             <div className="flex justify-between fs-sm fw-bold text-slate-900 mt-2"><span>TOTAL</span><span>{formatCurrency(receipt.total, selectedCompany?.currency)}</span></div>
             <div className="text-[10px] text-slate-400 mt-3">Ref: {receipt.ref}</div>
-            <PrimaryBtn onClick={() => { setReceipt(null); setCart([]); setDiscount(0); }}>New Transaction</PrimaryBtn>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <PrimaryBtn onClick={() => { setReceipt(null); setCart([]); setDiscount(0); }}>New Transaction</PrimaryBtn>
+              <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 fs-xs fw-semibold transition-all cursor-pointer" onClick={async () => {
+                const mobile = await modalPrompt('Send SMS receipt. Enter customer phone number:', { placeholder: '+233240000000', variant: 'info' });
+                if (!mobile) return;
+                const res = await sendSMS({
+                  company: selectedCompany,
+                  to: mobile,
+                  message: `[${selectedCompany.name}] POS Receipt #${receipt.ref} | Total Paid: ${formatCurrency(receipt.total, selectedCompany?.currency)} | ${receipt.ts}. Thank you!`
+                });
+                if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
+              }}><i className="bi bi-chat-left-dots"></i> SMS Receipt</button>
+              <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-violet-600 hover:text-white hover:border-violet-600 fs-xs fw-semibold transition-all cursor-pointer" onClick={async () => {
+                const emailAddr = await modalPrompt('Send Email receipt. Enter customer email address:', { placeholder: 'customer@example.com', variant: 'info' });
+                if (!emailAddr) return;
+                const itemRows = cart.map(i => `<tr><td style="padding:6px 4px;border-bottom:1px solid #f1f5f9;">${i.name} x${i.qty}</td><td style="text-align:right;padding:6px 4px;border-bottom:1px solid #f1f5f9;">${formatCurrency(i.price * i.qty, selectedCompany?.currency)}</td></tr>`).join('');
+                const res = await sendEmail({
+                  company: selectedCompany,
+                  to: emailAddr,
+                  subject: `POS Receipt #${receipt.ref} — ${selectedCompany.name}`,
+                  htmlBody: `<div style="font-family:sans-serif;padding:20px;border:1px solid #e2e8f0;border-radius:12px;max-width:480px;"><h2>${selectedCompany.name}</h2><h3>Sales Receipt: #${receipt.ref}</h3><p style="color:#64748b;font-size:13px;">${receipt.ts}</p><table style="width:100%;border-collapse:collapse;margin-top:12px;">${itemRows}</table>${discount > 0 ? `<p style="color:#ef4444;">Discount: -${discount}%</p>` : ''}<p style="font-weight:700;font-size:16px;margin-top:12px;">Total Paid: ${formatCurrency(receipt.total, selectedCompany?.currency)}</p><p style="color:#94a3b8;font-size:12px;margin-top:16px;">Thank you for shopping with us!</p></div>`
+                });
+                if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
+              }}><i className="bi bi-envelope"></i> Email Receipt</button>
+            </div>
           </div>
         ) : (
           <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
