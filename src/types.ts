@@ -21,6 +21,10 @@ export interface Company {
   companyLogo?: string;
   companySignature?: string;
   loginImages?: string[];
+  smsProvider?: 'Twilio' | 'Arkesel' | 'Hubtel' | 'Termii' | 'Infobip' | 'Custom';
+  smsApiKey?: string;
+  smsApiSecret?: string;
+  smsSenderId?: string;
   createdAt: string;
 }
 
