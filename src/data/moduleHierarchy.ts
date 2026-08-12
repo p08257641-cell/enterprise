@@ -22,6 +22,7 @@ export const MODULE_HIERARCHY: MainModuleItem[] = [
       { id: 'admin-approvals', label: 'Approval Workflows' },
       { id: 'admin-settings', label: 'Settings' },
       { id: 'admin-evat', label: 'E-VAT Settings' },
+      { id: 'admin-integrations', label: 'Integrations' },
       { id: 'pending-approvals', label: 'Pending Approvals' },
     ],
   },

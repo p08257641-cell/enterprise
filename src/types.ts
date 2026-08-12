@@ -33,6 +33,16 @@ export interface Company {
   emailApiKey?: string;
   emailFromAddress?: string;
   emailFromName?: string;
+  // WhatsApp Business Cloud API
+  whatsappApiKey?: string;
+  whatsappPhoneNumberId?: string;
+  whatsappBusinessAccountId?: string;
+  // External Integrations
+  webhookSecret?: string;
+  websiteIntegrationEnabled?: boolean;
+  shopifyIntegrationEnabled?: boolean;
+  woocommerceIntegrationEnabled?: boolean;
+  zapierIntegrationEnabled?: boolean;
   createdAt: string;
 }
 

@@ -3,6 +3,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { modalAlert, modalPrompt, toast } from '../../utils/modal';
 import { sendSMS } from '../../utils/sms';
+import { sendWhatsApp } from '../../utils/whatsapp';
 import { sendEmail } from '../../utils/email';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { MODULE_HIERARCHY } from '../../data/moduleHierarchy';
@@ -27,13 +28,22 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [emailFromName, setEmailFromName] = useState(selectedCompany?.emailFromName || '');
   const [testingEmail, setTestingEmail] = useState(false);
 
+  // WhatsApp
+  const [waApiKey, setWaApiKey] = useState(selectedCompany?.whatsappApiKey || '');
+  const [waPhoneNumberId, setWaPhoneNumberId] = useState(selectedCompany?.whatsappPhoneNumberId || '');
+  const [waBusinessAccountId, setWaBusinessAccountId] = useState(selectedCompany?.whatsappBusinessAccountId || '');
+  const [testingWa, setTestingWa] = useState(false);
+
+  // Integrations
+  const [webhookSecret] = useState(selectedCompany?.webhookSecret || ('whs_' + selectedCompany.id.replace(/-/g, '').slice(0, 24)));
+
   const isAdmin = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
   const localBranches = branches.filter(b => b.companyId === selectedCompany.id);
 
-  const [adminTab, setAdminTab] = useState<'branches' | 'departments' | 'users' | 'roles' | 'approvals' | 'settings' | 'evat'>(() => {
+  const [adminTab, setAdminTab] = useState<'branches' | 'departments' | 'users' | 'roles' | 'approvals' | 'settings' | 'evat' | 'integrations'>(() => {
     if (activeView === 'admin-users') return 'users';
     if (activeView === 'admin-roles') return 'roles';
     if (activeView === 'admin-branches') return 'branches';
