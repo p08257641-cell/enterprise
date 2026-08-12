@@ -170,7 +170,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'admin-approvals', label: 'Approval Workflows', viewId: 'admin-approvals', iconClass: 'bi bi-check2-square' },
             { id: 'admin-settings', label: 'Settings', viewId: 'admin-settings', iconClass: 'bi bi-toggles' },
             { id: 'admin-evat', label: 'E-VAT Settings', viewId: 'admin-evat', iconClass: 'bi bi-receipt-cutoff' },
-            { id: 'admin-integrations', label: 'Integrations', viewId: 'admin-integrations', iconClass: 'bi bi-plug' },
             { id: 'pending-approvals', label: 'Pending Approvals', viewId: 'pending-approvals', iconClass: 'bi bi-clipboard-check' },
           ]
         },

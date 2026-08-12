@@ -185,6 +185,36 @@ const [deptParent, setDeptParent] = useState('');
       <div>
         <PageHeader title="Administration" subtitle="Company configuration, branch management, users, roles and system settings." />
 
+        {/* ── Top Tab Bar ─────────────────────────────────────────────── */}
+        <div className="flex items-center gap-1 overflow-x-auto mb-6 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-xs">
+          {[
+            { id: 'branches', label: 'Branches', icon: 'bi bi-geo-alt' },
+            { id: 'departments', label: 'Departments', icon: 'bi bi-diagram-3' },
+            { id: 'users', label: 'Users', icon: 'bi bi-people' },
+            { id: 'roles', label: 'Roles', icon: 'bi bi-shield-lock' },
+            { id: 'approvals', label: 'Approvals', icon: 'bi bi-check2-square' },
+            { id: 'settings', label: 'Settings', icon: 'bi bi-toggles' },
+            { id: 'evat', label: 'E-VAT', icon: 'bi bi-receipt-cutoff' },
+            { id: 'integrations', label: 'Integrations', icon: 'bi bi-plug', highlight: true },
+          ].map((tab: any) => (
+            <button
+              key={tab.id}
+              onClick={() => setAdminTab(tab.id as any)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] fw-semibold whitespace-nowrap transition-all cursor-pointer ${
+                adminTab === tab.id
+                  ? (tab.highlight ? 'bg-violet-600 text-white shadow-sm' : 'bg-slate-900 text-white shadow-sm')
+                  : (tab.highlight ? 'text-violet-600 hover:bg-violet-50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700')
+              }`}
+            >
+              <i className={tab.icon}></i>
+              {tab.label}
+              {tab.highlight && adminTab !== tab.id && (
+                <span className="ml-0.5 flex h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {adminTab === 'branches' && (
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
