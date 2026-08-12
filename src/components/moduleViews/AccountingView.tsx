@@ -392,7 +392,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{acc.code}</td>
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{acc.name}</td>
                         <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">${(acc.balance ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">{formatCurrency(acc.balance ?? 0, selectedCompany?.currency)}</td>
                         <td className="px-4 py-3 text-right">
                           <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer mr-2"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
                           <button onClick={async e => { e.stopPropagation(); if (await modalConfirm('Delete this account?', { variant: 'danger' })) onDeleteGLAccount(acc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer mr-2">Delete</button>
@@ -413,7 +413,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     return (
                       <div key={type} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
                         <div className="flex flex-wrap items-center gap-2"><span className="h-2 w-2 rounded-full bg-slate-400"></span><span className="data-value text-slate-800">{type}</span></div>
-                        <div className="flex flex-wrap items-center gap-3"><span className="data-value-small text-slate-500">{typeAccounts.length} accounts</span><span className="data-value font-sans tabular-nums fw-semibold text-slate-900">${typeTotal.toLocaleString()}</span></div>
+                        <div className="flex flex-wrap items-center gap-3"><span className="data-value-small text-slate-500">{typeAccounts.length} accounts</span><span className="data-value font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(typeTotal, selectedCompany?.currency)}</span></div>
                       </div>
                     );
                   })}
@@ -437,7 +437,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs text-slate-700">{inv.customerName}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{inv.issueDate}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{inv.dueDate}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(inv.total ?? 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(inv.total ?? 0, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
                       <td className="px-4 py-3 text-right">
                         {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={e => { e.stopPropagation(); onPayInvoice(inv.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Pay</button>}
@@ -471,7 +471,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{exp.description}</td>
                       <td className="px-4 py-3"><Badge label={exp.category} variant="default" /></td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{exp.department}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(exp.amount ?? 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(exp.amount ?? 0, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3"><Badge label={exp.status} variant={exp.status === 'Approved' ? 'success' : exp.status === 'Rejected' ? 'danger' : 'warning'} /></td>
                       <td className="px-4 py-3 text-right">
                         {exp.status === 'Pending' && canApproveExpense && <button onClick={e => { e.stopPropagation(); onApproveExpense(exp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Approve</button>}
@@ -535,8 +535,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-lg fs-xs fw-semibold">
                     <span className="text-slate-600">Totals</span>
                     <div className="flex gap-4">
-                      <span className="font-sans tabular-nums text-emerald-600">DR: ${jeLines.reduce((s, l) => s + (l.debit || 0), 0).toLocaleString()}</span>
-                      <span className="font-sans tabular-nums text-rose-600">CR: ${jeLines.reduce((s, l) => s + (l.credit || 0), 0).toLocaleString()}</span>
+                      <span className="font-sans tabular-nums text-emerald-600">DR: {formatCurrency(jeLines.reduce((s, l) => s + (l.debit || 0), 0), selectedCompany?.currency)}</span>
+                      <span className="font-sans tabular-nums text-rose-600">CR: {formatCurrency(jeLines.reduce((s, l) => s + (l.credit || 0), 0), selectedCompany?.currency)}</span>
                       {Math.abs(jeLines.reduce((s, l) => s + (l.debit || 0), 0) - jeLines.reduce((s, l) => s + (l.credit || 0), 0)) < 0.01 ? <span className="text-emerald-600"><i className="bi bi-check-circle"></i> Balanced</span> : <span className="text-rose-600"><i className="bi bi-exclamation-circle"></i> Unbalanced</span>}
                     </div>
                   </div>
@@ -564,8 +564,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="data-value-small text-slate-600 mb-1">{entry.description}</div>
                       <div className="data-value-small text-slate-400 mb-2">{entry.date} {entry.reference && `| Ref: ${entry.reference}`}</div>
                       <div className="flex gap-4 mb-2">
-                        <span className="data-value-small font-sans tabular-nums text-emerald-600">DR: ${entry.totalDebit.toLocaleString()}</span>
-                        <span className="data-value-small font-sans tabular-nums text-rose-600">CR: ${entry.totalCredit.toLocaleString()}</span>
+                        <span className="data-value-small font-sans tabular-nums text-emerald-600">DR: {formatCurrency(entry.totalDebit, selectedCompany?.currency)}</span>
+                        <span className="data-value-small font-sans tabular-nums text-rose-600">CR: {formatCurrency(entry.totalCredit, selectedCompany?.currency)}</span>
                       </div>
                       {entry.status === 'Draft' && canPostJE && <div className="flex flex-wrap gap-2"><button onClick={() => onPostJournalEntry(entry.id)} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-slate-800">Post</button></div>}
                       {entry.status === 'Posted' && canApproveJE && <div className="flex flex-wrap gap-2"><button onClick={() => onApproveJournalEntry(entry.id)} className="data-value-small fw-semibold bg-emerald-600 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-emerald-700">Approve</button><button onClick={() => onVoidJournalEntry(entry.id)} className="data-value-small fw-semibold bg-white border border-slate-200 text-slate-600 px-3 py-1 rounded-lg cursor-pointer hover:bg-slate-50">Void</button></div>}
@@ -585,7 +585,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <StatCard label="Total Debits" value={formatCurrency(totalDebits, selectedCompany?.currency)} icon="bi bi-arrow-down-circle" sub="Sum of all debit balances" accent />
               <StatCard label="Total Credits" value={formatCurrency(totalCredits, selectedCompany?.currency)} icon="bi bi-arrow-up-circle" sub="Sum of all credit balances" color="text-emerald-600" />
             </div>
-            {Math.abs(totalDebits - totalCredits) > 0.01 && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl fs-xs text-rose-700 fw-semibold"><i className="bi bi-exclamation-triangle mr-1"></i> Trial balance is NOT balanced! Difference: ${Math.abs(totalDebits - totalCredits).toLocaleString()}</div>}
+            {Math.abs(totalDebits - totalCredits) > 0.01 && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl fs-xs text-rose-700 fw-semibold"><i className="bi bi-exclamation-triangle mr-1"></i> Trial balance is NOT balanced! Difference: {formatCurrency(Math.abs(totalDebits - totalCredits), selectedCompany?.currency)}</div>}
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Account Code' }, { label: 'Account Name' }, { label: 'Type' }, { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Actions', right: true }]} />
@@ -604,8 +604,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   ))}
                   <tr className="bg-slate-50 fw-bold">
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900" colSpan={3}>TOTAL</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">${totalDebits.toLocaleString()}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">${totalCredits.toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">{formatCurrency(totalDebits, selectedCompany?.currency)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">{formatCurrency(totalCredits, selectedCompany?.currency)}</td>
                     <td className="px-4 py-3"></td>
                   </tr>
                 </tbody>
@@ -627,7 +627,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     return (
                       <div key={type} className="flex justify-between py-2 border-b border-slate-100">
                         <span className="text-slate-600">{type}s</span>
-                        <span className="font-sans tabular-nums fw-semibold text-slate-900">${typeTotal.toLocaleString()}</span>
+                        <span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(typeTotal, selectedCompany?.currency)}</span>
                       </div>
                     );
                   })}
@@ -636,9 +636,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
                 <h3 className="section-title text-slate-500 mb-4">Income Statement</h3>
                 <div className="space-y-2 fs-xs">
-                  <div className="flex justify-between py-2 border-b border-slate-100"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums fw-semibold text-emerald-600">+${(revAcc?.balance ?? 0).toLocaleString()}</span></div>
-                  <div className="flex justify-between py-2 border-b border-slate-100"><span className="text-slate-600">Expenses</span><span className="font-sans tabular-nums fw-semibold text-rose-600">-${totalExpenses.toLocaleString()}</span></div>
-                  <div className="flex justify-between py-2 fw-bold"><span className="text-slate-900">Net Income</span><span className="font-sans tabular-nums text-slate-900">${((revAcc?.balance ?? 0) - totalExpenses).toLocaleString()}</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-100"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums fw-semibold text-emerald-600">+{formatCurrency(revAcc?.balance ?? 0, selectedCompany?.currency)}</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-100"><span className="text-slate-600">Expenses</span><span className="font-sans tabular-nums fw-semibold text-rose-600">-{formatCurrency(totalExpenses, selectedCompany?.currency)}</span></div>
+                  <div className="flex justify-between py-2 fw-bold"><span className="text-slate-900">Net Income</span><span className="font-sans tabular-nums text-slate-900">{formatCurrency((revAcc?.balance ?? 0) - totalExpenses, selectedCompany?.currency)}</span></div>
                 </div>
               </div>
             </div>
@@ -760,8 +760,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{bill.billNumber}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{bill.vendorName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500 max-w-[200px] truncate">{bill.description}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(bill.total ?? 0).toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">${bill.amountPaid.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(bill.total ?? 0, selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{formatCurrency(bill.amountPaid, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{bill.dueDate}</td>
                       <td className="px-4 py-3"><Badge label={bill.status} variant={bill.status === 'Paid' ? 'success' : bill.status === 'Overdue' ? 'danger' : bill.status === 'Approved' ? 'info' : bill.status === 'Partially Paid' ? 'warning' : 'default'} /></td>
                       <td className="px-4 py-3 text-right space-x-1">
@@ -796,7 +796,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <tr key={inv.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{inv.invoiceNumber}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{inv.customerName}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(inv.total ?? 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(inv.total ?? 0, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{inv.issueDate}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{inv.dueDate}</td>
                       <td className="px-4 py-3">
@@ -834,7 +834,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       {canEditBankAccount && <button onClick={() => { setEditingBankAccount(ba); setBaName(ba.name); setBaBankName(ba.bankName); setBaAccountNumber(ba.accountNumber); setBaAccountType(ba.accountType); setBaBalance(String(ba.balance ?? 0)); setShowBankAccountModal(true); }} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i></button>}
                     </div>
                   </div>
-                  <p className="fs-lg fw-bold text-slate-900 font-sans tabular-nums">${(ba.balance ?? 0).toLocaleString()}</p>
+                  <p className="fs-lg fw-bold text-slate-900 font-sans tabular-nums">{formatCurrency(ba.balance ?? 0, selectedCompany?.currency)}</p>
                   <p className="fs-xs text-slate-500 mt-1">{ba.bankName} {ba.accountNumber}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">{ba.name}</p>
                 </div>
@@ -852,7 +852,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs text-slate-500">{tx.date}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{tx.description}</td>
                       <td className="px-4 py-3"><Badge label={tx.type} variant={tx.type === 'Credit' ? 'success' : 'danger'} /></td>
-                      <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-rose-600'}`}>{tx.type === 'Credit' ? '+' : '-'}${(tx.amount ?? 0).toLocaleString()}</td>
+                      <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-rose-600'}`}>{tx.type === 'Credit' ? '+' : '-'}{formatCurrency(tx.amount ?? 0, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3">{tx.reconciled ? <i className="bi bi-check-circle-fill text-emerald-500 fs-sm"></i> : <i className="bi bi-circle text-slate-300 fs-sm"></i>}</td>
                       <td className="px-4 py-3 text-[10px] text-slate-400 font-mono">{tx.reference || '-'}</td>
                       <td className="px-4 py-3 text-right">
@@ -874,9 +874,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     {localBankReconciliations.map(rec => (
                       <tr key={rec.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs text-slate-500">{rec.periodStartDate} to {rec.periodEndDate}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(rec.statementBalance ?? 0).toLocaleString()}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(rec.bookBalance ?? 0).toLocaleString()}</td>
-                        <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${Math.abs(rec.reconciledDifference ?? 0) < 0.01 ? 'text-emerald-600' : 'text-rose-600'}`}>${Math.abs(rec.reconciledDifference ?? 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency((rec.statementBalance ?? 0), selectedCompany?.currency)}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency((rec.bookBalance ?? 0), selectedCompany?.currency)}</td>
+                        <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${Math.abs(rec.reconciledDifference ?? 0) < 0.01 ? 'text-emerald-600' : 'text-rose-600'}`}>{formatCurrency(Math.abs(rec.reconciledDifference ?? 0), selectedCompany?.currency)}</td>
                         <td className="px-4 py-3"><Badge label={rec.status} variant={rec.status === 'Completed' ? 'success' : 'danger'} /></td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{resolveUserName(rec.completedBy || '')}</td>
                         <td className="px-4 py-3 text-right">
@@ -910,8 +910,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900 font-mono">{asset.assetCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{asset.name}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{asset.category}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(asset.purchasePrice ?? 0).toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(asset.currentBookValue ?? 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(asset.purchasePrice ?? 0, selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(asset.currentBookValue ?? 0, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{asset.location}</td>
                       <td className="px-4 py-3"><Badge label={asset.status} variant={asset.status === 'Active' ? 'success' : asset.status === 'Disposed' ? 'danger' : 'default'} /></td>
                       <td className="px-4 py-3 text-right">
@@ -936,9 +936,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <tr key={de.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{de.assetCode} - {de.assetName}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{de.period}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600">${(de.depreciationAmount ?? 0).toLocaleString()}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">${(de.accumulatedDepreciation ?? 0).toLocaleString()}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${(de.bookValue ?? 0).toLocaleString()}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600">{formatCurrency(de.depreciationAmount ?? 0, selectedCompany?.currency)}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{formatCurrency(de.accumulatedDepreciation ?? 0, selectedCompany?.currency)}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency((de.bookValue ?? 0), selectedCompany?.currency)}</td>
                         <td className="px-4 py-3"><Badge label={de.status} variant={de.status === 'Posted' ? 'success' : 'warning'} /></td>
                         <td className="px-4 py-3 text-right">
                           <button onClick={e => { e.stopPropagation(); accDeprModal.open(de); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
@@ -974,8 +974,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <tr key={bud.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{bud.name}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{bud.accountCode} - {bud.accountName}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${budgetAmt.toLocaleString()}</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">${actualAmt.toLocaleString()}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(budgetAmt, selectedCompany?.currency)}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(actualAmt, selectedCompany?.currency)}</td>
                         <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${varianceAmt >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{varianceAmt >= 0 ? '+' : ''}${varianceAmt.toLocaleString()}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-2">
@@ -1015,8 +1015,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <h3 className="fs-sm fw-bold text-slate-900 mb-1">{cc.name}</h3>
                     <p className="text-[10px] text-slate-400 mb-3">{cc.departmentName} · {cc.managerName}</p>
                     <div className="space-y-2">
-                      <div className="flex justify-between fs-xs"><span className="text-slate-500">Budget</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${ccBudget.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-xs"><span className="text-slate-500">Actual Spend</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${ccActual.toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-xs"><span className="text-slate-500">Budget</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(ccBudget, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-xs"><span className="text-slate-500">Actual Spend</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(ccActual, selectedCompany?.currency)}</span></div>
                       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${pctUsed > 90 ? 'bg-rose-500' : pctUsed > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(pctUsed, 100)}%` }}></div></div>
                       <div className="flex justify-between text-[10px]"><span className="text-slate-400">{pctUsed}% utilized</span><span className={`fw-semibold ${ccBudget - ccActual >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{ccBudget - ccActual >= 0 ? `${formatCurrency(ccBudget - ccActual, selectedCompany?.currency)} remaining` : `${formatCurrency(Math.abs(ccBudget - ccActual), selectedCompany?.currency)} over budget`}</span></div>
                     </div>
@@ -1103,10 +1103,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-4 fs-xs">
-                    <div><span className="text-slate-500 block">Taxable Income</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${(tr.taxableIncome ?? 0).toLocaleString()}</span></div>
-                    <div><span className="text-slate-500 block">Tax Due</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${(tr.taxDue ?? 0).toLocaleString()}</span></div>
-                    <div><span className="text-slate-500 block">Credits</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${(tr.credits ?? 0).toLocaleString()}</span></div>
-                    <div><span className="text-slate-500 block">Net Payable</span><span className="font-sans tabular-nums fw-bold text-slate-900">${(tr.netPayable ?? 0).toLocaleString()}</span></div>
+                    <div><span className="text-slate-500 block">Taxable Income</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency((tr.taxableIncome ?? 0), selectedCompany?.currency)}</span></div>
+                    <div><span className="text-slate-500 block">Tax Due</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency((tr.taxDue ?? 0), selectedCompany?.currency)}</span></div>
+                    <div><span className="text-slate-500 block">Credits</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency((tr.credits ?? 0), selectedCompany?.currency)}</span></div>
+                    <div><span className="text-slate-500 block">Net Payable</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency((tr.netPayable ?? 0), selectedCompany?.currency)}</span></div>
                   </div>
                   {tr.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {tr.filedDate} by {tr.filedBy}</p>}
                   {canManageTax && <div className="flex gap-2 mt-3">
@@ -1141,7 +1141,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 fs-xs">
-                    <div><span className="text-slate-500 block">Amount</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${(tx.amount ?? 0).toLocaleString()}</span></div>
+                    <div><span className="text-slate-500 block">Amount</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency((tx.amount ?? 0), selectedCompany?.currency)}</span></div>
                     <div><span className="text-slate-500 block">Currency</span><span className="fw-semibold text-slate-900">{tx.currency}</span></div>
                     <div><span className="text-slate-500 block">Date</span><span className="fw-semibold text-slate-900">{tx.date}</span></div>
                   </div>
@@ -1316,12 +1316,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   const net = revenue - (cogs + opex);
                   return (
                     <>
-                      <div className="flex justify-between fs-sm"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums fw-bold text-emerald-600">${revenue.toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm"><span className="text-slate-600">Revenue</span><span className="font-sans tabular-nums fw-bold text-emerald-600">{formatCurrency(revenue, selectedCompany?.currency)}</span></div>
                       <div className="flex justify-between fs-sm"><span className="text-slate-600">Cost of Goods Sold</span><span className="font-sans tabular-nums fw-bold text-slate-900">(${cogs.toLocaleString()})</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-semibold text-slate-900">Gross Profit</span><span className="font-sans tabular-nums fw-bold text-slate-900">${grossProfit.toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-semibold text-slate-900">Gross Profit</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(grossProfit, selectedCompany?.currency)}</span></div>
                       <div className="flex justify-between fs-sm"><span className="text-slate-600">Operating Expenses</span><span className="font-sans tabular-nums fw-bold text-slate-900">(${opex.toLocaleString()})</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-semibold text-slate-900">Operating Income</span><span className="font-sans tabular-nums fw-bold text-slate-900">${(grossProfit - opex).toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-base border-t-2 border-slate-200 pt-3"><span className="fw-bold text-slate-900">Net Income</span><span className="font-sans tabular-nums fw-bold text-slate-900">${net.toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-semibold text-slate-900">Operating Income</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency((grossProfit - opex), selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-base border-t-2 border-slate-200 pt-3"><span className="fw-bold text-slate-900">Net Income</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(net, selectedCompany?.currency)}</span></div>
                     </>
                   );
                 })()}
@@ -1342,15 +1342,15 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <>
                       <h4 className="section-title text-slate-500">Assets</h4>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Total Assets</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${assets.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Total Assets</span><span className="font-sans tabular-nums fw-bold text-slate-900">${assets.toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Total Assets</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(assets, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Total Assets</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(assets, selectedCompany?.currency)}</span></div>
                       <h4 className="section-title text-slate-500 pt-4">Liabilities</h4>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Total Liabilities</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${liab.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Total Liabilities</span><span className="font-sans tabular-nums fw-bold text-slate-900">${liab.toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Total Liabilities</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(liab, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Total Liabilities</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(liab, selectedCompany?.currency)}</span></div>
                       <h4 className="section-title text-slate-500 pt-4">Equity</h4>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Total Equity</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${eq.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Total Equity</span><span className="font-sans tabular-nums fw-bold text-slate-900">${eq.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-base border-t-2 border-slate-900 pt-3"><span className="fw-bold text-slate-900">Total Liabilities + Equity</span><span className="font-sans tabular-nums fw-bold text-slate-900">${(liab + eq).toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Total Equity</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(eq, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Total Equity</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(eq, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-base border-t-2 border-slate-900 pt-3"><span className="fw-bold text-slate-900">Total Liabilities + Equity</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(liab + eq, selectedCompany?.currency)}</span></div>
                     </>
                   );
                 })()}
@@ -1371,16 +1371,16 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <>
                       <h4 className="section-title text-slate-500">Operating Activities</h4>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Net Income</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${netIncome.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Depreciation</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${depreciation.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Cash from Operations</span><span className="font-sans tabular-nums fw-bold text-slate-900">${(netIncome + depreciation).toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Net Income</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(netIncome, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Depreciation</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(depreciation, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Cash from Operations</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(netIncome + depreciation, selectedCompany?.currency)}</span></div>
                       <h4 className="section-title text-slate-500 pt-4">Investing Activities</h4>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Capital Expenditures (Fixed Assets)</span><span className="font-sans tabular-nums fw-semibold text-slate-900">(${localFixedAssets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0).toLocaleString()})</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Cash from Investing</span><span className="font-sans tabular-nums fw-bold text-slate-900">(${localFixedAssets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0).toLocaleString()})</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Capital Expenditures (Fixed Assets)</span><span className="font-sans tabular-nums fw-semibold text-slate-900">({formatCurrency(localFixedAssets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0), selectedCompany?.currency)})</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Cash from Investing</span><span className="font-sans tabular-nums fw-bold text-slate-900">({formatCurrency(localFixedAssets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0), selectedCompany?.currency)})</span></div>
                       <h4 className="section-title text-slate-500 pt-4">Financing Activities</h4>
-                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Net Income (Retained)</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${netIncome.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Cash from Financing</span><span className="font-sans tabular-nums fw-bold text-slate-900">${netIncome.toLocaleString()}</span></div>
-                      <div className="flex justify-between fs-base border-t-2 border-slate-900 pt-3"><span className="fw-bold text-slate-900">Net Change in Cash</span><span className="font-sans tabular-nums fw-bold text-slate-900">${(netIncome + depreciation).toLocaleString()}</span></div>
+                      <div className="flex justify-between fs-sm ml-4"><span className="text-slate-600">Net Income (Retained)</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(netIncome, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-sm border-t border-slate-200 pt-2"><span className="fw-bold text-slate-900">Cash from Financing</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(netIncome, selectedCompany?.currency)}</span></div>
+                      <div className="flex justify-between fs-base border-t-2 border-slate-900 pt-3"><span className="fw-bold text-slate-900">Net Change in Cash</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(netIncome + depreciation, selectedCompany?.currency)}</span></div>
                     </>
                   );
                 })()}
@@ -1418,18 +1418,18 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       return (
                         <tr key={inv.id} className="border-b border-slate-100">
                           <td className="py-2 fw-semibold text-slate-900">{inv.customerName}</td>
-                          <td className="text-right font-sans tabular-nums">${b[0].toLocaleString()}</td>
-                          <td className="text-right font-sans tabular-nums">${b[1].toLocaleString()}</td>
-                          <td className="text-right font-sans tabular-nums">${b[2].toLocaleString()}</td>
-                          <td className="text-right font-sans tabular-nums">${b[3].toLocaleString()}</td>
-                          <td className="text-right font-sans tabular-nums">${b[4].toLocaleString()}</td>
-                          <td className="text-right font-sans tabular-nums fw-bold">${total.toLocaleString()}</td>
+                          <td className="text-right font-sans tabular-nums">{formatCurrency(b[0], selectedCompany?.currency)}</td>
+                          <td className="text-right font-sans tabular-nums">{formatCurrency(b[1], selectedCompany?.currency)}</td>
+                          <td className="text-right font-sans tabular-nums">{formatCurrency(b[2], selectedCompany?.currency)}</td>
+                          <td className="text-right font-sans tabular-nums">{formatCurrency(b[3], selectedCompany?.currency)}</td>
+                          <td className="text-right font-sans tabular-nums">{formatCurrency(b[4], selectedCompany?.currency)}</td>
+                          <td className="text-right font-sans tabular-nums fw-bold">{formatCurrency(total, selectedCompany?.currency)}</td>
                         </tr>
                       );
                     });
                     if (rows.length === 0) rows.push(<tr key="none"><td colSpan={7} className="py-6 text-center text-slate-400">No outstanding receivables.</td></tr>);
                     return rows.concat(
-                      <tr key="tot" className="border-t-2 border-slate-900 fw-bold"><td className="py-2 text-slate-900">Total</td><td className="text-right font-sans tabular-nums">${totals[0].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[1].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[2].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[3].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[4].toLocaleString()}</td><td className="text-right font-sans tabular-nums">${totals[5].toLocaleString()}</td></tr>
+                      <tr key="tot" className="border-t-2 border-slate-900 fw-bold"><td className="py-2 text-slate-900">Total</td><td className="text-right font-sans tabular-nums">{formatCurrency(totals[0], selectedCompany?.currency)}</td><td className="text-right font-sans tabular-nums">{formatCurrency(totals[1], selectedCompany?.currency)}</td><td className="text-right font-sans tabular-nums">{formatCurrency(totals[2], selectedCompany?.currency)}</td><td className="text-right font-sans tabular-nums">{formatCurrency(totals[3], selectedCompany?.currency)}</td><td className="text-right font-sans tabular-nums">{formatCurrency(totals[4], selectedCompany?.currency)}</td><td className="text-right font-sans tabular-nums">{formatCurrency(totals[5], selectedCompany?.currency)}</td></tr>
                     );
                   })()}
                 </tbody>
@@ -1449,7 +1449,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div><Label>Subtotal (USD)</Label><Input type="number" value={invSubtotal} onChange={e => setInvSubtotal(e.target.value)} /></div>
                   <div><Label>Tax Amount</Label><Input type="number" value={invTax} onChange={e => setInvTax(e.target.value)} /></div>
                 </div>
-                <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg fs-xs flex justify-between fw-semibold"><span className="text-slate-600">Total Amount</span><span className="font-sans tabular-nums text-slate-900">${(Number(invSubtotal) + Number(invTax)).toLocaleString()}</span></div>
+                <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg fs-xs flex justify-between fw-semibold"><span className="text-slate-600">Total Amount</span><span className="font-sans tabular-nums text-slate-900">{formatCurrency(Number(invSubtotal) + Number(invTax), selectedCompany?.currency)}</span></div>
                 <PrimaryBtn type="submit" icon="bi bi-file-earmark-plus">Create Invoice</PrimaryBtn>
               </form>
             </div>
@@ -1803,7 +1803,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
                   <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                     <span className="fs-xs fw-semibold text-slate-700">Budget Line Items</span>
-                    <span className="fs-xs text-slate-500">Total: <span className="fw-semibold text-slate-900">${budItems.reduce((s, i) => s + (Number(i.amount) || 0), 0).toLocaleString()}</span></span>
+                    <span className="fs-xs text-slate-500">Total: <span className="fw-semibold text-slate-900">{formatCurrency(budItems.reduce((s, i) => s + (Number(i.amount) || 0), 0), selectedCompany?.currency)}</span></span>
                   </div>
                   {budItems.length > 0 && (
                     <div className="divide-y divide-slate-100">
@@ -1814,7 +1814,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                             {item.department && <span className="fs-xs text-slate-500 ml-2">/ {item.department}</span>}
                             {item.notes && <p className="text-[10px] text-slate-400 mt-0.5">{item.notes}</p>}
                           </div>
-                          <span className="fs-xs font-sans tabular-nums text-slate-900">${(Number(item.amount) || 0).toLocaleString()}</span>
+                          <span className="fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(Number(item.amount) || 0, selectedCompany?.currency)}</span>
                           <button onClick={() => setBudItems(budItems.filter((_, i) => i !== idx))} className="text-slate-300 hover:text-rose-500 cursor-pointer transition-colors"><i className="bi bi-trash fs-xs"></i></button>
                         </div>
                       ))}
@@ -2341,8 +2341,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Budget Amount', key: 'budgetAmt', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Amounts' },
             { label: 'Actual Amount', key: 'actualAmt', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Amounts' },
             { label: 'Variance', key: 'varianceAmt', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-arrows-expand', section: 'Amounts' },
-            { label: 'Variance %', key: 'variancePercent', mono: true, format: (v) => `${Number(v || 0).toLocaleString()}%`, icon: 'bi bi-percent', section: 'Performance' },
-            { label: '% Used', key: 'pctUsed', mono: true, format: (v) => `${Number(v || 0)}%`, icon: 'bi bi-speedometer2', section: 'Performance' },
+            { label: 'Variance %', key: 'variancePercent', mono: true, format: (v) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-percent', section: 'Performance' },
+            { label: '% Used', key: 'pctUsed', mono: true, format: (v) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-speedometer2', section: 'Performance' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Performance' },
             { label: 'ID', key: 'id', mono: true, section: 'System' },
             { label: 'Line Items', key: 'items', full: true, icon: 'bi bi-list-task', format: (v) => {
@@ -2357,7 +2357,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         {it.department && <span className="fs-xs text-slate-500 ml-1.5">/ {it.department}</span>}
                         {it.notes && <p className="text-[10px] text-slate-400 mt-0.5">{it.notes}</p>}
                       </div>
-                      <span className="fs-xs font-sans tabular-nums text-slate-900">${Number(it.amount || 0).toLocaleString()}</span>
+                      <span className="fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(Number(it.amount || 0), selectedCompany?.currency)}</span>
                     </div>
                   ))}
                 </div>

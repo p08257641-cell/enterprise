@@ -166,7 +166,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.customerName}</td>
                   <td className="px-4 py-3 fs-xs text-slate-500">{o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{o.orderDate}</td>
-                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${o.total.toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(o.total, selectedCompany?.currency)}</td>
                   <td className="px-4 py-3"><Badge label={o.priority} variant={priorityVariant(o.priority)} /></td>
                   <td className="px-4 py-3"><Badge label={o.status} variant={statusVariant(o.status)} /></td>
                   <td className="px-4 py-3">
@@ -197,7 +197,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{q.customerName}</td>
                   <td className="px-4 py-3 fs-xs text-slate-500">{q.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{q.validUntil || '—'}</td>
-                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${q.total.toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(q.total, selectedCompany?.currency)}</td>
                   <td className="px-4 py-3"><Badge label={q.status} variant={statusVariant(q.status)} /></td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -230,7 +230,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3 fs-xs text-slate-500">{c.company || '—'}</td>
                   <td className="px-4 py-3 fs-xs text-slate-400">{c.email || '—'}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700">{c.totalOrders}</td>
-                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${c.totalSpend.toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(c.totalSpend, selectedCompany?.currency)}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{c.lastOrderDate || '—'}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -264,8 +264,8 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                     <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.repName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{t.month} {t.year}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${t.targetAmount.toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${t.actualAmount.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(t.targetAmount, selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(t.actualAmount, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="h-2 bg-slate-100 rounded-full overflow-hidden w-20">
@@ -307,7 +307,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="grid grid-cols-3 gap-3 mt-3">
                   <div><Label>Quantity</Label><Input type="number" value={form.itemQty} onChange={e => setForm({ ...form, itemQty: e.target.value })} /></div>
                   <div><Label>Unit Price ($)</Label><Input type="number" value={form.itemPrice} onChange={e => setForm({ ...form, itemPrice: e.target.value })} placeholder="0.00" /></div>
-                  <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">${((Number(form.itemQty) || 0) * (Number(form.itemPrice) || 0)).toLocaleString()}</div></div>
+                  <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">{formatCurrency(((Number(form.itemQty) || 0) * (Number(form.itemPrice) || 0)), selectedCompany?.currency)}</div></div>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -388,13 +388,13 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="grid grid-cols-3 gap-3 mt-3">
                         <div><Label>Quantity</Label><Input type="number" value={it.itemQty} onChange={e => setQuoteItems(quoteForm.items.map((x, i) => i === idx ? { ...x, itemQty: e.target.value } : x))} /></div>
                         <div><Label>Unit Price ($)</Label><Input type="number" value={it.itemPrice} onChange={e => setQuoteItems(quoteForm.items.map((x, i) => i === idx ? { ...x, itemPrice: e.target.value } : x))} placeholder="0.00" /></div>
-                        <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">${lineTotal.toLocaleString()}</div></div>
+                        <div><Label>Item Total</Label><div className="fs-sm fw-bold text-slate-900 mt-1">{formatCurrency(lineTotal, selectedCompany?.currency)}</div></div>
                       </div>
                     </div>
                   );
                 })}
                 <div className="flex justify-end pt-1">
-                  <div className="fs-xs fw-semibold text-slate-500">Subtotal: <span className="text-slate-900">${(quoteForm.items.reduce((s, it) => s + (Number(it.itemQty) || 0) * (Number(it.itemPrice) || 0), 0)).toLocaleString()}</span></div>
+                  <div className="fs-xs fw-semibold text-slate-500">Subtotal: <span className="text-slate-900">{formatCurrency((quoteForm.items.reduce((s, it) => s + (Number(it.itemQty) || 0) * (Number(it.itemPrice) || 0), 0)), selectedCompany?.currency)}</span></div>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -503,8 +503,8 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-3 py-2 fs-xs text-slate-700">{item.name}</td>
                         <td className="px-3 py-2 fs-xs text-slate-500">{item.sku || '—'}</td>
                         <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">{item.quantity}</td>
-                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">${item.unitPrice?.toLocaleString()}</td>
-                        <td className="px-3 py-2 fs-xs text-slate-900 text-right font-sans tabular-nums fw-semibold">${item.total?.toLocaleString()}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">{formatCurrency(item.unitPrice || 0, selectedCompany?.currency)}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-900 text-right font-sans tabular-nums fw-semibold">{formatCurrency(item.total || 0, selectedCompany?.currency)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -611,8 +611,8 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-3 py-2 fs-xs text-slate-700">{item.name}</td>
                         <td className="px-3 py-2 fs-xs text-slate-500">{item.sku || '—'}</td>
                         <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">{item.quantity}</td>
-                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">${item.unitPrice?.toLocaleString()}</td>
-                        <td className="px-3 py-2 fs-xs text-slate-900 text-right font-sans tabular-nums fw-semibold">${item.total?.toLocaleString()}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-700 text-right font-sans tabular-nums">{formatCurrency(item.unitPrice || 0, selectedCompany?.currency)}</td>
+                        <td className="px-3 py-2 fs-xs text-slate-900 text-right font-sans tabular-nums fw-semibold">{formatCurrency(item.total || 0, selectedCompany?.currency)}</td>
                       </tr>
                     ))}
                   </tbody>

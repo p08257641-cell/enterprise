@@ -390,7 +390,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={item.name} className="space-y-1">
                   <div className="flex justify-between text-xs font-semibold text-slate-700">
                     <span>{item.name}</span>
-                    <span className="font-mono">${item.amount.toLocaleString()}</span>
+                    <span className="font-mono">{formatCurrency(item.amount, selectedCompany?.currency)}</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2">
                     <div

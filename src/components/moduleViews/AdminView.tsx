@@ -232,7 +232,7 @@ const [deptParent, setDeptParent] = useState('');
                             <span className="fs-sm text-slate-500">{parentName || '— Root'}</span>
                           </td>
                           <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">{dept.employeeCount} staff</td>
-                          <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">${dept.budget.toLocaleString()}</td>
+                          <td className="px-4 py-3.5 fs-sm font-sans tabular-nums text-slate-700">{formatCurrency(dept.budget, selectedCompany?.currency)}</td>
                           <td className="px-4 py-3.5 fs-sm text-slate-600">
                             {manager ? `${manager.firstName} ${manager.lastName}` : '—'}
                           </td>
@@ -1076,7 +1076,7 @@ const [deptParent, setDeptParent] = useState('');
             { label: 'Department', key: 'name', icon: 'bi bi-collection' },
             { label: 'Manager', key: 'managerName', icon: 'bi bi-person-vcard', section: 'Details' },
             { label: 'Reports To', key: 'parentName', icon: 'bi bi-arrow-up-right', section: 'Details' },
-            { label: 'Head Count', key: 'employeeCount', format: (v: number) => `${v} staff`, icon: 'bi bi-people', section: 'Details' },
+            { label: 'Head Count', key: 'employeeCount', format: (v) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-people', section: 'Details' },
             { label: 'Budget', key: 'budget', format: (v: number) => formatCurrency(v, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Details' },
           ]}
           title={r => r.name} subtitle={r => 'Department Details'}

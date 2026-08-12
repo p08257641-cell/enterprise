@@ -275,10 +275,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Gross Payroll</span><span className="font-sans tabular-nums fw-bold text-slate-900">${totalPayroll.toLocaleString()}</span></div>
-                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Tax Withholding (20%)</span><span className="font-sans tabular-nums text-rose-600">-${(totalPayroll * 0.2).toLocaleString()}</span></div>
-                    <div className="flex justify-between table-cell mb-2"><span className="text-slate-600">Benefits / Deductions</span><span className="table-cell-mono text-rose-600">-${(totalPayroll * 0.05).toLocaleString()}</span></div>
-                    <div className="border-t border-slate-200 pt-2 flex justify-between table-cell fw-bold"><span className="text-slate-900">Net Payroll Disbursement</span><span className="table-cell-mono text-slate-900">${(totalPayroll * 0.75).toLocaleString()}</span></div>
+                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Gross Payroll</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(totalPayroll, selectedCompany?.currency)}</span></div>
+                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Tax Withholding (20%)</span><span className="font-sans tabular-nums text-rose-600">-{formatCurrency((totalPayroll * 0.2), selectedCompany?.currency)}</span></div>
+                    <div className="flex justify-between table-cell mb-2"><span className="text-slate-600">Benefits / Deductions</span><span className="table-cell-mono text-rose-600">-{formatCurrency((totalPayroll * 0.05), selectedCompany?.currency)}</span></div>
+                    <div className="border-t border-slate-200 pt-2 flex justify-between table-cell fw-bold"><span className="text-slate-900">Net Payroll Disbursement</span><span className="table-cell-mono text-slate-900">{formatCurrency((totalPayroll * 0.75), selectedCompany?.currency)}</span></div>
                   </div>
                   <PrimaryBtn icon="bi bi-play-circle" onClick={() => setPayrollStep('review')}>Review & Process Payroll</PrimaryBtn>
                 </div>
@@ -553,9 +553,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{getEmployeeNameById(employees, slip.employeeId) || slip.employeeName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{slip.department}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-500">{slip.period}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${slip.gross.toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${slip.deductions.toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${slip.net.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{formatCurrency(slip.gross, selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-{formatCurrency(slip.deductions, selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{formatCurrency(slip.net, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -864,10 +864,10 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     return (
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${emp.salary.toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-${Math.round(totalCustomTax).toLocaleString()}</td>
-                      <td colSpan={3} className="px-4 py-3 fs-xs font-sans tabular-nums text-emerald-600 text-right">+${Math.round(totalCustomBenefit).toLocaleString()}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${net.toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{formatCurrency(emp.salary, selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">-{formatCurrency(Math.round(totalCustomTax), selectedCompany?.currency)}</td>
+                      <td colSpan={3} className="px-4 py-3 fs-xs font-sans tabular-nums text-emerald-600 text-right">+{formatCurrency(Math.round(totalCustomBenefit), selectedCompany?.currency)}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">{formatCurrency(net, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={(e) => { e.stopPropagation(); taxModal.open({ ...emp, net, taxesList: allTaxesBreakdown, benefitsList: allBenefitsBreakdown }); }}
@@ -911,7 +911,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">160h</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{otHours}h</td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${otRate}/hr</td>
-                        <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">${(otHours * otRate).toLocaleString()}</td>
+                        <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">{formatCurrency((otHours * otRate), selectedCompany?.currency)}</td>
                         <td className="px-4 py-3 fs-xs text-slate-500">HR Manager</td>
                         <td className="px-4 py-3 text-right">
                           <button

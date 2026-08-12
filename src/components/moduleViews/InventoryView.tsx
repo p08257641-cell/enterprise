@@ -74,7 +74,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 fs-xs text-slate-500">{item.warehouse}</td>
                     <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right ${isLow ? 'text-rose-600' : 'text-slate-900'}`}>{item.stockLevel}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400 text-right">{item.minStockLevel}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">${item.unitPrice.toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{formatCurrency(item.unitPrice, selectedCompany?.currency)}</td>
                     <td className="px-4 py-3"><Badge label={isLow ? 'Low Stock' : 'OK'} variant={isLow ? 'danger' : 'success'} /></td>
                     <td className="px-4 py-3 text-right">
                       <button
@@ -119,7 +119,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex items-center gap-2 mb-3"><i className="bi bi-building text-slate-400"></i><span className="fs-sm fw-bold text-slate-900">{wh}</span></div>
                 <div className="grid grid-cols-2 gap-3 fs-xs">
                   <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">SKUs</div><div className="font-sans tabular-nums fw-bold text-slate-900 mt-0.5">{items.length}</div></div>
-                  <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">Valuation</div><div className="font-sans tabular-nums fw-bold text-slate-900 mt-0.5">${val.toLocaleString()}</div></div>
+                  <div className="p-2.5 bg-slate-50 rounded-lg"><div className="data-value-small text-slate-400 uppercase tracking-wider">Valuation</div><div className="font-sans tabular-nums fw-bold text-slate-900 mt-0.5">{formatCurrency(val, selectedCompany?.currency)}</div></div>
                 </div>
               </div>
             );
@@ -220,8 +220,8 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 data-value-small font-sans tabular-nums text-slate-500">{item.sku}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{item.name}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{item.stockLevel.toLocaleString()}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${item.unitPrice.toFixed(2)}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">${(item.stockLevel * item.unitPrice).toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">{formatCurrency(item.unitPrice, selectedCompany?.currency)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{formatCurrency((item.stockLevel * item.unitPrice), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{item.warehouse}</td>
                     <td className="px-4 py-3 text-right">
                       <button

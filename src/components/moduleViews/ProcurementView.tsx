@@ -138,7 +138,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{o.vendorName}</td>
                   <td className="px-4 py-3 fs-xs text-slate-500 max-w-[160px] truncate">{o.item}</td>
                   <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{o.date}</td>
-                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${(o.total || 0).toLocaleString()}</td>
+                  <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency((o.total || 0), selectedCompany?.currency)}</td>
                   <td className="px-4 py-3"><Badge label={o.status} variant={o.status === 'Approved' || o.status === 'Received' ? 'success' : o.status === 'Cancelled' ? 'danger' : 'warning'} /></td>
                   <td className="px-4 py-3 text-right">
                     <button
@@ -280,7 +280,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             <div className="p-3 bg-slate-50 rounded-lg flex items-center justify-between">
               <span className="fs-xs text-slate-500">Estimated Total</span>
-              <span className="fs-sm fw-bold font-sans tabular-nums text-slate-900">${(Number(newQty) * Number(newUnitPrice)).toLocaleString()}</span>
+              <span className="fs-sm fw-bold font-sans tabular-nums text-slate-900">{formatCurrency((Number(newQty) * Number(newUnitPrice)), selectedCompany?.currency)}</span>
             </div>
             <div className="flex gap-2 pt-2">
               <PrimaryBtn onClick={submitPO} disabled={!newItem.trim()}>Submit Purchase Order</PrimaryBtn>

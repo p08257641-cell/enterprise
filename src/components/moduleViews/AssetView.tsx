@@ -109,7 +109,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{a.name}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{a.category}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{a.location}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${(a.purchasePrice || 0).toLocaleString()}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{formatCurrency((a.purchasePrice || 0), selectedCompany?.currency)}</td>
                       <td className="px-4 py-3"><Badge label={a.status} variant={a.status === 'Active' ? 'success' : a.status === 'Disposed' ? 'danger' : 'warning'} /></td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -276,7 +276,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{r.assetCode}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.name}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">${(r.purchasePrice || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{formatCurrency((r.purchasePrice || 0), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{r.usefulLifeYears}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${r.annual.toFixed(0)}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600 text-right">${((r.purchasePrice || 0) - r.netBook).toFixed(0)}</td>

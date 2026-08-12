@@ -1259,7 +1259,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                       <td className="px-5 py-3 font-mono fs-xs fw-semibold text-slate-800">{inv.invoiceNumber}</td>
                       <td className="px-5 py-3 fs-xs text-slate-600">{inv.customerName}</td>
                       <td className="px-5 py-3 fs-xs font-sans text-slate-500">{inv.dueDate}</td>
-                      <td className="px-5 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${inv.total.toLocaleString()}</td>
+                      <td className="px-5 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(inv.total, selectedCompany?.currency)}</td>
                       <td className="px-5 py-3">
                         <Badge label={inv.status} variant={inv.status === 'Overdue' ? 'danger' : 'info'} />
                       </td>
@@ -1284,15 +1284,15 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-slate-100">
                 <span className="fs-xs text-slate-600">Total Revenue</span>
-                <span className="fs-xs font-sans tabular-nums fw-semibold text-emerald-600">+${(revenueAccount?.balance ?? 0).toLocaleString()}</span>
+                <span className="fs-xs font-sans tabular-nums fw-semibold text-emerald-600">+{formatCurrency((revenueAccount?.balance ?? 0), selectedCompany?.currency)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-slate-100">
                 <span className="fs-xs text-slate-600">Operating Expenses</span>
-                <span className="fs-xs font-sans tabular-nums fw-semibold text-rose-600">-${expenses.toLocaleString()}</span>
+                <span className="fs-xs font-sans tabular-nums fw-semibold text-rose-600">-{formatCurrency(expenses, selectedCompany?.currency)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-slate-100">
                 <span className="fs-xs text-slate-600">Gross Profit</span>
-                <span className="fs-xs font-sans tabular-nums fw-semibold text-slate-900">${((revenueAccount?.balance ?? 0) - expenses).toLocaleString()}</span>
+                <span className="fs-xs font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(((revenueAccount?.balance ?? 0) - expenses), selectedCompany?.currency)}</span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="fs-xs fw-bold text-slate-900">Net Margin</span>
@@ -1408,7 +1408,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   <tr key={l.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-5 py-3 fs-xs fw-semibold text-slate-900">{l.companyName}</td>
                     <td className="px-5 py-3 text-[11px] text-slate-600">{l.firstName} {l.lastName}</td>
-                    <td className="px-5 py-3 text-[11px] font-sans tabular-nums fw-semibold text-slate-900 text-right">${l.value.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-[11px] font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(l.value, selectedCompany?.currency)}</td>
                     <td className="px-5 py-3">
                       <span className={`text-[10px] fw-bold px-2 py-0.5 rounded-full ${(l.aiLeadScore ?? 0) >= 80 ? 'bg-emerald-50 text-emerald-700' : (l.aiLeadScore ?? 0) >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
                         {l.aiLeadScore ?? '—'}%

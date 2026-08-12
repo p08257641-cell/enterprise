@@ -199,8 +199,8 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 fs-xs text-slate-500">{b.product}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700">{b.qty}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{b.unit}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">${(b.cost || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${((b.qty || 0) * (b.cost || 0)).toFixed(2)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-700 text-right">{formatCurrency((b.cost || 0), selectedCompany?.currency)}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(((b.qty || 0) * (b.cost || 0)), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={(e) => { e.stopPropagation(); bomModal.open(b); }}
@@ -219,7 +219,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                 {filteredBOM.length > 0 && (
                   <tr className="bg-slate-50 border-t-2 border-slate-200">
                     <td colSpan={isAdmin ? 7 : 6} className="px-4 py-3 table-cell fw-bold text-slate-700 text-right">Total Material Cost</td>
-                    <td className="px-4 py-3 table-cell-mono fw-bold text-slate-900 text-right">${bomTotal.toFixed(2)}</td>
+                    <td className="px-4 py-3 table-cell-mono fw-bold text-slate-900 text-right">{formatCurrency(bomTotal, selectedCompany?.currency)}</td>
                   </tr>
                 )}
                 {filteredBOM.length === 0 && <EmptyRow cols={isAdmin ? 9 : 8} message="No BOM items found." />}

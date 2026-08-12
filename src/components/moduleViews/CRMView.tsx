@@ -318,7 +318,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                           })()}
                         </div>
                         <div className="mt-2 flex items-center justify-between">
-                          <span className="data-value-small font-sans tabular-nums fw-semibold text-slate-900">${l.value.toLocaleString()}</span>
+                          <span className="data-value-small font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(l.value, selectedCompany?.currency)}</span>
                           {l.aiLeadScore && <span className="data-value-small bg-slate-900 text-white px-1.5 py-0.5 rounded font-sans tabular-nums">{l.aiLeadScore}%</span>}
                         </div>
                         {l.comments && l.comments.length > 0 && (
@@ -575,7 +575,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Deal Value</div>
-                    <div className="data-value fw-semibold text-slate-900">${lead.value.toLocaleString()}</div>
+                    <div className="data-value fw-semibold text-slate-900">{formatCurrency(lead.value, selectedCompany?.currency)}</div>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <div className="data-value-small text-slate-500">Stage</div>
@@ -683,7 +683,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 fs-xs text-slate-600">{l.companyName}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{l.email}</td>
                     <td className="px-4 py-3"><Badge label={l.source} /></td>
-                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">${l.value.toLocaleString()}</td>
+                    <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(l.value, selectedCompany?.currency)}</td>
                     <td className="px-4 py-3"><Badge label={l.status} variant={l.status === 'Won' ? 'success' : l.status === 'Lost' ? 'danger' : l.status === 'Qualified' ? 'info' : 'default'} /></td>
                     <td className="px-4 py-3 text-right">
                       <button

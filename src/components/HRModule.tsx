@@ -567,7 +567,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                 {isHRorAdmin && (
                   <div className="text-left sm:text-right shrink-0 mt-3 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-white/10 flex sm:block items-center justify-between">
                     <div>
-                      <div className="fs-2xl fw-bold text-white tabular-nums">${(selectedEmp.salary || 0).toLocaleString()}</div>
+                      <div className="fs-2xl fw-bold text-white tabular-nums">{formatCurrency((selectedEmp.salary || 0), selectedCompany?.currency)}</div>
                       <div className="fs-xs text-slate-400 mt-0.5">Monthly Gross</div>
                     </div>
                     <button
@@ -706,7 +706,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     {isHRorAdmin && (
                       <div className="flex items-center justify-between pt-2 border-t border-slate-200 mt-2">
                         <span className="fs-xs text-slate-500">Monthly Salary</span>
-                        <span className="fs-xs fw-bold text-slate-900 font-mono">${(selectedEmp.salary || 0).toLocaleString()}</span>
+                        <span className="fs-xs fw-bold text-slate-900 font-mono">{formatCurrency((selectedEmp.salary || 0), selectedCompany?.currency)}</span>
                       </div>
                     )}
                   </div>
