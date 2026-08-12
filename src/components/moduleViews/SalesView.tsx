@@ -1,3 +1,4 @@
+import { hasCrudPermission } from '../../permissions';
 import { formatCurrency } from '../../utils/currency';
 import React, { useState } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, ViewModal } from './shared';

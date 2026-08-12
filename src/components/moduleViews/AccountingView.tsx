@@ -10,7 +10,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { GLAccount, TaxCode, ComplianceCheck, FilingDeadline, TaxReturn } from '../../types';
-import { isFinanceDeptHead, isAdminRole, isAccountantRole } from '../../permissions';
+import { isFinanceDeptHead, isAdminRole, isAccountantRole, hasCrudPermission } from '../../permissions';
 import { formatCurrency } from '../../utils/currency';
 
 export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
@@ -42,15 +42,19 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   // ── Accounting role permissions ──────────────────────────────────────────
   const isHighestAuth = isFinanceDeptHead(selectedUser.activeRole) || isAdminRole(selectedUser.activeRole);
   const isFinMgr = selectedUser.activeRole === 'Finance Manager';
-  const canManageTax = isHighestAuth || isFinMgr;
+  const userRole = selectedUser.activeRole;
+  const customRoles = props.customRoles || [];
+  const compId = selectedCompany?.id || '';
+
+  const canManageTax = isHighestAuth || isFinMgr || hasCrudPermission(userRole, customRoles, compId, ['Accounting', 'Finance', activeView], 'Update');
   const canApproveJE = isHighestAuth || isFinMgr;
   const canPostJE = canApproveJE || isAccountantRole(selectedUser.activeRole);
   const canCloseFiscalPeriod = isHighestAuth || isFinMgr;
   const canSetOpeningBalance = isHighestAuth || isFinMgr;
   const canApproveExpense = isHighestAuth || isFinMgr;
   const canApproveBill = isHighestAuth || isFinMgr;
-  const canRegisterAsset = isHighestAuth || isFinMgr;
-  const canManageBudget = isHighestAuth || isFinMgr;
+  const canRegisterAsset = isHighestAuth || isFinMgr || hasCrudPermission(userRole, customRoles, compId, ['Accounting', 'Finance', activeView], 'Create');
+  const canManageBudget = isHighestAuth || isFinMgr || hasCrudPermission(userRole, customRoles, compId, ['Accounting', 'Finance', activeView], 'Create');
   const canManageCostCenter = isHighestAuth || isFinMgr;
   const canManageMultiCurrency = isHighestAuth || isFinMgr;
   const canManageIntercompany = isHighestAuth || isFinMgr;
