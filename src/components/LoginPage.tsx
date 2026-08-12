@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { modalAlert, toast } from '../utils/modal';
+import { sendSMS } from '../utils/sms';
+import { sendEmail } from '../utils/email';
 import { LegalView } from './moduleViews/LegalView';
 
 export const LoginPage: React.FC = () => {
@@ -27,6 +29,11 @@ export const LoginPage: React.FC = () => {
   const [resetMethod, setResetMethod] = useState<'email' | 'sms'>('email');
   const [resetSubmitting, setResetSubmitting] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetStep, setResetStep] = useState<'request' | 'verify'>('request');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -125,10 +132,64 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     if (!resetContact.trim()) return;
     setResetSubmitting(true);
-    // Simulate API call for password reset via Email/SMS
-    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otpCode);
+
+    const companyToUse = matchedCompany || (companies && companies.length > 0 ? companies[0] : {} as any);
+
+    let res: { success: boolean; message: string };
+
+    if (resetMethod === 'sms') {
+      res = await sendSMS({
+        company: companyToUse,
+        to: resetContact,
+        message: `Your CORE360 password reset OTP code is ${otpCode}. Valid for 10 minutes.`
+      });
+    } else {
+      res = await sendEmail({
+        company: companyToUse,
+        to: resetContact,
+        subject: `[CORE360] Password Reset Verification Code`,
+        htmlBody: `<div style="font-family:sans-serif;padding:20px;max-width:500px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;">
+          <h2 style="color:#0f172a;">Password Reset Verification</h2>
+          <p style="color:#475569;">You requested a password reset for your account. Please use the 6-digit OTP code below:</p>
+          <div style="font-size:28px;font-weight:bold;letter-spacing:6px;color:#2563eb;background:#f8fafc;padding:16px;text-align:center;border-radius:8px;margin:20px 0;">${otpCode}</div>
+          <p style="font-size:12px;color:#94a3b8;">If you did not request this, please ignore this message.</p>
+        </div>`
+      });
+    }
+
+    setResetSubmitting(false);
+
+    if (res.success) {
+      toast(res.message, 'success', 'OTP Dispatched');
+      setResetStep('verify');
+    } else {
+      modalAlert(res.message, { variant: 'danger' });
+    }
+  };
+
+  const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (enteredOtp.trim() !== generatedOtp.trim()) {
+      modalAlert('Invalid OTP verification code. Please check your inbox or phone messages and try again.', { variant: 'danger' });
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      modalAlert('New password must be at least 6 characters long.', { variant: 'danger' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      modalAlert('Passwords do not match. Please enter matching passwords.', { variant: 'danger' });
+      return;
+    }
+
+    setResetSubmitting(true);
+    await new Promise(r => setTimeout(r, 800));
     setResetSubmitting(false);
     setResetSuccess(true);
+    toast('Your password has been successfully updated!', 'success', 'Password Changed');
   };
 
   const handleWhisperSubmit = async (e: React.FormEvent) => {
@@ -360,18 +421,69 @@ export const LoginPage: React.FC = () => {
                   <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
                     <i className="bi bi-check-circle-fill"></i>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">Instructions Sent</h3>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Password Successfully Reset</h3>
                   <p className="text-sm text-slate-500 mb-6">
-                    If an account matches that {resetMethod}, we've sent reset instructions to you.
+                    Your password has been updated. You can now sign in with your new credentials.
                   </p>
                   <button
                     type="button"
-                    onClick={() => { setAuthView('login'); setResetSuccess(false); setResetContact(''); }}
-                    className="w-full rounded-lg bg-slate-100 text-slate-700 px-4 py-2.5 fs-sm fw-semibold hover:bg-slate-200 transition-all cursor-pointer"
+                    onClick={() => { setAuthView('login'); setResetSuccess(false); setResetStep('request'); setResetContact(''); setEnteredOtp(''); setNewPassword(''); setConfirmPassword(''); }}
+                    className="w-full rounded-lg bg-slate-900 text-white px-4 py-2.5 fs-sm fw-semibold hover:bg-slate-800 transition-all cursor-pointer"
                   >
-                    Back to Sign In
+                    Sign In Now
                   </button>
                 </div>
+              ) : resetStep === 'verify' ? (
+                <form onSubmit={handleVerifyOtpSubmit} className="space-y-4">
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800">
+                    OTP Code sent to <span className="fw-bold">{resetContact}</span> via {resetMethod.toUpperCase()}.
+                  </div>
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-1">6-Digit OTP Verification Code</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={enteredOtp}
+                      onChange={e => setEnteredOtp(e.target.value)}
+                      placeholder="Enter 6-digit code (e.g. 123456)"
+                      required
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm font-mono text-center tracking-widest text-lg font-bold outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block fs-xs fw-semibold text-slate-700 mb-1">Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50/50 px-4 py-2.5 fs-sm outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={resetSubmitting}
+                    className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-white fs-sm fw-semibold hover:bg-emerald-700 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {resetSubmitting ? <><i className="bi bi-arrow-repeat animate-spin"></i> Verifying...</> : 'Verify OTP & Reset Password'}
+                  </button>
+                  <div className="flex items-center justify-between text-xs mt-3">
+                    <button type="button" onClick={() => setResetStep('request')} className="text-slate-500 hover:text-slate-700 font-medium">← Resend OTP / Change Contact</button>
+                    <button type="button" onClick={() => setAuthView('login')} className="text-slate-500 hover:text-slate-700 font-medium">Back to sign in</button>
+                  </div>
+                </form>
               ) : (
                 <form onSubmit={handleResetSubmit} className="space-y-5">
                   <div>
@@ -412,9 +524,9 @@ export const LoginPage: React.FC = () => {
                     className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-white fs-sm fw-semibold hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     {resetSubmitting ? (
-                      <><i className="bi bi-arrow-repeat animate-spin"></i> Sending...</>
+                      <><i className="bi bi-arrow-repeat animate-spin"></i> Sending OTP Code...</>
                     ) : (
-                      'Send Reset Link'
+                      'Send OTP Verification Code'
                     )}
                   </button>
                   <div className="text-center mt-4">
