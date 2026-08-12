@@ -25,6 +25,14 @@ export interface Company {
   smsApiKey?: string;
   smsApiSecret?: string;
   smsSenderId?: string;
+  emailProvider?: 'SMTP' | 'SendGrid' | 'Mailgun' | 'Postmark' | 'AWS SES' | 'Resend' | 'Custom';
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUsername?: string;
+  smtpPassword?: string;
+  emailApiKey?: string;
+  emailFromAddress?: string;
+  emailFromName?: string;
   createdAt: string;
 }
 

@@ -3,6 +3,7 @@ import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow,
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { modalAlert, modalPrompt, toast } from '../../utils/modal';
 import { sendSMS } from '../../utils/sms';
+import { sendEmail } from '../../utils/email';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { MODULE_HIERARCHY } from '../../data/moduleHierarchy';
 import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
@@ -16,6 +17,15 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [smsApiSecret, setSmsApiSecret] = useState(selectedCompany?.smsApiSecret || '');
   const [smsSenderId, setSmsSenderId] = useState(selectedCompany?.smsSenderId || '');
   const [testingSms, setTestingSms] = useState(false);
+  const [emailProvider, setEmailProvider] = useState<'SMTP' | 'SendGrid' | 'Mailgun' | 'Postmark' | 'AWS SES' | 'Resend' | 'Custom'>(selectedCompany?.emailProvider || 'SMTP');
+  const [smtpHost, setSmtpHost] = useState(selectedCompany?.smtpHost || '');
+  const [smtpPort, setSmtpPort] = useState(selectedCompany?.smtpPort || 587);
+  const [smtpUsername, setSmtpUsername] = useState(selectedCompany?.smtpUsername || '');
+  const [smtpPassword, setSmtpPassword] = useState(selectedCompany?.smtpPassword || '');
+  const [emailApiKey, setEmailApiKey] = useState(selectedCompany?.emailApiKey || '');
+  const [emailFromAddress, setEmailFromAddress] = useState(selectedCompany?.emailFromAddress || '');
+  const [emailFromName, setEmailFromName] = useState(selectedCompany?.emailFromName || '');
+  const [testingEmail, setTestingEmail] = useState(false);
 
   const isAdmin = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
 
