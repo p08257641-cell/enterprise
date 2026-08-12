@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
@@ -226,7 +227,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <g key={i} className="opacity-40">
                       <line x1={padL} y1={yVal} x2={svgW - padR} y2={yVal} stroke="#e2e8f0" strokeDasharray="3,3" />
-                      <text x={padL - 8} y={yVal + 3} textAnchor="end" className="fill-slate-400 font-mono text-[9px]">{`$${textVal.toLocaleString()}`}</text>
+                      <text x={padL - 8} y={yVal + 3} textAnchor="end" className="fill-slate-400 font-mono text-[9px]">{formatCurrency(textVal, selectedCompany?.currency)}</text>
                     </g>
                   );
                 })}

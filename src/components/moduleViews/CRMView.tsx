@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
@@ -170,7 +171,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
         {crmTab !== 'reports' && (
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
             <StatCard label="Total Leads" value={localLeads.length} icon="bi bi-people" sub="All pipeline contacts" />
-            <StatCard label="Pipeline Value" value={`$${pipelineValue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Active deal potential" accent />
+            <StatCard label="Pipeline Value" value={formatCurrency(pipelineValue, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Active deal potential" accent />
             <StatCard label="Qualified" value={localLeads.filter(l => l.status === 'Qualified').length} icon="bi bi-star" sub="Ready to propose" />
             <StatCard label="Closed Won" value={localLeads.filter(l => l.status === 'Won').length} icon="bi bi-trophy" sub="Converted deals" />
           </div>
@@ -951,7 +952,7 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                 <>
                   <div className="grid gap-4 sm:grid-cols-4">
                     <StatCard label="Win Rate" value={`${localLeads.length > 0 ? Math.round((wonLeads.length / localLeads.length) * 100) : 0}%`} icon="bi bi-trophy" sub="Deals closed vs total" color="text-emerald-600" />
-                    <StatCard label="Avg Deal Size" value={`$${localLeads.length > 0 ? Math.round(localLeads.reduce((s, l) => s + l.value, 0) / localLeads.length).toLocaleString() : 0}`} icon="bi bi-currency-dollar" sub="Mean pipeline value" accent />
+                    <StatCard label="Avg Deal Size" value={formatCurrency(localLeads.length > 0 ? Math.round(localLeads.reduce((s, l) => s + l.value, 0) / localLeads.length) : 0, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Mean pipeline value" accent />
                     <StatCard label="Pipeline Velocity" value={wonLeads.length > 0 ? `${avgDaysToClose} days` : 'N/A'} icon="bi bi-speedometer" sub={wonLeads.length > 0 ? 'Avg days to close' : 'No won deals yet'} />
                     <StatCard label="Lost Deals" value={localLeads.filter(l => l.status === 'Lost').length} icon="bi bi-x-circle" sub="This quarter" color="text-rose-600" />
                   </div>

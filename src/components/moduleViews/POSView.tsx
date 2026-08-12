@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState } from 'react';
 import { ModuleViewsProps, PageHeader, Badge, TableHead, PrimaryBtn, SecBtn, StatCard, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 
@@ -302,7 +303,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard label="Total Customers" value={localCustomers.length} icon="bi bi-people" sub="Registered" />
-            <StatCard label="Total Revenue" value={`$${localCustomers.reduce((s, c) => s + (c.totalSpent || 0), 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="All customers" accent />
+            <StatCard label="Total Revenue" value={formatCurrency(localCustomers.reduce((s, c) => s + (c.totalSpent || 0), 0), selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="All customers" accent />
             <StatCard label="Loyalty Members" value={localCustomers.filter(c => (c.loyaltyPoints || 0) > 0).length} icon="bi bi-star" sub="With points" />
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
@@ -352,7 +353,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-4">
             <StatCard label="Total Sales" value={localSales.length} icon="bi bi-receipt" sub="All transactions" />
-            <StatCard label="Revenue" value={`$${localSales.reduce((s, x) => s + (x.total || 0), 0).toFixed(2)}`} icon="bi bi-currency-dollar" sub="Gross revenue" accent />
+            <StatCard label="Revenue" value={formatCurrency(localSales.reduce((s, x) => s + (x.total || 0), 0), selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Gross revenue" accent />
             <StatCard label="Returns" value={localReturns.length} icon="bi bi-arrow-return-left" sub="All returns" />
             <StatCard label="Open Shifts" value={localShifts.filter(s => s.status === 'Open').length} icon="bi bi-lock" sub="Currently active" />
           </div>
@@ -415,8 +416,8 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard label="Total Sales" value={localSales.length} icon="bi bi-receipt" sub="Transactions" />
-            <StatCard label="Revenue" value={`$${localSales.reduce((s, x) => s + (x.total || 0), 0).toFixed(2)}`} icon="bi bi-currency-dollar" sub="Gross total" accent />
-            <StatCard label="Average Sale" value={`$${localSales.length > 0 ? (localSales.reduce((s, x) => s + (x.total || 0), 0) / localSales.length).toFixed(2) : '0.00'}`} icon="bi bi-bar-chart" sub="Per transaction" />
+            <StatCard label="Revenue" value={formatCurrency(localSales.reduce((s, x) => s + (x.total || 0), 0), selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Gross total" accent />
+            <StatCard label="Average Sale" value={formatCurrency(localSales.length > 0 ? (localSales.reduce((s, x) => s + (x.total || 0), 0) / localSales.length) : 0, selectedCompany?.currency)} icon="bi bi-bar-chart" sub="Per transaction" />
           </div>
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
@@ -459,7 +460,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                   <tr key={d.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{d.name}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.type}</td>
-                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : `$${d.value}`}</td>
+                    <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900">{d.type === 'Percentage' ? `${d.value}%` : formatCurrency(d.value, selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.usageCount || 0}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
                     <td className="px-4 py-3"><Badge label={d.isActive !== false ? 'Active' : 'Inactive'} variant={d.isActive !== false ? 'success' : 'default'} /></td>
@@ -633,7 +634,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'SKU', key: 'sku', mono: true, icon: 'bi bi-hash' },
             { label: 'Name', key: 'name', icon: 'bi bi-box-seam' },
             { label: 'Category', key: 'category', icon: 'bi bi-collection', section: 'Details' },
-            { label: 'Price', key: 'unitPrice', format: (v: number) => `$${v.toFixed(2)}`, icon: 'bi bi-cash', section: 'Details' },
+            { label: 'Price', key: 'unitPrice', format: (v: number) => formatCurrency(v, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Details' },
             { label: 'Stock', key: 'stockLevel', icon: 'bi bi-stack', section: 'Inventory' },
             { label: 'Reorder Level', key: 'reorderLevel', icon: 'bi bi-exclamation-triangle', section: 'Inventory' },
           ]}
@@ -650,7 +651,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Email', key: 'email', mono: true, icon: 'bi bi-envelope', section: 'Contact' },
             { label: 'Phone', key: 'phone', mono: true, icon: 'bi bi-telephone', section: 'Contact' },
             { label: 'Loyalty Points', key: 'loyaltyPoints', icon: 'bi bi-trophy', section: 'Loyalty' },
-            { label: 'Lifetime Spend', key: 'totalSpent', format: (v: number) => `$${(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Loyalty' },
+            { label: 'Lifetime Spend', key: 'totalSpent', format: (v: number) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Loyalty' },
           ]}
           title={r => `${r.firstName} ${r.lastName}`} subtitle={r => r.tier || 'Standard'}
           onClose={customerModal.close} />
@@ -677,7 +678,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Items', key: 'items', format: (v: any[]) => `${v?.length || 0}`, icon: 'bi bi-box-seam', section: 'Sale' },
             { label: 'Payment Method', key: 'paymentMethod', icon: 'bi bi-credit-card', section: 'Sale' },
             { label: 'Status', key: 'paymentStatus', icon: 'bi bi-flag', section: 'Sale' },
-            { label: 'Total', key: 'total', format: (v: number) => `$${(v || 0).toFixed(2)}`, icon: 'bi bi-cash', section: 'Sale' },
+            { label: 'Total', key: 'total', format: (v: number) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Sale' },
           ]}
           title={r => r.saleNumber || r.id} subtitle={r => `POS Sale`}
           onClose={saleModal.close} />
@@ -688,7 +689,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           fields={[
             { label: 'Name', key: 'name', icon: 'bi bi-tag' },
             { label: 'Type', key: 'type', icon: 'bi bi-diagram-3', section: 'Details' },
-            { label: 'Value', key: 'value', format: (v: number, r: any) => r.type === 'Percentage' ? `${v}%` : `$${v}`, icon: 'bi bi-cash', section: 'Details' },
+            { label: 'Value', key: 'value', format: (v: number, r: any) => r.type === 'Percentage' ? `${v}%` : formatCurrency(v, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Details' },
             { label: 'Max Usage', key: 'maxUsage', format: (v: any) => v ?? 'Unlimited', icon: 'bi bi-infinity', section: 'Details' },
             { label: 'Status', key: 'isActive', format: (v: boolean) => v !== false ? 'Active' : 'Inactive', icon: 'bi bi-flag', section: 'Details' },
           ]}

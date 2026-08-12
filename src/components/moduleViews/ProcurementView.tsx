@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 import { isAdminRole } from '../../permissions';
@@ -117,7 +118,7 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-4 mb-6">
         <StatCard label="Total POs" value={localPOs.length} icon="bi bi-file-earmark-plus" sub="Purchase orders issued" />
-        <StatCard label="PO Value" value={`$${totalPoValue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Total committed spend" accent />
+        <StatCard label="PO Value" value={formatCurrency(totalPoValue, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Total committed spend" accent />
         <StatCard label="Pending Approval" value={localPOs.filter(o => o.status === 'Pending').length} icon="bi bi-clock" sub="Awaiting authorisation" />
         <StatCard label="Received" value={localPOs.filter(o => o.status === 'Received').length} icon="bi bi-check-circle" sub="Delivered orders" />
       </div>
@@ -380,8 +381,8 @@ export const ProcurementView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Qty', key: 'qty', icon: 'bi bi-123', section: 'Order' },
             { label: 'Date', key: 'date', mono: true, icon: 'bi bi-calendar-event', section: 'Order' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Order' },
-            { label: 'Unit Price', key: 'unitPrice', format: (v: number) => `$${(v || 0).toLocaleString()}`, icon: 'bi bi-tag', section: 'Amount' },
-            { label: 'Total', key: 'total', format: (v: number) => `$${(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amount' },
+            { label: 'Unit Price', key: 'unitPrice', format: (v: number) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-tag', section: 'Amount' },
+            { label: 'Total', key: 'total', format: (v: number) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Amount' },
           ]}
           title={r => `Purchase Order ${r.poNumber}`} subtitle={r => r.vendorName}
           onClose={poModal.close} />

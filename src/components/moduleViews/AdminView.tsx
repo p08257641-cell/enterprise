@@ -5,6 +5,7 @@ import { modalAlert, toast } from '../../utils/modal';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { MODULE_HIERARCHY } from '../../data/moduleHierarchy';
 import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
+import { formatCurrency } from '../../utils/currency';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const { searchTerm = '', activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies, approvalPolicies: propApprovalPolicies = [] } = props;
@@ -1076,7 +1077,7 @@ const [deptParent, setDeptParent] = useState('');
             { label: 'Manager', key: 'managerName', icon: 'bi bi-person-vcard', section: 'Details' },
             { label: 'Reports To', key: 'parentName', icon: 'bi bi-arrow-up-right', section: 'Details' },
             { label: 'Head Count', key: 'employeeCount', format: (v: number) => `${v} staff`, icon: 'bi bi-people', section: 'Details' },
-            { label: 'Budget', key: 'budget', format: (v: number) => `$${v.toLocaleString()}`, icon: 'bi bi-cash', section: 'Details' },
+            { label: 'Budget', key: 'budget', format: (v: number) => formatCurrency(v, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Details' },
           ]}
           title={r => r.name} subtitle={r => 'Department Details'}
           onClose={deptModal.close} />

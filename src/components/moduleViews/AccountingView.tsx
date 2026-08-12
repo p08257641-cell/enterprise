@@ -457,7 +457,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <PageHeader title="Expenses" subtitle="Track and manage business expenses by category and department."
               action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowExpenseModal(true)}>Add Expense</PrimaryBtn>} />
             <div className="grid gap-4 sm:grid-cols-3 mb-6">
-              <StatCard label="Total Expenses" value={`$${localExpenses.reduce((s, e) => s + e.amount, 0).toLocaleString()}`} icon="bi bi-credit-card" sub="All recorded expenses" accent />
+              <StatCard label="Total Expenses" value={formatCurrency(localExpenses.reduce((s, e) => s + e.amount, 0), selectedCompany?.currency)} icon="bi bi-credit-card" sub="All recorded expenses" accent />
               <StatCard label="Pending Approval" value={localExpenses.filter(e => e.status === 'Pending').length} icon="bi bi-clock" sub="Awaiting review" />
               <StatCard label="Approved" value={localExpenses.filter(e => e.status === 'Approved').length} icon="bi bi-check-circle" sub="Auto-posted to GL" color="text-emerald-600" />
             </div>
@@ -582,8 +582,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
           <>
             <PageHeader title="Trial Balance" subtitle="Verify that total debits equal total credits across all accounts." />
             <div className="grid gap-4 sm:grid-cols-2 mb-6">
-              <StatCard label="Total Debits" value={`$${totalDebits.toLocaleString()}`} icon="bi bi-arrow-down-circle" sub="Sum of all debit balances" accent />
-              <StatCard label="Total Credits" value={`$${totalCredits.toLocaleString()}`} icon="bi bi-arrow-up-circle" sub="Sum of all credit balances" color="text-emerald-600" />
+              <StatCard label="Total Debits" value={formatCurrency(totalDebits, selectedCompany?.currency)} icon="bi bi-arrow-down-circle" sub="Sum of all debit balances" accent />
+              <StatCard label="Total Credits" value={formatCurrency(totalCredits, selectedCompany?.currency)} icon="bi bi-arrow-up-circle" sub="Sum of all credit balances" color="text-emerald-600" />
             </div>
             {Math.abs(totalDebits - totalCredits) > 0.01 && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl fs-xs text-rose-700 fw-semibold"><i className="bi bi-exclamation-triangle mr-1"></i> Trial balance is NOT balanced! Difference: ${Math.abs(totalDebits - totalCredits).toLocaleString()}</div>}
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
@@ -595,8 +595,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{acc.code}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{acc.name}</td>
                       <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Asset' || acc.type === 'Expense') ? `$${(acc.balance ?? 0).toLocaleString()}` : '-'}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Liability' || acc.type === 'Revenue' || acc.type === 'Equity') ? `$${(acc.balance ?? 0).toLocaleString()}` : '-'}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Asset' || acc.type === 'Expense') ? formatCurrency(acc.balance ?? 0, selectedCompany?.currency) : '-'}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Liability' || acc.type === 'Revenue' || acc.type === 'Equity') ? formatCurrency(acc.balance ?? 0, selectedCompany?.currency) : '-'}</td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                       </td>
@@ -701,8 +701,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-600">{ob.accountCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{ob.accountName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{localFiscalPeriods.find(f => f.id === ob.periodId)?.name || ob.periodId}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.debit > 0 ? `$${ob.debit.toLocaleString()}` : '-'}</td>
-                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.credit > 0 ? `$${ob.credit.toLocaleString()}` : '-'}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.debit > 0 ? formatCurrency(ob.debit, selectedCompany?.currency) : '-'}</td>
+                      <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.credit > 0 ? formatCurrency(ob.credit, selectedCompany?.currency) : '-'}</td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={e => { e.stopPropagation(); accOpeningBalModal.open(ob); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                       </td>
@@ -748,8 +748,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
               <StatCard label="Total Bills" value={localBills.length} icon="bi bi-receipt" />
               <StatCard label="Pending Approval" value={localBills.filter(b => b.status === 'Pending').length} icon="bi bi-hourglass" color="text-amber-600" />
-              <StatCard label="Total Outstanding" value={`$${localBills.filter(b => b.status !== 'Paid' && b.status !== 'Void').reduce((s, b) => s + ((b.total ?? 0) - (b.amountPaid ?? 0)), 0).toLocaleString()}`} icon="bi bi-cash-stack" color="text-rose-600" />
-              <StatCard label="Paid This Month" value={`$${localBillPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
+              <StatCard label="Total Outstanding" value={formatCurrency(localBills.filter(b => b.status !== 'Paid' && b.status !== 'Void').reduce((s, b) => s + ((b.total ?? 0) - (b.amountPaid ?? 0)), 0), selectedCompany?.currency)} icon="bi bi-cash-stack" color="text-rose-600" />
+              <StatCard label="Paid This Month" value={formatCurrency(localBillPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0), selectedCompany?.currency)} icon="bi bi-check-circle" color="text-emerald-600" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
@@ -783,9 +783,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
           <>
             <PageHeader title="Accounts Receivable" subtitle="Track customer invoice payments and collections." action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`ar-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Total', 'Issue Date', 'Due Date', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.total ?? 0, i.issueDate, i.dueDate, i.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setCpInvoiceId(localInvoices.find(i => i.status !== 'Paid' && i.status !== 'Void')?.id || ''); setCpAmount(''); setCpRef(''); setShowCustomerPaymentModal(true); }}>Record Payment</PrimaryBtn></>} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
-              <StatCard label="Outstanding AR" value={`$${localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').reduce((s, i) => s + (i.total ?? 0), 0).toLocaleString()}`} icon="bi bi-hourglass-split" color="text-amber-600" />
-              <StatCard label="Overdue" value={`$${localInvoices.filter(i => i.status === 'Overdue').reduce((s, i) => s + (i.total ?? 0), 0).toLocaleString()}`} icon="bi bi-exclamation-triangle" color="text-rose-600" />
-              <StatCard label="Collected This Month" value={`$${localCustomerPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0).toLocaleString()}`} icon="bi bi-check-circle" color="text-emerald-600" />
+              <StatCard label="Outstanding AR" value={formatCurrency(localInvoices.filter(i => i.status !== 'Paid' && i.status !== 'Void').reduce((s, i) => s + (i.total ?? 0), 0), selectedCompany?.currency)} icon="bi bi-hourglass-split" color="text-amber-600" />
+              <StatCard label="Overdue" value={formatCurrency(localInvoices.filter(i => i.status === 'Overdue').reduce((s, i) => s + (i.total ?? 0), 0), selectedCompany?.currency)} icon="bi bi-exclamation-triangle" color="text-rose-600" />
+              <StatCard label="Collected This Month" value={formatCurrency(localCustomerPayments.filter(p => p.paymentDate >= new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]).reduce((s, p) => s + (p.amount ?? 0), 0), selectedCompany?.currency)} icon="bi bi-check-circle" color="text-emerald-600" />
               <StatCard label="Total Invoices" value={localInvoices.length} icon="bi bi-file-earmark-text" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
@@ -897,8 +897,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <PageHeader title="Fixed Assets Register" subtitle="Track capital assets, run depreciation schedules and manage disposals." action={canRegisterAsset ? <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setAssetCode(`FA-${Date.now().toString().slice(-6)}`); setAssetName(''); setAssetCost(''); setShowAssetModal(true); }}>Register Asset</PrimaryBtn> : undefined} />
             <div className="grid gap-4 sm:grid-cols-4 mb-6">
               <StatCard label="Total Assets" value={localFixedAssets.length} icon="bi bi-collection" />
-              <StatCard label="Total Book Value" value={`$${localFixedAssets.reduce((s, a) => s + (a.currentBookValue ?? 0), 0).toLocaleString()}`} icon="bi bi-cash-stack" />
-              <StatCard label="Accumulated Depr." value={`$${localFixedAssets.reduce((s, a) => s + (a.accumulatedDepreciation ?? 0), 0).toLocaleString()}`} icon="bi bi-graph-down" color="text-rose-600" />
+              <StatCard label="Total Book Value" value={formatCurrency(localFixedAssets.reduce((s, a) => s + (a.currentBookValue ?? 0), 0), selectedCompany?.currency)} icon="bi bi-cash-stack" />
+              <StatCard label="Accumulated Depr." value={formatCurrency(localFixedAssets.reduce((s, a) => s + (a.accumulatedDepreciation ?? 0), 0), selectedCompany?.currency)} icon="bi bi-graph-down" color="text-rose-600" />
               <StatCard label="Pending Depreciation" value={localDepreciationEntries.filter(d => d.status === 'Draft').length} icon="bi bi-hourglass" color="text-amber-600" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden mb-6">
@@ -957,9 +957,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
           <>
             <PageHeader title="Budget Management" subtitle="Create budgets, track variances and approve allocations." action={canManageBudget ? <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setBudName(''); setBudAmount(''); setBudItems([]); setShowBudgetModal(true); }}>New Budget</PrimaryBtn> : undefined} />
             <div className="grid gap-4 sm:grid-cols-3 mb-6">
-              <StatCard label="Total Budget" value={`$${localBudgets.reduce((s, b) => s + (b.budgetAmount ?? 0), 0).toLocaleString()}`} icon="bi bi-piggy-bank" />
-              <StatCard label="Total Actual" value={`$${localBudgets.reduce((s, b) => s + (b.actualAmount ?? 0), 0).toLocaleString()}`} icon="bi bi-cash-stack" />
-              <StatCard label="Overall Variance" value={`${localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0) >= 0 ? '+' : ''}$${localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0).toLocaleString()}`} icon="bi bi-graph-up" color={localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'} />
+              <StatCard label="Total Budget" value={formatCurrency(localBudgets.reduce((s, b) => s + (b.budgetAmount ?? 0), 0), selectedCompany?.currency)} icon="bi bi-piggy-bank" />
+              <StatCard label="Total Actual" value={formatCurrency(localBudgets.reduce((s, b) => s + (b.actualAmount ?? 0), 0), selectedCompany?.currency)} icon="bi bi-cash-stack" />
+              <StatCard label="Overall Variance" value={`${localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0) >= 0 ? '+' : ''}${formatCurrency(localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0), selectedCompany?.currency)}`} icon="bi bi-graph-up" color={localBudgets.reduce((s, b) => s + (b.variance ?? 0), 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'} />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
@@ -1018,7 +1018,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="flex justify-between fs-xs"><span className="text-slate-500">Budget</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${ccBudget.toLocaleString()}</span></div>
                       <div className="flex justify-between fs-xs"><span className="text-slate-500">Actual Spend</span><span className="font-sans tabular-nums fw-semibold text-slate-900">${ccActual.toLocaleString()}</span></div>
                       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${pctUsed > 90 ? 'bg-rose-500' : pctUsed > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(pctUsed, 100)}%` }}></div></div>
-                      <div className="flex justify-between text-[10px]"><span className="text-slate-400">{pctUsed}% utilized</span><span className={`fw-semibold ${ccBudget - ccActual >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{ccBudget - ccActual >= 0 ? `$${(ccBudget - ccActual).toLocaleString()} remaining` : `$${Math.abs(ccBudget - ccActual).toLocaleString()} over budget`}</span></div>
+                      <div className="flex justify-between text-[10px]"><span className="text-slate-400">{pctUsed}% utilized</span><span className={`fw-semibold ${ccBudget - ccActual >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{ccBudget - ccActual >= 0 ? `${formatCurrency(ccBudget - ccActual, selectedCompany?.currency)} remaining` : `${formatCurrency(Math.abs(ccBudget - ccActual), selectedCompany?.currency)} over budget`}</span></div>
                     </div>
                   </div>
                 );
@@ -2099,7 +2099,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Account Code', key: 'code', mono: true, icon: 'bi bi-hash' },
             { label: 'Name', key: 'name', icon: 'bi bi-tag' },
             { label: 'Type', key: 'type', icon: 'bi bi-diagram-3', section: 'Account' },
-            { label: 'Balance', key: 'balance', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Account' },
+            { label: 'Balance', key: 'balance', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Account' },
             { label: 'Company ID', key: 'companyId', mono: true, section: 'System' },
             { label: 'ID', key: 'id', mono: true, section: 'System' },
           ]}
@@ -2122,9 +2122,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 ['Status', r.status],
                 ['Issue Date', r.issueDate],
                 ['Due Date', r.dueDate],
-                ['Subtotal', `$${Number(r.subtotal || 0).toLocaleString()}`],
-                ['Tax', `$${Number(r.tax || 0).toLocaleString()}`],
-                ['Total', `$${Number(r.total || 0).toLocaleString()}`],
+                ['Subtotal', formatCurrency(Number(r.subtotal || 0), selectedCompany?.currency)],
+                ['Tax', formatCurrency(Number(r.tax || 0), selectedCompany?.currency)],
+                ['Total', formatCurrency(Number(r.total || 0), selectedCompany?.currency)],
                 ...(r.evatIrn ? [['GRA IRN', r.evatIrn]] : []),
                 ...(r.evatQrCode ? [['GRA QR Code', `<img src="${r.evatQrCode}" width="100" height="100" />`]] : []),
               ]), 
@@ -2139,9 +2139,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
             { label: 'Issue Date', key: 'issueDate', mono: true, icon: 'bi bi-calendar-event', section: 'Details' },
             { label: 'Due Date', key: 'dueDate', mono: true, icon: 'bi bi-calendar-check', section: 'Details' },
-            { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
-            { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-percent', section: 'Amounts' },
-            { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
+            { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Tax', key: 'tax', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-percent', section: 'Amounts' },
+            { label: 'Total', key: 'total', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Amounts' },
             ...(accInvoiceModal.selected?.evatIrn ? [
               { label: 'GRA IRN', key: 'evatIrn', mono: true, icon: 'bi bi-shield-check', section: 'E-VAT' },
               { label: 'E-VAT Status', key: 'evatStatus', icon: 'bi bi-check-circle', section: 'E-VAT' },
@@ -2164,7 +2164,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Department', key: 'department', icon: 'bi bi-building', section: 'Details' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
             { label: 'Date', key: 'date', mono: true, icon: 'bi bi-calendar-event', section: 'Details' },
-            { label: 'Amount', key: 'amount', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Amount', key: 'amount', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Amounts' },
             { label: 'Created By', key: 'createdBy', mono: true, icon: 'bi bi-person', section: 'Audit' },
             { label: 'Created At', key: 'createdAt', mono: true, icon: 'bi bi-clock', section: 'Audit' },
             { label: 'GL Account', key: 'glAccountId', mono: true, section: 'Audit' },
@@ -2183,8 +2183,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Account Code', key: 'accountCode', mono: true, icon: 'bi bi-hash' },
             { label: 'Account Name', key: 'accountName', icon: 'bi bi-tag' },
             { label: 'Period ID', key: 'periodId', mono: true, icon: 'bi bi-calendar', section: 'Period' },
-            { label: 'Debit', key: 'debit', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrow-down-left', section: 'Balances' },
-            { label: 'Credit', key: 'credit', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrow-up-right', section: 'Balances' },
+            { label: 'Debit', key: 'debit', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-arrow-down-left', section: 'Balances' },
+            { label: 'Credit', key: 'credit', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-arrow-up-right', section: 'Balances' },
             { label: 'Created At', key: 'createdAt', mono: true, icon: 'bi bi-clock', section: 'System' },
             { label: 'Account ID', key: 'accountId', mono: true, section: 'System' },
             { label: 'ID', key: 'id', mono: true, section: 'System' },
@@ -2225,10 +2225,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Invoice Date', key: 'invoiceDate', mono: true, icon: 'bi bi-calendar-event', section: 'Dates' },
             { label: 'Due Date', key: 'dueDate', mono: true, icon: 'bi bi-calendar-check', section: 'Dates' },
             { label: 'Description', key: 'description', icon: 'bi bi-card-text', section: 'Dates' },
-            { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
-            { label: 'Tax', key: 'tax', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-percent', section: 'Amounts' },
-            { label: 'Total', key: 'total', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
-            { label: 'Amount Paid', key: 'amountPaid', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-check2-circle', section: 'Amounts' },
+            { label: 'Subtotal', key: 'subtotal', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Tax', key: 'tax', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-percent', section: 'Amounts' },
+            { label: 'Total', key: 'total', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Amounts' },
+            { label: 'Amount Paid', key: 'amountPaid', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-check2-circle', section: 'Amounts' },
             { label: 'Created By', key: 'createdByName', icon: 'bi bi-person', section: 'Audit' },
             { label: 'Created At', key: 'createdAt', mono: true, icon: 'bi bi-clock', section: 'Audit' },
             { label: 'ID', key: 'id', mono: true, section: 'Audit' },
@@ -2247,7 +2247,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Description', key: 'description', icon: 'bi bi-card-text' },
             { label: 'Type', key: 'type', icon: 'bi bi-arrow-left-right', section: 'Transaction' },
             { label: 'Date', key: 'date', mono: true, icon: 'bi bi-calendar-event', section: 'Transaction' },
-            { label: 'Amount', key: 'amount', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Transaction' },
+            { label: 'Amount', key: 'amount', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Transaction' },
             { label: 'Reconciled', key: 'reconciled', icon: 'bi bi-check2-circle', section: 'Reconciliation' },
             { label: 'Reconciled Date', key: 'reconciledDate', mono: true, icon: 'bi bi-clock', section: 'Reconciliation' },
             { label: 'Reference', key: 'reference', mono: true, icon: 'bi bi-hash', section: 'Reconciliation' },
@@ -2268,9 +2268,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Overview' },
             { label: 'Period Start', key: 'periodStartDate', mono: true, icon: 'bi bi-calendar-event', section: 'Overview' },
             { label: 'Period End', key: 'periodEndDate', mono: true, icon: 'bi bi-calendar-check', section: 'Overview' },
-            { label: 'Statement Balance', key: 'statementBalance', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Balances' },
-            { label: 'Book Balance', key: 'bookBalance', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Balances' },
-            { label: 'Difference', key: 'reconciledDifference', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrows-expand', section: 'Balances' },
+            { label: 'Statement Balance', key: 'statementBalance', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Balances' },
+            { label: 'Book Balance', key: 'bookBalance', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Balances' },
+            { label: 'Difference', key: 'reconciledDifference', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-arrows-expand', section: 'Balances' },
             { label: 'Transactions', key: 'reconciledTransactionIds', format: (v) => Array.isArray(v) ? `${v.length} items` : '—', icon: 'bi bi-list-check', section: 'Balances' },
             { label: 'Completed By', key: 'completedByName', icon: 'bi bi-person', section: 'Audit' },
             { label: 'Completed At', key: 'completedAt', mono: true, icon: 'bi bi-clock', section: 'Audit' },
@@ -2294,12 +2294,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Location', key: 'location', icon: 'bi bi-geo-alt', section: 'Details' },
             { label: 'Description', key: 'description', icon: 'bi bi-card-text', full: true, section: 'Details' },
             { label: 'Purchase Date', key: 'purchaseDate', mono: true, icon: 'bi bi-calendar-event', section: 'Cost' },
-            { label: 'Purchase Price', key: 'purchasePrice', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Cost' },
-            { label: 'Salvage Value', key: 'salvageValue', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-piggy-bank', section: 'Cost' },
+            { label: 'Purchase Price', key: 'purchasePrice', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Cost' },
+            { label: 'Salvage Value', key: 'salvageValue', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-piggy-bank', section: 'Cost' },
             { label: 'Useful Life (yrs)', key: 'usefulLifeYears', mono: true, icon: 'bi bi-hourglass-split', section: 'Depreciation' },
             { label: 'Method', key: 'depreciationMethod', icon: 'bi bi-graph-down', section: 'Depreciation' },
-            { label: 'Accum. Depreciation', key: 'accumulatedDepreciation', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Depreciation' },
-            { label: 'Book Value', key: 'currentBookValue', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Depreciation' },
+            { label: 'Accum. Depreciation', key: 'accumulatedDepreciation', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-dash-circle', section: 'Depreciation' },
+            { label: 'Book Value', key: 'currentBookValue', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Depreciation' },
             { label: 'ID', key: 'id', mono: true, section: 'System' },
           ]}
         />
@@ -2316,9 +2316,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Asset Name', key: 'assetName', icon: 'bi bi-tag' },
             { label: 'Period', key: 'period', mono: true, icon: 'bi bi-calendar', section: 'Period' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Period' },
-            { label: 'Depreciation', key: 'depreciationAmount', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Values' },
-            { label: 'Accum. Depreciation', key: 'accumulatedDepreciation', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-graph-down', section: 'Values' },
-            { label: 'Book Value', key: 'bookValue', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Values' },
+            { label: 'Depreciation', key: 'depreciationAmount', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-dash-circle', section: 'Values' },
+            { label: 'Accum. Depreciation', key: 'accumulatedDepreciation', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-graph-down', section: 'Values' },
+            { label: 'Book Value', key: 'bookValue', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Values' },
             { label: 'Journal Entry', key: 'journalEntryId', mono: true, icon: 'bi bi-journal-text', section: 'System' },
             { label: 'ID', key: 'id', mono: true, section: 'System' },
           ]}
@@ -2338,9 +2338,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Period', key: 'period', mono: true, icon: 'bi bi-calendar2', section: 'Period' },
             { label: 'Account', key: 'accountName', icon: 'bi bi-book', section: 'Account' },
             { label: 'Account Code', key: 'accountCode', mono: true, icon: 'bi bi-hash', section: 'Account' },
-            { label: 'Budget Amount', key: 'budgetAmt', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Amounts' },
-            { label: 'Actual Amount', key: 'actualAmt', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Amounts' },
-            { label: 'Variance', key: 'varianceAmt', mono: true, format: (v) => `$${Number(v || 0).toLocaleString()}`, icon: 'bi bi-arrows-expand', section: 'Amounts' },
+            { label: 'Budget Amount', key: 'budgetAmt', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-cash', section: 'Amounts' },
+            { label: 'Actual Amount', key: 'actualAmt', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Amounts' },
+            { label: 'Variance', key: 'varianceAmt', mono: true, format: (v) => formatCurrency(Number(v || 0), selectedCompany?.currency), icon: 'bi bi-arrows-expand', section: 'Amounts' },
             { label: 'Variance %', key: 'variancePercent', mono: true, format: (v) => `${Number(v || 0).toLocaleString()}%`, icon: 'bi bi-percent', section: 'Performance' },
             { label: '% Used', key: 'pctUsed', mono: true, format: (v) => `${Number(v || 0)}%`, icon: 'bi bi-speedometer2', section: 'Performance' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Performance' },

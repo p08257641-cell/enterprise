@@ -5,8 +5,9 @@ import { modalConfirm } from '../../utils/modal';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isSuperAdminRole, isHRRole, isFinanceDeptHead } from '../../permissions';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
-function payslipPDFBody(slip: { employeeName: string; employeeId: string; department: string; period: string; baseSalary: number; gross: number; deductions: number; net: number; status: string; customBenefitsTotal?: number; breakdown?: { name: string; amount: number; type: string }[] }) {
+function payslipPDFBody(slip: any, currencyCode?: string) {
   const earnings = slip.breakdown?.filter(b => b.type === 'Benefit') || [];
   const deductions = slip.breakdown?.filter(b => b.type === 'Deduction' || b.type === 'Tax') || [];
   const baseSalary = slip.baseSalary || slip.gross;
@@ -37,18 +38,18 @@ function payslipPDFBody(slip: { employeeName: string; employeeId: string; depart
         </div>
         <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
           <span>Base Salary</span>
-          <span style="font-family:monospace; font-weight:600; color:#0f172a;">$${baseSalary.toLocaleString()}</span>
+          <span style="font-family:monospace; font-weight:600; color:#0f172a;">${formatCurrency(baseSalary, currencyCode)}</span>
         </div>
         ${earnings.map(e => `
         <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
           <span>${e.name}</span>
-          <span style="font-family:monospace; font-weight:600; color:#16a34a;">+$${e.amount.toLocaleString()}</span>
+          <span style="font-family:monospace; font-weight:600; color:#16a34a;">+${formatCurrency(e.amount, currencyCode)}</span>
         </div>
         `).join('')}
         
         <div style="display:flex; justify-content:space-between; padding:12px 0 0 0; margin-top:12px; border-top:1px dashed #cbd5e1; font-size:13px; font-weight:700; color:#0f172a;">
           <span>Gross Earnings</span>
-          <span style="font-family:monospace;">$${(slip.gross || 0).toLocaleString()}</span>
+          <span style="font-family:monospace;">${formatCurrency(slip.gross || 0, currencyCode)}</span>
         </div>
       </div>
 
@@ -60,13 +61,13 @@ function payslipPDFBody(slip: { employeeName: string; employeeId: string; depart
         ${deductions.length > 0 ? deductions.map(d => `
         <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
           <span>${d.name}</span>
-          <span style="font-family:monospace; font-weight:600; color:#dc2626;">-$${d.amount.toLocaleString()}</span>
+          <span style="font-family:monospace; font-weight:600; color:#dc2626;">-${formatCurrency(d.amount, currencyCode)}</span>
         </div>
         `).join('') : '<div style="padding:6px 0; font-size:12px; color:#94a3b8; font-style:italic;">No deductions for this period.</div>'}
         
         <div style="display:flex; justify-content:space-between; padding:12px 0 0 0; margin-top:12px; border-top:1px dashed #cbd5e1; font-size:13px; font-weight:700; color:#0f172a;">
           <span>Total Deductions</span>
-          <span style="font-family:monospace; color:#dc2626;">-$${(slip.deductions || 0).toLocaleString()}</span>
+          <span style="font-family:monospace; color:#dc2626;">-${formatCurrency(slip.deductions || 0, currencyCode)}</span>
         </div>
       </div>
     </div>
@@ -79,7 +80,7 @@ function payslipPDFBody(slip: { employeeName: string; employeeId: string; depart
       </div>
       <div style="text-align:right;">
         <div style="font-size:28px; font-weight:800; font-family:monospace; letter-spacing:-0.02em;">
-          $${(slip.net || 0).toLocaleString()}
+          ${formatCurrency(slip.net || 0, currencyCode)}
         </div>
       </div>
     </div>
@@ -170,9 +171,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         <PageHeader title="Payroll & Salary Management" subtitle={isEmployeeRole ? "View your payslips, earnings details, and tax deductions." : "Process monthly payroll, manage salary structures, deductions and generate payslips."} />
         {!isEmployeeRole && derivedPayrollTab !== 'tax' && derivedPayrollTab !== 'overtime' && (
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
-            <StatCard label="Total Payroll" value={`$${totalPayroll.toLocaleString()}`} icon="bi bi-cash-stack" sub="Monthly gross obligation" />
+            <StatCard label="Total Payroll" value={formatCurrency(totalPayroll, selectedCompany?.currency)} icon="bi bi-cash-stack" sub="Monthly gross obligation" />
             <StatCard label="Employees on Payroll" value={localEmployees.length} icon="bi bi-people" sub="Active salary records" />
-            <StatCard label="Avg Salary" value={`$${localEmployees.length ? Math.round(totalPayroll / localEmployees.length).toLocaleString() : 0}`} icon="bi bi-bar-chart" sub="Mean monthly salary" accent />
+            <StatCard label="Avg Salary" value={formatCurrency(localEmployees.length ? Math.round(totalPayroll / localEmployees.length) : 0, selectedCompany?.currency)} icon="bi bi-bar-chart" sub="Mean monthly salary" accent />
             <StatCard label="Next Run" value={(() => { const d = new Date(); d.setMonth(d.getMonth() + 1, 1); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); })()} icon="bi bi-calendar" sub="Scheduled payroll date" />
           </div>
         )}
@@ -622,17 +623,17 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center py-1.5">
                             <span className="data-value text-slate-600">Base Salary</span>
-                            <span className="data-value font-sans tabular-nums text-slate-900">{showSlipsValues ? `$${(activeSlip.baseSalary || activeSlip.gross).toLocaleString()}` : '****'}</span>
+                            <span className="data-value font-sans tabular-nums text-slate-900">{showSlipsValues ? formatCurrency(activeSlip.baseSalary || activeSlip.gross, selectedCompany?.currency) : '****'}</span>
                           </div>
                           {activeSlip.breakdown?.filter((b: any) => b.type === 'Benefit').map((b: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center py-1.5">
                               <span className="data-value text-slate-600">{b.name}</span>
-                              <span className="data-value font-sans tabular-nums text-emerald-600">{showSlipsValues ? `+$${b.amount.toLocaleString()}` : '****'}</span>
+                              <span className="data-value font-sans tabular-nums text-emerald-600">{showSlipsValues ? `+${formatCurrency(b.amount, selectedCompany?.currency)}` : '****'}</span>
                             </div>
                           ))}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                             <span className="table-cell-semibold text-slate-900">Total Gross Earnings</span>
-                            <span className="table-cell-semibold font-sans tabular-nums text-slate-900">{showSlipsValues ? `$${activeSlip.gross.toLocaleString()}` : '****'}</span>
+                            <span className="table-cell-semibold font-sans tabular-nums text-slate-900">{showSlipsValues ? formatCurrency(activeSlip.gross, selectedCompany?.currency) : '****'}</span>
                           </div>
                         </div>
                       </div>
@@ -644,12 +645,12 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           {activeSlip.breakdown?.filter((b: any) => b.type === 'Tax').map((b: any, idx: number) => (
                             <div key={idx} className="flex justify-between items-center py-1.5">
                               <span className="data-value text-slate-600">{b.name}</span>
-                              <span className="data-value font-sans tabular-nums text-rose-600">{showSlipsValues ? `-$${b.amount.toLocaleString()}` : '****'}</span>
+                              <span className="data-value font-sans tabular-nums text-rose-600">{showSlipsValues ? `-${formatCurrency(b.amount, selectedCompany?.currency)}` : '****'}</span>
                             </div>
                           ))}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                             <span className="table-cell-semibold text-slate-900">Total Deductions</span>
-                            <span className="table-cell-semibold font-sans tabular-nums text-rose-600">{showSlipsValues ? `-$${activeSlip.deductions.toLocaleString()}` : '****'}</span>
+                            <span className="table-cell-semibold font-sans tabular-nums text-rose-600">{showSlipsValues ? `-${formatCurrency(activeSlip.deductions, selectedCompany?.currency)}` : '****'}</span>
                           </div>
                         </div>
                       </div>
@@ -660,7 +661,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="table-cell-semibold text-emerald-800">Net Pay</div>
                           <div className="data-value-small text-emerald-600">Direct Deposited</div>
                         </div>
-                        <div className="fs-2xl fw-bold font-sans tabular-nums text-emerald-700">{showSlipsValues ? `$${activeSlip.net.toLocaleString()}` : '****'}</div>
+                        <div className="fs-2xl fw-bold font-sans tabular-nums text-emerald-700">{showSlipsValues ? formatCurrency(activeSlip.net, selectedCompany?.currency) : '****'}</div>
                       </div>
                     </div>
                   </div>
@@ -676,9 +677,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         {mySlips.map(slip => (
                           <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors ${activeSlip.id === slip.id ? 'bg-slate-50' : ''}`}>
                             <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{slip.period}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{showSlipsValues ? `$${slip.gross.toLocaleString()}` : '****'}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">{showSlipsValues ? `-$${slip.deductions.toLocaleString()}` : '****'}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{showSlipsValues ? `$${slip.net.toLocaleString()}` : '****'}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{showSlipsValues ? formatCurrency(slip.gross, selectedCompany?.currency) : '****'}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">{showSlipsValues ? `-${formatCurrency(slip.deductions, selectedCompany?.currency)}` : '****'}</td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{showSlipsValues ? formatCurrency(slip.net, selectedCompany?.currency) : '****'}</td>
                             <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               <button onClick={(e) => { 
@@ -721,7 +722,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         {derivedPayrollTab === 'tax' && (
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-3">
-              <StatCard label="Total Base Payroll" value={`$${totalPayroll.toLocaleString()}`} icon="bi bi-cash" color="text-emerald-600" />
+              <StatCard label="Total Base Payroll" value={formatCurrency(totalPayroll, selectedCompany?.currency)} icon="bi bi-cash" color="text-emerald-600" />
             </div>
             {isHRorAdmin && onUpdatePayrollTaxConfig && (
               <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
@@ -888,7 +889,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3 mb-2">
               <StatCard label="OT Hours This Month" value={`${attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length * 2}h`} icon="bi bi-clock-history" sub="Across all staff" accent />
-              <StatCard label="OT Payout" value={`$${Math.round(attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length * 2 * (totalPayroll / localEmployees.length / 160) * 1.5).toLocaleString()}`} icon="bi bi-currency-dollar" sub="1.5x premium rate" />
+              <StatCard label="OT Payout" value={formatCurrency(Math.round(attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length * 2 * (totalPayroll / localEmployees.length / 160) * 1.5), selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="1.5x premium rate" />
               <StatCard label="Employees with OT" value={attendance.filter(a => a.companyId === selectedCompany.id && a.checkOut).length} icon="bi bi-people" sub="Claimed overtime this month" />
             </div>
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
@@ -962,9 +963,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Department', value: payslipModal.selected.department, icon: 'bi bi-collection' },
               { label: 'Period', value: payslipModal.selected.period, icon: 'bi bi-calendar-event' },
               { label: 'Status', value: payslipModal.selected.status, icon: 'bi bi-flag', section: 'Details' },
-              { label: 'Gross', value: `$${payslipModal.selected.gross.toLocaleString()}`, icon: 'bi bi-cash', section: 'Earnings' },
-              { label: 'Deductions', value: `-$${payslipModal.selected.deductions.toLocaleString()}`, icon: 'bi bi-dash-circle', section: 'Earnings' },
-              { label: 'Net', value: `$${payslipModal.selected.net.toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Earnings' },
+              { label: 'Gross', value: formatCurrency(payslipModal.selected.gross, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Earnings' },
+              { label: 'Deductions', value: `-${formatCurrency(payslipModal.selected.deductions, selectedCompany?.currency)}`, icon: 'bi bi-dash-circle', section: 'Earnings' },
+              { label: 'Net', value: formatCurrency(payslipModal.selected.net, selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Earnings' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
@@ -985,20 +986,20 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: 'Gross (Salary)', value: `$${taxModal.selected.salary.toLocaleString()}`, icon: 'bi bi-cash', variant: 'normal' },
+              { label: 'Gross (Salary)', value: formatCurrency(taxModal.selected.salary, selectedCompany?.currency), icon: 'bi bi-cash', variant: 'normal' },
               ...(taxModal.selected.taxesList || []).map((t: any) => ({
                 label: t.name,
-                value: `-$${Math.round(t.value).toLocaleString()}`,
+                value: `-${formatCurrency(Math.round(t.value), selectedCompany?.currency)}`,
                 icon: 'bi bi-dash-circle',
                 variant: 'danger'
               })),
               ...(taxModal.selected.benefitsList || []).map((b: any) => ({
                 label: b.name,
-                value: `+$${Math.round(b.value).toLocaleString()}`,
+                value: `+${formatCurrency(Math.round(b.value), selectedCompany?.currency)}`,
                 icon: 'bi bi-plus-circle',
                 variant: 'success'
               })),
-              { label: 'Net Pay', value: `$${taxModal.selected.net.toLocaleString()}`, icon: 'bi bi-wallet2', variant: 'net' },
+              { label: 'Net Pay', value: formatCurrency(taxModal.selected.net, selectedCompany?.currency), icon: 'bi bi-wallet2', variant: 'net' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                 <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
@@ -1027,8 +1028,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Department', value: otModal.selected.department, icon: 'bi bi-collection' },
               { label: 'Regular Hours', value: '160h', icon: 'bi bi-hourglass-split', section: 'Hours' },
               { label: 'OT Hours', value: `${otModal.selected.otHours}h`, icon: 'bi bi-clock', section: 'Hours' },
-              { label: 'OT Rate', value: `$${otModal.selected.otRate}/hr`, icon: 'bi bi-cash', section: 'Hours' },
-              { label: 'OT Pay', value: `$${otModal.selected.otPay.toLocaleString()}`, icon: 'bi bi-wallet2', section: 'Summary' },
+              { label: 'OT Rate', value: `${formatCurrency(otModal.selected.otRate, selectedCompany?.currency)}/hr`, icon: 'bi bi-cash', section: 'Hours' },
+              { label: 'OT Pay', value: formatCurrency(otModal.selected.otPay, selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Summary' },
               { label: 'Approved By', value: 'HR Manager', icon: 'bi bi-person-check', section: 'Summary' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">

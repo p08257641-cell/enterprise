@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, ViewModal } from './shared';
 import { isAdminRole } from '../../permissions';
@@ -430,8 +431,8 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Product', value: bomModal.selected.product },
               { label: 'Quantity', value: bomModal.selected.qty },
               { label: 'Unit', value: bomModal.selected.unit },
-              { label: 'Unit Cost', value: `$${(bomModal.selected.cost || 0).toFixed(2)}` },
-              { label: 'Line Total', value: `$${((bomModal.selected.qty || 0) * (bomModal.selected.cost || 0)).toFixed(2)}` },
+              { label: 'Unit Cost', value: formatCurrency(bomModal.selected.cost || 0, selectedCompany?.currency) },
+              { label: 'Line Total', value: formatCurrency((bomModal.selected.qty || 0) * (bomModal.selected.cost || 0), selectedCompany?.currency) },
             ].map(f => (
               <div key={f.label}><div className="data-value-small text-slate-500">{f.label}</div><div className="data-value fw-semibold text-slate-900">{f.value}</div></div>
             ))}

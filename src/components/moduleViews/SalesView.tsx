@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, ViewModal } from './shared';
 
@@ -146,7 +147,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
       {salesTab !== 'targets' && (
         <div className="grid gap-4 sm:grid-cols-4 mb-6">
           <StatCard label="Total Orders" value={companyOrders.length} icon="bi bi-cart" sub="All sales orders" />
-          <StatCard label="Revenue Closed" value={`$${completedRevenue.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Completed order total" accent />
+          <StatCard label="Revenue Closed" value={formatCurrency(completedRevenue, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Completed order total" accent />
           <StatCard label="Processing" value={companyOrders.filter(o => o.status === 'Processing' || o.status === 'Confirmed').length} icon="bi bi-hourglass-split" sub="Orders in progress" />
           <StatCard label="Customers" value={companyCustomers.length} icon="bi bi-people" sub="Registered customers" />
         </div>
@@ -248,9 +249,9 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
       {salesTab === 'targets' && (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3 mb-2">
-            <StatCard label="Quota Attainment" value={`${quotaPct}%`} icon="bi bi-bullseye" sub={`vs. $${monthlyTarget.toLocaleString()} monthly target`} accent />
-            <StatCard label="Revenue Closed" value={`$${completedRevenue.toLocaleString()}`} icon="bi bi-graph-up" sub="This month" color="text-emerald-600" />
-            <StatCard label="Remaining" value={`$${Math.max(0, monthlyTarget - completedRevenue).toLocaleString()}`} icon="bi bi-flag" sub="To hit monthly target" />
+            <StatCard label="Quota Attainment" value={`${quotaPct}%`} icon="bi bi-bullseye" sub={`vs. ${formatCurrency(monthlyTarget, selectedCompany?.currency)} monthly target`} accent />
+            <StatCard label="Revenue Closed" value={formatCurrency(completedRevenue, selectedCompany?.currency)} icon="bi bi-graph-up" sub="This month" color="text-emerald-600" />
+            <StatCard label="Remaining" value={formatCurrency(Math.max(0, monthlyTarget - completedRevenue), selectedCompany?.currency)} icon="bi bi-flag" sub="To hit monthly target" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <table className="w-full text-left">
@@ -472,10 +473,10 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
             <h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#0ea5e9' }} />Pricing</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Subtotal', value: `$${viewOrder.subtotal?.toLocaleString()}`, icon: 'bi bi-receipt' },
-                { label: 'Tax', value: `$${viewOrder.tax?.toLocaleString()}`, icon: 'bi bi-percent' },
-                { label: 'Discount', value: `-$${viewOrder.discount?.toLocaleString()}`, icon: 'bi bi-tag' },
-                { label: 'Total', value: `$${viewOrder.total?.toLocaleString()}`, icon: 'bi bi-wallet2' },
+                { label: 'Subtotal', value: formatCurrency(viewOrder.subtotal || 0, selectedCompany?.currency), icon: 'bi bi-receipt' },
+                { label: 'Tax', value: formatCurrency(viewOrder.tax || 0, selectedCompany?.currency), icon: 'bi bi-percent' },
+                { label: 'Discount', value: `-${formatCurrency(viewOrder.discount || 0, selectedCompany?.currency)}`, icon: 'bi bi-tag' },
+                { label: 'Total', value: formatCurrency(viewOrder.total || 0, selectedCompany?.currency), icon: 'bi bi-wallet2' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
@@ -535,7 +536,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Phone', value: viewCust.phone, icon: 'bi bi-telephone' },
                 { label: 'Address', value: viewCust.address, icon: 'bi bi-geo-alt' },
                 { label: 'Total Orders', value: viewCust.totalOrders, icon: 'bi bi-bag-check' },
-                { label: 'Total Spend', value: `$${viewCust.totalSpend?.toLocaleString()}`, icon: 'bi bi-wallet2' },
+                { label: 'Total Spend', value: formatCurrency(viewCust.totalSpend || 0, selectedCompany?.currency), icon: 'bi bi-wallet2' },
                 { label: 'Last Order', value: viewCust.lastOrderDate || '—', icon: 'bi bi-calendar-event' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
@@ -581,9 +582,9 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
             <h3 className="section-title text-slate-400 mb-2.5 flex items-center gap-1.5"><span className="h-3 w-0.5 rounded-full" style={{ background: '#8b5cf6' }} />Pricing</h3>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Subtotal', value: `$${viewQuote.subtotal?.toLocaleString()}`, icon: 'bi bi-receipt' },
-                { label: 'Tax', value: `$${viewQuote.tax?.toLocaleString()}`, icon: 'bi bi-percent' },
-                { label: 'Total', value: `$${viewQuote.total?.toLocaleString()}`, icon: 'bi bi-wallet2' },
+                { label: 'Subtotal', value: formatCurrency(viewQuote.subtotal || 0, selectedCompany?.currency), icon: 'bi bi-receipt' },
+                { label: 'Tax', value: formatCurrency(viewQuote.tax || 0, selectedCompany?.currency), icon: 'bi bi-percent' },
+                { label: 'Total', value: formatCurrency(viewQuote.total || 0, selectedCompany?.currency), icon: 'bi bi-wallet2' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>

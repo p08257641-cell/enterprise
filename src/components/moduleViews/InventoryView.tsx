@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
 import { modalAlert } from '../../utils/modal';
@@ -52,7 +53,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
       </div>
       {invTab !== 'transfers' && invTab !== 'valuation' && (
         <div className="grid gap-4 sm:grid-cols-4 mb-6">
-          <StatCard label="Stock Valuation" value={`$${totalVal.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Total warehoused value" />
+          <StatCard label="Stock Valuation" value={formatCurrency(totalVal, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Total warehoused value" />
           <StatCard label="SKU Count" value={localStock.length} icon="bi bi-box-seam" sub="Distinct products" />
           <StatCard label="Low Stock" value={lowStock.length} icon="bi bi-exclamation-triangle" sub="Below safety threshold" accent />
           <StatCard label="Warehouses" value={[...new Set(localStock.map(i => i.warehouse))].length} icon="bi bi-building" sub="Active locations" />
@@ -205,9 +206,9 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
       {invTab === 'valuation' && (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3 mb-2">
-            <StatCard label="Total Stock Value" value={`$${localStock.reduce((s, i) => s + i.stockLevel * i.unitPrice, 0).toLocaleString()}`} icon="bi bi-currency-dollar" sub="At cost price" accent />
+            <StatCard label="Total Stock Value" value={formatCurrency(localStock.reduce((s, i) => s + i.stockLevel * i.unitPrice, 0), selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="At cost price" accent />
             <StatCard label="Highest Value SKU" value={[...localStock].sort((a, b) => b.stockLevel * b.unitPrice - a.stockLevel * a.unitPrice)[0]?.name ?? '—'} icon="bi bi-award" sub="By total stock value" />
-            <StatCard label="Low Stock Risk Value" value={`$${localStock.filter(i => i.stockLevel <= i.minStockLevel).reduce((s, i) => s + i.stockLevel * i.unitPrice, 0).toLocaleString()}`} icon="bi bi-exclamation-triangle" sub="Value at risk" color="text-rose-600" />
+            <StatCard label="Low Stock Risk Value" value={formatCurrency(localStock.filter(i => i.stockLevel <= i.minStockLevel).reduce((s, i) => s + i.stockLevel * i.unitPrice, 0), selectedCompany?.currency)} icon="bi bi-exclamation-triangle" sub="Value at risk" color="text-rose-600" />
           </div>
           <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
             <div className="px-5 py-4 border-b border-slate-100"><h3 className="section-title text-slate-900">Stock Valuation Report</h3></div>
@@ -248,7 +249,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
             { label: 'Stock Level', key: 'stockLevel', icon: 'bi bi-stack', section: 'Levels' },
             { label: 'Min Level', key: 'minStockLevel', icon: 'bi bi-exclamation-triangle', section: 'Levels' },
-            { label: 'Unit Price', key: 'unitPrice', format: (v: number) => `$${v.toFixed(2)}`, icon: 'bi bi-cash', section: 'Levels' },
+            { label: 'Unit Price', key: 'unitPrice', format: (v: number) => formatCurrency(v, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Levels' },
           ]}
           title={r => r.name} subtitle={r => r.sku}
           onClose={stockModal.close} />

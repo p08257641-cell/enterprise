@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
 import { ModuleViewsProps, PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, ViewModal } from './shared';
 import { isAdminRole, hasCrudPermission } from '../../permissions';
@@ -87,7 +88,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
         <>
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
             <StatCard label="Total Assets" value={localAssets.length} icon="bi bi-collection" sub="Registered in system" />
-            <StatCard label="Asset Value" value={`$${totalGross.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Total acquisition cost" accent />
+            <StatCard label="Asset Value" value={formatCurrency(totalGross, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Total acquisition cost" accent />
             <StatCard label="Active" value={localAssets.filter(a => a.status === 'Active').length} icon="bi bi-check-circle" sub="Running normally" />
             <StatCard label="Disposed" value={localAssets.filter(a => a.status === 'Disposed').length} icon="bi bi-trash" sub="Retired assets" />
           </div>
@@ -255,9 +256,9 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
       {assetTab === 'depreciation' && (
         <>
           <div className="grid gap-4 sm:grid-cols-3 mb-6">
-            <StatCard label="Gross Value" value={`$${totalGross.toLocaleString()}`} icon="bi bi-currency-dollar" sub="Acquisition cost" />
-            <StatCard label="Accumulated Depreciation" value={`$${totalAccum.toLocaleString()}`} icon="bi bi-graph-down" sub="Total depreciated" accent />
-            <StatCard label="Net Book Value" value={`$${totalNetBook.toLocaleString()}`} icon="bi bi-collection" sub="Current carrying value" />
+            <StatCard label="Gross Value" value={formatCurrency(totalGross, selectedCompany?.currency)} icon="bi bi-currency-dollar" sub="Acquisition cost" />
+            <StatCard label="Accumulated Depreciation" value={formatCurrency(totalAccum, selectedCompany?.currency)} icon="bi bi-graph-down" sub="Total depreciated" accent />
+            <StatCard label="Net Book Value" value={formatCurrency(totalNetBook, selectedCompany?.currency)} icon="bi bi-collection" sub="Current carrying value" />
           </div>
           {isAdmin && (
             <div className="flex justify-end mb-4">
@@ -299,7 +300,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
             { label: 'Category', key: 'category', icon: 'bi bi-collection', section: 'Details' },
             { label: 'Location', key: 'location', icon: 'bi bi-geo-alt', section: 'Details' },
             { label: 'Status', key: 'status', icon: 'bi bi-flag', section: 'Details' },
-            { label: 'Purchase Price', key: 'purchasePrice', format: (v: number) => `$${(v || 0).toLocaleString()}`, icon: 'bi bi-cash', section: 'Valuation' },
+            { label: 'Purchase Price', key: 'purchasePrice', format: (v: number) => formatCurrency(v || 0, selectedCompany?.currency), icon: 'bi bi-cash', section: 'Valuation' },
             { label: 'Purchase Date', key: 'purchaseDate', icon: 'bi bi-calendar-event', section: 'Valuation' },
             { label: 'Useful Life (yrs)', key: 'usefulLifeYears', icon: 'bi bi-hourglass-split', section: 'Valuation' },
             { label: 'Depreciation Method', key: 'depreciationMethod', icon: 'bi bi-graph-down-arrow', section: 'Valuation' },
