@@ -38,7 +38,12 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const [webhookSecret] = useState(selectedCompany?.webhookSecret || ('whs_' + selectedCompany.id.replace(/-/g, '').slice(0, 24)));
 
   // Integrations Modals & Form States
-  const [activeIntegModal, setActiveIntegModal] = useState<string | null>(null);
+  const [activeIntegModal, setActiveIntegModal] = useState<string | null>(() => {
+    if (activeView?.startsWith('admin-integrations-')) {
+      return activeView.replace('admin-integrations-', '');
+    }
+    return null;
+  });
   const [shopifyStoreUrl, setShopifyStoreUrl] = useState(selectedCompany?.shopifyStoreUrl || '');
   const [shopifyAccessToken, setShopifyAccessToken] = useState(selectedCompany?.shopifyAccessToken || '');
   const [shopifyEnabled, setShopifyEnabled] = useState(!!selectedCompany?.shopifyIntegrationEnabled);
@@ -71,6 +76,7 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const localBranches = branches.filter(b => b.companyId === selectedCompany.id);
 
   const [adminTab, setAdminTab] = useState<'branches' | 'departments' | 'users' | 'roles' | 'approvals' | 'settings' | 'evat' | 'integrations'>(() => {
+    if (activeView?.startsWith('admin-integrations')) return 'integrations';
     if (activeView === 'admin-users') return 'users';
     if (activeView === 'admin-roles') return 'roles';
     if (activeView === 'admin-branches') return 'branches';
@@ -82,6 +88,13 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   });
 
   useEffect(() => {
+    if (activeView?.startsWith('admin-integrations')) {
+      setAdminTab('integrations');
+      if (activeView.includes('-')) {
+        const parts = activeView.split('-');
+        if (parts.length >= 3) setActiveIntegModal(parts.slice(2).join('-'));
+      }
+    }
     if (activeView === 'admin-users') setAdminTab('users');
     else if (activeView === 'admin-roles') setAdminTab('roles');
     else if (activeView === 'admin-branches') setAdminTab('branches');

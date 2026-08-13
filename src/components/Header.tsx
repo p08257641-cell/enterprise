@@ -10,6 +10,7 @@ import { isEmployeeRole } from '../permissions';
 
 interface HeaderProps {
   selectedUser: User;
+  selectedCompany?: any;
   notificationCount: number;
   pendingApprovalCount: number;
   pendingApprovals?: PendingApproval[];
@@ -56,6 +57,7 @@ function timeAgo(dateStr: string): string {
 
 export const Header: React.FC<HeaderProps> = ({
   selectedUser,
+  selectedCompany,
   notificationCount,
   pendingApprovalCount,
   pendingApprovals = [],
