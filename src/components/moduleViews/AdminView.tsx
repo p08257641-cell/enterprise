@@ -7,7 +7,7 @@ import { sendWhatsApp } from '../../utils/whatsapp';
 import { sendEmail } from '../../utils/email';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { MODULE_HIERARCHY } from '../../data/moduleHierarchy';
-import { isAdminRole, isHRRole, isHRDeptHead, canAccessSubmenu } from '../../permissions';
+import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
 import { formatCurrency } from '../../utils/currency';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
@@ -188,16 +188,15 @@ const [deptParent, setDeptParent] = useState('');
         {/* ── Top Tab Bar ─────────────────────────────────────────────── */}
         <div className="flex items-center gap-1 overflow-x-auto mb-6 bg-white border border-slate-200 rounded-xl px-2 py-1.5 shadow-xs">
           {([
-            { id: 'branches',     label: 'Branches',     icon: 'bi bi-geo-alt',        submenuId: 'admin-branches' },
-            { id: 'departments',  label: 'Departments',  icon: 'bi bi-diagram-3',      submenuId: 'admin-departments' },
-            { id: 'users',        label: 'Users',        icon: 'bi bi-people',         submenuId: 'admin-users' },
-            { id: 'roles',        label: 'Roles',        icon: 'bi bi-shield-lock',    submenuId: 'admin-roles' },
-            { id: 'approvals',    label: 'Approvals',    icon: 'bi bi-check2-square',  submenuId: 'admin-approvals' },
-            { id: 'settings',     label: 'Settings',     icon: 'bi bi-toggles',        submenuId: 'admin-settings' },
-            { id: 'evat',         label: 'E-VAT',        icon: 'bi bi-receipt-cutoff', submenuId: 'admin-evat' },
-            { id: 'integrations', label: 'Integrations', icon: 'bi bi-plug',           submenuId: 'admin-settings', highlight: true },
-          ] as { id: string; label: string; icon: string; submenuId: string; highlight?: boolean }[])
-            .filter(tab => canAccessSubmenu(selectedUser.activeRole, tab.submenuId))
+            { id: 'branches',     label: 'Branches',     icon: 'bi bi-geo-alt' },
+            { id: 'departments',  label: 'Departments',  icon: 'bi bi-diagram-3' },
+            { id: 'users',        label: 'Users',        icon: 'bi bi-people' },
+            { id: 'roles',        label: 'Roles',        icon: 'bi bi-shield-lock' },
+            { id: 'approvals',    label: 'Approvals',    icon: 'bi bi-check2-square' },
+            { id: 'settings',     label: 'Settings',     icon: 'bi bi-toggles' },
+            { id: 'evat',         label: 'E-VAT',        icon: 'bi bi-receipt-cutoff' },
+            { id: 'integrations', label: 'Integrations', icon: 'bi bi-plug', highlight: true },
+          ] as { id: string; label: string; icon: string; highlight?: boolean }[])
             .map(tab => (
             <button
               key={tab.id}
