@@ -179,12 +179,14 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative" ref={appsRef}>
           <button
             onClick={() => setAppsMenuOpen(prev => !prev)}
-            className={`p-1.5 rounded-full transition-all cursor-pointer ${
-              appsMenuOpen ? 'bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/20' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+            className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-2xs ${
+              appsMenuOpen
+                ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900/20'
+                : 'bg-slate-100/90 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80'
             }`}
             title="Apps & Integrations Launcher"
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+            <svg viewBox="0 0 24 24" className="w-6.5 h-6.5 fill-current">
               <path d="M6 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm12 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-6 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm12 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-6 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm12 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
             </svg>
           </button>
@@ -194,8 +196,8 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-900/15 z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between px-2 pb-3 mb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-                    <i className="bi bi-grid-3x3-gap-fill text-indigo-600 text-xs"></i>
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                    <i className="bi bi-grid-3x3-gap-fill text-indigo-600 text-sm"></i>
                   </div>
                   <span className="text-xs fw-bold text-slate-900 tracking-wide">Apps & Integrations</span>
                 </div>
