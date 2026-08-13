@@ -41,10 +41,25 @@ export interface Company {
   webhookSecret?: string;
   websiteIntegrationEnabled?: boolean;
   shopifyIntegrationEnabled?: boolean;
+  shopifyStoreUrl?: string;
+  shopifyAccessToken?: string;
   woocommerceIntegrationEnabled?: boolean;
+  woocommerceSiteUrl?: string;
+  woocommerceConsumerKey?: string;
+  woocommerceConsumerSecret?: string;
   zapierIntegrationEnabled?: boolean;
+  xeroIntegrationEnabled?: boolean;
+  xeroTenantId?: string;
+  xeroClientId?: string;
+  quickbooksIntegrationEnabled?: boolean;
+  quickbooksRealmId?: string;
+  quickbooksClientId?: string;
+  googleWorkspaceIntegrationEnabled?: boolean;
+  googleWorkspaceDomain?: string;
+  googleWorkspaceClientId?: string;
   createdAt: string;
 }
+
 
 export interface User {
   id: string;

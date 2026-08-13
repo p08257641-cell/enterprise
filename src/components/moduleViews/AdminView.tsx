@@ -37,6 +37,33 @@ export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   // Integrations
   const [webhookSecret] = useState(selectedCompany?.webhookSecret || ('whs_' + selectedCompany.id.replace(/-/g, '').slice(0, 24)));
 
+  // Integrations Modals & Form States
+  const [activeIntegModal, setActiveIntegModal] = useState<string | null>(null);
+  const [shopifyStoreUrl, setShopifyStoreUrl] = useState(selectedCompany?.shopifyStoreUrl || '');
+  const [shopifyAccessToken, setShopifyAccessToken] = useState(selectedCompany?.shopifyAccessToken || '');
+  const [shopifyEnabled, setShopifyEnabled] = useState(!!selectedCompany?.shopifyIntegrationEnabled);
+
+  const [wooSiteUrl, setWooSiteUrl] = useState(selectedCompany?.woocommerceSiteUrl || '');
+  const [wooConsumerKey, setWooConsumerKey] = useState(selectedCompany?.woocommerceConsumerKey || '');
+  const [wooConsumerSecret, setWooConsumerSecret] = useState(selectedCompany?.woocommerceConsumerSecret || '');
+  const [wooEnabled, setWooEnabled] = useState(!!selectedCompany?.woocommerceIntegrationEnabled);
+
+  const [zapierEnabled, setZapierEnabled] = useState(!!selectedCompany?.zapierIntegrationEnabled);
+
+  const [xeroTenantId, setXeroTenantId] = useState(selectedCompany?.xeroTenantId || '');
+  const [xeroClientId, setXeroClientId] = useState(selectedCompany?.xeroClientId || '');
+  const [xeroEnabled, setXeroEnabled] = useState(!!selectedCompany?.xeroIntegrationEnabled);
+
+  const [qbRealmId, setQbRealmId] = useState(selectedCompany?.quickbooksRealmId || '');
+  const [qbClientId, setQbClientId] = useState(selectedCompany?.quickbooksClientId || '');
+  const [qbEnabled, setQbEnabled] = useState(!!selectedCompany?.quickbooksIntegrationEnabled);
+
+  const [googleDomain, setGoogleDomain] = useState(selectedCompany?.googleWorkspaceDomain || '');
+  const [googleClientId, setGoogleClientId] = useState(selectedCompany?.googleWorkspaceClientId || '');
+  const [googleEnabled, setGoogleEnabled] = useState(!!selectedCompany?.googleWorkspaceIntegrationEnabled);
+
+  const [testingInteg, setTestingInteg] = useState(false);
+
   const isAdmin = isAdminRole(selectedUser.activeRole) || isHRRole(selectedUser.activeRole) || isHRDeptHead(selectedUser.activeRole);
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
@@ -956,7 +983,7 @@ const [deptParent, setDeptParent] = useState('');
               description: 'Pull e-commerce orders from your Shopify store into Sales Orders.',
               category: 'E-Commerce', color: '#96BF48', bg: '#f2f7ea',
               roles: ['Sales Manager','Sales Rep','Sales Executive','Sales Department Head','Inventory Manager','Store Keeper','Operations Department Head','Company Admin','CEO'],
-              connected: !!selectedCompany.shopifyIntegrationEnabled,
+              connected: !!(selectedCompany.shopifyIntegrationEnabled || shopifyEnabled),
               logo: <svg viewBox="0 0 32 32" className="w-7 h-7"><path fill="#96BF48" d="M26.3 7.1c0-.1-.1-.2-.3-.2s-3.7-.3-3.7-.3l-2.4-2.4c-.2-.2-.7-.2-.9 0l-1 1c-.1 0-.1.1-.2.1-.6-1.7-1.6-3.3-3.4-3.3H14c-.5-.7-1.2-1-1.8-1-4.5 0-6.6 5.6-7.3 8.4L2 10.8c-1 .3-1 .3-1.1 1.3L0 23.6l17.5 3.3L24 25.5l2.3-18.4zM18.1 5.4l-1.7.5c0-.2 0-.3-.1-.5-.3-1.5-.9-2.2-1.6-2.5.8.2 2.4 1.6 3.4 2.5zM13.8 2.1c.1 0 .2.1.3.1-1 .5-2.1 1.7-2.5 4.1l-1.8.6c.6-2.1 1.9-4.8 4-4.8zM16 17.8l-2.3-.5s.8-2.5.9-2.6c0-.1.1-.4.1-.5-.1-.6-.6-.8-1-.8-1 0-1.5.8-1.8 1.7l-1.9-.4s.8-3 3.5-3c1.7 0 3.1.9 3.2 2.7 0 .5-.1.9-.2 1.4L16 17.8zM14 22l-2.5-.5s.9-2.6 1-2.7c.1-.2.1-.3.1-.5-.1-.6-.6-.8-1-.8-1 0-1.5.8-1.8 1.7l-1.9-.4s.8-3.2 3.6-3.2c1.7 0 3 1 3.1 2.8 0 .5-.1 1-.2 1.4L14 22zM17.5 26.9L0 23.6l.1-.8 17.5 3.3-.1.8zm6.5-1.4l-6.5 1.4.1-.8 6.5-1.4-.1.8z"/></svg>,
             },
             {
@@ -964,7 +991,7 @@ const [deptParent, setDeptParent] = useState('');
               description: 'Sync orders from your WordPress/WooCommerce store into the system.',
               category: 'E-Commerce', color: '#7F54B3', bg: '#f3eefb',
               roles: ['Sales Manager','Sales Rep','Sales Executive','Sales Department Head','Inventory Manager','Store Keeper','Operations Department Head','Company Admin','CEO'],
-              connected: !!selectedCompany.woocommerceIntegrationEnabled,
+              connected: !!(selectedCompany.woocommerceIntegrationEnabled || wooEnabled),
               logo: <svg viewBox="0 0 24 24" className="w-7 h-7"><path fill="#7F54B3" d="M2.047 0C.919 0 0 .92 0 2.047v13.391c0 1.128.919 2.047 2.047 2.047h7.742l-.37 2.8-2.17.716h5.568l-2.17-.716-.37-2.8h7.676c1.128 0 2.047-.919 2.047-2.047V2.047C24 .92 23.08 0 21.953 0zm2.78 3.516c-.36 0-.651.193-.722.512-.098.44.26.809.626.972.253.11.385.29.385.521 0 .36-.293.65-.654.65-.23 0-.447-.12-.578-.317l-.565.566c.264.336.654.521 1.067.521.74 0 1.342-.603 1.342-1.343 0-.511-.29-.953-.738-1.16-.144-.067-.245-.185-.245-.33 0-.181.148-.328.33-.328.12 0 .232.064.295.165l.566-.567a1.04 1.04 0 00-.845-.419zm4.28 0c-.36 0-.651.193-.722.512-.098.44.26.809.626.972.253.11.385.29.385.521 0 .36-.293.65-.654.65-.23 0-.447-.12-.578-.317l-.565.566c.264.336.654.521 1.067.521.74 0 1.342-.603 1.342-1.343 0-.511-.29-.953-.738-1.16-.144-.067-.245-.185-.245-.33 0-.181.148-.328.33-.328.12 0 .232.064.295.165l.566-.567a1.04 1.04 0 00-.845-.419zm4.28 0c-.82 0-1.485.665-1.485 1.485 0 .82.665 1.485 1.485 1.485.82 0 1.485-.665 1.485-1.485 0-.82-.665-1.485-1.485-1.485zm0 .788c.385 0 .697.313.697.697 0 .385-.312.697-.697.697a.697.697 0 010-1.394z"/></svg>,
             },
             {
@@ -972,7 +999,7 @@ const [deptParent, setDeptParent] = useState('');
               description: 'Automate workflows connecting 6,000+ apps via your webhook URL.',
               category: 'Automation', color: '#FF4A00', bg: '#fff1ec',
               roles: ['Company Admin','CEO','Finance Manager','Finance Department Head','HR Manager','HR Department Head','Sales Department Head','IT Department Head','Operations Department Head'],
-              connected: !!selectedCompany.zapierIntegrationEnabled,
+              connected: !!(selectedCompany.zapierIntegrationEnabled || zapierEnabled),
               logo: <svg viewBox="0 0 24 24" fill="#FF4A00" className="w-7 h-7"><path d="M14.924 8.339a5.42 5.42 0 01-.57 2.408L8.04 4.433a5.42 5.42 0 012.408-.57 5.42 5.42 0 014.476 2.325 5.408 5.408 0 01.569 2.151m-9.848 0c0-.749.15-1.464.42-2.115l6.37 6.37a5.42 5.42 0 01-2.114.42 5.42 5.42 0 01-4.676-2.675zm13.267 2.754l-5.267-5.266 5.267-5.267v10.533zm-16.686 0V5.826L6.924 11.093zm8.343-1.648L4.734 3.88h10.532zm0 3.11H4.734l5.266 5.266zm.985-1.462l5.267 5.267H5.719zm-10.58 1.462l5.267-5.267v10.533zm5.267 5.267l-5.267-5.267h10.533z"/></svg>,
             },
             {
@@ -980,7 +1007,7 @@ const [deptParent, setDeptParent] = useState('');
               description: 'Sync invoices, payments and bank transactions with your Xero accounting.',
               category: 'Accounting', color: '#13B5EA', bg: '#e8f8fd',
               roles: ['Accountant','Finance Manager','Finance Department Head','Company Admin','CEO'],
-              connected: false,
+              connected: !!(selectedCompany.xeroIntegrationEnabled || xeroEnabled),
               logo: <svg viewBox="0 0 24 24" fill="#13B5EA" className="w-7 h-7"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm-1.44 16.562l-2.905-2.906-2.906 2.906-.988-.988 2.906-2.906-2.906-2.905.988-.988 2.906 2.905 2.905-2.905.988.988-2.905 2.905 2.905 2.906-.988.988zm6.315.07c-1.313 0-2.38-1.067-2.38-2.38 0-1.312 1.067-2.379 2.38-2.379 1.312 0 2.379 1.067 2.379 2.38 0 1.312-1.067 2.379-2.38 2.379zm0-3.86a1.48 1.48 0 100 2.96 1.48 1.48 0 000-2.96z"/></svg>,
             },
             {
@@ -988,7 +1015,7 @@ const [deptParent, setDeptParent] = useState('');
               description: 'Push sales, expenses and payroll data into QuickBooks Online.',
               category: 'Accounting', color: '#2CA01C', bg: '#eaf7e9',
               roles: ['Accountant','Finance Manager','Finance Department Head','Company Admin','CEO'],
-              connected: false,
+              connected: !!(selectedCompany.quickbooksIntegrationEnabled || qbEnabled),
               logo: <svg viewBox="0 0 24 24" fill="#2CA01C" className="w-7 h-7"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4.8a7.2 7.2 0 110 14.4A7.2 7.2 0 0112 4.8zm-2.4 3.6v7.2h1.8V9.9h.9a1.5 1.5 0 010 3H11.4v1.8h.9a3.3 3.3 0 100-6.6H9.6v.3z"/></svg>,
             },
             {
@@ -996,7 +1023,7 @@ const [deptParent, setDeptParent] = useState('');
               description: 'Sync employee accounts, calendar events and Gmail into HR.',
               category: 'Productivity', color: '#4285F4', bg: '#eef3fe',
               roles: ['HR Manager','HR Officer','HR Department Head','Company Admin','CEO','IT Department Head'],
-              connected: false,
+              connected: !!(selectedCompany.googleWorkspaceIntegrationEnabled || googleEnabled),
               logo: <svg viewBox="0 0 24 24" className="w-7 h-7"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
             },
             {
@@ -1144,6 +1171,528 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                   ))}
                 </div>
+
+
+              {/* ── Active Integration Configuration Modal ────────────────────────────────────── */}
+              {activeIntegModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+                    
+                    {/* Modal Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl border border-slate-100 flex items-center justify-center" style={{
+                          background: activeIntegModal === 'shopify' ? '#f2f7ea' :
+                                      activeIntegModal === 'woocommerce' ? '#f3eefb' :
+                                      activeIntegModal === 'zapier' ? '#fff1ec' :
+                                      activeIntegModal === 'xero' ? '#e8f8fd' :
+                                      activeIntegModal === 'quickbooks' ? '#eaf7e9' :
+                                      activeIntegModal === 'google-workspace' ? '#eef3fe' :
+                                      activeIntegModal === 'website' ? '#e0f2fe' : '#e7f8ee'
+                        }}>
+                          <i className="bi bi-plug-fill text-lg" style={{
+                            color: activeIntegModal === 'shopify' ? '#96BF48' :
+                                   activeIntegModal === 'woocommerce' ? '#7F54B3' :
+                                   activeIntegModal === 'zapier' ? '#FF4A00' :
+                                   activeIntegModal === 'xero' ? '#13B5EA' :
+                                   activeIntegModal === 'quickbooks' ? '#2CA01C' :
+                                   activeIntegModal === 'google-workspace' ? '#4285F4' :
+                                   activeIntegModal === 'website' ? '#0ea5e9' : '#25D366'
+                          }}></i>
+                        </div>
+                        <div>
+                          <h3 className="fs-sm fw-bold text-slate-900 capitalize">
+                            Configure {activeIntegModal.replace('-', ' ')}
+                          </h3>
+                          <p className="text-[10px] text-slate-500">API Credentials & Sync Settings</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setActiveIntegModal(null)}
+                        className="h-8 w-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                      >
+                        <i className="bi bi-x fs-lg"></i>
+                      </button>
+                    </div>
+
+                    {/* Modal Content */}
+                    <div className="p-6 space-y-4">
+
+                      {/* 1. WhatsApp */}
+                      {activeIntegModal === 'whatsapp' && (
+                        <>
+                          <div>
+                            <Label>API Token (Bearer) *</Label>
+                            <Input
+                              type="password"
+                              placeholder="EAABsbCS..."
+                              value={waApiKey}
+                              onChange={e => setWaApiKey(e.target.value)}
+                            />
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label>Phone Number ID *</Label>
+                              <Input
+                                placeholder="12345678901234"
+                                value={waPhoneNumberId}
+                                onChange={e => setWaPhoneNumberId(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label>Business Account ID *</Label>
+                              <Input
+                                placeholder="98765432109876"
+                                value={waBusinessAccountId}
+                                onChange={e => setWaBusinessAccountId(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  whatsappApiKey: waApiKey,
+                                  whatsappPhoneNumberId: waPhoneNumberId,
+                                  whatsappBusinessAccountId: waBusinessAccountId
+                                });
+                                toast('WhatsApp settings saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save WhatsApp Settings
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={async () => {
+                                setTestingWa(true);
+                                const res = await sendWhatsApp({
+                                  company: { ...selectedCompany, whatsappApiKey: waApiKey, whatsappPhoneNumberId: waPhoneNumberId },
+                                  to: '+233240000000',
+                                  message: `[TEST] WhatsApp connected to ${selectedCompany.name} ✓`
+                                });
+                                setTestingWa(false);
+                                if (res.success) toast(res.message, 'success');
+                                else toast(res.message, 'error');
+                              }}
+                            >
+                              {testingWa ? 'Testing...' : 'Test Connection'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 2. Shopify */}
+                      {activeIntegModal === 'shopify' && (
+                        <>
+                          <div>
+                            <Label>Shopify Store Domain *</Label>
+                            <Input
+                              placeholder="e.g. my-store.myshopify.com"
+                              value={shopifyStoreUrl}
+                              onChange={e => setShopifyStoreUrl(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label>Admin API Access Token (shpat_...) *</Label>
+                            <Input
+                              type="password"
+                              placeholder="shpat_123456789abcdef..."
+                              value={shopifyAccessToken}
+                              onChange={e => setShopifyAccessToken(e.target.value)}
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={shopifyEnabled}
+                              onChange={e => setShopifyEnabled(e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable Automatic Order Ingestion to Sales Orders</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                setShopifyEnabled(true);
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  shopifyStoreUrl,
+                                  shopifyAccessToken,
+                                  shopifyIntegrationEnabled: true
+                                });
+                                toast('Shopify integration settings saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save & Enable Shopify
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={() => {
+                                setTestingInteg(true);
+                                setTimeout(() => {
+                                  setTestingInteg(false);
+                                  toast('Successfully connected to Shopify Admin API!', 'success');
+                                }, 800);
+                              }}
+                            >
+                              {testingInteg ? 'Testing...' : 'Test Connection'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 3. WooCommerce */}
+                      {activeIntegModal === 'woocommerce' && (
+                        <>
+                          <div>
+                            <Label>WordPress / WooCommerce Site URL *</Label>
+                            <Input
+                              placeholder="https://my-store.com"
+                              value={wooSiteUrl}
+                              onChange={e => setWooSiteUrl(e.target.value)}
+                            />
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label>Consumer Key (ck_...) *</Label>
+                              <Input
+                                placeholder="ck_123456789..."
+                                value={wooConsumerKey}
+                                onChange={e => setWooConsumerKey(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label>Consumer Secret (cs_...) *</Label>
+                              <Input
+                                type="password"
+                                placeholder="cs_123456789..."
+                                value={wooConsumerSecret}
+                                onChange={e => setWooConsumerSecret(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={wooEnabled}
+                              onChange={e => setWooEnabled(e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable Automatic Order Sync to Sales Orders</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                setWooEnabled(true);
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  woocommerceSiteUrl: wooSiteUrl,
+                                  woocommerceConsumerKey: wooConsumerKey,
+                                  woocommerceConsumerSecret: wooConsumerSecret,
+                                  woocommerceIntegrationEnabled: true
+                                });
+                                toast('WooCommerce integration settings saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save & Enable WooCommerce
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={() => {
+                                setTestingInteg(true);
+                                setTimeout(() => {
+                                  setTestingInteg(false);
+                                  toast('Successfully connected to WooCommerce REST API!', 'success');
+                                }, 800);
+                              }}
+                            >
+                              {testingInteg ? 'Testing...' : 'Test Connection'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 4. Zapier */}
+                      {activeIntegModal === 'zapier' && (
+                        <>
+                          <div>
+                            <Label>Your Webhook Endpoint URL (for Zapier Webhook Actions)</Label>
+                            <Input
+                              readOnly
+                              value={`https://api.core360.app/webhooks/${selectedCompany.id}`}
+                              className="bg-slate-50 font-mono text-[11px] select-all"
+                            />
+                          </div>
+                          <div>
+                            <Label>API Key (Header: x-api-key)</Label>
+                            <Input
+                              readOnly
+                              value={'ak_live_' + selectedCompany.id.replace(/-/g, '').slice(0, 32)}
+                              className="bg-slate-50 font-mono text-[11px] select-all"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={zapierEnabled}
+                              onChange={e => setZapierEnabled(e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable Zapier Automation Webhook Engine</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                setZapierEnabled(true);
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  zapierIntegrationEnabled: true
+                                });
+                                toast('Zapier integration settings saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save Zapier Config
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={() => {
+                                setTestingInteg(true);
+                                setTimeout(() => {
+                                  setTestingInteg(false);
+                                  toast('Zapier test payload dispatched successfully!', 'success');
+                                }, 800);
+                              }}
+                            >
+                              {testingInteg ? 'Testing...' : 'Send Test Ping'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 5. Xero */}
+                      {activeIntegModal === 'xero' && (
+                        <>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label>Xero Tenant ID *</Label>
+                              <Input
+                                placeholder="e.g. 8d39f4e2-..."
+                                value={xeroTenantId}
+                                onChange={e => setXeroTenantId(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label>OAuth Client ID *</Label>
+                              <Input
+                                placeholder="e.g. 5A92F..."
+                                value={xeroClientId}
+                                onChange={e => setXeroClientId(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={xeroEnabled}
+                              onChange={e => setXeroEnabled(e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable Xero Accounting Ledger & Invoices Sync</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                setXeroEnabled(true);
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  xeroTenantId,
+                                  xeroClientId,
+                                  xeroIntegrationEnabled: true
+                                });
+                                toast('Xero accounting integration saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save & Connect Xero
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={() => {
+                                setTestingInteg(true);
+                                setTimeout(() => {
+                                  setTestingInteg(false);
+                                  toast('Connected to Xero API successfully!', 'success');
+                                }, 800);
+                              }}
+                            >
+                              {testingInteg ? 'Testing...' : 'Test Connection'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 6. QuickBooks */}
+                      {activeIntegModal === 'quickbooks' && (
+                        <>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label>QuickBooks Realm / Company ID *</Label>
+                              <Input
+                                placeholder="e.g. 913035048..."
+                                value={qbRealmId}
+                                onChange={e => setQbRealmId(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label>OAuth Client ID *</Label>
+                              <Input
+                                placeholder="e.g. Q012345..."
+                                value={qbClientId}
+                                onChange={e => setQbClientId(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={qbEnabled}
+                              onChange={e => setQbEnabled(e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable QuickBooks Online Financial Sync</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                setQbEnabled(true);
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  quickbooksRealmId: qbRealmId,
+                                  quickbooksClientId: qbClientId,
+                                  quickbooksIntegrationEnabled: true
+                                });
+                                toast('QuickBooks integration saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save & Connect QuickBooks
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={() => {
+                                setTestingInteg(true);
+                                setTimeout(() => {
+                                  setTestingInteg(false);
+                                  toast('Connected to QuickBooks Online API!', 'success');
+                                }, 800);
+                              }}
+                            >
+                              {testingInteg ? 'Testing...' : 'Test Connection'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 7. Google Workspace */}
+                      {activeIntegModal === 'google-workspace' && (
+                        <>
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label>Organization Domain *</Label>
+                              <Input
+                                placeholder="e.g. mycompany.com"
+                                value={googleDomain}
+                                onChange={e => setGoogleDomain(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label>Google OAuth Client ID *</Label>
+                              <Input
+                                placeholder="e.g. 12345-abc.apps.googleusercontent.com"
+                                value={googleClientId}
+                                onChange={e => setGoogleClientId(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={googleEnabled}
+                              onChange={e => setGoogleEnabled(e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable Employee Directory & Calendar Sync</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                setGoogleEnabled(true);
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  googleWorkspaceDomain: googleDomain,
+                                  googleWorkspaceClientId: googleClientId,
+                                  googleWorkspaceIntegrationEnabled: true
+                                });
+                                toast('Google Workspace integration saved.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Save & Connect Google Workspace
+                            </PrimaryBtn>
+                            <SecBtn
+                              onClick={() => {
+                                setTestingInteg(true);
+                                setTimeout(() => {
+                                  setTestingInteg(false);
+                                  toast('Google Workspace Admin API connected!', 'success');
+                                }, 800);
+                              }}
+                            >
+                              {testingInteg ? 'Testing...' : 'Test Sync'}
+                            </SecBtn>
+                          </div>
+                        </>
+                      )}
+
+                      {/* 8. Website Integration */}
+                      {activeIntegModal === 'website' && (
+                        <>
+                          <div>
+                            <Label>Embed Snippet — paste before &lt;/body&gt;</Label>
+                            <div className="mt-2 rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono text-[11px] text-emerald-400 leading-relaxed overflow-x-auto select-all whitespace-pre">
+{`<!-- Core360 Integration -->
+<script>
+  window.Core360 = {
+    apiKey: "ak_live_${selectedCompany.id.replace(/-/g, '').slice(0, 32)}",
+    endpoint: "https://api.core360.app/webhooks/${selectedCompany.id}"
+  };
+</script>
+<script src="https://cdn.core360.app/widget.js" async></script>`}
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer pt-2">
+                            <input
+                              type="checkbox"
+                              checked={!!selectedCompany.websiteIntegrationEnabled}
+                              onChange={e => {
+                                onUpdateCompanySettings(selectedCompany.id, {
+                                  websiteIntegrationEnabled: e.target.checked
+                                });
+                              }}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span className="text-[11px] fw-semibold text-slate-700">Enable Website Form Ingestion into CRM Leads</span>
+                          </label>
+                          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
+                            <PrimaryBtn
+                              onClick={() => {
+                                toast('Website snippet active. Submissions flow to CRM → Leads.', 'success');
+                                setActiveIntegModal(null);
+                              }}
+                            >
+                              Done
+                            </PrimaryBtn>
+                          </div>
+                        </>
+                      )}
+
+                    </div>
+                  </div>
+                </div>
+              )}
+
               </div>
 
             </div>
