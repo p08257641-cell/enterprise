@@ -397,7 +397,7 @@ app.get('/api/public/companies', asyncHandler(async (req, res) => {
 // PUBLIC WEBHOOK INGESTION ENGINE (Shopify, WooCommerce, WhatsApp, Website Embed)
 // Protected via API Key, Webhook Secret, and HMAC signature verification
 // ══════════════════════════════════════════════════════════════════════════════
-app.post('/api/public/webhooks/:companyId', asyncHandler(async (req, res) => {
+app.post(['/webhooks/:companyId', '/api/webhooks/:companyId', '/api/public/webhooks/:companyId'], asyncHandler(async (req, res) => {
   const { companyId } = req.params;
   const apiKey = (req.headers['x-api-key'] || req.query.apiKey) as string;
   const signature = (req.headers['x-core360-signature'] || req.headers['x-hub-signature-256']) as string;
