@@ -17,8 +17,9 @@ import { pendingApprovals } from './db/pendingApprovals';
 import { db, dbAll, dbByCompany, dbById, dbInsert, dbInsertMany, dbUpdate, dbDelete, logAuditDb, dbByCompanyPaginated, dbAllPaginated } from './db/repo';
 import { pool } from './db';
 import { logger, logRequest, logError } from './server/lib/logger';
-import { signToken, hashPassword, comparePassword, crudGuard } from './server/lib/auth';
+import { signToken, hashPassword, comparePassword, crudGuard, verifyHmacSignature, maskSensitiveFields } from './server/lib/auth';
 import { authenticate, requireRole, enforceTenantIsolation } from './server/middleware/auth';
+
 import { globalLimiter, authLimiter, aiLimiter } from './server/middleware/rateLimit';
 import { validate, LoginSchema, CreateTicketSchema, CreateLeadSchema, CreateExpenseSchema, CreateBillSchema, JournalEntrySchema } from './server/lib/validators';
 
@@ -392,8 +393,81 @@ app.get('/api/public/companies', asyncHandler(async (req, res) => {
   res.json(publicData);
 }));
 
+// ══════════════════════════════════════════════════════════════════════════════
+// PUBLIC WEBHOOK INGESTION ENGINE (Shopify, WooCommerce, WhatsApp, Website Embed)
+// Protected via API Key, Webhook Secret, and HMAC signature verification
+// ══════════════════════════════════════════════════════════════════════════════
+app.post('/api/public/webhooks/:companyId', asyncHandler(async (req, res) => {
+  const { companyId } = req.params;
+  const apiKey = (req.headers['x-api-key'] || req.query.apiKey) as string;
+  const signature = (req.headers['x-core360-signature'] || req.headers['x-hub-signature-256']) as string;
+
+  // 1. Verify target company exists
+  const company = await dbById<any>(schema.companies, companyId);
+  if (!company) {
+    return res.status(404).json({ error: 'Tenant workspace not found' });
+  }
+
+  // 2. Validate API Key or HMAC Signature
+  const expectedApiKey = 'ak_live_' + company.id.replace(/-/g, '').slice(0, 32);
+  const isValidApiKey = apiKey === expectedApiKey || apiKey === company.apiKey;
+
+  let isValidSignature = false;
+  if (signature && company.webhookSecret) {
+    const rawBody = JSON.stringify(req.body);
+    isValidSignature = verifyHmacSignature(rawBody, signature, company.webhookSecret);
+  }
+
+  if (!isValidApiKey && !isValidSignature) {
+    logAudit(companyId, 'unauthorized', 'External Webhook', 'WEBHOOK_REJECTED', 'Integrations', `Invalid API key or signature for tenant ${companyId}`);
+    return res.status(401).json({ error: 'Unauthorized: Invalid API key or HMAC signature' });
+  }
+
+  // 3. Process payload based on event source
+  const payload = req.body || {};
+  const eventType = payload.event || payload.type || 'contact_submission';
+
+  if (eventType === 'order_created' || payload.order_id) {
+    // Create Sales Order
+    const newOrder: any = {
+      id: `so-wh-${Date.now()}`,
+      companyId,
+      orderNumber: `SO-WH-${Math.floor(1000 + Math.random() * 9000)}`,
+      customerName: payload.customerName || payload.customer?.name || 'Online Customer',
+      customerEmail: payload.customerEmail || payload.customer?.email || 'customer@example.com',
+      totalAmount: Number(payload.totalAmount || payload.total_price || 0),
+      currency: payload.currency || company.currency || 'USD',
+      status: 'Confirmed',
+      items: JSON.stringify(payload.items || []),
+      createdAt: new Date().toISOString()
+    };
+    await dbInsert<any>(schema.salesOrders, newOrder);
+    logAudit(companyId, 'webhook', 'Webhook Engine', 'SALES_ORDER_CREATED', 'Sales', `Created Sales Order ${newOrder.orderNumber} via external webhook`);
+    return res.status(201).json({ success: true, message: 'Sales Order ingested successfully', recordId: newOrder.id });
+  } else {
+    // Create CRM Lead
+    const newLead: any = {
+      id: `lead-wh-${Date.now()}`,
+      companyId,
+      name: payload.name || payload.contact_name || payload.email || 'Web Inquirer',
+      company: payload.companyName || payload.company || 'Direct Inquiry',
+      email: payload.email || '',
+      phone: payload.phone || payload.phoneNumber || '',
+      status: 'New',
+      source: payload.source || 'Website Integration Widget',
+      value: Number(payload.budget || payload.value || 0),
+      notes: payload.message || payload.notes || 'Submitted via Core360 Webhook Integration',
+      createdAt: new Date().toISOString()
+    };
+    await dbInsert<any>(schema.crmLeads, newLead);
+    logAudit(companyId, 'webhook', 'Webhook Engine', 'CRM_LEAD_CREATED', 'CRM', `Created Lead ${newLead.name} via external webhook`);
+    return res.status(201).json({ success: true, message: 'Lead ingested successfully', recordId: newLead.id });
+  }
+}));
+
 // Apply auth to all subsequent /api routes
 app.use('/api', authenticate);
+
 
 // CRUD permission enforcement
 const CRUD_ROUTES: Array<{ prefix: string; module: string }> = [

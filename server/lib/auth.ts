@@ -40,3 +40,34 @@ export function crudGuard(module: string, action: string, options?: { allowOnEmp
     return res.status(403).json({ error: `Missing ${module}.${action} permission` });
   };
 }
+
+import crypto from 'crypto';
+
+export function verifyHmacSignature(payload: string, signature: string, secret: string): boolean {
+  if (!signature || !secret) return false;
+  try {
+    const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    const expectedBuf = Buffer.from(expected);
+    const signatureBuf = Buffer.from(signature.replace(/^sha256=/, ''));
+    if (expectedBuf.length !== signatureBuf.length) return false;
+    return crypto.timingSafeEqual(expectedBuf, signatureBuf);
+  } catch {
+    return false;
+  }
+}
+
+export function maskSensitiveFields<T extends Record<string, any>>(obj: T): T {
+  if (!obj || typeof obj !== 'object') return obj;
+  const clone = { ...obj };
+  const sensitiveKeys = [
+    'whatsappApiKey', 'smtpPassword', 'emailApiKey', 'securityKey',
+    'smsApiKey', 'smsApiSecret', 'password', 'apiSecret', 'secret'
+  ];
+  for (const key of Object.keys(clone)) {
+    if (sensitiveKeys.includes(key) && typeof clone[key] === 'string' && clone[key].length > 0) {
+      clone[key as keyof T] = '••••••••' as any;
+    }
+  }
+  return clone;
+}
+
