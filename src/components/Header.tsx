@@ -20,6 +20,7 @@ interface HeaderProps {
   onSwitchRole?: (userId: string, newRole: string) => void;
   onToggleSidebar?: () => void;
   onNavigateView?: (view: string) => void;
+  onStartTour?: () => void;
 }
 
 const MODULE_ICONS: Record<string, string> = {
@@ -67,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSwitchRole,
   onToggleSidebar,
   onNavigateView,
+  onStartTour,
 }) => {
   const { logout } = useAuth();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -175,6 +177,18 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           </div>
+        )}
+
+        {/* ── AI System Walkthrough & Onboarding Tour Button ───────────────── */}
+        {onStartTour && (
+          <button
+            onClick={onStartTour}
+            className="h-10 px-3 sm:h-11 sm:px-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 flex items-center gap-2 transition-all cursor-pointer shadow-2xs font-semibold text-xs group"
+            title="Start AI System Onboarding Walkthrough"
+          >
+            <i className="bi bi-compass-fill text-indigo-600 text-sm group-hover:rotate-45 transition-transform"></i>
+            <span className="hidden sm:inline">AI Tour</span>
+          </button>
         )}
 
         {/* ── Google-Style 9-Dots App Launcher Waffle Menu ─────────────────── */}

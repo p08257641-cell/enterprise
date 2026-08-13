@@ -10,6 +10,7 @@ import { Sidebar } from './components/Sidebar';
 import { RoleDashboards } from './components/RoleDashboards';
 import { WorkflowBuilder } from './components/WorkflowBuilder';
 import { AIAssistant } from './components/AIAssistant';
+import { AIOnboardingTour } from './components/AIOnboardingTour';
 import { ModuleViews } from './components/ModuleViews';
 import { TenantSetup } from './components/TenantSetup';
 import { FadeIn, Skeleton } from './components/ui';
@@ -147,6 +148,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   // Navigation states
   const [activeView, setActiveView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [showTenantSetup, setShowTenantSetup] = useState(false);
   const [notificationCount, setNotificationCount] = useState(2);
   const [searchTerm, setSearchTerm] = useState('');
@@ -3361,6 +3363,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           onSwitchRole={handleSwitchRole}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onNavigateView={setActiveView}
+          onStartTour={() => setIsTourOpen(true)}
         />
 
         {/* Dynamic Dashboard/Controls View stage */}
@@ -3846,6 +3849,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         </div>
       )}
     </div>
+
+    {/* AI System Onboarding & Walkthrough Tour Modal */}
+    <AIOnboardingTour
+      user={selectedUser}
+      isOpen={isTourOpen}
+      onClose={() => setIsTourOpen(false)}
+      onNavigateView={setActiveView}
+    />
 
     {/* Floating Team Chat — always visible */}
     <FloatingChat
