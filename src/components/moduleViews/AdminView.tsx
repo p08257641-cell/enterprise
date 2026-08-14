@@ -512,14 +512,19 @@ const [deptParent, setDeptParent] = useState('');
                           )}
                         </div>
                         {Object.keys(crudByModule).length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-2">
+                          <div className="flex flex-wrap gap-2 mt-2.5">
                             {Object.entries(crudByModule).map(([mod, actions]: [string, any]) => (
-                              <div key={mod} className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5">
-                                <span className="text-[9px] font-mono fw-bold text-slate-500">{mod}</span>
+                              <div key={mod} className="flex flex-wrap items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1">
+                                <span className="text-[10px] font-mono fw-bold text-slate-700 uppercase tracking-wide">{mod}</span>
                                 <span className="text-slate-300">|</span>
-                                <div className="flex gap-0.5">
-                                  {[{k:'Create',l:'Create'},{k:'Read',l:'View'},{k:'Update',l:'Edit'},{k:'Delete',l:'Delete'}].map(a => (
-                                    <span key={a.k} className={`text-[9px] px-1.5 py-0.5 rounded-md fw-semibold ${actions.includes(a.k) ? 'text-slate-900 bg-slate-200/80' : 'text-slate-300'}`}>{a.l}</span>
+                                <div className="flex flex-wrap items-center gap-1">
+                                  {[
+                                    { k: 'Create', l: 'Create', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                                    { k: 'Read', l: 'View', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+                                    { k: 'Update', l: 'Edit', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+                                    { k: 'Delete', l: 'Delete', cls: 'bg-rose-50 text-rose-700 border-rose-200' }
+                                  ].map(a => (
+                                    <span key={a.k} className={`text-[9px] px-1.5 py-0.5 rounded border fw-bold ${actions.includes(a.k) ? a.cls : 'text-slate-300 border-slate-100 opacity-40'}`}>{a.l}</span>
                                   ))}
                                 </div>
                               </div>
@@ -1864,7 +1869,7 @@ const [deptParent, setDeptParent] = useState('');
                         return (
                           <div key={mod.id} className={`rounded-xl border transition-all ${hasModule ? 'bg-slate-50/50 border-slate-300' : 'bg-white border-slate-200'}`}>
                             {/* Main Module Header */}
-                            <div className="p-3 flex items-center justify-between">
+                            <div className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <label className="flex items-center gap-2.5 cursor-pointer select-none">
                                 <input
                                   type="checkbox"
@@ -1880,17 +1885,22 @@ const [deptParent, setDeptParent] = useState('');
 
                               {/* Main Module level CRUD if no submodules */}
                               {hasModule && (!mod.subModules || mod.subModules.length === 0) && (
-                                <div className="flex items-center gap-1">
-                                  {crudActions.map(action => {
-                                    const checked = roleFormCrudPermissions.includes(`${mod.id}.${action}`);
+                                <div className="flex flex-wrap items-center gap-1.5 pl-6 sm:pl-0">
+                                  {[
+                                    { key: 'Create', label: 'Create', activeCls: 'bg-emerald-600 text-white border-emerald-600' },
+                                    { key: 'Read', label: 'View', activeCls: 'bg-blue-600 text-white border-blue-600' },
+                                    { key: 'Update', label: 'Edit', activeCls: 'bg-amber-600 text-white border-amber-600' },
+                                    { key: 'Delete', label: 'Delete', activeCls: 'bg-rose-600 text-white border-rose-600' }
+                                  ].map(action => {
+                                    const checked = roleFormCrudPermissions.includes(`${mod.id}.${action.key}`);
                                     return (
                                       <button
-                                        key={action}
+                                        key={action.key}
                                         type="button"
-                                        onClick={() => toggleCrud([mod.id], action)}
-                                        className={`px-2 py-0.5 rounded border text-[9px] fw-semibold transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                        onClick={() => toggleCrud([mod.id], action.key)}
+                                        className={`px-2.5 py-1 rounded-md border text-[10px] fw-bold transition-all cursor-pointer ${checked ? `${action.activeCls} shadow-2xs` : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                                       >
-                                        {action === 'Read' ? 'View' : action === 'Update' ? 'Edit' : action}
+                                        {action.label}
                                       </button>
                                     );
                                   })}
@@ -1904,7 +1914,7 @@ const [deptParent, setDeptParent] = useState('');
                                 {mod.subModules.map(sub => {
                                   const isSubActive = roleFormSubmenus.includes(sub.id);
                                   return (
-                                    <div key={sub.id} className="py-2 flex items-center justify-between gap-2">
+                                    <div key={sub.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                       <label className="flex items-center gap-2 cursor-pointer select-none">
                                         <input
                                           type="checkbox"
@@ -1919,18 +1929,23 @@ const [deptParent, setDeptParent] = useState('');
 
                                       {/* Submodule CRUD permissions */}
                                       {isSubActive && (
-                                        <div className="flex items-center gap-1">
-                                          {crudActions.map(action => {
-                                            const checked = roleFormCrudPermissions.includes(`${sub.id}.${action}`) || roleFormCrudPermissions.includes(`${mod.id}.${sub.id}.${action}`);
+                                        <div className="flex flex-wrap items-center gap-1.5 pl-5 sm:pl-0">
+                                          {[
+                                            { key: 'Create', label: 'Create', activeCls: 'bg-emerald-600 text-white border-emerald-600' },
+                                            { key: 'Read', label: 'View', activeCls: 'bg-blue-600 text-white border-blue-600' },
+                                            { key: 'Update', label: 'Edit', activeCls: 'bg-amber-600 text-white border-amber-600' },
+                                            { key: 'Delete', label: 'Delete', activeCls: 'bg-rose-600 text-white border-rose-600' }
+                                          ].map(action => {
+                                            const checked = roleFormCrudPermissions.includes(`${sub.id}.${action.key}`) || roleFormCrudPermissions.includes(`${mod.id}.${sub.id}.${action.key}`);
                                             return (
                                               <button
-                                                key={action}
+                                                key={action.key}
                                                 type="button"
-                                                onClick={() => toggleCrud([sub.id, `${mod.id}.${sub.id}`, sub.label], action)}
-                                                className={`px-2 py-0.5 rounded border text-[9px] fw-semibold transition-all cursor-pointer ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
-                                                title={`${action} ${sub.label}`}
+                                                onClick={() => toggleCrud([sub.id, `${mod.id}.${sub.id}`, sub.label], action.key)}
+                                                className={`px-2 py-0.5 rounded-md border text-[9.5px] fw-bold transition-all cursor-pointer ${checked ? `${action.activeCls} shadow-2xs` : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                                title={`${action.label} ${sub.label}`}
                                               >
-                                                {action === 'Read' ? 'View' : action === 'Update' ? 'Edit' : action}
+                                                {action.label}
                                               </button>
                                             );
                                           })}
