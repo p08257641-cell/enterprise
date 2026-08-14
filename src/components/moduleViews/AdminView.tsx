@@ -181,9 +181,69 @@ const [deptParent, setDeptParent] = useState('');
       setEditingRole(roleToEdit);
       setRoleFormName(roleToEdit.name);
       setRoleFormDesc(roleToEdit.description);
-      setRoleFormModules(roleToEdit.modules || []);
-      setRoleFormSubmenus(roleToEdit.submenus || []);
-      setRoleFormCrudPermissions(roleToEdit.crudPermissions || []);
+
+      const isFullAdmin = roleToEdit.name === 'Company Admin' || roleToEdit.name === 'CEO' || roleToEdit.name === 'Super Admin' || (roleToEdit.submenus && roleToEdit.submenus.includes('*'));
+
+      if (isFullAdmin) {
+        const allModules = MODULE_HIERARCHY.map(m => m.id);
+        const allSubmenus: string[] = [];
+        const allCrud: string[] = [];
+        const actions = ['Create', 'Read', 'Update', 'Delete'];
+
+        MODULE_HIERARCHY.forEach(mod => {
+          actions.forEach(a => allCrud.push(`${mod.id}.${a}`));
+          if (mod.subModules) {
+            mod.subModules.forEach(sub => {
+              allSubmenus.push(sub.id);
+              actions.forEach(a => {
+                allCrud.push(`${sub.id}.${a}`);
+                allCrud.push(`${mod.id}.${sub.id}.${a}`);
+              });
+            });
+          }
+        });
+
+        setRoleFormModules(allModules);
+        setRoleFormSubmenus(allSubmenus);
+        setRoleFormCrudPermissions(Array.from(new Set([...allCrud, ...(roleToEdit.crudPermissions || [])])));
+      } else {
+        setRoleFormModules(roleToEdit.modules || []);
+        
+        let subIds = [...(roleToEdit.submenus || [])];
+        if (subIds.includes('*')) {
+          subIds = [];
+          MODULE_HIERARCHY.forEach(mod => {
+            if ((roleToEdit.modules || []).includes(mod.id) && mod.subModules) {
+              mod.subModules.forEach(sub => subIds.push(sub.id));
+            }
+          });
+        }
+        setRoleFormSubmenus(subIds);
+
+        let crudPerms = [...(roleToEdit.crudPermissions || [])];
+        if (crudPerms.length === 0) {
+          const actions = ['Create', 'Read', 'Update', 'Delete'];
+          const generatedCrud: string[] = [];
+          MODULE_HIERARCHY.forEach(mod => {
+            if ((roleToEdit.modules || []).includes(mod.id)) {
+              actions.forEach(a => generatedCrud.push(`${mod.id}.${a}`));
+              if (mod.subModules) {
+                mod.subModules.forEach(sub => {
+                  if (subIds.includes(sub.id)) {
+                    actions.forEach(a => {
+                      generatedCrud.push(`${sub.id}.${a}`);
+                      generatedCrud.push(`${mod.id}.${sub.id}.${a}`);
+                    });
+                  }
+                });
+              }
+            }
+          });
+          crudPerms = generatedCrud;
+        }
+
+        setRoleFormCrudPermissions(crudPerms);
+      }
     } else {
       setEditingRole(null);
       setRoleFormName('');
