@@ -209,7 +209,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* App Launcher Popover */}
           {appsMenuOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-900/15 z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-900/15 z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between px-2 pb-3 mb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
@@ -378,7 +378,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Notification Dropdown Panel */}
           {panelOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 z-50 overflow-hidden animate-fade-in">
+            <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 z-50 overflow-hidden animate-fade-in">
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <div>
