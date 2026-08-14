@@ -729,8 +729,9 @@ app.put('/api/users/:id/login-access', asyncHandler(async (req, res) => {
 app.get('/api/roles', asyncHandler(async (req, res) => {
   const { companyId } = req.query;
   const all = await dbAll<any>(customRoles);
-  res.json(companyId ? all.filter((r: any) => r.companyId === companyId) : all);
-    }));
+  const companyRoles = all.filter((r: any) => r.name !== 'Super Admin' && r.id !== 'role-super');
+  res.json(companyId ? companyRoles.filter((r: any) => r.companyId === companyId) : companyRoles);
+}));
 
 app.post('/api/roles', asyncHandler(async (req, res) => {
   const { companyId, name, description, modules, submenus, crudPermissions } = req.body;

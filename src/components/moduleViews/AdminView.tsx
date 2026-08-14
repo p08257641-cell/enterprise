@@ -187,7 +187,7 @@ const [deptParent, setDeptParent] = useState('');
       setRoleFormName(roleToEdit.name);
       setRoleFormDesc(roleToEdit.description);
 
-      const isFullAdmin = roleToEdit.name === 'Company Admin' || roleToEdit.name === 'CEO' || roleToEdit.name === 'Super Admin' || (roleToEdit.submenus && roleToEdit.submenus.includes('*'));
+      const isFullAdmin = roleToEdit.name === 'Company Admin' || roleToEdit.name === 'CEO' || (roleToEdit.submenus && roleToEdit.submenus.includes('*'));
 
       if (isFullAdmin) {
         const allModules = MODULE_HIERARCHY.map(m => m.id);
@@ -545,13 +545,13 @@ const [deptParent, setDeptParent] = useState('');
               )}
             </div>
             <div className="divide-y divide-slate-100">
-              {customRoles.length === 0 && (
+              {customRoles.filter(r => r.name !== 'Super Admin' && r.id !== 'role-super').length === 0 && (
                 <div className="px-5 py-8 text-center text-[11px] text-slate-400">No roles found. Click "Add Role" to create one.</div>
               )}
-              {customRoles.map(r => {
+              {customRoles.filter(r => r.name !== 'Super Admin' && r.id !== 'role-super').map(r => {
                 const userCount = countUsersForRole(r.name);
                 const allActions = ['Create', 'Read', 'Update', 'Delete'];
-                const isFullAdminRole = r.name === 'Company Admin' || r.name === 'CEO' || r.name === 'Super Admin';
+                const isFullAdminRole = r.name === 'Company Admin' || r.name === 'CEO';
 
                 const crudByModule: Record<string, string[]> = {};
                 

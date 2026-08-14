@@ -331,7 +331,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setPollOptions(pollOptsData);
         setPollVotes(pollVotesData);
         setCompanyImages(imgData);
-        setCustomRoles(Array.isArray(rolesData) ? rolesData : []);
+        setCustomRoles(Array.isArray(rolesData) ? rolesData.filter((r: any) => r.name !== 'Super Admin' && r.id !== 'role-super') : []);
         setApprovalPolicies(policiesData);
         setPendingApprovals(approvalsData);
 
