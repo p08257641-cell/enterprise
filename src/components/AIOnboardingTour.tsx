@@ -249,14 +249,17 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
 
   if (!isOpen) return null;
 
-  const current = steps[currentStep];
+  const safeStepIndex = (currentStep >= 0 && currentStep < steps.length) ? currentStep : 0;
+  const current = steps[safeStepIndex] || steps[0];
+
+  if (!current) return null;
 
   const handleNext = () => {
-    if (current.targetView) {
+    if (current?.targetView) {
       onNavigateView(current.targetView);
     }
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
+    if (safeStepIndex < steps.length - 1) {
+      setCurrentStep(safeStepIndex + 1);
     } else {
       onClose();
     }
