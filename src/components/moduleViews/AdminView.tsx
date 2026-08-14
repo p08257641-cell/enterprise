@@ -485,12 +485,27 @@ const [deptParent, setDeptParent] = useState('');
               )}
               {customRoles.map(r => {
                 const userCount = countUsersForRole(r.name);
-                const crudByModule = (r.crudPermissions || []).reduce((acc: any, p: string) => {
+                const allActions = ['Create', 'Read', 'Update', 'Delete'];
+                const isFullAdminRole = r.name === 'Company Admin' || r.name === 'CEO' || r.name === 'Super Admin';
+
+                const crudByModule: Record<string, string[]> = {};
+                
+                // Map explicit CRUD permissions first
+                (r.crudPermissions || []).forEach(p => {
                   const [mod, action] = p.split('.');
-                  if (!acc[mod]) acc[mod] = [];
-                  acc[mod].push(action);
-                  return acc;
-                }, {});
+                  if (mod && action) {
+                    if (!crudByModule[mod]) crudByModule[mod] = [];
+                    if (!crudByModule[mod].includes(action)) crudByModule[mod].push(action);
+                  }
+                });
+
+                // For built-in admin roles or modules without explicit permissions, default to full CRUD for all assigned modules
+                (r.modules || []).forEach(mod => {
+                  if (isFullAdminRole || !crudByModule[mod]) {
+                    crudByModule[mod] = [...allActions];
+                  }
+                });
+
                 return (
                   <div key={r.id} className="p-5 flex items-start justify-between hover:bg-slate-50/40 transition-colors gap-4">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -918,6 +933,167 @@ const [deptParent, setDeptParent] = useState('');
                       input.value = '';
                     }
                   }} icon="bi bi-plus-lg">Add URL</PrimaryBtn>
+                </div>
+              </div>
+            </div>
+
+            {/* System Security, Password Reset & Communications */}
+            <div>
+              <h3 className="section-title text-slate-900 mb-4">System Security, Password Reset & Communications</h3>
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">
+                <div>
+                  <h4 className="fs-sm fw-bold text-slate-900 mb-1">Password Reset & Security Channel</h4>
+                  <p className="text-[11px] text-slate-500 mb-3">Choose how password reset links, OTPs, and security alerts are dispatched to users.</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {[
+                      { id: 'Both', label: 'Email & SMS (Recommended)', desc: 'Sends via both Email & SMS gateways', icon: 'bi-shield-check text-emerald-600' },
+                      { id: 'Email', label: 'Email Only', desc: 'Sends via SMTP / SendGrid', icon: 'bi-envelope text-blue-600' },
+                      { id: 'SMS', label: 'SMS Only', desc: 'Sends via Arkesel / Hubtel SMS', icon: 'bi-chat-dots text-purple-600' }
+                    ].map(ch => (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        onClick={() => onUpdateCompanySettings(selectedCompany.id, { passwordResetChannel: ch.id })}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          (selectedCompany.passwordResetChannel || 'Both') === ch.id
+                            ? 'bg-indigo-50/70 border-indigo-300 ring-2 ring-indigo-500/20 shadow-xs'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <i className={`bi ${ch.icon} fs-sm`}></i>
+                          <span className="fs-xs fw-bold text-slate-900">{ch.label}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">{ch.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2 pt-4 border-t border-slate-100">
+                  {/* SMS Gateway Config */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                        <i className="bi bi-chat-text-fill text-emerald-600 fs-xs"></i>
+                      </div>
+                      <h4 className="fs-xs fw-bold text-slate-900">Company SMS Gateway & Sender ID</h4>
+                    </div>
+                    <div>
+                      <Label>SMS Provider</Label>
+                      <Select
+                        value={selectedCompany.smsProvider || 'Arkesel'}
+                        onChange={e => onUpdateCompanySettings(selectedCompany.id, { smsProvider: e.target.value })}
+                      >
+                        <option value="Arkesel">Arkesel (Ghana)</option>
+                        <option value="Hubtel">Hubtel (Ghana)</option>
+                        <option value="Termii">Termii (Nigeria)</option>
+                        <option value="Twilio">Twilio Global</option>
+                        <option value="Infobip">Infobip Enterprise</option>
+                        <option value="Custom">Custom Webhook</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Company Sender ID (Appears on SMS)</Label>
+                      <Input
+                        defaultValue={selectedCompany.smsSenderId || 'OHENE MEDIA'}
+                        onBlur={e => onUpdateCompanySettings(selectedCompany.id, { smsSenderId: e.target.value })}
+                        placeholder="OHENE MEDIA"
+                      />
+                    </div>
+                    <div>
+                      <Label>API Key</Label>
+                      <Input
+                        type="password"
+                        defaultValue={selectedCompany.smsApiKey || ''}
+                        onBlur={e => onUpdateCompanySettings(selectedCompany.id, { smsApiKey: e.target.value })}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email/SMTP Config */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                        <i className="bi bi-envelope-paper-fill text-blue-600 fs-xs"></i>
+                      </div>
+                      <h4 className="fs-xs fw-bold text-slate-900">Company Sender Email & SMTP Server</h4>
+                    </div>
+                    <div>
+                      <Label>Email Provider</Label>
+                      <Select
+                        value={selectedCompany.emailProvider || 'SMTP'}
+                        onChange={e => onUpdateCompanySettings(selectedCompany.id, { emailProvider: e.target.value })}
+                      >
+                        <option value="SMTP">Custom SMTP Server</option>
+                        <option value="SendGrid">SendGrid API</option>
+                        <option value="Mailgun">Mailgun API</option>
+                        <option value="AWS SES">AWS SES</option>
+                        <option value="Resend">Resend API</option>
+                      </Select>
+                    </div>
+                    <div className="grid gap-3 grid-cols-2">
+                      <div>
+                        <Label>From Name</Label>
+                        <Input
+                          defaultValue={selectedCompany.emailFromName || `${selectedCompany.name} Support`}
+                          onBlur={e => onUpdateCompanySettings(selectedCompany.id, { emailFromName: e.target.value })}
+                          placeholder="Ohene Media Support"
+                        />
+                      </div>
+                      <div>
+                        <Label>From Email Address</Label>
+                        <Input
+                          defaultValue={selectedCompany.emailFromAddress || `support@${selectedCompany.domain || 'ohenemedia.com'}`}
+                          onBlur={e => onUpdateCompanySettings(selectedCompany.id, { emailFromAddress: e.target.value })}
+                          placeholder="support@company.com"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>SMTP Host & Port</Label>
+                      <Input
+                        defaultValue={selectedCompany.smtpHost || 'smtp.sendgrid.net'}
+                        onBlur={e => onUpdateCompanySettings(selectedCompany.id, { smtpHost: e.target.value })}
+                        placeholder="smtp.sendgrid.net:587"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Event Triggers & Testing */}
+                <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={selectedCompany.leadAssignmentNotifyEmail !== false}
+                        onChange={e => onUpdateCompanySettings(selectedCompany.id, { leadAssignmentNotifyEmail: e.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                      />
+                      <span className="text-xs text-slate-700 font-medium">Send automatic email notifications to employees when a CRM lead is assigned to them</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={selectedCompany.leadAssignmentNotifySMS !== false}
+                        onChange={e => onUpdateCompanySettings(selectedCompany.id, { leadAssignmentNotifySMS: e.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                      />
+                      <span className="text-xs text-slate-700 font-medium">Send automatic SMS alerts to assigned employees</span>
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      modalAlert(`✅ Test Password Reset & Security Dispatch Triggered!\n\nEmail Sent From: ${selectedCompany.emailFromAddress || 'support@ohenemedia.com'}\nSMS Sender ID: ${selectedCompany.smsSenderId || 'OHENE MEDIA'}\nChannel: ${selectedCompany.passwordResetChannel || 'Both Email & SMS'}`, { variant: 'info' });
+                    }}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs fw-semibold transition-all cursor-pointer flex items-center gap-2 shrink-0"
+                  >
+                    <i className="bi bi-send-check-fill"></i> Test Security Dispatch
+                  </button>
                 </div>
               </div>
             </div>

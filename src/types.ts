@@ -33,6 +33,9 @@ export interface Company {
   emailApiKey?: string;
   emailFromAddress?: string;
   emailFromName?: string;
+  passwordResetChannel?: 'Email' | 'SMS' | 'Both';
+  leadAssignmentNotifyEmail?: boolean;
+  leadAssignmentNotifySMS?: boolean;
   // WhatsApp Business Cloud API
   whatsappApiKey?: string;
   whatsappPhoneNumberId?: string;
@@ -73,6 +76,8 @@ export interface User {
   branch?: string;
   avatar?: string;
     signatureUrl?: string;
+  notificationEmail?: string;
+  notificationPhone?: string;
   permissions: string[];
   status: 'Active' | 'Inactive';
   loginEnabled: boolean; // HR can toggle to block/unblock employee login
@@ -161,6 +166,8 @@ export interface Employee {
   photoUrl?: string;
   signatureUrl?: string;
   email: string;
+  notificationEmail?: string;
+  notificationPhone?: string;
   department: string;
   designation: string;
   branch: string;

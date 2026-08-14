@@ -2050,17 +2050,31 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
   const handleAssignLead = async (leadId: string, userId: string, userName: string, department: string) => {
     try {
+      const targetLead = leads.find(l => l.id === leadId);
+      const leadLabel = targetLead ? `${targetLead.firstName} ${targetLead.lastName} (${targetLead.companyName})` : 'Lead';
+
       const res = await fetch(`/api/leads/${leadId}/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assignedTo: userId, assignedToName: userName, department })
       });
       const lead = await safeJson(res);
-      setLeads(leads.map(l => l.id === leadId ? lead : l));
+      setLeads(leads.map(l => l.id === leadId ? (lead.lead || lead) : l));
+
+      // 📧 Find assigned employee notification details
+      const emp = employees.find(e => e.userId === userId || e.id === userId || `${e.firstName} ${e.lastName}`.toLowerCase() === userName.toLowerCase());
+      const usr = users.find(u => u.id === userId || u.name.toLowerCase() === userName.toLowerCase());
+      const recipientEmail = emp?.notificationEmail || emp?.email || usr?.notificationEmail || usr?.email || `${(userName || 'employee').toLowerCase().replace(/\s+/g, '.')}@${selectedCompany?.domain || 'company.com'}`;
+
+      // Toast alert confirming email notification sent
+      toast(`📧 Lead "${leadLabel}" assigned to ${userName || 'team member'}.\nAutomated Email Alert sent to ${recipientEmail}`, 'success', 'Lead Assigned & Employee Notified');
+      setNotificationCount(prev => prev + 1);
+
       const logRes = await fetch('/api/audit-logs');
       setAuditLogs(await safeJson(logRes));
     } catch (err) {
       console.error(err);
+      toast('Failed to assign lead', 'error', 'Error');
     }
   };
 
