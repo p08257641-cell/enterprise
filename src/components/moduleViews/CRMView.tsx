@@ -1,12 +1,16 @@
 import { formatCurrency } from '../../utils/currency';
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, toast } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
+import { hasCrudPermission } from '../../permissions';
 import { CRMLead } from '../../types';
 
 export const CRMView: React.FC<ModuleViewsProps> = (props) => {
   const { searchTerm = '', activeView, selectedCompany, selectedUser, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onGenerateLeads, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan } = props;
+
+  const userRole = selectedUser.activeRole || selectedUser.role || 'Employee';
+  const canCreateLead = hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['CRM', 'crm-pipeline'], 'Create');
 
   const localLeads = leads.filter(l => l.companyId === selectedCompany.id);
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
@@ -164,7 +168,26 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   </button>
                 </>
               )}
-              <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowLeadForm(true)}>Add Lead</PrimaryBtn>
+              <button
+                type="button"
+                disabled={!canCreateLead}
+                onClick={() => {
+                  if (!canCreateLead) {
+                    toast('Permission Required: Your assigned role does not have Create permission to add leads.', 'warning');
+                    return;
+                  }
+                  setShowLeadForm(true);
+                }}
+                title={canCreateLead ? 'Add Lead' : 'Permission Required: Create'}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-all ${
+                  canCreateLead
+                    ? 'hover:bg-slate-800 cursor-pointer'
+                    : 'opacity-40 filter saturate-50 cursor-not-allowed'
+                }`}
+              >
+                <i className="bi bi-plus-lg"></i>
+                Add Lead
+              </button>
             </div>
           } 
         />

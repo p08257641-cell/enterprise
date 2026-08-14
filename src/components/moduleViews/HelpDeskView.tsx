@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal } from './shared';
+import { ModuleViewsProps, PageHeader, StatCard, Badge, Th, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select, useRowModal, RowModal, toast } from './shared';
 import { getEmployeeByUserId, getUserNameById, getEmployeeNameById } from '../../utils/employeeResolver';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
-import { isAdminRole, isHRRole, isHelpDeskAdmin } from '../../permissions';
+import { isAdminRole, isHRRole, isHelpDeskAdmin, hasCrudPermission } from '../../permissions';
 import { SupportTicket, KBArticle } from '../../types';
 import { parseActiveView } from '../../parseActiveView';
 
@@ -12,6 +12,11 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   
   const isHDAdmin = isHelpDeskAdmin(selectedUser.activeRole) || isAdminRole(selectedUser.activeRole);
+  const userRole = selectedUser.activeRole || selectedUser.role || 'Employee';
+  const canCreateTicket = hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['Help Desk', 'hd-tickets'], 'Create');
+  const canEditTicket = hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['Help Desk', 'hd-tickets'], 'Update');
+  const canDeleteTicket = hasCrudPermission(userRole, props.customRoles || [], selectedCompany.id, ['Help Desk', 'hd-tickets'], 'Delete');
+
   const localTickets = tickets.filter(t => {
     if (t.companyId !== selectedCompany.id) return false;
     if (t.status === 'In Progress' && !isHDAdmin) {
@@ -71,8 +76,31 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
 
   return (
     <div>
-      <PageHeader title="Help Desk & Support" subtitle="Manage support tickets, SLA monitoring, agent assignment and knowledge base."
-        action={<PrimaryBtn icon="bi bi-plus-lg" onClick={() => setHdTab('create')}>New Ticket</PrimaryBtn>} />
+      <PageHeader
+        title="Help Desk & Support"
+        subtitle="Manage support tickets, SLA monitoring, agent assignment and knowledge base."
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              if (!canCreateTicket) {
+                toast('Permission Required: Your assigned role does not have Create permission for Help Desk tickets.', 'warning');
+                return;
+              }
+              setHdTab('create');
+            }}
+            title={canCreateTicket ? 'Create New Ticket' : 'Permission Required: Create'}
+            className={`inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-all ${
+              canCreateTicket
+                ? 'hover:bg-slate-800 cursor-pointer'
+                : 'opacity-40 filter saturate-50 cursor-not-allowed'
+            }`}
+          >
+            <i className="bi bi-plus-lg"></i>
+            New Ticket
+          </button>
+        }
+      />
       {hdTab !== 'sla' && (
         <div className="grid gap-4 sm:grid-cols-4 mb-6">
           <StatCard label="Open Tickets" value={localTickets.filter(t => t.status === 'Open').length} icon="bi bi-ticket" sub="Unassigned queue" />
@@ -138,8 +166,24 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                   <div><Label>Direct To Department</Label><Select value={tktDept} onChange={e => setTktDept(e.target.value)}><option value="">Select department…</option>{localDepartments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</Select></div>
                   <div><Label>Assign To</Label><Select value={tktAssignee} onChange={e => setTktAssignee(e.target.value)}><option value="">Select agent...</option>{localEmployees.filter(e => e.status === 'Active' && (e.department === 'Support' || e.department === 'IT' || e.department === 'Operations')).map(emp => <option key={emp.id} value={emp.userId || emp.id}>{emp.firstName} {emp.lastName} ({emp.department})</option>)}</Select></div>
                 </div>
-                <div><Label>Description</Label><textarea value={tktDesc} onChange={e => setTktDesc(e.target.value)} rows={3} placeholder="Detailed description…" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none resize-none" /></div>
-                <PrimaryBtn type="submit" icon="bi bi-send">Submit Ticket</PrimaryBtn>
+                <button
+                  type="submit"
+                  disabled={!canCreateTicket}
+                  onClick={(e) => {
+                    if (!canCreateTicket) {
+                      e.preventDefault();
+                      toast('Permission Required: Your role does not have Create permission to submit tickets.', 'warning');
+                    }
+                  }}
+                  title={canCreateTicket ? 'Submit Ticket' : 'Permission Required: Create'}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-all ${
+                    canCreateTicket
+                      ? 'hover:bg-slate-800 cursor-pointer'
+                      : 'opacity-40 filter saturate-50 cursor-not-allowed'
+                  }`}
+                >
+                  <i className="bi bi-send"></i> Submit Ticket
+                </button>
               </form>
             </div>
           </div>
