@@ -256,17 +256,9 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
 
   const handleNext = () => {
     if (safeStepIndex < steps.length - 1) {
-      const nextStepIndex = safeStepIndex + 1;
-      const nextStep = steps[nextStepIndex];
-      // Only navigate if next step has explicit targetView AND is not admin (unless executive/admin role)
-      if (nextStep?.targetView) {
-        if (nextStep.targetView !== 'admin' || isExecutive) {
-          onNavigateView(nextStep.targetView);
-        }
-      }
-      setCurrentStep(nextStepIndex);
+      setCurrentStep(safeStepIndex + 1);
     } else {
-      // Tour finished - close dialog cleanly without navigating away
+      // Tour finished - close modal cleanly without redirecting or changing active view
       onClose();
     }
   };
