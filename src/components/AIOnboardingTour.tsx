@@ -34,19 +34,22 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
   const userRole = user.activeRole || user.role || 'Employee';
   
   const getStepsForTrack = (): TourStep[] => {
-    const isSales = userRole.includes('Sales') || userRole.includes('POS');
-    const isHR = userRole.includes('HR') || userRole.includes('People');
-    const isFinance = userRole.includes('Account') || userRole.includes('Finance') || userRole.includes('CFO');
+    const isExecutive = userRole.includes('Admin') || userRole.includes('CEO') || userRole.includes('Executive') || userRole.includes('Director') || userRole.includes('Owner');
+    const isSales = userRole.includes('Sales') || userRole.includes('POS') || userRole.includes('Commerce');
+    const isHR = userRole.includes('HR') || userRole.includes('People') || userRole.includes('Recruit');
+    const isFinance = userRole.includes('Account') || userRole.includes('Finance') || userRole.includes('CFO') || userRole.includes('Audit') || userRole.includes('Billing');
+    const isSupport = userRole.includes('Support') || userRole.includes('Help') || userRole.includes('Desk') || userRole.includes('Service');
+    const isOperations = userRole.includes('Ops') || userRole.includes('Operation') || userRole.includes('Inventory') || userRole.includes('Warehouse');
 
     const commonIntro: TourStep = {
       title: `Welcome to Core360, ${user.name.split(' ')[0]}!`,
-      badge: 'Getting Started',
+      badge: `${userRole} Onboarding`,
       icon: 'bi-stars text-indigo-600',
-      description: `You are logged in as a ${userRole}. Core360 is your unified cloud workspace designed to streamline your daily tasks, eliminate manual data entry, and give you real-time tools.`,
+      description: `You are logged in as a ${userRole}. Core360 provides a clean, role-tailored workspace designed specifically for your daily tasks and workflow.`,
       keyFeatures: [
-        'Role-customized workspace dashboard',
-        'Built-in AI Assistant for quick answers & document OCR',
-        'Automated notifications and task management'
+        `Personalized workspace for ${userRole} permissions`,
+        'Built-in AI Assistant for instant guidance & tasks',
+        'Real-time automated alerts and notification digest'
       ],
       proTip: 'You can restart this AI Onboarding Walkthrough anytime by clicking the Compass icon in the top header.'
     };
@@ -55,18 +58,34 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
       title: 'Navigating Your Workspace',
       badge: 'System Basics',
       icon: 'bi-compass-fill text-indigo-600',
-      description: 'Use the left sidebar to navigate between your assigned modules. Click the 9-dots button at the top right to access connected integration apps like WhatsApp, Shopify, Xero, and QuickBooks.',
+      description: 'Use the left sidebar to access your assigned modules. Click the 9-dots App Launcher button at the top right to access connected tools and integrations.',
       keyFeatures: [
-        'Left Sidebar: Core business modules',
+        'Left Sidebar: Core business modules assigned to your role',
         'Top Header: Quick search, notifications, and app launcher',
-        'Profile Pill: Switch active roles if you hold multiple permissions'
+        'Profile Pill: Switch active roles or manage preferences'
       ],
-      proTip: 'Use the top Global Search bar to search across customers, invoices, employees, and leads instantly.'
+      proTip: 'Use the top Global Search bar to quickly locate files, records, or contacts.'
     };
 
     let trackSteps: TourStep[] = [];
 
-    if (isSales) {
+    if (isExecutive) {
+      trackSteps = [
+        {
+          title: 'Executive Control & Governance',
+          badge: 'Executive Track',
+          icon: 'bi-gear-wide-connected text-indigo-600',
+          description: 'Full oversight across multi-branch operations, granular Role-Based Access Control (RBAC), and company security settings.',
+          targetView: 'admin',
+          keyFeatures: [
+            'Granular Create, View, Edit, Delete permissions per role',
+            'Company security & automated password reset dispatcher',
+            'Integrations hub for WhatsApp, Shopify, Xero, and QuickBooks'
+          ],
+          proTip: 'Go to Admin > Settings to configure SMS and Email sender credentials for automated alerts.'
+        }
+      ];
+    } else if (isSales) {
       trackSteps = [
         {
           title: 'Sales & Omnichannel Orders',
@@ -82,15 +101,15 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
           proTip: 'Click "Quotations" in Sales to send professional PDF estimates straight to clients.'
         },
         {
-          title: 'CRM Pipeline & WhatsApp Leads',
+          title: 'CRM Pipeline & Customer Leads',
           badge: 'Commercial Track',
           icon: 'bi-funnel-fill text-amber-600',
           description: 'Track sales deals through visual Kanban pipeline stages and automate customer follow-ups.',
           targetView: 'crm',
           keyFeatures: [
             'Drag-and-drop lead stage management',
-            'WhatsApp Business API integration for invoice & receipt sending',
-            'Embedded website form widget for automated lead capture'
+            'Automated email notifications when leads are assigned to you',
+            'WhatsApp Business API integration for sending receipts'
           ],
           proTip: 'Use the WhatsApp action button to send payment links directly to customer WhatsApp chats.'
         }
@@ -153,20 +172,53 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
           proTip: 'Use the AI Document Scanner to upload vendor receipts and auto-fill expenses.'
         }
       ];
-    } else {
+    } else if (isSupport) {
       trackSteps = [
         {
-          title: 'All-In-One Enterprise Control',
-          badge: 'Executive Track',
-          icon: 'bi-gear-wide-connected text-slate-700',
-          description: 'Access complete business oversight across Sales, HR, CRM, Accounting, and System Integrations.',
-          targetView: 'admin',
+          title: 'Help Desk & Customer SLA Management',
+          badge: 'Support Track',
+          icon: 'bi-headset text-indigo-600',
+          description: 'Manage incoming customer support tickets, track SLA response times, and resolve customer issues efficiently.',
+          targetView: 'helpdesk',
           keyFeatures: [
-            'Granular Role-Based Access Control (RBAC)',
-            'Immutable audit trails and multi-branch management',
-            'Integrations hub for WhatsApp, Shopify, Xero & Zapier'
+            'Ticket queue prioritization & status tracking',
+            'Automated assignment rules for support agents',
+            'Integration with CRM leads & customer history'
           ],
-          proTip: 'Configure explicit Create, View, Edit, Delete permissions for every staff role.'
+          proTip: 'Use pre-built reply templates to respond to common customer inquiries in seconds.'
+        }
+      ];
+    } else if (isOperations) {
+      trackSteps = [
+        {
+          title: 'Inventory & Stock Management',
+          badge: 'Operations Track',
+          icon: 'bi-box-seam text-amber-600',
+          description: 'Track multi-branch inventory levels, stock movements, purchase orders, and supplier receipts.',
+          targetView: 'operations',
+          keyFeatures: [
+            'Real-time stock valuation & low-stock alerts',
+            'Purchase order creation & goods received vouchers',
+            'Barcode scanning and batch serial number tracking'
+          ],
+          proTip: 'Set up low-stock thresholds to receive automated alerts before running out of essential items.'
+        }
+      ];
+    } else {
+      // 👤 Standard Employee Role Track (Does NOT navigate to Admin)
+      trackSteps = [
+        {
+          title: 'Employee Self-Service Portal',
+          badge: 'Employee Track',
+          icon: 'bi-person-badge-fill text-indigo-600',
+          description: 'Welcome to your personal employee workspace! Here you can clock in, submit leave requests, check payslips, and manage your tasks.',
+          targetView: 'hr',
+          keyFeatures: [
+            '1-Click Clock-In / Clock-Out for daily attendance',
+            'Submit leave applications and track manager approval',
+            'Access digital monthly payslips & view performance OKRs'
+          ],
+          proTip: 'Check your notification inbox at the top right to stay updated on leave approvals and team updates.'
         }
       ];
     }
@@ -175,7 +227,7 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
       title: 'You Are All Set!',
       badge: 'Walkthrough Complete',
       icon: 'bi-check-circle-fill text-emerald-500',
-      description: 'You have completed your Core360 AI Onboarding System Walkthrough! You can now start using your workspace.',
+      description: `You have completed your Core360 AI Onboarding System Walkthrough for ${userRole}! You can now start using your workspace.`,
       keyFeatures: [
         'Explore your dashboard modules anytime from the sidebar',
         'Ask the AI Assistant questions whenever you get stuck',
