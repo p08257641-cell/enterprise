@@ -7,11 +7,16 @@ import { sendWhatsApp } from '../../utils/whatsapp';
 import { sendEmail } from '../../utils/email';
 import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { MODULE_HIERARCHY } from '../../data/moduleHierarchy';
-import { isAdminRole, isHRRole, isHRDeptHead } from '../../permissions';
+import { isAdminRole, isHRRole, isHRDeptHead, hasCrudPermission } from '../../permissions';
 import { formatCurrency } from '../../utils/currency';
 
 export const AdminView: React.FC<ModuleViewsProps> = (props) => {
   const { searchTerm = '', activeView, selectedCompany, selectedUser, users, employees, departments, branches, leads, crmActivities, crmTasks, crmEmails, glAccounts, invoices, inventory, tickets, auditLogs, apiKeys, leaves, attendance, okrs, payslips, journalEntries, expenses, fiscalPeriods, openingBalances, onAddEmployee, onAddLead, onMoveLead, onAssignLead, onAddComment, onAddInvoice, onPayInvoice, onAdjustStock, onAddTicket, onInviteUser, onGenerateAPIKey, onAddExpense, onApproveLeave, onRejectLeave, onAddLeave, onClockIn, onClockOut, onLogCrmActivity, onCreateCrmTask, onUpdateCrmTask, onSendCrmEmail, onAddOKR, onUpdateOKRProgress, onRunPayroll, onAddGLAccount, onUpdateGLAccount, onDeleteGLAccount, onCreateJournalEntry, onPostJournalEntry, onApproveJournalEntry, onVoidJournalEntry, onApproveExpense, onCloseFiscalPeriod, onSetOpeningBalance, bills, billPayments, customerPayments, bankAccounts, bankTransactions, bankReconciliations, fixedAssets, depreciationEntries, budgets, costCenters, currencyRates, onCreateBill, onApproveBill, onPayBill, onReceiveCustomerPayment, onCreateBankAccount, onReconcileBank, onCreateFixedAsset, onDisposeAsset, onRunDepreciation, onCreateBudget, onApproveBudget, onCreateCostCenter, onUpdateCurrencyRate, taxCodes, taxReturns, intercompanyTxns, consolidationRules, complianceChecks, auditSnapshots, policyDocuments, filingDeadlines, onCreateTaxReturn, onFileTaxReturn, onCreateIntercompanyTxn, onApproveIntercompanyTxn, onEliminateIntercompanyTxn, onCreateConsolidationRule, onResolveComplianceCheck, onAcknowledgePolicy, onFileDeadline, tenants, onAssignPlan, onAddBranch, onAddDepartment, onUpdateDepartment, onUpdateCompanySettings, customRoles: propCustomRoles = [], onCreateRole, onUpdateRole, onDeleteRole, onUpdateApprovalPolicies, approvalPolicies: propApprovalPolicies = [] } = props;
+
+  const userRole = selectedUser.activeRole || selectedUser.role || 'Employee';
+  const canDeleteRole = hasCrudPermission(userRole, propCustomRoles || [], selectedCompany.id, ['Administration', 'admin-roles'], 'Delete');
+  const canDeleteBranch = hasCrudPermission(userRole, propCustomRoles || [], selectedCompany.id, ['Administration', 'admin-branches'], 'Delete');
+  const canDeleteAdminDept = hasCrudPermission(userRole, propCustomRoles || [], selectedCompany.id, ['Administration', 'admin-departments'], 'Delete');
 
   const [smsProvider, setSmsProvider] = useState<'Twilio' | 'Arkesel' | 'Hubtel' | 'Termii' | 'Infobip' | 'Custom'>(selectedCompany?.smsProvider || 'Arkesel');
   const [smsApiKey, setSmsApiKey] = useState(selectedCompany?.smsApiKey || '');
@@ -618,18 +623,26 @@ const [deptParent, setDeptParent] = useState('');
                           >
                             <i className="bi bi-pencil text-[11px]"></i>
                           </button>
-                          {!r.isSystem && r.name !== 'Employee' && userCount === 0 && onDeleteRole && (
                             <button
+                              disabled={!canDeleteRole}
                               onClick={async () => {
+                                if (!canDeleteRole) {
+                                  toast('Permission Required: Your role does not have Delete permission for Roles.', 'warning');
+                                  return;
+                                }
                                 if (window.confirm(`Delete role "${r.name}"? This cannot be undone.`)) {
                                   await onDeleteRole(r.id);
                                 }
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 hover:bg-red-600 hover:text-white border border-red-200 hover:border-red-600 text-red-500 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+                              title={canDeleteRole ? 'Delete Role' : 'Permission Required: Delete'}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 border rounded-md text-xs font-medium transition-all duration-150 ${
+                                canDeleteRole
+                                  ? 'bg-red-50 hover:bg-red-600 hover:text-white border-red-200 hover:border-red-600 text-red-500 cursor-pointer'
+                                  : 'opacity-40 filter saturate-50 cursor-not-allowed border-slate-200 text-slate-400 bg-slate-50'
+                              }`}
                             >
                               <i className="bi bi-trash text-[11px]"></i>
                             </button>
-                          )}
                         </div>
                       )}
                     </div>

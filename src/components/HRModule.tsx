@@ -193,6 +193,8 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const isHRDeptHeadUser = isHRDeptHead(userRole);
   const isHRorAdmin = isAdmin || isHR || isHRDeptHeadUser;
   const isEmployee = !isHRorAdmin && !isDeptHead;
+  const canDeleteDept = hasCrudPermission(userRole, customRoles || [], selectedCompany.id, ['HR', 'hr-departments'], 'Delete');
+  const canDeleteOnb = hasCrudPermission(userRole, customRoles || [], selectedCompany.id, ['HR', 'hr-onboarding'], 'Delete');
 
   const localEmployees = employees.filter(e => e.companyId === selectedCompany.id);
   const localDepartments = departments.filter(d => d.companyId === selectedCompany.id);
@@ -2317,7 +2319,24 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   </div>
                   <div className="mt-3 pt-3 border-t border-slate-200 flex gap-2">
                     <button onClick={() => { setEditOnbModal(o); setEditOnbPhase(o.phase); setEditOnbTasks(o.tasks.join(', ')); setEditOnbStatus(o.status); }} className="fs-xs fw-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Edit</button>
-                    <button onClick={async () => { if (await modalConfirm(`Delete onboarding for ${o.employeeName}?`, { variant: 'danger' })) onDeleteOnboarding(o.id); }} className="fs-xs fw-semibold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors">Delete</button>
+                    <button
+                      disabled={!canDeleteOnb}
+                      onClick={async () => {
+                        if (!canDeleteOnb) {
+                          modalAlert('Permission Required: Your assigned role does not have Delete permission for Onboarding records.', { title: 'Permission Required' });
+                          return;
+                        }
+                        if (await modalConfirm(`Delete onboarding for ${o.employeeName}?`, { variant: 'danger' })) onDeleteOnboarding(o.id);
+                      }}
+                      title={canDeleteOnb ? 'Delete Onboarding' : 'Permission Required: Delete'}
+                      className={`fs-xs fw-semibold transition-all ${
+                        canDeleteOnb
+                          ? 'text-rose-600 hover:text-rose-800 cursor-pointer'
+                          : 'opacity-40 filter saturate-50 cursor-not-allowed text-slate-400'
+                      }`}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               );
@@ -3069,7 +3088,24 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                 {isHRorAdmin && (
                   <div className="mt-3 pt-3 border-t border-slate-200 flex gap-2">
                     <button onClick={() => { setEditDeptModal(dept); setEditDeptName(dept.name); setEditDeptManager(dept.managerId || ''); setEditDeptBudget(String(dept.budget)); setEditDeptParent(dept.parentId || ''); }} className="fs-xs fw-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors">Edit</button>
-                    <button onClick={async () => { if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id); }} className="fs-xs fw-semibold text-rose-600 hover:text-rose-800 cursor-pointer transition-colors">Delete</button>
+                    <button
+                      disabled={!canDeleteDept}
+                      onClick={async () => {
+                        if (!canDeleteDept) {
+                          modalAlert('Permission Required: Your assigned role does not have Delete permission for Departments.', { title: 'Permission Required' });
+                          return;
+                        }
+                        if (await modalConfirm(`Delete department "${dept.name}"?`, { variant: 'danger' })) onDeleteDepartment(dept.id);
+                      }}
+                      title={canDeleteDept ? 'Delete Department' : 'Permission Required: Delete'}
+                      className={`fs-xs fw-semibold transition-all ${
+                        canDeleteDept
+                          ? 'text-rose-600 hover:text-rose-800 cursor-pointer'
+                          : 'opacity-40 filter saturate-50 cursor-not-allowed text-slate-400'
+                      }`}
+                    >
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>

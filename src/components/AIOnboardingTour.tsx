@@ -32,9 +32,9 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   const userRole = user.activeRole || user.role || 'Employee';
+  const isExecutive = userRole.includes('Admin') || userRole.includes('CEO') || userRole.includes('Executive') || userRole.includes('Director') || userRole.includes('Owner');
   
   const getStepsForTrack = (): TourStep[] => {
-    const isExecutive = userRole.includes('Admin') || userRole.includes('CEO') || userRole.includes('Executive') || userRole.includes('Director') || userRole.includes('Owner');
     const isSales = userRole.includes('Sales') || userRole.includes('POS') || userRole.includes('Commerce');
     const isHR = userRole.includes('HR') || userRole.includes('People') || userRole.includes('Recruit');
     const isFinance = userRole.includes('Account') || userRole.includes('Finance') || userRole.includes('CFO') || userRole.includes('Audit') || userRole.includes('Billing');
@@ -255,12 +255,18 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
   if (!current) return null;
 
   const handleNext = () => {
-    if (current?.targetView) {
-      onNavigateView(current.targetView);
-    }
     if (safeStepIndex < steps.length - 1) {
-      setCurrentStep(safeStepIndex + 1);
+      const nextStepIndex = safeStepIndex + 1;
+      const nextStep = steps[nextStepIndex];
+      // Only navigate if next step has explicit targetView AND is not admin (unless executive/admin role)
+      if (nextStep?.targetView) {
+        if (nextStep.targetView !== 'admin' || isExecutive) {
+          onNavigateView(nextStep.targetView);
+        }
+      }
+      setCurrentStep(nextStepIndex);
     } else {
+      // Tour finished - close dialog cleanly without navigating away
       onClose();
     }
   };

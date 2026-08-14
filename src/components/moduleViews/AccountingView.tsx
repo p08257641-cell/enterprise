@@ -63,6 +63,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const canManageConsolidation = isHighestAuth || isFinMgr;
   const canManageCompliance = isHighestAuth || isFinMgr;
   const canManagePolicies = isHighestAuth || isFinMgr;
+  const canDeleteGL = isHighestAuth || isFinMgr || hasCrudPermission(userRole, customRoles, compId, ['Accounting', 'accounting'], 'Delete');
   const canManageFilingDeadlines = isHighestAuth || isFinMgr;
   const canEditBankAccount = isHighestAuth || isFinMgr;
   const accGLModal = useRowModal<typeof localGL[0]>();
@@ -401,7 +402,25 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">{formatCurrency(acc.balance ?? 0, selectedCompany?.currency)}</td>
                         <td className="px-4 py-3 text-right">
                           <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer mr-2"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
-                          <button onClick={async e => { e.stopPropagation(); if (await modalConfirm('Delete this account?', { variant: 'danger' })) onDeleteGLAccount(acc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer mr-2">Delete</button>
+                          <button
+                            disabled={!canDeleteGL}
+                            onClick={async e => {
+                              e.stopPropagation();
+                              if (!canDeleteGL) {
+                                toast('Permission Required: Your assigned role does not have Delete permission for GL Accounts.', 'warning');
+                                return;
+                              }
+                              if (await modalConfirm('Delete this account?', { variant: 'danger' })) onDeleteGLAccount(acc.id);
+                            }}
+                            title={canDeleteGL ? 'Delete Account' : 'Permission Required: Delete'}
+                            className={`data-value-small mr-2 transition-all ${
+                              canDeleteGL
+                                ? 'text-slate-500 hover:text-rose-600 cursor-pointer'
+                                : 'opacity-40 filter saturate-50 cursor-not-allowed text-slate-300'
+                            }`}
+                          >
+                            Delete
+                          </button>
                           <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
                         </td>
                       </tr>
