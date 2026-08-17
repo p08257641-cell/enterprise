@@ -300,7 +300,7 @@ const [deptParent, setDeptParent] = useState('');
             { id: 'approvals',    label: 'Approvals',    icon: 'bi bi-check2-square' },
             { id: 'settings',     label: 'Settings',     icon: 'bi bi-toggles' },
             { id: 'evat',         label: 'E-VAT',        icon: 'bi bi-receipt-cutoff' },
-            { id: 'integrations', label: 'Integrations', icon: 'bi bi-plug', highlight: true },
+            ...(!['Employee'].includes(selectedUser.activeRole || selectedUser.role || '') ? [{ id: 'integrations', label: 'Integrations', icon: 'bi bi-plug', highlight: true }] : []),
           ] as { id: string; label: string; icon: string; highlight?: boolean }[])
             .map(tab => (
             <button
