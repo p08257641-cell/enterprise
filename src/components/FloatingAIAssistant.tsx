@@ -104,7 +104,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   const generateEnterpriseBotReply = (query: string): string => {
     const q = query.toLowerCase();
 
-    // Executive 360 Summary
+    // 1. Executive 360 Summary & Company Overview
     if (q.includes('executive') || q.includes('summary') || q.includes('overview') || q.includes('360')) {
       const currencySymbol = selectedCompany.currency === 'USD' ? '$' : selectedCompany.currency === 'EUR' ? '€' : selectedCompany.currency === 'GBP' ? '£' : 'GHS ';
       return `🏢 **Executive 360 Summary — ${selectedCompany.name}**
@@ -129,52 +129,77 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
 💡 *All core ERP modules are synchronized for ${userRole}. You can trigger automated jobs directly under the Automations tab.*`;
     }
 
-    // Leave balance / requests
-    if (q.includes('leave') || q.includes('vacation')) {
+    // 2. Leave Balance & Requests
+    if (q.includes('leave') || q.includes('vacation') || q.includes('time off')) {
       if (isEmployee) {
         return `🌴 **Your Personal Leave Summary:**\n- Annual Leave Balance: **14 Days Remaining**\n- Sick Leave: **5 Days Available**\n- Pending Requests: **0**\n\nYou can submit a new leave application under **HR & Payroll > Leave Management**.`;
       }
       return `🌴 **Company Leave Intelligence:**\n- Active Employees: **${employees.length || 12}**\n- Pending Leave Requests: **${pendingLeavesCount}** requiring review.\n\nGo to **HR Management > Leave Requests** to approve or decline applications.`;
     }
 
-    // Payslips & Payroll
-    if (q.includes('payslip') || q.includes('pay slip') || q.includes('salary') || q.includes('payroll')) {
+    // 3. Payslips, Payroll & Salary
+    if (q.includes('payslip') || q.includes('pay slip') || q.includes('salary') || q.includes('payroll') || q.includes('paye') || q.includes('ssnit')) {
       if (isEmployee) {
         return `📄 **Digital Payslip Status:**\n- Latest Released Period: **July 2026**\n- Net Salary Disbursed: Confidential\n\nYou can view and download official PDF payslips under **HR & Payroll > My Payslips**.`;
       }
-      return `💸 **Payroll Automation Status:**\n- Total Active Roster: **${employees.length || 12} Staff**\n- Automated Cron Schedule: **Monthly Custom Execution Time**\n- Monthly Gross Obligation: **GHS 68,900**\n\nYou can trigger or configure automated monthly payroll runs under **Payroll > Run Payroll**.`;
+      return `💸 **Payroll Automation Status:**\n- Total Active Roster: **${employees.length || 12} Staff**\n- Automated Cron Schedule: **Custom Execution Time**\n- Monthly Gross Obligation: **GHS 68,900**\n\nYou can trigger or configure automated monthly payroll runs under **Payroll > Run Payroll**.`;
     }
 
-    // Attendance & Clock In
-    if (q.includes('attendance') || q.includes('clock')) {
+    // 4. Attendance & Shift Clock-In
+    if (q.includes('attendance') || q.includes('clock') || q.includes('absent') || q.includes('roster')) {
       if (isEmployee) {
         return `⏰ **Attendance & Shift Log:**\n- Status Today: **Present (Clocked In at 08:45 AM)**\n- Work Mode: **Office / Headquarters**\n- Monthly Attendance Rate: **95%**\n\nLog shift entries under **HR & Payroll > Attendance Log**.`;
       }
       return `👥 **Daily Staff Attendance Breakdown:**\n- Staff Present Today: **91% (10 Staff)**\n- Late Arrivals: **1 Staff**\n- Approved Leaves: **1 Staff**\n\nView individual clock-in/out histories in **HR Management > Attendance Management**.`;
     }
 
-    // Invoices & Overdue Reminders / Financials
-    if (q.includes('invoice') || q.includes('financial') || q.includes('revenue') || q.includes('overdue') || q.includes('payment')) {
-      return `📊 **Financial & Invoicing Summary for ${selectedCompany.name}:**\n- Total Invoices Tracked: **${invoices.length || 8}**\n- Overdue Invoices: **${overdueInvoicesCount || 2} Invoices** requiring follow-up.\n- Automation Status: WhatsApp & Email payment reminders configured.\n\nGo to **Accounting & Finance > Invoices** to view detailed client ledgers.`;
+    // 5. Invoices, Revenue & Overdue Payment Reminders
+    if (q.includes('invoice') || q.includes('financial') || q.includes('revenue') || q.includes('overdue') || q.includes('payment') || q.includes('reminder')) {
+      return `📊 **Financial & Invoicing Summary for ${selectedCompany.name}:**\n- Total Invoices Tracked: **${invoices.length || 8} Invoices**\n- Overdue Invoices: **${overdueInvoicesCount || 2} Invoices** requiring follow-up.\n- Automation Engine: WhatsApp & Email payment reminders active.\n\nGo to **Accounting & Finance > Invoices** to view client ledgers.`;
     }
 
-    // Low Stock & Inventory
-    if (q.includes('stock') || q.includes('inventory') || q.includes('reorder') || q.includes('purchase order')) {
-      return `📦 **Inventory Safety Audit for ${selectedCompany.name}:**\n- Items Below Reorder Level: **${lowStockCount || 3} Items**\n- Total Managed Items: **${inventory.length || 15} SKU items**\n- Auto PO Engine: Enabled for low safety thresholds.\n\nGo to **Operations & Supply > Inventory** to manage stock reorders.`;
+    // 6. Stock, Inventory, Reorder & Purchase Orders / Valuation
+    if (q.includes('stock') || q.includes('inventory') || q.includes('reorder') || q.includes('purchase order') || q.includes('valuation') || q.includes('warehouse')) {
+      return `📦 **Inventory Safety & Stock Valuation for ${selectedCompany.name}:**\n- Items Below Reorder Threshold: **${lowStockCount || 3} Items**\n- Total Warehouse Items: **${inventory.length || 15} Managed SKUs**\n- Warehouse Stock Valuation: **GHS 184,500**\n- Auto PO Engine: Ready to generate draft Purchase Orders.\n\nGo to **Operations & Supply > Inventory** to audit stock levels.`;
     }
 
-    // CRM & Sales Leads
-    if (q.includes('sales') || q.includes('lead') || q.includes('deal') || q.includes('pipeline') || q.includes('crm')) {
-      return `📈 **Sales Pipeline Audit for ${selectedCompany.name}:**\n- Active CRM Leads: **14 Qualified Opportunities**\n- Total Pipeline Value: **GHS 320,000**\n- Top Conversion Stage: **Proposal & Negotiation (6 Deals)**\n\nManage leads under **CRM & Sales > Sales Pipeline**.`;
+    // 7. Bank Reconciliation
+    if (q.includes('bank') || q.includes('reconciliation') || q.includes('reconcile')) {
+      return `🏦 **Automated Bank Reconciliation Audit:**\n- GL Cash Account: **Synced**\n- Matched Bank Transactions: **98.4% Auto-Matched**\n- Unreconciled Items: **2 Entries** requiring manager review.\n\nPerform reconciliation under **Accounting & Finance > Bank Accounts**.`;
     }
 
-    // OKRs & Goals
-    if (q.includes('okr') || q.includes('goal') || q.includes('performance')) {
+    // 8. Tax Liability (PAYE / VAT)
+    if (q.includes('tax') || q.includes('vat') || q.includes('withholding') || q.includes('liability')) {
+      return `🧾 **Tax & Statutory Compliance Audit:**\n- PAYE Employee Tax Withholding: **Filed & Current**\n- SSNIT Tier 1/2/3 Contributions: **Remitted**\n- Net VAT Liability MTD: **GHS 12,450**\n\nReview tax reports under **Accounting & Finance > Tax Reports**.`;
+    }
+
+    // 9. Recruitment, Vacancy & CV Keyword Screening
+    if (q.includes('vacancy') || q.includes('cv') || q.includes('screening') || q.includes('keyword') || q.includes('applicant') || q.includes('recruitment')) {
+      return `💼 **AI Recruitment & CV Screening Engine:**\n- Active Vacancies: **3 Open Positions**\n- Required Keywords: Configured in Post Vacancy Modal\n- Applicant Pipeline: **18 Applicants Screened**\n- Top Match Score: **92% Skill Compatibility**\n\nManage vacancies and run AI shortlists under **HR & Recruitment > ATS Pipeline**.`;
+    }
+
+    // 10. CRM, Sales Leads & Follow-ups
+    if (q.includes('sales') || q.includes('lead') || q.includes('deal') || q.includes('pipeline') || q.includes('crm') || q.includes('follow-up') || q.includes('follow up')) {
+      return `📈 **Sales Pipeline & Lead Intelligence for ${selectedCompany.name}:**\n- Active CRM Leads: **14 Qualified Opportunities**\n- Total Pipeline Value: **GHS 320,000**\n- Top Stage: **Proposal & Negotiation (6 Deals)**\n- Follow-up Dispatch: WhatsApp & Email reminders ready.\n\nManage leads under **CRM & Sales > Sales Pipeline**.`;
+    }
+
+    // 11. OKRs & Goals
+    if (q.includes('okr') || q.includes('goal') || q.includes('kpi') || q.includes('performance')) {
       return `🎯 **OKR Performance Tracker:**\n- Active Company OKRs: **Operational Excellence & Expansion**\n- Target Completion: **82% On Track**\n\nUpdate your quarterly progress milestones under **HR & Payroll > OKRs & Goals**.`;
     }
 
+    // 12. Cron Jobs & Automation
+    if (q.includes('cron') || q.includes('automated') || q.includes('automation') || q.includes('job') || q.includes('schedule')) {
+      return `⚙️ **Automated Background Cron Worker:**\n- Cron Engine Status: **Active & Running**\n- Scheduled Payroll Cron: **Custom Time / Target Selection Active**\n- Overdue Invoice Cron: **Weekly Schedule Active**\n- Low Stock PO Cron: **Auto-Trigger Active**\n\nManage automation schedules under the **Automations** tab.`;
+    }
+
+    // 13. General Greetings
+    if (q.includes('hello') || q.includes('hi') || q.includes('hey') || q.includes('greeting') || q.includes('help')) {
+      return `👋 **Hello! I am your Enterprise Assistant for ${selectedCompany.name}.**\nLogged in as **${userRole}**.\n\nYou can ask me about Finance, Payroll, Attendance, Stock Levels, Sales Leads, or trigger automated 1-click workflows directly from the top tabs!`;
+    }
+
     // Default Enterprise Bot Answer
-    return `🤖 **Enterprise Bot Assistant for ${selectedCompany.name}:**\nI have evaluated your request regarding *"${query}"* for role **${userRole}**.\n\nAll ERP operational modules (Finance, HR Payroll, Inventory, and CRM) are synchronized. You can use the quick tabs above to execute automated 1-click workflows or inspect live role insights.`;
+    return `🤖 **Enterprise Bot Assistant — ${selectedCompany.name}:**\nI have evaluated your request regarding *"${query}"* for role **${userRole}**.\n\nAll ERP operational modules (Finance, HR Payroll, Inventory, and CRM) are synchronized. You can use the quick tabs above to execute automated 1-click workflows or inspect live role insights.`;
   };
 
   const handleSend = async (customText?: string) => {
