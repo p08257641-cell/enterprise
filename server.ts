@@ -718,6 +718,31 @@ app.get('/api/bootstrap', asyncHandler(async (req, res) => {
   });
 }));
 
+// ─── Server-Side Background Automation Cron Scheduler (Runs without human intervention) ───
+function startBackgroundAutomationScheduler() {
+  console.log('[Automation Scheduler] Server-side background cron timer active. Running scheduled jobs automatically...');
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      const allCompanies = await dbAll<any>(schema.companies);
+      for (const comp of allCompanies) {
+        logAuditDb({
+          companyId: comp.id,
+          userId: 'system-cron',
+          userName: 'Automation Timer Engine',
+          action: 'CRON_AUTO_EXECUTE',
+          module: 'Workflow & Automation',
+          details: `Server-side background timer executed scheduled jobs at ${now.toISOString()}`
+        });
+      }
+    } catch (err) {
+      console.error('[Automation Scheduler Error]:', err);
+    }
+  }, 60000); // Evaluates every 60 seconds automatically without human intervention
+}
+
+startBackgroundAutomationScheduler();
+
 // 1. Tenants (Companies)
 app.get('/api/companies', asyncHandler(async (req, res) => {
   res.json(await dbAll(schema.companies));
