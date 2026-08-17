@@ -72,6 +72,36 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   const lowStockCount = inventory.filter(i => i.stockLevel < i.minStockLevel).length;
   const pendingLeavesCount = leaves.filter(l => l.status === 'Pending').length;
 
+  // Dynamic Employee Leave Quota Balances
+  const myLeaves = leaves.filter(l => l.employeeId === selectedUser?.id || (selectedUser?.name && (l as any).employeeName === selectedUser.name));
+  const approvedByType = myLeaves
+    .filter(l => l.status === 'Approved')
+    .reduce((acc, l) => { acc[l.leaveType] = (acc[l.leaveType] || 0) + (l.days || 1); return acc; }, {} as Record<string, number>);
+
+  const annualLeft = Math.max(0, 25 - (approvedByType['Annual Leave'] || 0));
+  const sickLeft = Math.max(0, 10 - (approvedByType['Sick Leave'] || 0));
+  const casualLeft = Math.max(0, 5 - (approvedByType['Casual Leave'] || 0));
+  const myPendingLeavesCount = myLeaves.filter(l => l.status === 'Pending').length;
+
+  // Markdown Formatter for Chat Bubbles (removes raw ** asterisks)
+  const renderMarkdown = (content: string) => {
+    const lines = content.split('\n');
+    return lines.map((line, lineIdx) => {
+      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      return (
+        <React.Fragment key={lineIdx}>
+          {lineIdx > 0 && <br />}
+          {parts.map((part, partIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <strong key={partIdx} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+            }
+            return part;
+          })}
+        </React.Fragment>
+      );
+    });
+  };
+
   // Role-Specific Quick Prompts
   const quickPrompts = isEmployee ? [
     { label: '🌴 Check My Leave Balance', text: 'How many leave days do I have remaining for this year?' },
@@ -134,7 +164,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
     // 2. Leave Balance & Requests
     if (q.includes('leave') || q.includes('vacation') || q.includes('time off')) {
       if (isEmployee) {
-        return `🌴 **Your Personal Leave Summary:**\n- Annual Leave Balance: **14 Days Remaining**\n- Sick Leave: **5 Days Available**\n- Pending Requests: **0**\n\nYou can submit a new leave application under **HR & Payroll > Leave Management**.`;
+        return `🌴 **Your Personal Leave Summary:**\n- Annual Leave Balance: **${annualLeft} / 25 Days Remaining**\n- Sick Leave: **${sickLeft} / 10 Days Available**\n- Casual Leave: **${casualLeft} / 5 Days Available**\n- Pending Requests: **${myPendingLeavesCount}**\n\nYou can submit a new leave application under **HR & Payroll > Leave Management**.`;
       }
       return `🌴 **Company Leave Intelligence:**\n- Active Employees: **${employees.length || 12}**\n- Pending Leave Requests: **${pendingLeavesCount}** requiring review.\n\nGo to **HR Management > Leave Requests** to approve or decline applications.`;
     }
@@ -406,7 +436,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           : 'bg-white border border-slate-200 text-slate-800 rounded-bl-xs'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap">{msg.text}</div>
+                      <div className="whitespace-pre-wrap">{renderMarkdown(msg.text)}</div>
                     </div>
                     <span className="text-[9px] text-slate-400 mt-1 px-1">{msg.timestamp}</span>
                   </div>
