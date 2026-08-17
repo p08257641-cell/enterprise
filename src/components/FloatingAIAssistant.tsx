@@ -104,6 +104,31 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   const generateEnterpriseBotReply = (query: string): string => {
     const q = query.toLowerCase();
 
+    // Executive 360 Summary
+    if (q.includes('executive') || q.includes('summary') || q.includes('overview') || q.includes('360')) {
+      const currencySymbol = selectedCompany.currency === 'USD' ? '$' : selectedCompany.currency === 'EUR' ? '€' : selectedCompany.currency === 'GBP' ? '£' : 'GHS ';
+      return `🏢 **Executive 360 Summary — ${selectedCompany.name}**
+
+📊 **1. Finance & Revenue Operations**
+- Total Invoices Tracked: **${invoices.length || 8} Invoices**
+- Outstanding / Overdue: **${overdueInvoicesCount || 2} Invoices** (${currencySymbol}18,400 pending collection)
+- Payment Reminders: **Active** (WhatsApp & Email dispatch ready)
+- Fiscal Margin: **+24.8% MTD**
+
+👥 **2. HR & Staff Roster Intelligence**
+- Active Employee Roster: **${employees.length || 12} Enrolled Staff**
+- Today's Staff Attendance Rate: **91% Present** (10 Present, 1 Late, 1 On Leave)
+- Monthly Payroll Obligation: **${currencySymbol}68,900** (PAYE & SSNIT Tier 1/2/3 auto-filed)
+- Pending Leave Requests: **${pendingLeavesCount} Application(s)** awaiting review
+
+📦 **3. Supply Chain & Inventory Health**
+- Managed Stock SKUs: **${inventory.length || 15} Active Items**
+- Reorder Risk Level: **${lowStockCount || 3} Items Below Safety Threshold**
+- Auto-PO Purchase Order Engine: **Ready for 1-click dispatch**
+
+💡 *All core ERP modules are synchronized for ${userRole}. You can trigger automated jobs directly under the Automations tab.*`;
+    }
+
     // Leave balance / requests
     if (q.includes('leave') || q.includes('vacation')) {
       if (isEmployee) {
@@ -117,7 +142,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
       if (isEmployee) {
         return `📄 **Digital Payslip Status:**\n- Latest Released Period: **July 2026**\n- Net Salary Disbursed: Confidential\n\nYou can view and download official PDF payslips under **HR & Payroll > My Payslips**.`;
       }
-      return `💸 **Payroll Automation Status:**\n- Total Active Roster: **${employees.length || 12} Staff**\n- Automated Cron Schedule: **Monthly Day 25 at 09:00**\n- Monthly Gross Obligation: **GHS 68,900**\n\nYou can trigger or configure automated monthly payroll runs under **Payroll > Run Payroll**.`;
+      return `💸 **Payroll Automation Status:**\n- Total Active Roster: **${employees.length || 12} Staff**\n- Automated Cron Schedule: **Monthly Custom Execution Time**\n- Monthly Gross Obligation: **GHS 68,900**\n\nYou can trigger or configure automated monthly payroll runs under **Payroll > Run Payroll**.`;
     }
 
     // Attendance & Clock In
@@ -136,6 +161,11 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
     // Low Stock & Inventory
     if (q.includes('stock') || q.includes('inventory') || q.includes('reorder') || q.includes('purchase order')) {
       return `📦 **Inventory Safety Audit for ${selectedCompany.name}:**\n- Items Below Reorder Level: **${lowStockCount || 3} Items**\n- Total Managed Items: **${inventory.length || 15} SKU items**\n- Auto PO Engine: Enabled for low safety thresholds.\n\nGo to **Operations & Supply > Inventory** to manage stock reorders.`;
+    }
+
+    // CRM & Sales Leads
+    if (q.includes('sales') || q.includes('lead') || q.includes('deal') || q.includes('pipeline') || q.includes('crm')) {
+      return `📈 **Sales Pipeline Audit for ${selectedCompany.name}:**\n- Active CRM Leads: **14 Qualified Opportunities**\n- Total Pipeline Value: **GHS 320,000**\n- Top Conversion Stage: **Proposal & Negotiation (6 Deals)**\n\nManage leads under **CRM & Sales > Sales Pipeline**.`;
     }
 
     // OKRs & Goals
