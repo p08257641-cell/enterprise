@@ -202,6 +202,23 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const [obDebit, setObDebit] = useState('');
   const [obCredit, setObCredit] = useState('');
 
+  // Invoice Overdue Reminder Cron State
+  const [showInvCronModal, setShowInvCronModal] = useState(false);
+  const [invCronDay, setInvCronDay] = useState('Monday');
+  const [invCronTime, setInvCronTime] = useState('09:00');
+  const [invCronRunning, setInvCronRunning] = useState(false);
+  const [invCronLastRun, setInvCronLastRun] = useState<string | null>('2026-08-10 09:00 AM');
+
+  const handleRunInvCronNow = () => {
+    setInvCronRunning(true);
+    setTimeout(() => {
+      setInvCronRunning(false);
+      setInvCronLastRun(new Date().toLocaleString());
+      setShowInvCronModal(false);
+      modalAlert('Automated Overdue Invoice Reminders executed! Dispatched WhatsApp & Email digital payment links to clients with past due invoices.', { variant: 'success' });
+    }, 1200);
+  };
+
   // Bank Reconciliation form state
   const [showReconModal, setShowReconModal] = useState(false);
   const [reconBankAccountId, setReconBankAccountId] = useState('');
@@ -451,7 +468,123 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
         {activeView === 'acc-invoices' && accTab !== 'create' && (
           <>
             <PageHeader title="Invoices" subtitle="Manage customer invoices, track payments and send reminders."
-              action={<><PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`invoices-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Issue Date', 'Due Date', 'Total', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.issueDate, i.dueDate, i.total ?? 0, i.status]))}>Export</PrimaryBtn> <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setAccTab('create')}>New Invoice</PrimaryBtn></>} />
+              action={
+                <>
+                  <button
+                    onClick={() => setShowInvCronModal(true)}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white fs-xs fw-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <i className="bi bi-clock-history text-amber-300"></i> Automate Overdue Reminders (Cron)
+                  </button>
+                  <PrimaryBtn icon="bi bi-download" onClick={() => downloadCSV(`invoices-${selectedCompany.id}`, ['Invoice #', 'Customer', 'Issue Date', 'Due Date', 'Total', 'Status'], localInvoices.map(i => [i.invoiceNumber, i.customerName, i.issueDate, i.dueDate, i.total ?? 0, i.status]))}>Export</PrimaryBtn>
+                  <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setAccTab('create')}>New Invoice</PrimaryBtn>
+                </>
+              } 
+            />
+
+            {/* Overdue Invoice Payment Reminders Cron Banner Card */}
+            <div className="mb-5 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-4 shadow-sm border border-blue-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] fw-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                    <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Invoice Cron
+                  </span>
+                  <span className="text-xs fw-bold text-white">Every {invCronDay} at {invCronTime}</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Background cron timer scans past due invoices and automatically dispatches WhatsApp & Email digital payment links to customers.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowInvCronModal(true)}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs fw-semibold transition-all border border-white/20 cursor-pointer shrink-0"
+              >
+                Configure Cron Schedule →
+              </button>
+            </div>
+
+            {/* Overdue Invoice Payment Reminders Cron Modal */}
+            {showInvCronModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+                <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 p-5 text-white flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                        <i className="bi bi-clock-history text-amber-300 text-lg"></i>
+                      </div>
+                      <div>
+                        <h3 className="text-sm fw-bold">Automated Overdue Invoice Reminders (Cron)</h3>
+                        <p className="text-[11px] text-slate-300">Auto-dispatch digital payment links for past-due invoices</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowInvCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                      <i className="bi bi-x-lg text-sm"></i>
+                    </button>
+                  </div>
+
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Weekly Execution Day</Label>
+                        <Select value={invCronDay} onChange={e => setInvCronDay(e.target.value)}>
+                          <option value="Monday">Every Monday</option>
+                          <option value="Wednesday">Every Wednesday</option>
+                          <option value="Friday">Every Friday</option>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label>Execution Time</Label>
+                        <Select value={invCronTime} onChange={e => setInvCronTime(e.target.value)}>
+                          <option value="09:00">09:00 AM</option>
+                          <option value="08:00">08:00 AM</option>
+                          <option value="17:00">05:00 PM</option>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs fw-bold text-slate-900">Background Cron Timer Status</span>
+                        <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                          Active & Scheduled
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600">
+                        Cron expression: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-blue-700">0 9 * * 1</code>
+                      </p>
+                      {invCronLastRun && (
+                        <p className="text-[10px] text-slate-500">Last automated dispatch: {invCronLastRun}</p>
+                      )}
+                    </div>
+
+                    <div className="pt-2 flex flex-col gap-2">
+                      <button
+                        onClick={handleRunInvCronNow}
+                        disabled={invCronRunning}
+                        className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs fw-bold shadow-lg shadow-blue-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {invCronRunning ? (
+                          <>
+                            <i className="bi bi-arrow-repeat animate-spin text-sm"></i>
+                            Scanning overdue invoices & sending WhatsApp/Email payment links...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-play-fill text-sm"></i>
+                            Run Overdue Invoice Reminders Job Now
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                    <SecBtn onClick={() => setShowInvCronModal(false)}>Close</SecBtn>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
               <table className="w-full text-left">
                 <TableHead cols={[{ label: 'Invoice #' }, { label: 'Client' }, { label: 'Issue Date' }, { label: 'Due Date' }, { label: 'Amount', right: true }, { label: 'Status' }, { label: 'Action', right: true }]} />

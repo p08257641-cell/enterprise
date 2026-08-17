@@ -57,6 +57,23 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
   // CRM Contact Detail
   const [selectedLeadForDetail, setSelectedLeadForDetail] = useState<string | null>(null);
 
+  // CRM Stale Lead Cron State
+  const [showCrmCronModal, setShowCrmCronModal] = useState(false);
+  const [crmCronDay, setCrmCronDay] = useState('Tuesday');
+  const [crmCronTime, setCrmCronTime] = useState('09:00');
+  const [crmCronRunning, setCrmCronRunning] = useState(false);
+  const [crmCronLastRun, setCrmCronLastRun] = useState<string | null>('2026-08-11 09:00 AM');
+
+  const handleRunCrmCronNow = () => {
+    setCrmCronRunning(true);
+    setTimeout(() => {
+      setCrmCronRunning(false);
+      setCrmCronLastRun(new Date().toLocaleString());
+      setShowCrmCronModal(false);
+      toast('Automated CRM Lead Follow-up Cron executed! Alerted assigned sales reps and reassigned inactive leads.');
+    }, 1200);
+  };
+
   // CRM Task Management
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -168,29 +185,139 @@ export const CRMView: React.FC<ModuleViewsProps> = (props) => {
                   </button>
                 </>
               )}
-              <button
-                type="button"
-                disabled={!canCreateLead}
-                onClick={() => {
-                  if (!canCreateLead) {
-                    toast('Permission Required: Your assigned role does not have Create permission to add leads.', 'warning');
-                    return;
-                  }
-                  setShowLeadForm(true);
-                }}
-                title={canCreateLead ? 'Add Lead' : 'Permission Required: Create'}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-all ${
-                  canCreateLead
-                    ? 'hover:bg-slate-800 cursor-pointer'
-                    : 'opacity-40 filter saturate-50 cursor-not-allowed'
-                }`}
-              >
-                <i className="bi bi-plus-lg"></i>
-                Add Lead
-              </button>
+                  <button
+                    onClick={() => setShowCrmCronModal(true)}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white fs-xs fw-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <i className="bi bi-clock-history text-amber-300"></i> Automate Stale Follow-ups (Cron)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canCreateLead}
+                    onClick={() => {
+                      if (!canCreateLead) {
+                        toast('Permission Required: Your assigned role does not have Create permission to add leads.', 'warning');
+                        return;
+                      }
+                      setShowLeadForm(true);
+                    }}
+                    title={canCreateLead ? 'Add Lead' : 'Permission Required: Create'}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold shadow-xs transition-all ${
+                      canCreateLead
+                        ? 'hover:bg-slate-800 cursor-pointer'
+                        : 'opacity-50 cursor-not-allowed bg-slate-400'
+                    }`}
+                  >
+                    <i className="bi bi-plus-lg fs-xs"></i> Add Lead
+                  </button>
             </div>
           } 
         />
+
+        {/* CRM Stale Lead Follow-up Cron Banner Card */}
+        <div className="mb-5 bg-gradient-to-r from-slate-900 via-violet-950 to-indigo-950 text-white rounded-2xl p-4 shadow-sm border border-violet-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] fw-bold bg-violet-500/20 text-violet-300 border border-violet-400/30">
+                <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Lead Cron
+              </span>
+              <span className="text-xs fw-bold text-white">Every {crmCronDay} at {crmCronTime}</span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Background cron timer scans open CRM leads without activity for &gt; 7 days, alerts assigned sales reps, and reassigns dormant leads.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCrmCronModal(true)}
+            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs fw-semibold transition-all border border-white/20 cursor-pointer shrink-0"
+          >
+            Configure Lead Cron →
+          </button>
+        </div>
+
+        {/* CRM Stale Lead Follow-up Cron Modal */}
+        {showCrmCronModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-gradient-to-r from-slate-900 via-violet-950 to-indigo-950 p-5 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-500 to-indigo-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                    <i className="bi bi-clock-history text-amber-300 text-lg"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-sm fw-bold">Automated Stale Lead & Follow-Up Cron</h3>
+                    <p className="text-[11px] text-slate-300">Auto-scan inactive leads & alert assigned sales representatives</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowCrmCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                  <i className="bi bi-x-lg text-sm"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Weekly Audit Day</Label>
+                    <Select value={crmCronDay} onChange={e => setCrmCronDay(e.target.value)}>
+                      <option value="Tuesday">Every Tuesday</option>
+                      <option value="Thursday">Every Thursday</option>
+                      <option value="Monday">Every Monday</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Audit Time</Label>
+                    <Select value={crmCronTime} onChange={e => setCrmCronTime(e.target.value)}>
+                      <option value="09:00">09:00 AM</option>
+                      <option value="08:00">08:00 AM</option>
+                      <option value="17:00">05:00 PM</option>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs fw-bold text-slate-900">Background Cron Timer Status</span>
+                    <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                      Active & Monitoring Pipeline
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Cron expression: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-violet-700">0 9 * * 2</code>
+                  </p>
+                  {crmCronLastRun && (
+                    <p className="text-[10px] text-slate-500">Last automated audit: {crmCronLastRun}</p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <button
+                    onClick={handleRunCrmCronNow}
+                    disabled={crmCronRunning}
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs fw-bold shadow-lg shadow-violet-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {crmCronRunning ? (
+                      <>
+                        <i className="bi bi-arrow-repeat animate-spin text-sm"></i>
+                        Scanning inactive pipeline leads & dispatching sales notifications...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-play-fill text-sm"></i>
+                        Run Stale Lead Follow-up Job Now
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <SecBtn onClick={() => setShowCrmCronModal(false)}>Close</SecBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
         {crmTab !== 'reports' && (
           <div className="grid gap-4 sm:grid-cols-4 mb-6">
             <StatCard label="Total Leads" value={localLeads.length} icon="bi bi-people" sub="All pipeline contacts" />

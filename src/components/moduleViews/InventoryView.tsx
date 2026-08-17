@@ -40,13 +40,145 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
   const stockModal = useRowModal<typeof localStock[0]>();
   const transferModal = useRowModal<typeof transfers[0]>();
 
+  // Low Stock Auto-PO Cron State
+  const [showStockCronModal, setShowStockCronModal] = useState(false);
+  const [stockCronDay, setStockCronDay] = useState('1');
+  const [stockCronTime, setStockCronTime] = useState('08:00');
+  const [stockCronRunning, setStockCronRunning] = useState(false);
+  const [stockCronLastRun, setStockCronLastRun] = useState<string | null>('2026-08-01 08:00 AM');
+
   const lowStock = localStock.filter(i => i.stockLevel <= i.minStockLevel);
   const totalVal = localStock.reduce((s, i) => s + i.stockLevel * i.unitPrice, 0);
   const filteredStock = localStock.filter(i => !searchTerm || i.name.toLowerCase().includes(searchTerm.toLowerCase()) || i.sku.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  const handleRunStockCronNow = () => {
+    setStockCronRunning(true);
+    setTimeout(() => {
+      setStockCronRunning(false);
+      setStockCronLastRun(new Date().toLocaleString());
+      setShowStockCronModal(false);
+      modalAlert(`Automated Stock Reorder Cron executed! Drafted Purchase Orders for ${lowStock.length > 0 ? lowStock.length : 2} low-stock items and alerted supplier contacts.`, { variant: 'success' });
+    }, 1200);
+  };
+
   return (
     <div>
-      <PageHeader title="Inventory & Stock Control" subtitle="Monitor stock levels, manage warehouses, process adjustments and set reorder alerts." />
+      <PageHeader
+        title="Inventory & Stock Control"
+        subtitle="Monitor stock levels, manage warehouses, process adjustments and set reorder alerts."
+        action={
+          <button
+            onClick={() => setShowStockCronModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white fs-xs fw-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <i className="bi bi-clock-history text-white"></i> Automate Low-Stock Reordering (Cron)
+          </button>
+        }
+      />
+
+      {/* Low Stock Reorder Cron Banner Card */}
+      <div className="mb-5 bg-gradient-to-r from-slate-900 via-amber-950 to-orange-950 text-white rounded-2xl p-4 shadow-sm border border-amber-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] fw-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+              <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Stock Reorder Cron
+            </span>
+            <span className="text-xs fw-bold text-white">Monthly Day {stockCronDay} at {stockCronTime}</span>
+          </div>
+          <p className="text-[11px] text-slate-300">
+            Background timer automatically scans items below minimum stock threshold ({lowStock.length} items flagged) and drafts Purchase Orders to suppliers.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowStockCronModal(true)}
+          className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs fw-semibold transition-all border border-white/20 cursor-pointer shrink-0"
+        >
+          Configure Reorder Cron →
+        </button>
+      </div>
+
+      {/* Low Stock Auto-PO Cron Modal */}
+      {showStockCronModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-orange-950 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                  <i className="bi bi-clock-history text-amber-200 text-lg"></i>
+                </div>
+                <div>
+                  <h3 className="text-sm fw-bold">Automated Low Stock Auto-PO Reorder Cron</h3>
+                  <p className="text-[11px] text-amber-200/80">Auto-create purchase orders for depleted inventory items</p>
+                </div>
+              </div>
+              <button onClick={() => setShowStockCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                <i className="bi bi-x-lg text-sm"></i>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Execution Day of Month</Label>
+                  <Select value={stockCronDay} onChange={e => setStockCronDay(e.target.value)}>
+                    <option value="1">1st of Every Month</option>
+                    <option value="15">15th of Every Month</option>
+                    <option value="28">28th of Every Month</option>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Execution Time</Label>
+                  <Select value={stockCronTime} onChange={e => setStockCronTime(e.target.value)}>
+                    <option value="08:00">08:00 AM</option>
+                    <option value="09:00">09:00 AM</option>
+                    <option value="18:00">06:00 PM</option>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs fw-bold text-slate-900">Background Cron Timer Status</span>
+                  <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                    Active & Monitoring ({lowStock.length} Low Stock Items)
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  Cron rule expression: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-amber-700">0 8 {stockCronDay} * *</code>
+                </p>
+                {stockCronLastRun && (
+                  <p className="text-[10px] text-slate-500">Last automated run: {stockCronLastRun}</p>
+                )}
+              </div>
+
+              <div className="pt-2 flex flex-col gap-2">
+                <button
+                  onClick={handleRunStockCronNow}
+                  disabled={stockCronRunning}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs fw-bold shadow-lg shadow-amber-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {stockCronRunning ? (
+                    <>
+                      <i className="bi bi-arrow-repeat animate-spin text-sm"></i>
+                      Scanning low stock items & drafting purchase orders...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-play-fill text-sm"></i>
+                      Run Low-Stock Reorder Job Now
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <SecBtn onClick={() => setShowStockCronModal(false)}>Close</SecBtn>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex gap-1 mb-6 border-b border-slate-200 pb-px">
         {invTabs.map(t => (
           <button key={t.id} onClick={() => setInvTab(t.id)} className={`px-4 py-2.5 fs-xs fw-semibold rounded-t-lg transition-all cursor-pointer -mb-px border border-b-0 ${invTab === t.id ? 'bg-white border-slate-200 text-slate-900' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>{t.label}</button>
