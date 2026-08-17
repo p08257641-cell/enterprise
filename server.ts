@@ -544,16 +544,27 @@ const CRUD_ROUTES: Array<{ prefix: string; module: string }> = [
 ];
 
 app.use('/api', (req, res, next) => {
+  const userRole = (req as any).user?.role || (req as any).user?.activeRole;
+  if (['Super Admin', 'Company Admin', 'CEO', 'System Administrator', 'IT Department Head'].includes(userRole)) {
+    return next();
+  }
+
+  // GET requests are allowed for authenticated company users to read reference data for UI rendering
+  if (req.method === 'GET') return next();
+
   const perms: string[] = (req as any).user?.crudPermissions || [];
   if (perms.length === 0) return next();
+
   const method = req.method;
-  const actionMap: Record<string, string> = { GET: 'Read', POST: 'Create', PUT: 'Update', PATCH: 'Update', DELETE: 'Delete' };
+  const actionMap: Record<string, string> = { POST: 'Create', PUT: 'Update', PATCH: 'Update', DELETE: 'Delete' };
   const action = actionMap[method];
   if (!action) return next();
+
   const path = req.path;
   for (const route of CRUD_ROUTES) {
     if (path.startsWith(route.prefix) || path.startsWith('/api' + route.prefix)) {
-      if (!perms.includes(`${route.module}.${action}`)) {
+      const hasPerm = perms.some(p => p === `${route.module}.${action}` || p.toLowerCase() === `${route.module.toLowerCase()}.${action.toLowerCase()}`);
+      if (!hasPerm) {
         return res.status(403).json({ error: `Missing ${route.module}.${action} permission` });
       }
       return next();
