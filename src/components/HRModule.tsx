@@ -1321,6 +1321,35 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
       <div className="space-y-6">
         <SectionHeader title="Recruitment & ATS" subtitle="Post vacancies, track applicants and register new employees." />
 
+        {/* 🤖 Prominent AI CV Keyword Shortlisting Engine Banner Card */}
+        {isHRorAdmin && (
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white rounded-3xl p-6 shadow-xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 animate-in fade-in duration-200">
+            <div className="space-y-2 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs fw-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <i className="bi bi-stars"></i> AI Resume Engine
+                </span>
+                <h3 className="text-base fw-bold text-white tracking-tight">AI CV Keyword Shortlisting & Screening</h3>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Define required skills & qualifications (<code className="text-amber-200 font-mono bg-white/10 px-1.5 py-0.5 rounded">React, Node, PostgreSQL, CPA, GAAP</code>). The AI evaluates applicant resumes, calculates fit scores, and automatically shortlists top candidates.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
+                <span className="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 font-mono">Current Target: {targetKeywords}</span>
+                <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-lg border border-emerald-400/20 font-mono">Min Threshold: {minMatchScore}%</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAiScreeningModal(true)}
+              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-xs fw-bold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-2 shrink-0 border border-white/20 hover:scale-105"
+            >
+              <i className="bi bi-stars text-amber-300 text-sm"></i>
+              Run AI Resume Keyword Shortlist
+            </button>
+          </div>
+        )}
+
         {/* ATS Pipeline */}
         <div className="grid gap-4 sm:grid-cols-4">
           {[
