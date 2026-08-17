@@ -109,12 +109,18 @@ const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle?: 
   </div>
 );
 
-const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input {...props}  />
+const Input = ({ className = '', ...props }: React.InputHTMLAttributes<HTMLInputElement>) => (
+  <input
+    {...props}
+    className={`w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all font-sans shadow-2xs ${className}`}
+  />
 );
 
-const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => (
-  <select {...props}  />
+const Select = ({ className = '', ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) => (
+  <select
+    {...props}
+    className={`w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all font-sans shadow-2xs ${className}`}
+  />
 );
 
 const Label = ({ children }: { children: React.ReactNode }) => (

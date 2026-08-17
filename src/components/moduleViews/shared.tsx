@@ -484,11 +484,11 @@ export const Label = ({ children }: { children: React.ReactNode }) => (
 );
 
 export const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 data-value text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 ${props.className ?? ''}`} />
+  <input {...props} className={`w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-sans shadow-2xs ${props.className ?? ''}`} />
 );
 
 export const Select = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => (
-  <select {...props} className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 data-value text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300 ${props.className ?? ''}`} />
+  <select {...props} className={`w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-sans shadow-2xs ${props.className ?? ''}`} />
 );
 
 export const toast = (msg: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
