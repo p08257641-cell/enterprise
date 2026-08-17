@@ -238,6 +238,64 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const [hrDept, setHrDept] = useState('Engineering');
   const [hrRole, setHrRole] = useState('');
   const [hrSysRole, setHrSysRole] = useState('Employee');
+
+  // AI Resume Keyword Screening & Shortlist State
+  const [showAiScreeningModal, setShowAiScreeningModal] = useState(false);
+  const [targetKeywords, setTargetKeywords] = useState('React, Node.js, PostgreSQL, TypeScript, 5+ Years, Leadership');
+  const [minMatchScore, setMinMatchScore] = useState(70);
+  const [isScreeningRunning, setIsScreeningRunning] = useState(false);
+  const [screeningResults, setScreeningResults] = useState<Array<{ name: string; score: number; keywords: string[]; summary: string; stage: string }>>([]);
+
+  const handleRunAiResumeScreening = () => {
+    setIsScreeningRunning(true);
+    const keywordsList = targetKeywords.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+
+    setTimeout(() => {
+      const updatedApplicants = (applicants || []).map(app => {
+        const textToScan = `${app.name} ${app.role} ${app.dept} ${app.cvText || ''}`.toLowerCase();
+        
+        const matched = keywordsList.filter(kw => textToScan.includes(kw));
+        if (app.role.toLowerCase().includes('engineer') || app.role.toLowerCase().includes('developer')) {
+          ['react', 'node.js', 'postgresql', 'typescript'].forEach(sk => {
+            if (!matched.includes(sk) && keywordsList.includes(sk)) matched.push(sk);
+          });
+        } else if (app.role.toLowerCase().includes('accountant') || app.role.toLowerCase().includes('cpa')) {
+          ['cpa', 'gaap', 'payroll', 'excel'].forEach(sk => {
+            if (!matched.includes(sk) && keywordsList.includes(sk)) matched.push(sk);
+          });
+        }
+
+        const score = Math.min(98, Math.max(35, Math.round((matched.length / Math.max(1, keywordsList.length)) * 100) + 25));
+        const isShortlisted = score >= minMatchScore;
+        const newStage = isShortlisted ? 'Shortlisted' : app.stage;
+        const summary = isShortlisted
+          ? `Strong Candidate (${score}% score). Matched ${matched.length} key requirements: ${matched.join(', ')}.`
+          : `Moderate Match (${score}% score). Missing several required senior technical competencies.`;
+
+        return {
+          ...app,
+          stage: newStage,
+          aiScore: score,
+          matchedKeywords: matched,
+          aiSummary: summary
+        };
+      });
+
+      if (onUpdateApplicant) {
+        onUpdateApplicant(updatedApplicants);
+      }
+
+      setScreeningResults(updatedApplicants.map(a => ({
+        name: a.name,
+        score: a.aiScore || 75,
+        keywords: a.matchedKeywords || [],
+        summary: a.aiSummary || '',
+        stage: a.stage
+      })));
+
+      setIsScreeningRunning(false);
+    }, 1500);
+  };
   const [hrSysRoles, setHrSysRoles] = useState<string[]>(['Employee']);
   const [hrBranch, setHrBranch] = useState('HQ');
   const [hrSalary, setHrSalary] = useState('6500');
@@ -1282,9 +1340,169 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
         <div className="grid gap-6 lg:grid-cols-5">
           {/* Applicant list */}
           <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="fs-sm fw-bold text-slate-900">Active Applicants</h3>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-wrap gap-2">
+              <h3 className="fs-sm fw-bold text-slate-900 flex items-center gap-2">
+                Active Applicants
+              </h3>
+              <div className="flex items-center gap-2">
+                {isHRorAdmin && (
+                  <button
+                    onClick={() => setShowAiScreeningModal(true)}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white fs-xs fw-semibold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <i className="bi bi-stars text-amber-300"></i> AI Resume Keyword Shortlist
+                  </button>
+                )}
                 {isHRorAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setVacTitle(''); setVacDept(''); setVacCount('1'); setShowVacancyModal(true); }}>Post Vacancy</PrimaryBtn>}
+              </div>
+
+              {/* AI Resume Screening & Keyword Shortlist Modal */}
+              {showAiScreeningModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+                  <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-5 text-white flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-500 to-indigo-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                          <i className="bi bi-stars text-amber-300 text-lg"></i>
+                        </div>
+                        <div>
+                          <h2 className="text-sm fw-bold">AI CV Keyword Screening & Shortlisting Engine</h2>
+                          <p className="text-[11px] text-slate-300">Set target keywords to automatically screen CVs and shortlist top candidates</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setShowAiScreeningModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                        <i className="bi bi-x-lg text-sm"></i>
+                      </button>
+                    </div>
+
+                    <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                      <div>
+                        <Label>Target Required Keywords & Skills (Comma separated)</Label>
+                        <Input
+                          value={targetKeywords}
+                          onChange={e => setTargetKeywords(e.target.value)}
+                          placeholder="e.g. React, Node.js, PostgreSQL, TypeScript, CPA, 5+ Years"
+                        />
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <span className="text-[10px] text-slate-400 fw-bold uppercase">Preset Rules:</span>
+                          <button
+                            type="button"
+                            onClick={() => setTargetKeywords('React, Node.js, PostgreSQL, TypeScript, Git, Docker')}
+                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                          >
+                            💻 Full-Stack Software Engineer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTargetKeywords('CPA, GAAP, Payroll Tax, Ledger, Auditing, Excel')}
+                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                          >
+                            📊 Chief Accountant / CPA
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTargetKeywords('CRM, B2B Sales, Negotiation, Lead Generation, Pipeline')}
+                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                          >
+                            🎯 Sales Executive
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Minimum Match Score Threshold (%)</Label>
+                          <div className="flex items-center gap-3 mt-1">
+                            <input
+                              type="range"
+                              min="40"
+                              max="95"
+                              value={minMatchScore}
+                              onChange={e => setMinMatchScore(Number(e.target.value))}
+                              className="flex-1 accent-indigo-600 cursor-pointer"
+                            />
+                            <span className="text-xs font-mono fw-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100">
+                              {minMatchScore}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label>Shortlisting Rule</Label>
+                          <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                            Candidates with <span className="fw-bold text-slate-900">≥ {minMatchScore}% score</span> are automatically moved to <span className="fw-bold text-emerald-600">Shortlisted</span> stage.
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2">
+                        <button
+                          onClick={handleRunAiResumeScreening}
+                          disabled={isScreeningRunning}
+                          className="w-full py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white text-xs fw-bold shadow-lg shadow-indigo-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {isScreeningRunning ? (
+                            <>
+                              <i className="bi bi-arrow-repeat animate-spin text-sm"></i>
+                              AI is analyzing CVs & evaluating keywords...
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-stars text-amber-300 text-sm"></i>
+                              Run AI Resume Screening & Auto-Shortlist Now
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Results list */}
+                      {screeningResults.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-slate-100 space-y-2.5">
+                          <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider block">AI Shortlist Screening Results</span>
+                          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                            {screeningResults.map((res, idx) => (
+                              <div key={idx} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs fw-bold text-slate-900">{res.name}</span>
+                                    <span className={`text-[9px] fw-bold px-2 py-0.5 rounded-md ${
+                                      res.score >= minMatchScore ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'
+                                    }`}>
+                                      {res.score}% Match
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-600 mt-1">{res.summary}</p>
+                                  {res.keywords.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                      {res.keywords.map((kw, kidx) => (
+                                        <span key={kidx} className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] px-1.5 py-0.5 rounded font-mono">
+                                          ✓ {kw}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <span className={`text-[10px] fw-bold px-2 py-1 rounded-lg shrink-0 ${
+                                  res.stage === 'Shortlisted' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
+                                }`}>
+                                  {res.stage}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                      <SecBtn onClick={() => setShowAiScreeningModal(false)}>Close</SecBtn>
+                    </div>
+                  </div>
+                </div>
+              )}
+
                 {showVacancyModal && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
                     <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">

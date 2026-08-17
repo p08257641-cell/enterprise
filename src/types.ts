@@ -1615,4 +1615,5 @@ export interface Applicant {
   cvText?: string;
   aiScore?: number;
   aiSummary?: string;
+  matchedKeywords?: string[];
 }
