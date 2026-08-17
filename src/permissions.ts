@@ -194,7 +194,11 @@ export const isSuperAdminRole = (role?: Role): boolean => role === 'Super Admin'
 export const isAdminRole = (role?: Role): boolean => role === 'Super Admin' || role === 'Company Admin';
 export const isHRRole = (role?: Role): boolean => role === 'HR Manager' || role === 'HR Officer';
 export const isHRorAdminRole = (role?: Role): boolean => isAdminRole(role) || isHRRole(role);
-export const isEmployeeRole = (role?: Role): boolean => role === 'Employee';
+export const isEmployeeRole = (role?: Role | string): boolean => {
+  if (!role) return false;
+  const r = String(role).trim().toLowerCase();
+  return r === 'employee' || r === 'employee self service' || r.includes('employee');
+};
 export const DEPT_HEAD_ROLES = ['HR Department Head', 'Sales Department Head', 'Finance Department Head', 'Operations Department Head', 'IT Department Head'] as const;
 export const isDeptHeadRole = (role?: Role): boolean => (DEPT_HEAD_ROLES as readonly string[]).includes(role || '');
 export const isHRDeptHead = (role?: Role): boolean => role === 'HR Department Head';

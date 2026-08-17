@@ -192,7 +192,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* ── Google-Style 9-Dots App Launcher Waffle Menu (Hidden for regular Employees) ─────────────────── */}
-        {!isEmployeeRole(selectedUser.activeRole || selectedUser.role || '') && (
+        {!isEmployee && (
           <div className="relative" ref={appsRef}>
             <button
               onClick={() => setAppsMenuOpen(prev => !prev)}
