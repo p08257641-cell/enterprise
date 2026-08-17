@@ -411,8 +411,16 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const [editAccountNumber, setEditAccountNumber] = useState('');
   const [editSortCode, setEditSortCode] = useState('');
   const [showVacancyModal, setShowVacancyModal] = useState(false);
-  const [vacTitle, setVacTitle] = useState(''); const [vacDept, setVacDept] = useState(''); const [vacCount, setVacCount] = useState('1');
-  const [vacancies, setVacancies] = useState<{ id: string; title: string; department: string; count: number; posted: string }[]>([]);
+  const [vacTitle, setVacTitle] = useState('');
+  const [vacDept, setVacDept] = useState('');
+  const [vacCount, setVacCount] = useState('1');
+  const [vacKeywords, setVacKeywords] = useState('React, TypeScript, Node.js, PostgreSQL');
+  const [vacMinScore, setVacMinScore] = useState('70');
+  const [vacancies, setVacancies] = useState<{ id: string; title: string; department: string; count: number; posted: string; keywords: string; minScore: number }[]>([
+    { id: 'vac-1', title: 'Senior Full-Stack Engineer', department: 'Engineering', count: 2, posted: '2026-08-01', keywords: 'React, TypeScript, Node.js, PostgreSQL, Docker', minScore: 70 },
+    { id: 'vac-2', title: 'Chief Accountant / CPA', department: 'Finance', count: 1, posted: '2026-08-05', keywords: 'CPA, GAAP, Financial Accounting, Auditing, Tax', minScore: 75 },
+    { id: 'vac-3', title: 'B2B Sales Representative', department: 'Sales', count: 3, posted: '2026-08-10', keywords: 'CRM, B2B Sales, Lead Generation, Negotiation, Pipeline', minScore: 65 }
+  ]);
   // Edit Department modal
   const [editDeptModal, setEditDeptModal] = useState<Department | null>(null);
   const [editDeptName, setEditDeptName] = useState('');
@@ -1322,32 +1330,63 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
       <div className="space-y-6">
         <SectionHeader title="Recruitment & ATS" subtitle="Post vacancies, track applicants and register new employees." />
 
-        {/* 🤖 Prominent AI CV Keyword Shortlisting Engine Banner Card */}
+        {/* Active Job Vacancies & AI Screening Keywords Section */}
         {isHRorAdmin && (
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white rounded-3xl p-6 shadow-xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 animate-in fade-in duration-200">
-            <div className="space-y-2 max-w-2xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs fw-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                  <i className="bi bi-stars"></i> AI Resume Engine
-                </span>
-                <h3 className="text-base fw-bold text-white tracking-tight">AI CV Keyword Shortlisting & Screening</h3>
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-5 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="fs-sm fw-bold text-slate-900 flex items-center gap-2">
+                  <i className="bi bi-briefcase-fill text-indigo-600"></i> Active Job Vacancies & AI Screening Keywords
+                </h3>
+                <p className="text-[11px] text-slate-500">Configure target skill keywords per vacancy. The AI screens resumes and shortlists top applicants.</p>
               </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Define required skills & qualifications (<code className="text-amber-200 font-mono bg-white/10 px-1.5 py-0.5 rounded">React, Node, PostgreSQL, CPA, GAAP</code>). The AI evaluates applicant resumes, calculates fit scores, and automatically shortlists top candidates.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
-                <span className="bg-white/10 px-2.5 py-1 rounded-lg border border-white/10 font-mono">Current Target: {targetKeywords}</span>
-                <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-lg border border-emerald-400/20 font-mono">Min Threshold: {minMatchScore}%</span>
-              </div>
+              <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setVacTitle(''); setVacDept(''); setVacCount('1'); setVacKeywords('React, TypeScript, Node.js, PostgreSQL'); setVacMinScore('70'); setShowVacancyModal(true); }}>
+                Post Vacancy with AI Keywords
+              </PrimaryBtn>
             </div>
 
-            <button
-              onClick={() => setShowAiScreeningModal(true)}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-xs fw-bold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-2 shrink-0 border border-white/20 hover:scale-105"
-            >
-              <i className="bi bi-stars text-amber-300 text-sm"></i>
-              Run AI Resume Keyword Shortlist
-            </button>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {vacancies.map((vac) => (
+                <div key={vac.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:shadow-md hover:border-indigo-200 transition-all space-y-3 group">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="fs-xs fw-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{vac.title}</h4>
+                      <span className="text-[11px] text-slate-500">{vac.department} · Posted {vac.posted}</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] fw-bold bg-indigo-100 text-indigo-700 shrink-0">
+                      {vac.count} {vac.count === 1 ? 'Opening' : 'Openings'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider block mb-1">Required AI Keywords:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {(vac.keywords || 'Skills required').split(',').map((kw, kwIdx) => (
+                        <span key={kwIdx} className="px-2 py-0.5 rounded-md text-[10px] font-mono fw-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                          {kw.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                    <span className="text-[10px] fw-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
+                      Min {vac.minScore || 70}% Match
+                    </span>
+                    <button
+                      onClick={() => {
+                        setTargetKeywords(vac.keywords);
+                        setMinMatchScore(vac.minScore || 70);
+                        setShowAiScreeningModal(true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[11px] fw-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                    >
+                      <i className="bi bi-stars text-amber-300 text-[10px]"></i> AI Shortlist
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -1534,23 +1573,94 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
               )}
 
                 {showVacancyModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-                    <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
-                      <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-3 mb-4">Post Vacancy</h2>
-                      <div className="space-y-4">
-                        <div><Label>Job Title *</Label><Input value={vacTitle} onChange={e => setVacTitle(e.target.value)} placeholder="Senior Engineer" /></div>
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+                    <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-5 text-white flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-500 to-indigo-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                            <i className="bi bi-briefcase-fill text-amber-300 text-lg"></i>
+                          </div>
+                          <div>
+                            <h2 className="text-sm fw-bold">Post New Job Vacancy & AI Screening Rules</h2>
+                            <p className="text-[11px] text-slate-300">Set vacancy details & target CV keywords for automated shortlisting</p>
+                          </div>
+                        </div>
+                        <button onClick={() => setShowVacancyModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                          <i className="bi bi-x-lg text-sm"></i>
+                        </button>
+                      </div>
+
+                      <div className="p-6 space-y-4">
+                        <div>
+                          <Label>Job Title *</Label>
+                          <Input value={vacTitle} onChange={e => setVacTitle(e.target.value)} placeholder="e.g. Senior Full-Stack Engineer" />
+                        </div>
+                        
                         <div className="grid gap-4 sm:grid-cols-2">
-                          <div><Label>Department</Label><Input value={vacDept} onChange={e => setVacDept(e.target.value)} placeholder="Engineering" /></div>
-                          <div><Label>Openings</Label><Input type="number" value={vacCount} onChange={e => setVacCount(e.target.value)} /></div>
+                          <div>
+                            <Label>Department</Label>
+                            <Input value={vacDept} onChange={e => setVacDept(e.target.value)} placeholder="e.g. Engineering" />
+                          </div>
+                          <div>
+                            <Label>Number of Openings</Label>
+                            <Input type="number" value={vacCount} onChange={e => setVacCount(e.target.value)} min="1" />
+                          </div>
+                        </div>
+
+                        {/* Required AI Keywords & Skills */}
+                        <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Required CV Screening Keywords & Skills *</Label>
+                            <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                              AI Resume Filter
+                            </span>
+                          </div>
+                          <Input
+                            value={vacKeywords}
+                            onChange={e => setVacKeywords(e.target.value)}
+                            placeholder="e.g. React, TypeScript, Node.js, PostgreSQL, Docker"
+                          />
+                          <p className="text-[10px] text-slate-500">
+                            Comma-separated list of required skills/qualifications the AI evaluates on applicant CVs.
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label>Minimum AI Fit Threshold Score (%)</Label>
+                          <Input
+                            type="number"
+                            value={vacMinScore}
+                            onChange={e => setVacMinScore(e.target.value)}
+                            min="10"
+                            max="100"
+                          />
+                          <div className="text-[10px] text-slate-400 mt-1">
+                            Applicants scoring equal or above this % will be auto-shortlisted.
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-end gap-2 pt-5 border-t border-slate-100 mt-5">
+
+                      <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
                         <SecBtn onClick={() => setShowVacancyModal(false)}>Cancel</SecBtn>
                         <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
                           if (!vacTitle) return void modalAlert('Job title required', { variant: 'warning' });
-                          setVacancies([...vacancies, { id: `vac-${Date.now()}`, title: vacTitle, department: vacDept, count: Number(vacCount) || 1, posted: new Date().toISOString().split('T')[0] }]);
-                          setShowVacancyModal(false); setVacTitle('');
-                        }}>Post Vacancy</PrimaryBtn>
+                          setVacancies([
+                            ...vacancies,
+                            {
+                              id: `vac-${Date.now()}`,
+                              title: vacTitle,
+                              department: vacDept || 'General',
+                              count: Number(vacCount) || 1,
+                              posted: new Date().toISOString().split('T')[0],
+                              keywords: vacKeywords || 'Required Skills',
+                              minScore: Number(vacMinScore) || 70
+                            }
+                          ]);
+                          setShowVacancyModal(false);
+                          setVacTitle('');
+                          setVacDept('');
+                          modalAlert('Job vacancy posted successfully with custom AI CV screening keywords!', { variant: 'success' });
+                        }}>Post Vacancy & Save AI Rules</PrimaryBtn>
                       </div>
                     </div>
                   </div>
