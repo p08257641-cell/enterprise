@@ -363,6 +363,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const [attDateFilter, setAttDateFilter] = useState(() => new Date().toISOString().split('T')[0]);
   const [attStatusFilter, setAttStatusFilter] = useState<'All' | 'Present' | 'Late' | 'On Leave' | 'Absent'>('All');
   const [showAttSettings, setShowAttSettings] = useState(false);
+  const [selectedEmpAttHistory, setSelectedEmpAttHistory] = useState<any | null>(null);
   const [attSettings, setAttSettings] = useState({
     workStartTime: '09:00',
     graceMinutes: 10,
@@ -2092,40 +2093,79 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
     const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     if (isHRorAdmin) {
-      const dateFilteredAttendance = companyAttendance.filter(a => !attDateFilter || a.date === attDateFilter);
-      
-      const absentRecords: any[] = [];
-      if (attDateFilter) {
-        localEmployees.forEach(emp => {
-          const hasRecord = dateFilteredAttendance.some(a => a.employeeId === emp.id);
-          if (!hasRecord) {
-            absentRecords.push({
-              id: `absent-${emp.id}-${attDateFilter}`,
-              companyId: selectedCompany.id,
-              employeeId: emp.id,
-              date: attDateFilter,
-              status: 'Absent',
-              checkIn: undefined,
-              locationType: undefined,
-            });
-          }
-        });
-      }
-      
-      const combinedAttendance = [...dateFilteredAttendance, ...absentRecords];
-      const filteredAttendance = combinedAttendance.filter(a => attStatusFilter === 'All' || a.status === attStatusFilter);
+      // 1. Reconcile full company roster for the selected date filter (attDateFilter)
+      const targetDate = attDateFilter || new Date().toISOString().split('T')[0];
 
-      const todayPresent = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Present').length;
-      const todayLate = companyAttendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'Late').length;
+      const allRosterForDate = localEmployees.map((emp, idx) => {
+        const existing = companyAttendance.find(a => a.employeeId === emp.id && a.date === targetDate);
+        if (existing) {
+          return {
+            ...existing,
+            emp,
+            employeeName: `${emp.firstName} ${emp.lastName}`,
+            department: emp.department,
+            employeeNumber: emp.employeeNumber
+          };
+        }
+        // Check approved leave
+        const onLeaveRecord = leaves.find(l => 
+          l.employeeId === emp.id && 
+          l.status === 'Approved' && 
+          l.startDate <= targetDate && 
+          l.endDate >= targetDate
+        );
+        if (onLeaveRecord) {
+          return {
+            id: `leave-${emp.id}-${targetDate}`,
+            companyId: selectedCompany.id,
+            employeeId: emp.id,
+            date: targetDate,
+            checkIn: undefined as string | undefined,
+            checkOut: undefined as string | undefined,
+            status: 'On Leave',
+            locationType: 'Leave',
+            emp,
+            employeeName: `${emp.firstName} ${emp.lastName}`,
+            department: emp.department,
+            employeeNumber: emp.employeeNumber
+          };
+        }
+        return {
+          id: `absent-${emp.id}-${targetDate}`,
+          companyId: selectedCompany.id,
+          employeeId: emp.id,
+          date: targetDate,
+          checkIn: undefined as string | undefined,
+          checkOut: undefined as string | undefined,
+          status: 'Absent',
+          locationType: 'Office',
+          emp,
+          employeeName: `${emp.firstName} ${emp.lastName}`,
+          department: emp.department,
+          employeeNumber: emp.employeeNumber
+        };
+      });
+
+      const countAll = allRosterForDate.length;
+      const countPresent = allRosterForDate.filter(a => a.status === 'Present').length;
+      const countLate = allRosterForDate.filter(a => a.status === 'Late').length;
+      const countLeave = allRosterForDate.filter(a => a.status === 'On Leave').length;
+      const countAbsent = allRosterForDate.filter(a => a.status === 'Absent').length;
+
+      const filteredAttendance = allRosterForDate.filter(a => attStatusFilter === 'All' || a.status === attStatusFilter);
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayPresent = companyAttendance.filter(a => a.date === todayStr && a.status === 'Present').length;
+      const todayLate = companyAttendance.filter(a => a.date === todayStr && a.status === 'Late').length;
 
       return (
         <div className="space-y-6">
-          <SectionHeader title="Attendance Management" subtitle="View all employee attendance records" />
+          <SectionHeader title="Attendance Management" subtitle="View all employee attendance records, daily clock-in logs & individual history." />
           <div className="grid gap-4 sm:grid-cols-4">
             <StatCard label="Present Today" value={todayPresent} icon="bi bi-person-check-fill" sub="Clocked in" color="text-emerald-600" />
             <StatCard label="Late Today" value={todayLate} icon="bi bi-clock-history" sub="After 9:00 AM" accent />
             <StatCard label="On Leave" value={onLeave.length} icon="bi bi-calendar-x" sub="Approved absence" />
-            <StatCard label="Total Records" value={dateFilteredAttendance.length} icon="bi bi-list-check" sub="Filtered results" />
+            <StatCard label="Total Staff Roster" value={localEmployees.length} icon="bi bi-people-fill" sub="Active company employees" />
           </div>
 
           {/* Attendance Settings Panel */}
@@ -2137,11 +2177,11 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   <i className="bi bi-gear6 text-slate-600"></i>
                 </div>
                 <div className="text-left">
-                  <div className="fs-sm fw-semibold text-slate-900">Attendance Settings</div>
+                  <div className="fs-sm fw-semibold text-slate-900">Attendance Settings & Penalties</div>
                   <div className="fs-xs text-slate-400">Configure late penalties, grace periods and escalation rules</div>
                 </div>
               </div>
-              <i ></i>
+              <i className={`bi bi-chevron-${showAttSettings ? 'up' : 'down'} text-slate-400`}></i>
             </button>
 
             {showAttSettings && (
@@ -2186,10 +2226,11 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       { value: 'custom', label: 'Custom Rule', icon: 'bi bi-pencil-square', desc: 'Define your own' },
                     ] as const).map(opt => (
                       <button key={opt.value} onClick={() => setAttSettings({ ...attSettings, penaltyType: opt.value })}
-                        >
-                        <i ></i>
-                        <div >{opt.label}</div>
-                        <div >{opt.desc}</div>
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${attSettings.penaltyType === opt.value ? 'border-indigo-600 bg-indigo-50/50 text-indigo-900' : 'border-slate-200 hover:bg-slate-50 text-slate-700'}`}
+                      >
+                        <i className={`${opt.icon} text-lg mb-1 block ${attSettings.penaltyType === opt.value ? 'text-indigo-600' : 'text-slate-400'}`}></i>
+                        <div className="fs-xs fw-bold">{opt.label}</div>
+                        <div className="text-[10px] text-slate-500">{opt.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -2232,8 +2273,9 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     </div>
                     <div className="flex items-center gap-3 pt-6">
                       <button onClick={() => setAttSettings({ ...attSettings, escalateAfterWarnings: !attSettings.escalateAfterWarnings })}
-                        >
-                        <span ></span>
+                        className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${attSettings.escalateAfterWarnings ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                      >
+                        <span className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${attSettings.escalateAfterWarnings ? 'left-5' : 'left-1'}`}></span>
                       </button>
                       <div>
                         <div className="fs-xs fw-semibold text-slate-700">Auto-escalate penalties</div>
@@ -2258,80 +2300,118 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
 
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-100 gap-3">
-              <h3 className="fs-sm fw-bold text-slate-900">Attendance Log</h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex flex-wrap items-center gap-2">
+              <div>
+                <h3 className="fs-sm fw-bold text-slate-900">Daily Attendance Log</h3>
+                <p className="text-[11px] text-slate-500">Click any employee row to view full attendance history & time logs</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium">Select Date:</span>
                   <input type="date" value={attDateFilter} onChange={e => setAttDateFilter(e.target.value)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 fs-xs text-slate-700 focus:border-slate-400 focus:outline-none" />
+                    className="rounded-xl border border-slate-200 px-3 py-1.5 fs-xs text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none shadow-xs bg-slate-50/50" />
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-100/80 rounded-full px-1.5 py-1">
+
+                {/* Fixed Top Filter Count Pills with Proper Badge Spacing */}
+                <div className="flex items-center gap-1.5 bg-slate-100/90 rounded-2xl p-1 border border-slate-200/80">
                   {([
-                    { label: 'All', icon: 'bi-grid-3x3-gap', color: 'slate', count: dateFilteredAttendance.length },
-                    { label: 'Present', icon: 'bi-check-circle-fill', color: 'emerald', count: dateFilteredAttendance.filter(a => a.status === 'Present').length },
-                    { label: 'Late', icon: 'bi-clock-fill', color: 'amber', count: dateFilteredAttendance.filter(a => a.status === 'Late').length },
-                    { label: 'On Leave', icon: 'bi-calendar-x-fill', color: 'blue', count: dateFilteredAttendance.filter(a => a.status === 'On Leave').length },
-                    { label: 'Absent', icon: 'bi-x-circle-fill', color: 'rose', count: dateFilteredAttendance.filter(a => a.status === 'Absent').length },
+                    { label: 'All', color: 'bg-slate-200 text-slate-800', count: countAll },
+                    { label: 'Present', color: 'bg-emerald-100 text-emerald-800', count: countPresent },
+                    { label: 'Late', color: 'bg-amber-100 text-amber-800', count: countLate },
+                    { label: 'On Leave', color: 'bg-blue-100 text-blue-800', count: countLeave },
+                    { label: 'Absent', color: 'bg-rose-100 text-rose-800', count: countAbsent },
                   ] as const).map(item => (
-                    <button key={item.label} onClick={() => setAttStatusFilter(item.label)}
-                      >
-                      <i ></i>
-                      <span className="hidden sm:inline">{item.label}</span>
-                      <span >{item.count}</span>
+                    <button
+                      key={item.label}
+                      onClick={() => setAttStatusFilter(item.label as any)}
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        attStatusFilter === item.label
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'hover:bg-slate-200/80 text-slate-600'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        attStatusFilter === item.label ? 'bg-white/20 text-white' : item.color
+                      }`}>
+                        {item.count}
+                      </span>
                     </button>
                   ))}
                 </div>
-                <button onClick={() => downloadCSV(`attendance-${selectedCompany.id}-${attDateFilter}`, ['Employee', 'Employee ID', 'Date', 'Check In', 'Check Out', 'Location', 'Status'], filteredAttendance.map(a => {
-                  const emp = localEmployees.find(e => e.id === a.employeeId);
-                  return [`${emp?.firstName || ''} ${emp?.lastName || ''}`, emp?.employeeNumber || '', a.date, a.checkIn || '', a.checkOut || '', a.locationType || '', a.status];
-                }))} className="fs-sm fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition-all flex items-center gap-1.5">
+
+                <button onClick={() => downloadCSV(`attendance-${selectedCompany.id}-${targetDate}`, ['Employee', 'Employee ID', 'Department', 'Date', 'Check In', 'Check Out', 'Location', 'Status'], filteredAttendance.map(a => [a.employeeName, a.employeeNumber || '', a.department || '', a.date, a.checkIn || '—', a.checkOut || '—', a.locationType || 'Office', a.status]))} className="fs-sm fw-semibold border border-slate-200 text-slate-600 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-slate-50 transition-all flex items-center gap-1.5">
                   <i className="bi bi-download fs-xs"></i> Export
                 </button>
               </div>
             </div>
+
             <table className="w-full text-left">
               <thead className="bg-slate-50/60 border-b border-slate-100">
                 <tr>
-                  {['Employee', 'Date', 'Check In', 'Check Out', 'Hours', 'Mode', 'Status'].map(col => (
+                  {['Employee', 'Date', 'Check In', 'Check Out', 'Hours', 'Mode', 'Status', 'Action'].map(col => (
                     <th key={col} className="px-4 py-3 section-title text-slate-400">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {dateFilteredAttendance.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center fs-sm text-slate-400">No attendance records found for the selected filters.</td></tr>
+                {filteredAttendance.length === 0 ? (
+                  <tr><td colSpan={8} className="px-4 py-8 text-center fs-sm text-slate-400">No attendance records match the selected status filter.</td></tr>
                 ) : (
                   filteredAttendance.map((a, i) => {
-                    const emp = localEmployees.find(e => e.id === a.employeeId);
+                    const emp = a.emp || localEmployees.find(e => e.id === a.employeeId);
                     if (!emp) return null;
-                    const hrs = a.checkIn && a.checkOut ? (() => {
-                      const inTime = new Date(`2000-01-01 ${a.checkIn}`);
-                      const outTime = new Date(`2000-01-01 ${a.checkOut}`);
-                      const diff = (outTime.getTime() - inTime.getTime()) / 36e5;
-                      return `${Math.floor(diff)}h ${Math.round((diff % 1) * 60)}m`;
-                    })() : '—';
+                    
+                    // Working Hours Calculation
+                    const hrs = (() => {
+                      if (!a.checkIn) return '—';
+                      if (!a.checkOut || a.checkIn === a.checkOut) return 'In Progress';
+                      try {
+                        const inTime = new Date(`2000-01-01 ${a.checkIn}`);
+                        const outTime = new Date(`2000-01-01 ${a.checkOut}`);
+                        const diff = (outTime.getTime() - inTime.getTime()) / 36e5;
+                        if (isNaN(diff) || diff <= 0) return 'In Progress';
+                        return `${Math.floor(diff)}h ${Math.round((diff % 1) * 60)}m`;
+                      } catch (e) {
+                        return '—';
+                      }
+                    })();
+
                     return (
-                      <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
+                      <tr
+                        key={a.id || i}
+                        onClick={() => setSelectedEmpAttHistory(emp)}
+                        className="hover:bg-indigo-50/40 transition-colors cursor-pointer group"
+                        title="Click to view complete employee attendance history"
+                      >
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2.5">
                             <Avatar first={emp.firstName} last={emp.lastName} photoUrl={emp.photoUrl} index={i} size="sm" />
                             <div>
-                              <div className="fs-sm fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</div>
-                              <div className="fs-xs text-slate-400">{emp.department}</div>
+                              <div className="fs-sm fw-semibold text-slate-900 group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                                {emp.firstName} {emp.lastName}
+                                <i className="bi bi-clock-history text-xs text-slate-400 group-hover:text-indigo-600"></i>
+                              </div>
+                              <div className="fs-xs text-slate-400">{emp.department} · {emp.employeeNumber || 'EMP'}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 fs-xs text-slate-600">{a.date}</td>
+                        <td className="px-4 py-3.5 fs-xs text-slate-600 font-mono">{a.date}</td>
                         <td className="px-4 py-3.5 fs-sm font-mono text-slate-700">{a.checkIn || '—'}</td>
-                        <td className="px-4 py-3.5 fs-sm font-mono text-slate-400">{a.checkOut || '—'}</td>
+                        <td className="px-4 py-3.5 fs-sm font-mono text-slate-400">{a.checkOut && a.checkOut !== a.checkIn ? a.checkOut : '—'}</td>
                         <td className="px-4 py-3.5 fs-sm font-mono text-slate-600">{hrs}</td>
                         <td className="px-4 py-3.5">
-                          <span >
-                            <i ></i>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs bg-slate-100 text-slate-700">
+                            <i className={`bi ${a.locationType === 'Remote' ? 'bi-laptop' : a.locationType === 'Leave' ? 'bi-calendar-x' : 'bi-building'} text-slate-400`}></i>
                             {a.locationType || 'Office'}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
                           <Badge label={a.status} variant={a.status === 'Present' ? 'success' : a.status === 'Late' ? 'warning' : a.status === 'On Leave' ? 'info' : 'danger'} />
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <span className="text-xs fw-bold text-indigo-600 group-hover:underline flex items-center gap-1 justify-end">
+                            History <i className="bi bi-chevron-right text-[10px]"></i>
+                          </span>
                         </td>
                       </tr>
                     );
@@ -2340,6 +2420,140 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
               </tbody>
             </table>
           </div>
+
+          {/* ── Employee Attendance History Modal ────────────────────────────────────── */}
+          {selectedEmpAttHistory && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+              <div className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+                {/* Modal Header */}
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 text-white flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-4">
+                    <Avatar first={selectedEmpAttHistory.firstName} last={selectedEmpAttHistory.lastName} photoUrl={selectedEmpAttHistory.photoUrl} size="md" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base fw-bold text-white">{selectedEmpAttHistory.firstName} {selectedEmpAttHistory.lastName}</h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] fw-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                          {selectedEmpAttHistory.employeeNumber || 'EMP'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-0.5">{selectedEmpAttHistory.jobTitle} · {selectedEmpAttHistory.department}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setSelectedEmpAttHistory(null)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                    <i className="bi bi-x-lg text-lg"></i>
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                  {/* Lifetime Summary Stats */}
+                  {(() => {
+                    const empLogs = companyAttendance.filter(a => a.employeeId === selectedEmpAttHistory.id);
+                    const empLeaves = leaves.filter(l => l.employeeId === selectedEmpAttHistory.id && l.status === 'Approved');
+                    const presentCount = empLogs.filter(a => a.status === 'Present').length;
+                    const lateCount = empLogs.filter(a => a.status === 'Late').length;
+                    const leaveCount = empLeaves.length;
+                    const totalHours = empLogs.reduce((sum, a) => {
+                      if (!a.checkIn || !a.checkOut || a.checkIn === a.checkOut) return sum;
+                      try {
+                        const inT = new Date(`2000-01-01 ${a.checkIn}`);
+                        const outT = new Date(`2000-01-01 ${a.checkOut}`);
+                        const diff = (outT.getTime() - inT.getTime()) / 36e5;
+                        return sum + (diff > 0 ? diff : 0);
+                      } catch (e) { return sum; }
+                    }, 0);
+
+                    return (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5">
+                            <span className="text-[10px] fw-bold uppercase tracking-wider text-emerald-600 block">Total Present</span>
+                            <span className="text-xl fw-bold font-mono text-emerald-900 mt-1 block">{presentCount} Days</span>
+                          </div>
+                          <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-3.5">
+                            <span className="text-[10px] fw-bold uppercase tracking-wider text-amber-600 block">Late Arrivals</span>
+                            <span className="text-xl fw-bold font-mono text-amber-900 mt-1 block">{lateCount} Days</span>
+                          </div>
+                          <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-3.5">
+                            <span className="text-[10px] fw-bold uppercase tracking-wider text-blue-600 block">Approved Leaves</span>
+                            <span className="text-xl fw-bold font-mono text-blue-900 mt-1 block">{leaveCount} Days</span>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                            <span className="text-[10px] fw-bold uppercase tracking-wider text-slate-500 block">Total Hours Worked</span>
+                            <span className="text-xl fw-bold font-mono text-slate-900 mt-1 block">{Math.round(totalHours)} Hours</span>
+                          </div>
+                        </div>
+
+                        {/* Attendance Logs Table */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="fs-sm fw-bold text-slate-900 flex items-center gap-2">
+                              <i className="bi bi-clock-history text-indigo-600"></i> Attendance & Time Logs History
+                            </h4>
+                            <button
+                              onClick={() => downloadCSV(`attendance-history-${selectedEmpAttHistory.firstName}-${selectedEmpAttHistory.lastName}`, ['Date', 'Check In', 'Check Out', 'Location', 'Status'], empLogs.map(l => [l.date, l.checkIn || '—', l.checkOut || '—', l.locationType || 'Office', l.status]))}
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 text-xs fw-semibold hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                              <i className="bi bi-download text-xs"></i> Export Employee Log
+                            </button>
+                          </div>
+
+                          <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                            <table className="w-full text-left">
+                              <thead className="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Date</th>
+                                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Check In</th>
+                                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Check Out</th>
+                                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Duration</th>
+                                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Mode</th>
+                                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {empLogs.length === 0 ? (
+                                  <tr><td colSpan={6} className="px-4 py-6 text-center text-xs text-slate-400">No past attendance logs recorded for this employee.</td></tr>
+                                ) : (
+                                  empLogs.map(log => {
+                                    const h = log.checkIn && log.checkOut && log.checkIn !== log.checkOut ? (() => {
+                                      try {
+                                        const iT = new Date(`2000-01-01 ${log.checkIn}`);
+                                        const oT = new Date(`2000-01-01 ${log.checkOut}`);
+                                        const diff = (oT.getTime() - iT.getTime()) / 36e5;
+                                        return `${Math.floor(diff)}h ${Math.round((diff % 1) * 60)}m`;
+                                      } catch (e) { return '—'; }
+                                    })() : log.checkIn ? 'In Progress' : '—';
+
+                                    return (
+                                      <tr key={log.id} className="hover:bg-slate-50/50">
+                                        <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{log.date}</td>
+                                        <td className="px-4 py-2.5 text-xs font-mono text-slate-800">{log.checkIn || '—'}</td>
+                                        <td className="px-4 py-2.5 text-xs font-mono text-slate-500">{log.checkOut || '—'}</td>
+                                        <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{h}</td>
+                                        <td className="px-4 py-2.5 text-xs text-slate-600">{log.locationType || 'Office'}</td>
+                                        <td className="px-4 py-2.5">
+                                          <Badge label={log.status} variant={log.status === 'Present' ? 'success' : log.status === 'Late' ? 'warning' : log.status === 'On Leave' ? 'info' : 'danger'} />
+                                        </td>
+                                      </tr>
+                                    );
+                                  })
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                  <SecBtn onClick={() => setSelectedEmpAttHistory(null)}>Close</SecBtn>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
