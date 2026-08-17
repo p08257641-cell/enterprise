@@ -16,6 +16,7 @@ import { TenantSetup } from './components/TenantSetup';
 import { FadeIn, Skeleton } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { FloatingChat } from './components/FloatingChat';
+import { FloatingAIAssistant } from './components/FloatingAIAssistant';
 import { LoginPage } from './components/LoginPage';
 import { useAuth } from './contexts/AuthContext';
 // No lucide-react imports needed
@@ -3990,6 +3991,16 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       onMarkThreadRead={handleMarkThreadRead}
       onCreateChatGroup={handleCreateChatGroup}
       onUpdateChatGroupMembers={handleUpdateChatGroupMembers}
+    />
+
+    {/* Floating AI Copilot Widget — always accessible */}
+    <FloatingAIAssistant
+      selectedCompany={selectedCompany}
+      activeView={activeView}
+      invoices={invoices}
+      inventory={inventory}
+      employees={employees}
+      onNavigateView={setActiveView}
     />
     </>
   );

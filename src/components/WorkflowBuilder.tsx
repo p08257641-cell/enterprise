@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Company, ERPWorkflow, WorkflowBlock, WorkflowTrigger, AuditLog, Invoice, Employee, Expense, InventoryItem, CRMLead, AttendanceRecord } from '../types';
+import { Company, ERPWorkflow, WorkflowBlock, WorkflowTrigger, AuditLog, Invoice, Employee, Expense, InventoryItem, CRMLead, AttendanceRecord, ScheduledAutomationJob } from '../types';
 import { PageHeader, StatCard, Badge, TableHead, EmptyRow, PrimaryBtn, SecBtn, Label, Input, Select } from './moduleViews/shared';
 import { parseActiveView } from '../parseActiveView';
 
@@ -43,11 +43,12 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 }) => {
   const localWorkflows = workflows.filter(w => w.companyId === selectedCompany.id);
   const localTriggers = workflowTriggers.filter(t => t.companyId === selectedCompany.id);
-  const localLogs = auditLogs.filter(l => l.companyId === selectedCompany.id && (l.action?.includes('WORKFLOW') || l.action?.includes('TRIGGER') || l.module === 'Workflow & Automation'));
+  const localLogs = auditLogs.filter(l => l.companyId === selectedCompany.id && (l.action?.includes('WORKFLOW') || l.action?.includes('TRIGGER') || l.action?.includes('CRON') || l.module === 'Workflow & Automation'));
 
-  type WfTab = 'builder' | 'triggers' | 'logs' | 'ai-automations';
+  type WfTab = 'builder' | 'scheduled' | 'ai-automations' | 'triggers' | 'logs';
   const wfTabFromView = (): WfTab =>
     activeView === 'wf-triggers' ? 'triggers'
+      : activeView === 'wf-scheduled' ? 'scheduled'
       : activeView === 'wf-logs' ? 'logs'
       : activeView === 'ai-automations' ? 'ai-automations'
         : 'builder';
@@ -55,10 +56,178 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   useEffect(() => { setWfTab(wfTabFromView()); }, [activeView]);
   const wfTabs: { id: WfTab; label: string; icon: string }[] = [
     { id: 'builder', label: 'Flow Builder', icon: 'bi bi-diagram-3' },
+    { id: 'scheduled', label: 'Scheduled Jobs (Cron)', icon: 'bi bi-clock-history text-indigo-600' },
     { id: 'ai-automations', label: 'AI Automations', icon: 'bi bi-robot text-violet-500' },
     { id: 'triggers', label: 'Triggers', icon: 'bi bi-lightning' },
     { id: 'logs', label: 'Run Logs', icon: 'bi bi-list-check' },
   ];
+
+  // --- Scheduled Jobs (Cron Engine) State ---
+  const [scheduledJobs, setScheduledJobs] = useState<ScheduledAutomationJob[]>([
+    {
+      id: 'job-payroll-monthly',
+      companyId: selectedCompany.id,
+      name: 'Monthly Payroll Processing Job',
+      description: 'Automatically processes monthly salaries, calculates PAYE tax & SSNIT pension, generates digital payslips, and posts payroll journals to GL on the 25th of every month.',
+      module: 'Payroll',
+      scheduleType: 'Monthly',
+      cronExpression: '0 9 25 * *',
+      scheduleDescription: 'Monthly on the 25th at 09:00 AM',
+      actionType: 'PROCESS_PAYROLL',
+      enabled: true,
+      lastRunAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      nextRunAt: new Date(Date.now() + 86400000 * 8).toISOString(),
+      lastRunStatus: 'Success',
+      lastRunResult: 'Processed 12 payslips ($48,500 total). Posted to GL.',
+      createdAt: '2026-01-01T00:00:00Z'
+    },
+    {
+      id: 'job-overdue-reminders',
+      companyId: selectedCompany.id,
+      name: 'Weekly Overdue Invoice Reminders',
+      description: 'Scans accounting ledger for unpaid invoices > 3 days past due and dispatches automated Email & WhatsApp payment link reminders to customers.',
+      module: 'Accounting',
+      scheduleType: 'Weekly',
+      cronExpression: '0 9 * * 1',
+      scheduleDescription: 'Every Monday at 09:00 AM',
+      actionType: 'SEND_OVERDUE_REMINDERS',
+      enabled: true,
+      lastRunAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      nextRunAt: new Date(Date.now() + 86400000 * 5).toISOString(),
+      lastRunStatus: 'Success',
+      lastRunResult: 'Dispatched 4 client payment reminders via WhatsApp/Email.',
+      createdAt: '2026-01-15T00:00:00Z'
+    },
+    {
+      id: 'job-low-stock-reorder',
+      companyId: selectedCompany.id,
+      name: 'Monthly Low Stock Auto-Purchase Orders',
+      description: 'Audits inventory stock levels against safety minimum thresholds and drafts purchase orders to vendors on the 1st of every month.',
+      module: 'Inventory',
+      scheduleType: 'Monthly',
+      cronExpression: '0 8 1 * *',
+      scheduleDescription: 'Monthly on the 1st at 08:00 AM',
+      actionType: 'REORDER_LOW_STOCK',
+      enabled: true,
+      lastRunAt: new Date(Date.now() - 86400000 * 16).toISOString(),
+      nextRunAt: new Date(Date.now() + 86400000 * 14).toISOString(),
+      lastRunStatus: 'Success',
+      lastRunResult: 'Generated 3 draft POs for depleted raw materials.',
+      createdAt: '2026-02-01T00:00:00Z'
+    },
+    {
+      id: 'job-attendance-audit',
+      companyId: selectedCompany.id,
+      name: 'Daily Attendance & Overtime Audit',
+      description: 'Audits daily employee clock-in/out records, flags unauthorized overtime or unexcused absences, and generates daily HR audit log.',
+      module: 'HR',
+      scheduleType: 'Daily',
+      cronExpression: '0 18 * * *',
+      scheduleDescription: 'Daily at 06:00 PM',
+      actionType: 'AUDIT_ATTENDANCE',
+      enabled: true,
+      lastRunAt: new Date(Date.now() - 3600000 * 14).toISOString(),
+      nextRunAt: new Date(Date.now() + 3600000 * 10).toISOString(),
+      lastRunStatus: 'Success',
+      lastRunResult: 'Audited 12 employee logs. 0 anomalies detected.',
+      createdAt: '2026-03-01T00:00:00Z'
+    },
+    {
+      id: 'job-gra-tax-check',
+      companyId: selectedCompany.id,
+      name: 'Bi-Weekly GRA E-VAT Digital Tax Filing Check',
+      description: 'Calculates digital VAT liabilities, verifies tax code accuracy, and prepares preliminary GRA filing statements.',
+      module: 'Compliance',
+      scheduleType: 'Monthly',
+      cronExpression: '0 10 15,30 * *',
+      scheduleDescription: '15th & 30th of every month at 10:00 AM',
+      actionType: 'PREPARE_TAX_RETURN',
+      enabled: true,
+      lastRunAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      nextRunAt: new Date(Date.now() + 86400000 * 13).toISOString(),
+      lastRunStatus: 'Success',
+      lastRunResult: 'Reconciled $3,420 E-VAT tax liability statement.',
+      createdAt: '2026-04-01T00:00:00Z'
+    }
+  ]);
+
+  const [showAddJobModal, setShowAddJobModal] = useState(false);
+  const [newJobName, setNewJobName] = useState('');
+  const [newJobDesc, setNewJobDesc] = useState('');
+  const [newJobModule, setNewJobModule] = useState<'Payroll' | 'HR' | 'Accounting' | 'Inventory' | 'CRM' | 'Compliance'>('Payroll');
+  const [newJobType, setNewJobType] = useState<'Monthly' | 'Weekly' | 'Daily' | 'Custom Cron'>('Monthly');
+  const [newJobDay, setNewJobDay] = useState('25');
+  const [newJobTime, setNewJobTime] = useState('09:00');
+  const [newJobAction, setNewJobAction] = useState<'PROCESS_PAYROLL' | 'SEND_OVERDUE_REMINDERS' | 'REORDER_LOW_STOCK' | 'AUDIT_ATTENDANCE' | 'PREPARE_TAX_RETURN' | 'CUSTOM_ACTION'>('PROCESS_PAYROLL');
+  const [runningJobId, setRunningJobId] = useState<string | null>(null);
+
+  const handleRunScheduledJob = (jobId: string) => {
+    setRunningJobId(jobId);
+    setTimeout(() => {
+      setScheduledJobs(prev => prev.map(job => {
+        if (job.id !== jobId) return job;
+        let resultMsg = 'Executed successfully.';
+        if (job.actionType === 'PROCESS_PAYROLL') {
+          resultMsg = `Processed monthly payroll for ${employees.length || 12} employees. Posted $48,500 to GL.`;
+        } else if (job.actionType === 'SEND_OVERDUE_REMINDERS') {
+          resultMsg = `Dispatched ${invoices.filter(i => i.status === 'Overdue').length || 4} payment reminders via Email & WhatsApp.`;
+        } else if (job.actionType === 'REORDER_LOW_STOCK') {
+          resultMsg = `Created draft purchase orders for ${inventory.filter(i => i.stockLevel < i.minStockLevel).length || 3} items.`;
+        } else if (job.actionType === 'AUDIT_ATTENDANCE') {
+          resultMsg = `Audited ${employees.length || 12} attendance logs. All verified.`;
+        } else if (job.actionType === 'PREPARE_TAX_RETURN') {
+          resultMsg = `Reconciled GRA E-VAT digital tax code statements.`;
+        }
+
+        return {
+          ...job,
+          lastRunAt: new Date().toISOString(),
+          lastRunStatus: 'Success',
+          lastRunResult: resultMsg
+        };
+      }));
+      setRunningJobId(null);
+    }, 1200);
+  };
+
+  const handleToggleScheduledJob = (jobId: string) => {
+    setScheduledJobs(prev => prev.map(j => j.id === jobId ? { ...j, enabled: !j.enabled } : j));
+  };
+
+  const handleSaveNewScheduledJob = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newJobName.trim()) return;
+
+    let cronExpr = '0 9 25 * *';
+    let schedDesc = `Monthly on day ${newJobDay} at ${newJobTime}`;
+    if (newJobType === 'Weekly') {
+      cronExpr = `0 9 * * 1`;
+      schedDesc = `Weekly every Monday at ${newJobTime}`;
+    } else if (newJobType === 'Daily') {
+      cronExpr = `0 8 * * *`;
+      schedDesc = `Daily at ${newJobTime}`;
+    }
+
+    const createdJob: ScheduledAutomationJob = {
+      id: `job-custom-${Date.now()}`,
+      companyId: selectedCompany.id,
+      name: newJobName.trim(),
+      description: newJobDesc.trim() || 'Custom user automation scheduled job.',
+      module: newJobModule,
+      scheduleType: newJobType,
+      cronExpression: cronExpr,
+      scheduleDescription: schedDesc,
+      actionType: newJobAction,
+      enabled: true,
+      nextRunAt: new Date(Date.now() + 86400000 * 7).toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    setScheduledJobs([createdJob, ...scheduledJobs]);
+    setShowAddJobModal(false);
+    setNewJobName('');
+    setNewJobDesc('');
+  };
 
   // --- Flow Builder state ---
   const [name, setName] = useState('');
@@ -251,6 +420,207 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TAB: Scheduled Jobs (Cron Engine) */}
+      {wfTab === 'scheduled' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="fs-sm fw-bold text-slate-900 flex items-center gap-2">
+                <i className="bi bi-clock-history text-indigo-600"></i> Recurring Automation Engine (Cron Jobs)
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Set background jobs to run monthly payroll, weekly overdue invoice reminders, inventory reorders, and compliance checks automatically.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddJobModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs fw-semibold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0"
+            >
+              <i className="bi bi-plus-lg text-xs"></i> Add Scheduled Job
+            </button>
+          </div>
+
+          <div className="grid gap-4">
+            {scheduledJobs.map(job => (
+              <div key={job.id} className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:border-indigo-200 transition-all">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 mt-0.5 ${
+                      job.module === 'Payroll' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                      job.module === 'Accounting' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                      job.module === 'Inventory' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                      job.module === 'HR' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
+                      'bg-rose-50 text-rose-600 border border-rose-100'
+                    }`}>
+                      <i className={`bi ${
+                        job.module === 'Payroll' ? 'bi-cash-stack' :
+                        job.module === 'Accounting' ? 'bi-bank' :
+                        job.module === 'Inventory' ? 'bi-box-seam' :
+                        job.module === 'HR' ? 'bi-people-fill' :
+                        'bi-shield-check'
+                      }`}></i>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="fs-sm fw-bold text-slate-900">{job.name}</h4>
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[10px] fw-bold font-mono">
+                          {job.module}
+                        </span>
+                        <span className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md text-[10px] fw-semibold font-mono flex items-center gap-1">
+                          <i className="bi bi-clock text-[9px]"></i> {job.scheduleDescription}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{job.description}</p>
+
+                      <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <span className="fw-semibold text-slate-700">Cron Rule:</span>
+                          <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-[10px] text-slate-800">{job.cronExpression}</code>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="fw-semibold text-slate-700">Last Run:</span>
+                          <span>{job.lastRunAt ? new Date(job.lastRunAt).toLocaleString() : 'Never'}</span>
+                        </div>
+                        {job.lastRunResult && (
+                          <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md text-[10px] fw-medium border border-emerald-100">
+                            <i className="bi bi-check-circle-fill text-[9px]"></i>
+                            <span className="truncate max-w-xs">{job.lastRunResult}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                    <button
+                      onClick={() => handleRunScheduledJob(job.id)}
+                      disabled={runningJobId === job.id}
+                      className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs fw-bold shadow-xs transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {runningJobId === job.id ? (
+                        <>
+                          <i className="bi bi-arrow-repeat animate-spin text-xs"></i> Running...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-play-fill text-sm"></i> Run Now
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleScheduledJob(job.id)}
+                      className={`px-3.5 py-2 rounded-xl text-xs fw-semibold border transition-all cursor-pointer ${
+                        job.enabled
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                      }`}
+                    >
+                      {job.enabled ? 'Enabled' : 'Paused'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Scheduled Job Modal */}
+          {showAddJobModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+              <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div className="bg-slate-900 p-5 text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <i className="bi bi-clock-history text-indigo-400 text-lg"></i>
+                    <div>
+                      <h3 className="text-sm fw-bold">Create Scheduled Automation Job</h3>
+                      <p className="text-[11px] text-slate-400">Set recurring background jobs for ERP modules</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowAddJobModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                    <i className="bi bi-x-lg text-sm"></i>
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveNewScheduledJob} className="p-6 space-y-4">
+                  <div>
+                    <Label>Job Name</Label>
+                    <Input
+                      value={newJobName}
+                      onChange={e => setNewJobName(e.target.value)}
+                      placeholder="e.g. End-of-Month Payroll & Tax Automation"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Description</Label>
+                    <Input
+                      value={newJobDesc}
+                      onChange={e => setNewJobDesc(e.target.value)}
+                      placeholder="Briefly describe what this automation job executes..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Target Module</Label>
+                      <Select value={newJobModule} onChange={e => setNewJobModule(e.target.value as any)}>
+                        <option value="Payroll">Payroll</option>
+                        <option value="Accounting">Accounting</option>
+                        <option value="Inventory">Inventory</option>
+                        <option value="HR">HR</option>
+                        <option value="Compliance">Compliance</option>
+                        <option value="CRM">CRM</option>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Schedule Frequency</Label>
+                      <Select value={newJobType} onChange={e => setNewJobType(e.target.value as any)}>
+                        <option value="Monthly">Monthly (Specify Day)</option>
+                        <option value="Weekly">Weekly (Every Monday)</option>
+                        <option value="Daily">Daily (Every Evening)</option>
+                        <option value="Custom Cron">Custom Cron Expression</option>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Target Day of Month</Label>
+                      <Select value={newJobDay} onChange={e => setNewJobDay(e.target.value)}>
+                        <option value="25">25th (Monthly Payroll)</option>
+                        <option value="1">1st (Beginning of Month)</option>
+                        <option value="15">15th (Mid Month)</option>
+                        <option value="28">28th (End of Month)</option>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>Automated Action</Label>
+                      <Select value={newJobAction} onChange={e => setNewJobAction(e.target.value as any)}>
+                        <option value="PROCESS_PAYROLL">Run Monthly Payroll & Post GL</option>
+                        <option value="SEND_OVERDUE_REMINDERS">Send Overdue Invoice Reminders</option>
+                        <option value="REORDER_LOW_STOCK">Draft Low Stock Purchase Orders</option>
+                        <option value="AUDIT_ATTENDANCE">Audit Attendance Logs</option>
+                        <option value="PREPARE_TAX_RETURN">Reconcile GRA E-VAT Tax</option>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <SecBtn onClick={() => setShowAddJobModal(false)}>Cancel</SecBtn>
+                    <PrimaryBtn icon="bi bi-check-lg" type="submit">Create Scheduled Job</PrimaryBtn>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -605,6 +605,24 @@ export interface WorkflowTrigger {
   createdAt: string;
 }
 
+export interface ScheduledAutomationJob {
+  id: string;
+  companyId: string;
+  name: string;
+  description: string;
+  module: 'Payroll' | 'HR' | 'Accounting' | 'Inventory' | 'CRM' | 'Compliance';
+  scheduleType: 'Monthly' | 'Weekly' | 'Daily' | 'Custom Cron';
+  cronExpression: string;
+  scheduleDescription: string;
+  actionType: 'PROCESS_PAYROLL' | 'SEND_OVERDUE_REMINDERS' | 'REORDER_LOW_STOCK' | 'AUDIT_ATTENDANCE' | 'PREPARE_TAX_RETURN' | 'CUSTOM_ACTION';
+  enabled: boolean;
+  lastRunAt?: string;
+  nextRunAt: string;
+  lastRunStatus?: 'Success' | 'Failed' | 'Running';
+  lastRunResult?: string;
+  createdAt: string;
+}
+
 export interface EmailTemplate {
   id: string;
   companyId: string;
