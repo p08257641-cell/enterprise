@@ -113,6 +113,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
   const [showPayrollCronModal, setShowPayrollCronModal] = useState(false);
   const [payrollCronDay, setPayrollCronDay] = useState('25');
   const [payrollCronTime, setPayrollCronTime] = useState('09:00');
+  const [payrollCronTarget, setPayrollCronTarget] = useState<'all' | 'selected' | 'group'>('all');
+  const [payrollCronEmployeeIds, setPayrollCronEmployeeIds] = useState<Set<string>>(new Set());
+  const [payrollCronGroupId, setPayrollCronGroupId] = useState('');
   const [payrollCronActive, setPayrollCronActive] = useState(true);
   const [payrollCronRunning, setPayrollCronRunning] = useState(false);
   const [payrollCronLastRun, setPayrollCronLastRun] = useState<string | null>('2026-07-25 09:00 AM');
@@ -122,7 +125,15 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
     setPayrollCronRunning(true);
     setTimeout(() => {
       if (onRunPayroll) {
-        const empIds = localEmployees.map(e => e.id);
+        let empIds: string[] = [];
+        if (payrollCronTarget === 'all') {
+          empIds = localEmployees.map(e => e.id);
+        } else if (payrollCronTarget === 'selected') {
+          empIds = Array.from(payrollCronEmployeeIds);
+        } else if (payrollCronTarget === 'group') {
+          const grp = payrollGroups.find(g => g.id === payrollCronGroupId);
+          empIds = grp ? grp.employeeIds : [];
+        }
         onRunPayroll(payMonth, paySalaryStructure, empIds);
       }
       setPayrollCronRunning(false);
@@ -201,286 +212,379 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
         )}
 
         {effectivePayrollTab === 'run' && (
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-xs p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-b border-slate-100 pb-3">
+          <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
                 <h3 className="section-title text-slate-900 flex items-center gap-2">
                   <i className="bi bi-cash-stack text-indigo-600"></i> Run Payroll
                 </h3>
-                {isHRorAdmin && (
-                  <button
-                    onClick={() => setShowPayrollCronModal(true)}
-                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white fs-xs fw-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                  >
-                    <i className="bi bi-clock-history text-amber-300"></i> Automate Monthly Payroll (Cron)
-                  </button>
-                )}
+                <p className="text-[11px] text-slate-500">Calculate employee salaries, tax deductions, digital payslips & GL posting.</p>
               </div>
-
-              {/* Payroll Cron Automation Banner Card */}
               {isHRorAdmin && (
-                <div className="mb-5 bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-950 text-white rounded-2xl p-4 shadow-sm border border-emerald-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] fw-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                        <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Cron Schedule
-                      </span>
-                      <span className="text-xs fw-bold text-white">Monthly Day {payrollCronDay} at {payrollCronTime}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-300">
-                      Automated background timer will calculate PAYE, SSNIT, generate digital payslips, and post GL journals automatically.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowPayrollCronModal(true)}
-                    className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs fw-semibold transition-all border border-white/20 cursor-pointer shrink-0"
-                  >
-                    Configure Cron Rule →
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowPayrollCronModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white fs-xs fw-bold transition-all shadow-xs cursor-pointer flex items-center gap-2"
+                >
+                  <i className="bi bi-clock-history text-amber-300 text-sm"></i> Automate Monthly Payroll (Cron)
+                </button>
               )}
+            </div>
 
-              {/* Payroll Automation Cron Modal */}
-              {showPayrollCronModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-                  <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                    <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-950 p-5 text-white flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md border border-white/20">
-                          <i className="bi bi-clock-history text-amber-300 text-lg"></i>
-                        </div>
-                        <div>
-                          <h3 className="text-sm fw-bold">Automated Monthly Payroll Cron Engine</h3>
-                          <p className="text-[11px] text-slate-300">Configure zero-intervention monthly payroll automation</p>
-                        </div>
-                      </div>
-                      <button onClick={() => setShowPayrollCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
-                        <i className="bi bi-x-lg text-sm"></i>
-                      </button>
-                    </div>
-
-                    <div className="p-6 space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Execution Day of Month</Label>
-                          <Select value={payrollCronDay} onChange={e => setPayrollCronDay(e.target.value)}>
-                            <option value="25">25th (Standard Payroll Day)</option>
-                            <option value="28">28th (End of Month)</option>
-                            <option value="1">1st (Beginning of Month)</option>
-                            <option value="15">15th (Mid Month)</option>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <Label>Execution Time</Label>
-                          <Select value={payrollCronTime} onChange={e => setPayrollCronTime(e.target.value)}>
-                            <option value="09:00">09:00 AM</option>
-                            <option value="08:00">08:00 AM</option>
-                            <option value="18:00">06:00 PM</option>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs fw-bold text-slate-900">Background Cron Scheduler Status</span>
-                          <span className={`text-[10px] fw-bold px-2 py-0.5 rounded-full ${payrollCronActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
-                            {payrollCronActive ? 'Active & Scheduled' : 'Paused'}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-600">
-                          Cron rule string: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-emerald-700">0 9 {payrollCronDay} * *</code>
-                        </p>
-                        {payrollCronLastRun && (
-                          <p className="text-[10px] text-slate-500">Last automated run: {payrollCronLastRun}</p>
-                        )}
-                      </div>
-
-                      <div className="pt-2 flex flex-col gap-2">
-                        <button
-                          onClick={handleRunPayrollCronNow}
-                          disabled={payrollCronRunning}
-                          className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs fw-bold shadow-lg shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                          {payrollCronRunning ? (
-                            <>
-                              <i className="bi bi-arrow-repeat animate-spin text-sm"></i>
-                              Processing automated payroll calculations & posting GL...
-                            </>
-                          ) : (
-                            <>
-                              <i className="bi bi-play-fill text-sm"></i>
-                              Run Automated Payroll Job Now
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
-                      <SecBtn onClick={() => setShowPayrollCronModal(false)}>Close</SecBtn>
-                    </div>
+            {/* Payroll Cron Automation Banner Card */}
+            {isHRorAdmin && (
+              <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-950 text-white rounded-2xl p-4 shadow-sm border border-emerald-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] fw-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                      <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Cron Schedule
+                    </span>
+                    <span className="text-xs fw-bold text-white">Monthly Day {payrollCronDay} at {payrollCronTime}</span>
+                    <span className="text-[11px] text-emerald-200 bg-white/10 px-2 py-0.5 rounded font-mono">
+                      Target: {payrollCronTarget === 'all' ? `All Staff (${localEmployees.length})` : payrollCronTarget === 'selected' ? `Selected Staff (${payrollCronEmployeeIds.size})` : `Group (${payrollGroups.find(g => g.id === payrollCronGroupId)?.name || 'Custom Group'})`}
+                    </span>
                   </div>
+                  <p className="text-[11px] text-slate-300">
+                    Automated background timer will calculate PAYE, SSNIT, generate digital payslips, and post GL journals automatically.
+                  </p>
                 </div>
-              )}
-              {payrollStep === 'idle' && (
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label>Payroll Period</Label>
-                      <input 
-                        type="month" 
-                        value={(() => {
-                          try {
-                            const [m, y] = payMonth.split(' ');
-                            const mIdx = new Date(`${m} 1, 2000`).getMonth() + 1;
-                            return `${y}-${mIdx.toString().padStart(2, '0')}`;
-                          } catch(e) { return ""; }
-                        })()} 
-                        onChange={e => {
-                          if (!e.target.value) return;
-                          const [y, m] = e.target.value.split('-');
-                          const d = new Date(parseInt(y), parseInt(m)-1, 1);
-                          setPayMonth(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
-                        }}
-                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 fs-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                      />
-                    </div>
-                    <div><Label>Salary Structure</Label><Select value={paySalaryStructure} onChange={e => setPaySalaryStructure(e.target.value)}><option>Standard</option><option>Executive</option><option>Contractor</option></Select></div>
-                  </div>
-                  
-                  {/* Employee Selection */}
-                  <div className="border border-slate-200 rounded-xl p-4">
-                    <Label>Employee Selection</Label>
-                    <div className="flex gap-4 mt-2 mb-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="payrollTarget" checked={payrollTarget === 'all'} onChange={() => setPayrollTarget('all')} className="accent-blue-600" />
-                        <span className="fs-xs text-slate-700">All Staff ({localEmployees.length})</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="payrollTarget" checked={payrollTarget === 'selected'} onChange={() => setPayrollTarget('selected')} className="accent-blue-600" />
-                        <span className="fs-xs text-slate-700">Selected Staff</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="payrollTarget" checked={payrollTarget === 'group'} onChange={() => setPayrollTarget('group')} className="accent-blue-600" />
-                        <span className="fs-xs text-slate-700">By Group</span>
-                      </label>
-                    </div>
-                    
-                    {payrollTarget === 'selected' && (
-                      <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-lg p-2 space-y-1">
-                        {localEmployees.map(emp => (
-                          <label key={emp.id} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedEmployeeIds.has(emp.id)}
-                              onChange={(e) => {
-                                const next = new Set(selectedEmployeeIds);
-                                if (e.target.checked) next.add(emp.id);
-                                else next.delete(emp.id);
-                                setSelectedEmployeeIds(next);
-                              }}
-                              className="accent-blue-600"
-                            />
-                            <span className="fs-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
-                            <span className="text-[10px] text-slate-400 ml-auto">{emp.department}</span>
-                          </label>
-                        ))}
+                <button
+                  onClick={() => setShowPayrollCronModal(true)}
+                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs fw-semibold transition-all border border-white/20 cursor-pointer shrink-0"
+                >
+                  Configure Cron Rule & Staff →
+                </button>
+              </div>
+            )}
+
+            {/* Payroll Automation Cron Modal */}
+            {showPayrollCronModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+                <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+                  {/* High Contrast Header */}
+                  <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-950 p-5 text-white flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                        <i className="bi bi-clock-history text-amber-300 text-lg"></i>
                       </div>
-                    )}
-                    
-                    {payrollTarget === 'group' && (
-                      <div className="space-y-2">
-                        <Select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)}>
-                          <option value="">Select a group...</option>
-                          {payrollGroups.filter(g => g.companyId === selectedCompany.id).map(g => (
-                            <option key={g.id} value={g.id}>{g.name} ({g.employeeIds.length} employees)</option>
-                          ))}
+                      <div>
+                        <h3 className="text-base fw-bold text-white tracking-tight">Automated Monthly Payroll Cron Engine</h3>
+                        <p className="text-xs text-slate-200 mt-0.5">Configure custom execution time, date & target employee roster for automated payroll</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowPayrollCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                      <i className="bi bi-x-lg text-sm"></i>
+                    </button>
+                  </div>
+
+                  <div className="p-6 space-y-5 overflow-y-auto flex-1">
+                    {/* Execution Schedule & Custom Time */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Execution Day of Month</Label>
+                        <Select value={payrollCronDay} onChange={e => setPayrollCronDay(e.target.value)}>
+                          <option value="25">25th (Standard Payroll Day)</option>
+                          <option value="28">28th (End of Month)</option>
+                          <option value="1">1st (Beginning of Month)</option>
+                          <option value="15">15th (Mid Month)</option>
                         </Select>
-                        {payrollGroups.filter(g => g.companyId === selectedCompany.id).length === 0 && (
-                          <p className="text-[10px] text-amber-600">No groups created yet. Go to "Groups" tab to create one.</p>
-                        )}
                       </div>
-                    )}
-                    
-                    <div className="mt-3 p-3 bg-slate-50 rounded-lg">
-                      <div className="flex justify-between fs-xs">
-                        <span className="text-slate-600">Employees to process:</span>
-                        <span className="fw-semibold text-slate-900">
-                          {payrollTarget === 'all' ? localEmployees.length :
-                           payrollTarget === 'selected' ? selectedEmployeeIds.size :
-                           payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0}
+
+                      <div>
+                        <Label>Custom Execution Time *</Label>
+                        <div className="space-y-1.5">
+                          <Input
+                            type="time"
+                            value={payrollCronTime}
+                            onChange={e => setPayrollCronTime(e.target.value)}
+                            className="font-mono text-sm"
+                          />
+                          <div className="flex flex-wrap gap-1">
+                            <span className="text-[10px] text-slate-400 font-medium">Quick Presets:</span>
+                            {['08:00', '09:00', '17:00', '23:59'].map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => setPayrollCronTime(t)}
+                                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                                  payrollCronTime === t ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                }`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Employee Selection for Cron */}
+                    <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Automated Cron Employee Selection Scope *</Label>
+                        <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                          Cron Filter
                         </span>
                       </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Gross Payroll</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(totalPayroll, selectedCompany?.currency)}</span></div>
-                    <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Tax Withholding (20%)</span><span className="font-sans tabular-nums text-rose-600">-{formatCurrency((totalPayroll * 0.2), selectedCompany?.currency)}</span></div>
-                    <div className="flex justify-between table-cell mb-2"><span className="text-slate-600">Benefits / Deductions</span><span className="table-cell-mono text-rose-600">-{formatCurrency((totalPayroll * 0.05), selectedCompany?.currency)}</span></div>
-                    <div className="border-t border-slate-200 pt-2 flex justify-between table-cell fw-bold"><span className="text-slate-900">Net Payroll Disbursement</span><span className="table-cell-mono text-slate-900">{formatCurrency((totalPayroll * 0.75), selectedCompany?.currency)}</span></div>
-                  </div>
-                  <PrimaryBtn icon="bi bi-play-circle" onClick={() => setPayrollStep('review')}>Review & Process Payroll</PrimaryBtn>
-                </div>
-              )}
-              {payrollStep === 'review' && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl fs-xs text-amber-800">
-                    <strong>Confirm Payroll Run:</strong> {payrollTarget === 'all' ? localEmployees.length : payrollTarget === 'selected' ? selectedEmployeeIds.size : payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0} employees · Period: {payMonth} · Net: ${(totalPayroll * 0.75).toLocaleString()}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <PrimaryBtn icon="bi bi-check-circle" onClick={() => {
-                      const employeeIds = payrollTarget === 'all' ? [] :
-                        payrollTarget === 'selected' ? Array.from(selectedEmployeeIds) :
-                        payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds || [];
-                      onRunPayroll(payMonth, paySalaryStructure, employeeIds);
-                      setPayrollStep('done');
-                    }}>Confirm & Disburse</PrimaryBtn>
-                    <SecBtn onClick={() => setPayrollStep('idle')}>Cancel</SecBtn>
-                  </div>
-                </div>
-              )}
-              {payrollStep === 'done' && (
-                <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                  <i className="bi bi-check-circle-fill text-emerald-600 fs-2xl block mb-2"></i>
-                  <div className="fs-sm fw-bold text-emerald-800">Payroll Processed Successfully!</div>
-                  <div className="fs-xs text-emerald-600 mt-1">{localEmployees.length} payslips generated · {payMonth} · Net ${(totalPayroll * 0.75).toLocaleString()} disbursed</div>
-                  <button onClick={() => setPayrollStep('idle')} className="mt-4 fs-xs fw-semibold text-emerald-700 underline cursor-pointer">Run New Payroll</button>
-                </div>
-              )}
-            </div>
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="section-title text-slate-500">Salary Bands</h3>
-                {isHRorAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => setShowBandModal(true)}>New Band</PrimaryBtn>}
-              </div>
-              <div className="space-y-3">
-                {salaryBands.filter(b => b.companyId === selectedCompany.id).length === 0 ? (
-                  <div className="text-center py-6">
-                    <i className="bi bi-bar-chart-line fs-3xl text-slate-200 block mb-2"></i>
-                    <p className="fs-sm text-slate-400">No salary bands defined yet</p>
-                  </div>
-                ) : (
-                  salaryBands.filter(b => b.companyId === selectedCompany.id).map(band => (
-                    <div key={band.id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
-                      <div className="flex justify-between items-center">
-                        <span className="table-cell-semibold text-slate-800">{band.name}</span>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="data-value-small font-sans tabular-nums text-slate-400">{band.employeeCount} employees</span>
-                          {isHRorAdmin && (
-                            <button onClick={async () => { if (await modalConfirm('Delete this salary band?', { variant: 'danger' })) onDeleteSalaryBand(band.id); }} className="text-slate-300 hover:text-red-500 transition-colors">
-                              <i className="bi bi-trash fs-xs"></i>
+
+                      <div className="flex flex-wrap gap-4 pt-1">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="cronTarget"
+                            checked={payrollCronTarget === 'all'}
+                            onChange={() => setPayrollCronTarget('all')}
+                            className="accent-emerald-600"
+                          />
+                          <span className="fs-xs fw-semibold text-slate-800">All Staff ({localEmployees.length})</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="cronTarget"
+                            checked={payrollCronTarget === 'selected'}
+                            onChange={() => setPayrollCronTarget('selected')}
+                            className="accent-emerald-600"
+                          />
+                          <span className="fs-xs fw-semibold text-slate-800">Selected Staff ({payrollCronEmployeeIds.size})</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="cronTarget"
+                            checked={payrollCronTarget === 'group'}
+                            onChange={() => setPayrollCronTarget('group')}
+                            className="accent-emerald-600"
+                          />
+                          <span className="fs-xs fw-semibold text-slate-800">By Payroll Group</span>
+                        </label>
+                      </div>
+
+                      {payrollCronTarget === 'selected' && (
+                        <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-xl p-2.5 bg-white space-y-1">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-1 px-1">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Select Staff Members to Automate</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (payrollCronEmployeeIds.size === localEmployees.length) {
+                                  setPayrollCronEmployeeIds(new Set());
+                                } else {
+                                  setPayrollCronEmployeeIds(new Set(localEmployees.map(e => e.id)));
+                                }
+                              }}
+                              className="text-[10px] text-emerald-600 font-bold hover:underline"
+                            >
+                              {payrollCronEmployeeIds.size === localEmployees.length ? 'Deselect All' : 'Select All'}
                             </button>
+                          </div>
+                          {localEmployees.map(emp => (
+                            <label key={emp.id} className="flex items-center gap-2.5 p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={payrollCronEmployeeIds.has(emp.id)}
+                                onChange={(e) => {
+                                  const next = new Set(payrollCronEmployeeIds);
+                                  if (e.target.checked) next.add(emp.id);
+                                  else next.delete(emp.id);
+                                  setPayrollCronEmployeeIds(next);
+                                }}
+                                className="accent-emerald-600 rounded"
+                              />
+                              <span className="fs-xs text-slate-900 fw-semibold">{emp.firstName} {emp.lastName}</span>
+                              <span className="text-[10px] text-slate-400 ml-auto font-mono">{emp.department}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {payrollCronTarget === 'group' && (
+                        <div className="space-y-1">
+                          <Select value={payrollCronGroupId} onChange={e => setPayrollCronGroupId(e.target.value)}>
+                            <option value="">Select a payroll group...</option>
+                            {payrollGroups.filter(g => g.companyId === selectedCompany.id).map(g => (
+                              <option key={g.id} value={g.id}>{g.name} ({g.employeeIds.length} employees)</option>
+                            ))}
+                          </Select>
+                          {payrollGroups.filter(g => g.companyId === selectedCompany.id).length === 0 && (
+                            <p className="text-[10px] text-amber-600">No payroll groups created yet. Create one in the Groups tab.</p>
                           )}
                         </div>
-                      </div>
-                      <div className="data-value text-slate-500 mt-0.5">${band.minSalary.toLocaleString()} – ${band.maxSalary.toLocaleString()}</div>
+                      )}
                     </div>
-                  ))
-                )}
+
+                    <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs fw-bold text-slate-900">Background Cron Scheduler Status</span>
+                        <span className={`text-[10px] fw-bold px-2 py-0.5 rounded-full ${payrollCronActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                          {payrollCronActive ? 'Active & Scheduled' : 'Paused'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600">
+                        Cron rule string: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-emerald-700">
+                          {payrollCronTime.split(':')[1] || '0'} {payrollCronTime.split(':')[0] || '9'} {payrollCronDay} * *
+                        </code>
+                      </p>
+                      {payrollCronLastRun && (
+                        <p className="text-[10px] text-slate-500">Last automated run: {payrollCronLastRun}</p>
+                      )}
+                    </div>
+
+                    <div className="pt-1 flex flex-col gap-2">
+                      <button
+                        onClick={handleRunPayrollCronNow}
+                        disabled={payrollCronRunning}
+                        className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs fw-bold shadow-lg shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {payrollCronRunning ? (
+                          <>
+                            <i className="bi bi-arrow-repeat animate-spin text-sm"></i>
+                            Processing automated payroll calculations for selected staff & posting GL...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-play-fill text-sm"></i>
+                            Run Automated Payroll Job Now
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                    <SecBtn onClick={() => setShowPayrollCronModal(false)}>Close</SecBtn>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {payrollStep === 'idle' && (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label>Payroll Period</Label>
+                    <input 
+                      type="month" 
+                      value={(() => {
+                        try {
+                          const [m, y] = payMonth.split(' ');
+                          const mIdx = new Date(`${m} 1, 2000`).getMonth() + 1;
+                          return `${y}-${mIdx.toString().padStart(2, '0')}`;
+                        } catch(e) { return ""; }
+                      })()} 
+                      onChange={e => {
+                        if (!e.target.value) return;
+                        const [y, m] = e.target.value.split('-');
+                        const d = new Date(parseInt(y), parseInt(m)-1, 1);
+                        setPayMonth(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 fs-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div><Label>Salary Structure</Label><Select value={paySalaryStructure} onChange={e => setPaySalaryStructure(e.target.value)}><option>Standard</option><option>Executive</option><option>Contractor</option></Select></div>
+                </div>
+                
+                {/* Employee Selection */}
+                <div className="border border-slate-200 rounded-xl p-4">
+                  <Label>Employee Selection</Label>
+                  <div className="flex gap-4 mt-2 mb-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="payrollTarget" checked={payrollTarget === 'all'} onChange={() => setPayrollTarget('all')} className="accent-blue-600" />
+                      <span className="fs-xs text-slate-700">All Staff ({localEmployees.length})</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="payrollTarget" checked={payrollTarget === 'selected'} onChange={() => setPayrollTarget('selected')} className="accent-blue-600" />
+                      <span className="fs-xs text-slate-700">Selected Staff</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="payrollTarget" checked={payrollTarget === 'group'} onChange={() => setPayrollTarget('group')} className="accent-blue-600" />
+                      <span className="fs-xs text-slate-700">By Group</span>
+                    </label>
+                  </div>
+                  
+                  {payrollTarget === 'selected' && (
+                    <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-lg p-2 space-y-1">
+                      {localEmployees.map(emp => (
+                        <label key={emp.id} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployeeIds.has(emp.id)}
+                            onChange={(e) => {
+                              const next = new Set(selectedEmployeeIds);
+                              if (e.target.checked) next.add(emp.id);
+                              else next.delete(emp.id);
+                              setSelectedEmployeeIds(next);
+                            }}
+                            className="accent-blue-600"
+                          />
+                          <span className="fs-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
+                          <span className="text-[10px] text-slate-400 ml-auto">{emp.department}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {payrollTarget === 'group' && (
+                    <div className="space-y-2">
+                      <Select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)}>
+                        <option value="">Select a group...</option>
+                        {payrollGroups.filter(g => g.companyId === selectedCompany.id).map(g => (
+                          <option key={g.id} value={g.id}>{g.name} ({g.employeeIds.length} employees)</option>
+                        ))}
+                      </Select>
+                      {payrollGroups.filter(g => g.companyId === selectedCompany.id).length === 0 && (
+                        <p className="text-[10px] text-amber-600">No groups created yet. Go to "Groups" tab to create one.</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+                    <div className="flex justify-between fs-xs">
+                      <span className="text-slate-600">Employees to process:</span>
+                      <span className="fw-semibold text-slate-900">
+                        {payrollTarget === 'all' ? localEmployees.length :
+                         payrollTarget === 'selected' ? selectedEmployeeIds.size :
+                         payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Gross Payroll</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency(totalPayroll, selectedCompany?.currency)}</span></div>
+                  <div className="flex justify-between fs-xs mb-2"><span className="text-slate-600">Tax Withholding (20%)</span><span className="font-sans tabular-nums text-rose-600">-{formatCurrency((totalPayroll * 0.2), selectedCompany?.currency)}</span></div>
+                  <div className="flex justify-between table-cell mb-2"><span className="text-slate-600">Benefits / Deductions</span><span className="table-cell-mono text-rose-600">-{formatCurrency((totalPayroll * 0.05), selectedCompany?.currency)}</span></div>
+                  <div className="border-t border-slate-200 pt-2 flex justify-between table-cell fw-bold"><span className="text-slate-900">Net Payroll Disbursement</span><span className="table-cell-mono text-slate-900">{formatCurrency((totalPayroll * 0.75), selectedCompany?.currency)}</span></div>
+                </div>
+                <PrimaryBtn icon="bi bi-play-circle" onClick={() => setPayrollStep('review')}>Review & Process Payroll</PrimaryBtn>
+              </div>
+            )}
+            {payrollStep === 'review' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl fs-xs text-amber-800">
+                  <strong>Confirm Payroll Run:</strong> {payrollTarget === 'all' ? localEmployees.length : payrollTarget === 'selected' ? selectedEmployeeIds.size : payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds.length || 0} employees · Period: {payMonth} · Net: ${(totalPayroll * 0.75).toLocaleString()}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <PrimaryBtn icon="bi bi-check-circle" onClick={() => {
+                    const employeeIds = payrollTarget === 'all' ? [] :
+                      payrollTarget === 'selected' ? Array.from(selectedEmployeeIds) :
+                      payrollGroups.find(g => g.id === selectedGroupId)?.employeeIds || [];
+                    onRunPayroll(payMonth, paySalaryStructure, employeeIds);
+                    setPayrollStep('done');
+                  }}>Confirm & Disburse</PrimaryBtn>
+                  <SecBtn onClick={() => setPayrollStep('idle')}>Cancel</SecBtn>
+                </div>
+              </div>
+            )}
+            {payrollStep === 'done' && (
+              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+                <i className="bi bi-check-circle-fill text-emerald-600 fs-2xl block mb-2"></i>
+                <div className="fs-sm fw-bold text-emerald-800">Payroll Processed Successfully!</div>
+                <div className="fs-xs text-emerald-600 mt-1">{localEmployees.length} payslips generated · {payMonth} · Net ${(totalPayroll * 0.75).toLocaleString()} disbursed</div>
+                <button onClick={() => setPayrollStep('idle')} className="mt-4 fs-xs fw-semibold text-emerald-700 underline cursor-pointer">Run New Payroll</button>
+              </div>
+            )}
+          </div>
+        )}
 
             {/* New Salary Band Modal */}
             {showBandModal && (
@@ -523,8 +627,6 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
               </div>
             )}
-          </div>
-        )}
 
         {/* Payroll Groups Management Tab */}
         {derivedPayrollTab === 'groups' && isHRorAdmin && (
@@ -1181,7 +1283,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
           </div>
         </ViewModal>
       )}
-      </div>
-    );
+    </div>
+  );
   }
+  return null;
 };
