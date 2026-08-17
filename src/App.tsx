@@ -3996,10 +3996,13 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
     {/* Floating AI Copilot Widget — always accessible */}
     <FloatingAIAssistant
       selectedCompany={selectedCompany}
+      selectedUser={selectedUser}
       activeView={activeView}
       invoices={invoices}
       inventory={inventory}
       employees={employees}
+      leaves={leaves}
+      attendance={attendance}
       onNavigateView={setActiveView}
     />
     </>
