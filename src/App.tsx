@@ -161,69 +161,174 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
   useEffect(() => {
     if (authLoading || !token) return;
     async function loadData() {
+      const authHeaders: Record<string, string> = {
+        'Authorization': `Bearer ${token}`,
+        'X-Company-ID': authUser?.companyId || ''
+      };
+
+      const afetch = (url: string, init?: RequestInit) =>
+        fetch(url, {
+          ...init,
+          headers: {
+            ...authHeaders,
+            ...(init?.headers || {})
+          }
+        });
+
+      // 1. Try single-call consolidated bootstrap endpoint first
+      try {
+        const bootRes = await afetch(`/api/bootstrap?companyId=${authUser?.companyId || ''}`);
+        if (bootRes.ok) {
+          const boot = await safeJson(bootRes);
+          if (boot) {
+            if (boot.companies) setCompanies(boot.companies);
+            if (boot.users) setUsers(boot.users);
+            if (boot.employees) setEmployees(boot.employees);
+            if (boot.applicants) setApplicants(boot.applicants);
+            if (boot.departments) setDepartments(boot.departments);
+            if (boot.branches) setBranches(boot.branches);
+            if (boot.leads) setLeads(boot.leads);
+            if (boot.accounting) {
+              setGlAccounts(boot.accounting.accounts || []);
+              setInvoices(boot.accounting.invoices || []);
+            }
+            if (boot.inventory) setInventory(boot.inventory);
+            if (boot.tickets) setTickets(boot.tickets);
+            if (boot.workflows) setWorkflows(boot.workflows);
+            if (boot.apikeys) setApiKeys(boot.apikeys);
+            if (boot.auditLogs) setAuditLogs(boot.auditLogs);
+            if (boot.posProducts) setPosProducts(boot.posProducts);
+            if (boot.posCustomers) setPosCustomers(boot.posCustomers);
+            if (boot.posSales) setPosSales(boot.posSales);
+            if (boot.posCategories) setPosCategories(boot.posCategories);
+            if (boot.posTerminals) setPosTerminals(boot.posTerminals);
+            if (boot.posShifts) setPosShifts(boot.posShifts);
+            if (boot.posDiscounts) setPosDiscounts(boot.posDiscounts);
+            if (boot.posReturns) setPosReturns(boot.posReturns);
+            if (boot.posDailyReports) setPosDailyReports(boot.posDailyReports);
+            if (boot.leaves) setLeaves(boot.leaves);
+            if (boot.attendance) setAttendance(boot.attendance);
+            if (boot.okrs) setOkrs(boot.okrs);
+            if (boot.payslips) setPayslips(boot.payslips);
+            if (boot.journalEntries) setJournalEntries(boot.journalEntries);
+            if (boot.expenses) setExpenses(boot.expenses);
+            if (boot.fiscalPeriods) setFiscalPeriods(boot.fiscalPeriods);
+            if (boot.openingBalances) setOpeningBalances(boot.openingBalances);
+            if (boot.bills) setBills(boot.bills);
+            if (boot.billPayments) setBillPayments(boot.billPayments);
+            if (boot.customerPayments) setCustomerPayments(boot.customerPayments);
+            if (boot.bankAccounts) setBankAccounts(boot.bankAccounts);
+            if (boot.bankTransactions) setBankTransactions(boot.bankTransactions);
+            if (boot.bankReconciliations) setBankReconciliations(boot.bankReconciliations);
+            if (boot.fixedAssets) setFixedAssets(boot.fixedAssets);
+            if (boot.depreciationEntries) setDepreciationEntries(boot.depreciationEntries);
+            if (boot.budgets) setBudgets(boot.budgets);
+            if (boot.costCenters) setCostCenters(boot.costCenters);
+            if (boot.onboardings) setOnboardings(boot.onboardings);
+            if (boot.payrollGroups) setPayrollGroups(boot.payrollGroups);
+            if (boot.salaryBands) setSalaryBands(boot.salaryBands);
+            if (boot.salesOrders) setSalesOrders(boot.salesOrders);
+            if (boot.salesCustomers) setSalesCustomers(boot.salesCustomers);
+            if (boot.salesQuotations) setSalesQuotations(boot.salesQuotations);
+            if (boot.salesTargets) setSalesTargets(boot.salesTargets);
+            if (boot.kbArticles) setKbArticles(boot.kbArticles);
+            if (boot.lmsCourses) setLmsCourses(boot.lmsCourses);
+            if (boot.announcements) setAnnouncements(boot.announcements);
+            if (boot.workflowTriggers) setWorkflowTriggers(boot.workflowTriggers);
+            if (boot.emailTemplates) setEmailTemplates(boot.emailTemplates);
+            if (boot.chatMessages) setChatMessages(boot.chatMessages);
+            if (boot.chatGroups) setChatGroups(boot.chatGroups);
+            if (boot.polls) setPolls(boot.polls);
+            if (boot.pollOptions) setPollOptions(boot.pollOptions);
+            if (boot.pollVotes) setPollVotes(boot.pollVotes);
+            if (boot.companyImages) setCompanyImages(boot.companyImages);
+            if (boot.roles) setCustomRoles(Array.isArray(boot.roles) ? boot.roles.filter((r: any) => r.name !== 'Super Admin' && r.id !== 'role-super') : []);
+            if (boot.approvalPolicies) setApprovalPolicies(boot.approvalPolicies);
+            if (boot.pendingApprovals) setPendingApprovals(boot.pendingApprovals);
+
+            if (boot.companies && boot.companies.length > 0) {
+              const hostname = window.location.hostname;
+              const subdomainCompany = boot.companies.find((c: any) => c.domain === hostname);
+              const userCompany = authUser ? boot.companies.find((c: any) => c.id === authUser.companyId) : null;
+              setSelectedCompany(subdomainCompany || userCompany || boot.companies[0]);
+            }
+            if (authUser && boot.users && boot.users.length > 0) {
+              const match = boot.users.find((u: any) => u.id === authUser.id);
+              if (match) setSelectedUser(match);
+            }
+
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Bootstrap load failed, using fallback batch fetch:', e);
+      }
+
+      // 2. Fallback to batched individual requests sending Authorization headers
       try {
         const [cRes, uRes, eRes, appRes, dRes, bRes, lRes, aRes, iRes, tRes, wRes, kRes, logRes, posProdRes, posCustRes, posSalesRes, posCatRes, posTermRes, posShiftRes, posDiscRes, posRetRes, posReportRes, leavesRes, attRes, okrsRes, slipsRes, jeRes, expRes, fpRes, obRes, billRes, bpPayRes, cpRes, baRes, btxRes, brRes, faRes, deRes, budRes, ccRes, onbRes, pgRes, sbRes, soRes, scRes, sqRes, stRes, kbRes, lmsRes, annRes, wtRes, etRes, chatRes, chatGroupsRes, pollsRes, pollOptsRes, pollVotesRes, imgRes, rolesRes, policiesRes, approvalsRes] = await Promise.all([
-          fetch('/api/companies'),
-          fetch('/api/users'),
-          fetch('/api/employees'),
-            fetch('/api/applicants'),
-          fetch('/api/departments'),
-          fetch('/api/branches'),
-          fetch('/api/leads'),
-          fetch('/api/accounting'),
-          fetch('/api/inventory'),
-          fetch('/api/tickets'),
-          fetch('/api/workflows'),
-          fetch('/api/apikeys'),
-          fetch('/api/audit-logs'),
-          fetch('/api/pos/products'),
-          fetch('/api/pos/customers'),
-          fetch('/api/pos/sales'),
-          fetch('/api/pos/categories'),
-          fetch('/api/pos/terminals'),
-          fetch('/api/pos/shifts'),
-          fetch('/api/pos/discounts'),
-          fetch('/api/pos/returns'),
-          fetch('/api/pos/reports/daily'),
-          fetch('/api/leaves'),
-          fetch('/api/attendance'),
-          fetch('/api/okrs'),
-          fetch('/api/payslips'),
-          fetch('/api/journal-entries'),
-          fetch('/api/expenses'),
-          fetch('/api/fiscal-periods'),
-          fetch('/api/opening-balances'),
-          fetch('/api/bills'),
-          fetch('/api/bill-payments'),
-          fetch('/api/customer-payments'),
-          fetch('/api/bank-accounts'),
-          fetch('/api/bank-transactions'),
-          fetch('/api/bank-reconciliations'),
-          fetch('/api/fixed-assets'),
-          fetch('/api/depreciation-entries'),
-          fetch('/api/budgets'),
-          fetch('/api/cost-centers'),
-          fetch('/api/onboardings'),
-          fetch('/api/payroll-groups'),
-          fetch('/api/salary-bands'),
-          fetch('/api/sales-orders'),
-          fetch('/api/sales-customers'),
-          fetch('/api/sales-quotations'),
-          fetch('/api/sales-targets'),
-          fetch('/api/kb-articles'),
-          fetch('/api/lms-courses'),
-          fetch('/api/announcements'),
-          fetch('/api/workflow-triggers'),
-          fetch('/api/email-templates'),
-          fetch(`/api/chat/messages?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/chat/groups?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/polls?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/poll-options?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/poll-votes?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/company-images?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/roles?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/approval-policies?companyId=${authUser?.companyId || ''}`),
-          fetch(`/api/pending-approvals?companyId=${authUser?.companyId || ''}`)
+          afetch('/api/companies'),
+          afetch('/api/users'),
+          afetch('/api/employees'),
+          afetch('/api/applicants'),
+          afetch('/api/departments'),
+          afetch('/api/branches'),
+          afetch('/api/leads'),
+          afetch('/api/accounting'),
+          afetch('/api/inventory'),
+          afetch('/api/tickets'),
+          afetch('/api/workflows'),
+          afetch('/api/apikeys'),
+          afetch('/api/audit-logs'),
+          afetch('/api/pos/products'),
+          afetch('/api/pos/customers'),
+          afetch('/api/pos/sales'),
+          afetch('/api/pos/categories'),
+          afetch('/api/pos/terminals'),
+          afetch('/api/pos/shifts'),
+          afetch('/api/pos/discounts'),
+          afetch('/api/pos/returns'),
+          afetch('/api/pos/reports/daily'),
+          afetch('/api/leaves'),
+          afetch('/api/attendance'),
+          afetch('/api/okrs'),
+          afetch('/api/payslips'),
+          afetch('/api/journal-entries'),
+          afetch('/api/expenses'),
+          afetch('/api/fiscal-periods'),
+          afetch('/api/opening-balances'),
+          afetch('/api/bills'),
+          afetch('/api/bill-payments'),
+          afetch('/api/customer-payments'),
+          afetch('/api/bank-accounts'),
+          afetch('/api/bank-transactions'),
+          afetch('/api/bank-reconciliations'),
+          afetch('/api/fixed-assets'),
+          afetch('/api/depreciation-entries'),
+          afetch('/api/budgets'),
+          afetch('/api/cost-centers'),
+          afetch('/api/onboardings'),
+          afetch('/api/payroll-groups'),
+          afetch('/api/salary-bands'),
+          afetch('/api/sales-orders'),
+          afetch('/api/sales-customers'),
+          afetch('/api/sales-quotations'),
+          afetch('/api/sales-targets'),
+          afetch('/api/kb-articles'),
+          afetch('/api/lms-courses'),
+          afetch('/api/announcements'),
+          afetch('/api/workflow-triggers'),
+          afetch('/api/email-templates'),
+          afetch(`/api/chat/messages?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/chat/groups?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/polls?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/poll-options?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/poll-votes?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/company-images?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/roles?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/approval-policies?companyId=${authUser?.companyId || ''}`),
+          afetch(`/api/pending-approvals?companyId=${authUser?.companyId || ''}`)
         ]);
 
         const cData = await safeJson(cRes);
@@ -336,15 +441,15 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         setPendingApprovals(approvalsData);
 
         // Fetch CRM activities
-        const actRes = await fetch('/api/crm-activities');
+        const actRes = await afetch('/api/crm-activities');
         setCrmActivities(await safeJson(actRes));
 
         // Fetch CRM tasks
-        const taskRes = await fetch('/api/crm-tasks');
+        const taskRes = await afetch('/api/crm-tasks');
         setCrmTasks(await safeJson(taskRes));
 
         // Fetch CRM emails
-        const emailRes = await fetch('/api/crm-emails');
+        const emailRes = await afetch('/api/crm-emails');
         setCrmEmails(await safeJson(emailRes));
         setPayslips(slipsData);
         setJournalEntries(jeData);
@@ -364,7 +469,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
         // Fetch currency rates separately
         try {
-          const crRes = await fetch('/api/currency-rates');
+          const crRes = await afetch('/api/currency-rates');
           const crData = await safeJson(crRes);
           setCurrencyRates(crData);
         } catch (e) { console.error('Failed to load currency rates:', e); }
@@ -372,14 +477,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         // Fetch Tier 3 data
         try {
           const [tcRes, trRes, icRes, conRes, compRes, asRes, pdRes, fdRes] = await Promise.all([
-            fetch('/api/tax-codes'),
-            fetch('/api/tax-returns'),
-            fetch('/api/intercompany-transactions'),
-            fetch('/api/consolidation-rules'),
-            fetch('/api/compliance-checks'),
-            fetch('/api/audit-snapshots'),
-            fetch('/api/policy-documents'),
-            fetch('/api/filing-deadlines')
+            afetch('/api/tax-codes'),
+            afetch('/api/tax-returns'),
+            afetch('/api/intercompany-transactions'),
+            afetch('/api/consolidation-rules'),
+            afetch('/api/compliance-checks'),
+            afetch('/api/audit-snapshots'),
+            afetch('/api/policy-documents'),
+            afetch('/api/filing-deadlines')
           ]);
           setTaxCodes(await safeJson(tcRes));
           setTaxReturns(await safeJson(trRes));
@@ -394,8 +499,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         // Fetch project data
         try {
           const [ptRes, pmRes] = await Promise.all([
-            fetch('/api/project-tasks'),
-            fetch('/api/project-milestones')
+            afetch('/api/project-tasks'),
+            afetch('/api/project-milestones')
           ]);
           setProjectTasks(await safeJson(ptRes));
           setProjectMilestones(await safeJson(pmRes));
@@ -404,14 +509,14 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
         // Fetch Operations & Projects module data
         try {
           const [vnRes, poRes, rfqRes, woRes, bomRes, qcRes, mtRes, docRes] = await Promise.all([
-            fetch('/api/vendors'),
-            fetch('/api/purchase-orders'),
-            fetch('/api/rfqs'),
-            fetch('/api/work-orders'),
-            fetch('/api/bom-items'),
-            fetch('/api/quality-checks'),
-            fetch('/api/maintenance-tasks'),
-            fetch(`/api/documents?companyId=${selectedCompany?.id || ''}&userId=${selectedUser?.id || ''}`),
+            afetch('/api/vendors'),
+            afetch('/api/purchase-orders'),
+            afetch('/api/rfqs'),
+            afetch('/api/work-orders'),
+            afetch('/api/bom-items'),
+            afetch('/api/quality-checks'),
+            afetch('/api/maintenance-tasks'),
+            afetch(`/api/documents?companyId=${selectedCompany?.id || ''}&userId=${selectedUser?.id || ''}`),
           ]);
           setVendors(await safeJson(vnRes));
           setPurchaseOrders(await safeJson(poRes));
@@ -425,19 +530,19 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
         // Fetch exit requests
         try {
-          const exitRes = await fetch('/api/exit-requests');
+          const exitRes = await afetch('/api/exit-requests');
           setExitRequests(await safeJson(exitRes));
         } catch (e) { console.error('Failed to load exit requests:', e); }
 
         // Fetch bank account updates
         try {
-          const bauRes = await fetch('/api/bank-account-updates');
+          const bauRes = await afetch('/api/bank-account-updates');
           setBankAccountUpdates(await safeJson(bauRes));
         } catch (e) { console.error('Failed to load bank account updates:', e); }
 
         // Fetch profile update requests
         try {
-          const purRes = await fetch('/api/profile-update-requests');
+          const purRes = await afetch('/api/profile-update-requests');
           setProfileUpdateRequests(await safeJson(purRes));
         } catch (e) { console.error('Failed to load profile update requests:', e); }
 
