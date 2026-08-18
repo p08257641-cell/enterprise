@@ -325,7 +325,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
   const [baCurrency, setBaCurrency] = useState('USD');
   const [baBalance, setBaBalance] = useState('');
     useEffect(() => {
-      if (activeView === 'acc-bank') { setAccGroup('bank'); setAccTab('bank'); }
+      if (activeView === 'acc-bank' || activeView === 'accounting-bank') { setAccGroup('bank'); setAccTab('bank'); }
       else if (activeView === 'acc-assets') { setAccGroup('assets'); setAccTab('fixed-assets'); }
       else if (activeView === 'acc-tax') { setAccGroup('tax'); setAccTab('tax'); }
       else if (activeView === 'acc-reports') { setAccGroup('reports'); setAccTab('reports'); }

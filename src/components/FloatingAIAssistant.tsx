@@ -180,7 +180,20 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
     // 4. Attendance & Shift Clock-In
     if (q.includes('attendance') || q.includes('clock') || q.includes('absent') || q.includes('roster')) {
       if (isEmployee) {
-        return `⏰ **Attendance & Shift Log:**\n- Status Today: **Present (Clocked In at 08:45 AM)**\n- Work Mode: **Office / Headquarters**\n- Monthly Attendance Rate: **95%**\n\nLog shift entries under **HR & Payroll > Attendance Log**.`;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const empId = selectedUser?.employeeId || selectedUser?.id;
+        const myTodayAttendance = attendance.find(a =>
+          (a.date === todayStr || (a.date && a.date.startsWith(todayStr))) &&
+          (a.employeeId === selectedUser?.id || a.employeeId === empId)
+        );
+
+        if (myTodayAttendance && (myTodayAttendance.checkIn || myTodayAttendance.status === 'Present' || myTodayAttendance.status === 'Late')) {
+          const checkInTime = myTodayAttendance.checkIn || '08:45 AM';
+          const workMode = myTodayAttendance.locationType ? `${myTodayAttendance.locationType} Mode` : 'Office / Headquarters';
+          return `⏰ **Attendance & Shift Log:**\n- Status Today: **Present (Clocked In at ${checkInTime})**\n- Work Mode: **${workMode}**\n- Monthly Attendance Rate: **95%**\n\nLog shift entries under **HR & Payroll > Attendance Log**.`;
+        } else {
+          return `⏰ **Attendance & Shift Log:**\n- Status Today: 🔴 **Not Clocked In (Awaiting clock-in)**\n- Work Mode: **Awaiting Check-In**\n- Monthly Attendance Rate: **95%**\n\n💡 **Need to record arrival?** Click **Check In** on your dashboard or under **HR & Payroll > Attendance Log**.`;
+        }
       }
       return `👥 **Daily Staff Attendance Breakdown:**\n- Staff Present Today: **91% (10 Staff)**\n- Late Arrivals: **1 Staff**\n- Approved Leaves: **1 Staff**\n\nView individual clock-in/out histories in **HR Management > Attendance Management**.`;
     }
@@ -315,7 +328,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
       if (onNavigateView) onNavigateView('hr-recruitment');
     } else if (actionName === 'BANK_RECON') {
       replyText = `✅ **Opening Automated Bank Reconciliation...**\nMatch statement transactions against GL cash accounts.`;
-      if (onNavigateView) onNavigateView('accounting-bank');
+      if (onNavigateView) onNavigateView('acc-bank');
     } else if (actionName === 'LEAD_FOLLOWUP') {
       replyText = `✅ **Dispatching Sales Lead Reminders...**\nSending follow-up notifications to active lead contacts.`;
       if (onNavigateView) onNavigateView('crm');
