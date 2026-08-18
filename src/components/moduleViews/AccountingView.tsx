@@ -523,23 +523,50 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
 
                   <div className="p-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <Label>Weekly Execution Day</Label>
+                        <Label>Execution Day / Frequency</Label>
                         <Select value={invCronDay} onChange={e => setInvCronDay(e.target.value)}>
                           <option value="Monday">Every Monday</option>
+                          <option value="Tuesday">Every Tuesday</option>
                           <option value="Wednesday">Every Wednesday</option>
+                          <option value="Thursday">Every Thursday</option>
                           <option value="Friday">Every Friday</option>
+                          <option value="Saturday">Every Saturday</option>
+                          <option value="Sunday">Every Sunday</option>
+                          <option value="Daily">Daily (Every Day)</option>
+                          <option value="Workdays">Workdays (Mon - Fri)</option>
+                          <option value="Monthly (1st)">Monthly (1st of Month)</option>
+                          <option value="Monthly (15th)">Monthly (15th of Month)</option>
+                          <option value="Monthly (End of Month)">Monthly (End of Month)</option>
                         </Select>
                       </div>
 
                       <div>
                         <Label>Execution Time</Label>
-                        <Select value={invCronTime} onChange={e => setInvCronTime(e.target.value)}>
-                          <option value="09:00">09:00 AM</option>
-                          <option value="08:00">08:00 AM</option>
-                          <option value="17:00">05:00 PM</option>
-                        </Select>
+                        <div className="space-y-1.5">
+                          <Input
+                            type="time"
+                            value={invCronTime}
+                            onChange={e => setInvCronTime(e.target.value)}
+                            className="font-mono text-xs"
+                          />
+                          <div className="flex flex-wrap gap-1">
+                            <span className="fs-3xs text-slate-400 font-medium">Quick Presets:</span>
+                            {['08:00', '09:00', '12:00', '17:00', '23:59'].map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => setInvCronTime(t)}
+                                className={`fs-3xs font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                                  invCronTime === t ? 'bg-amber-100 text-amber-800 border-amber-300 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                }`}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
