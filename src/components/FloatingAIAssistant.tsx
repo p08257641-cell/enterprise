@@ -333,7 +333,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   };
 
   return (
-    <div className="fixed bottom-6 right-20 z-40 font-sans">
+    <div className="fixed bottom-3 sm:bottom-6 right-3 sm:right-6 md:right-8 z-50 font-sans max-w-[calc(100vw-24px)]">
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
@@ -347,8 +347,8 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
               <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500 border-2 border-slate-900 animate-ping"></span>
             )}
           </div>
-          <span className="text-xs fw-bold tracking-wide">AI Copilot</span>
-          <span className="bg-white/20 text-[10px] fw-semibold px-2 py-0.5 rounded-full backdrop-blur-xs">
+          <span className="fs-xs fw-bold tracking-wide">AI Copilot</span>
+          <span className="bg-white/20 fs-xs fw-semibold px-2 py-0.5 rounded-full backdrop-blur-xs" style={{ fontSize: '10px' }}>
             {userRole}
           </span>
         </button>
@@ -356,23 +356,23 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
 
       {/* Expanded Floating AI Drawer Panel */}
       {isOpen && (
-        <div className="w-96 sm:w-[420px] bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col h-[580px] max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-[calc(100vw-24px)] sm:w-96 md:w-[420px] max-w-[420px] bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col h-[75vh] sm:h-[580px] max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
           
           {/* Drawer Header - Clean & High Contrast */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 text-white flex items-center justify-between shrink-0 relative border-b border-indigo-900/50">
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-3.5 sm:p-4 text-white flex items-center justify-between shrink-0 relative border-b border-indigo-900/50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-500 to-indigo-500 flex items-center justify-center text-white shadow-md border border-white/20">
                 <i className="bi bi-stars text-lg text-amber-300"></i>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm fw-bold text-white tracking-tight">Core360 AI Copilot</h3>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] fw-semibold bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
+                  <h3 className="fs-sm fw-bold text-white tracking-tight">Core360 AI Copilot</h3>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full fw-semibold bg-emerald-500/20 border border-emerald-400/30 text-emerald-300" style={{ fontSize: '9px' }}>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Online
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-200 truncate max-w-[220px]">
+                <p className="fs-xs text-slate-200 truncate max-w-[180px] sm:max-w-[220px]" style={{ fontSize: '11px' }}>
                   {selectedCompany.name} · <span className="text-indigo-300 font-semibold">{userRole}</span>
                 </p>
               </div>
@@ -438,12 +438,12 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                     >
                       <div className="whitespace-pre-wrap">{renderMarkdown(msg.text)}</div>
                     </div>
-                    <span className="text-[9px] text-slate-400 mt-1 px-1">{msg.timestamp}</span>
+                    <span className="fs-xs text-slate-400 mt-1 px-1" style={{ fontSize: '10px' }}>{msg.timestamp}</span>
                   </div>
                 ))}
 
                 {loading && (
-                  <div className="flex items-center gap-2 text-slate-500 text-xs bg-white border border-slate-200 rounded-2xl px-4 py-3 w-fit shadow-xs">
+                  <div className="flex items-center gap-2 text-slate-500 fs-xs bg-white border border-slate-200 rounded-2xl px-4 py-3 w-fit shadow-xs">
                     <i className="bi bi-arrow-repeat animate-spin text-indigo-600"></i>
                     <span>AI Copilot is thinking...</span>
                   </div>
@@ -457,7 +457,8 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                   <button
                     key={idx}
                     onClick={() => handleSend(qp.text)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 text-[10px] fw-semibold whitespace-nowrap transition-colors shrink-0 cursor-pointer border border-slate-200/60"
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 fs-xs fw-semibold whitespace-nowrap transition-colors shrink-0 cursor-pointer border border-slate-200/60"
+                    style={{ fontSize: '11px' }}
                   >
                     {qp.label}
                   </button>
