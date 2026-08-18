@@ -256,12 +256,14 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const [showEmailIngestModal, setShowEmailIngestModal] = useState(false);
   const [showRecruitmentSettingsModal, setShowRecruitmentSettingsModal] = useState(false);
   const [customInboundEmailInput, setCustomInboundEmailInput] = useState(selectedCompany.recruitmentInboundEmail || '');
+  const [isEditingInboundEmail, setIsEditingInboundEmail] = useState(false);
+  const [inlineEmailValue, setInlineEmailValue] = useState(selectedCompany.recruitmentInboundEmail || `careers@${selectedCompany.domain || 'company.com'}`);
   const [ingestName, setIngestName] = useState('');
   const [ingestEmail, setIngestEmail] = useState('');
   const [ingestVacancyTitle, setIngestVacancyTitle] = useState('Senior Full-Stack Engineer');
   const [ingestSkills, setIngestSkills] = useState('React, TypeScript, Node.js, PostgreSQL, Docker, Git');
 
-  const activeInboundEmail = selectedCompany.recruitmentInboundEmail || `jobs-${selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app`;
+  const activeInboundEmail = selectedCompany.recruitmentInboundEmail || `careers@${selectedCompany.domain || 'company.com'}`;
 
   const handleSaveRecruitmentEmailSettings = async () => {
     if (!selectedCompany) return;
@@ -270,6 +272,15 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
     });
     setShowRecruitmentSettingsModal(false);
     modalAlert(`Recruitment inbound email address configured:\n${customInboundEmailInput.trim() || activeInboundEmail}`, { variant: 'success' });
+  };
+
+  const handleSaveInlineEmail = async () => {
+    if (!selectedCompany || !inlineEmailValue.trim()) return;
+    await onUpdateCompanySettings(selectedCompany.id, {
+      recruitmentInboundEmail: inlineEmailValue.trim()
+    });
+    setIsEditingInboundEmail(false);
+    modalAlert(`Recruitment email address updated to:\n${inlineEmailValue.trim()}`, { variant: 'success' });
   };
 
   const handleIngestCandidateCV = () => {
@@ -1439,24 +1450,84 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t border-indigo-900/60 text-xs">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                <div className="flex items-center justify-between fs-2xs text-slate-400 fw-bold uppercase">
-                  <span>1. Dedicated Inbound Email</span>
-                  <i className="bi bi-mailbox text-indigo-400"></i>
+              <div className="p-3 bg-white/10 rounded-xl border border-white/15 space-y-2">
+                <div className="flex items-center justify-between fs-2xs text-indigo-200 fw-bold uppercase tracking-wider">
+                  <span>1. Company Recruitment Email</span>
+                  <i className="bi bi-envelope-at-fill text-amber-300"></i>
                 </div>
-                <div className="font-mono text-indigo-200 fw-semibold truncate fs-xs" title={activeInboundEmail}>
-                  {activeInboundEmail}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(activeInboundEmail);
-                    modalAlert(`Copied recruitment inbound CV email address:\n${activeInboundEmail}\n\nSet up automatic email forwarding from your custom careers@company.com to this address to ingest CVs automatically!`, { variant: 'info' });
-                  }}
-                  className="fs-2xs text-indigo-300 hover:text-white underline cursor-pointer"
-                >
-                  Copy Inbound Address
-                </button>
+
+                {isEditingInboundEmail ? (
+                  <div className="space-y-1.5 pt-0.5">
+                    <input
+                      type="email"
+                      value={inlineEmailValue}
+                      onChange={e => setInlineEmailValue(e.target.value)}
+                      placeholder={`careers@${selectedCompany.domain || 'company.com'}`}
+                      className="w-full px-2.5 py-1 rounded-lg bg-slate-900 border border-amber-400 text-amber-300 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      autoFocus
+                    />
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingInboundEmail(false)}
+                        className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white fs-3xs fw-semibold transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveInlineEmail}
+                        className="px-2.5 py-0.5 rounded bg-amber-400 hover:bg-amber-300 text-slate-950 fs-3xs fw-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                      >
+                        <i className="bi bi-check-lg"></i> Save Email
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <a
+                        href={`mailto:${activeInboundEmail}`}
+                        className="font-mono text-amber-300 fw-bold truncate fs-xs hover:underline"
+                        title="Click to send test email to recruitment address"
+                      >
+                        {activeInboundEmail}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInlineEmailValue(selectedCompany.recruitmentInboundEmail || `careers@${selectedCompany.domain || 'company.com'}`);
+                          setIsEditingInboundEmail(true);
+                        }}
+                        className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-indigo-100 text-2xs fw-semibold transition-all cursor-pointer flex items-center gap-1 shrink-0 border border-white/10"
+                        title="Click to edit recruitment email address"
+                      >
+                        <i className="bi bi-pencil-square text-amber-300"></i> Edit
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(activeInboundEmail);
+                          modalAlert(`Copied recruitment email address:\n${activeInboundEmail}`, { variant: 'info' });
+                        }}
+                        className="fs-3xs text-indigo-300 hover:text-white underline cursor-pointer"
+                      >
+                        Copy Address
+                      </button>
+                      <span className="text-white/20">•</span>
+                      <button
+                        type="button"
+                        onClick={() => { setCustomInboundEmailInput(selectedCompany.recruitmentInboundEmail || ''); setShowRecruitmentSettingsModal(true); }}
+                        className="fs-3xs text-indigo-300 hover:text-white underline cursor-pointer"
+                      >
+                        Forwarding Rules
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
