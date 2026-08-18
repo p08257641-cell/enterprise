@@ -143,7 +143,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   ] : isOperations ? [
     { label: '📦 Low Stock Safety Reorder', text: 'Which inventory items are below minimum safety reorder thresholds?' },
     { label: '🚚 Purchase Orders Status', text: 'Show active purchase orders and pending supplier deliveries.' },
-    { label: '🏭 Stock Valuation', text: 'Calculate the total warehouse inventory valuation.' }
+    { label: '📦 Stock Valuation', text: 'Calculate the total warehouse inventory valuation.' }
   ] : [
     { label: '🏢 Executive 360 Summary', text: `Provide an executive summary of Finance, HR, and Operations for ${selectedCompany.name}.` },
     { label: '💸 Payroll Automation Status', text: 'Check the status of automated monthly payroll cron jobs.' },

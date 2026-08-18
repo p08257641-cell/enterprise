@@ -338,8 +338,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="fs-2xl">🌐</span>
             ) : selectedCompany.companyLogo ? (
               <img src={selectedCompany.companyLogo} alt="Logo" className="h-8 w-8 rounded object-cover" />
-            ) : (
+            ) : selectedCompany.logo && selectedCompany.logo !== '🏭' && selectedCompany.logo !== '🏢' ? (
               <span className="fs-2xl">{selectedCompany.logo}</span>
+            ) : (
+              <i className="bi bi-building text-slate-700 fs-lg"></i>
             )}
             <div className="flex flex-col">
               <span className="fs-sm fw-bold text-slate-900 tracking-tight leading-tight truncate w-32">

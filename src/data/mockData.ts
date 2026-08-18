@@ -10,7 +10,7 @@ export const INITIAL_COMPANIES: Company[] = [
     id: 'c-acme',
     name: 'Acme Global Manufacturing',
     domain: 'acme.core360.site',
-    logo: '🏭',
+    logo: '🏢',
     industry: 'Industrial Equipment',
     currency: 'USD',
     timezone: 'America/New_York',

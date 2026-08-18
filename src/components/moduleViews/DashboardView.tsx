@@ -349,7 +349,15 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
           <div>
             <h3 className="section-title text-slate-900 mb-4">Company Overview</h3>
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center fs-4xl">{selectedCompany.logo}</div>
+              <div className="h-16 w-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center fs-4xl overflow-hidden">
+                {selectedCompany.companyLogo ? (
+                  <img src={selectedCompany.companyLogo} alt={selectedCompany.name} className="w-full h-full object-contain p-1" />
+                ) : selectedCompany.logo && selectedCompany.logo !== '🏭' && selectedCompany.logo !== '🏢' ? (
+                  selectedCompany.logo
+                ) : (
+                  <i className="bi bi-building fs-3xl text-indigo-600"></i>
+                )}
+              </div>
               <div>
                 <div className="fs-xl fw-bold text-slate-900">{selectedCompany.name}</div>
                 <div className="fs-sm text-slate-500 font-sans tabular-nums">{selectedCompany.domain}</div>
