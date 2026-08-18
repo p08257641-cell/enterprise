@@ -19,6 +19,7 @@ interface FloatingAIAssistantProps {
   attendance?: AttendanceRecord[];
   scheduledJobs?: ScheduledAutomationJob[];
   onTriggerJob?: (jobId: string) => void;
+  onRunPayroll?: (period: string, structure: string, employeeIds?: string[]) => void;
   onNavigateView?: (view: string) => void;
 }
 
@@ -33,6 +34,7 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   attendance = [],
   scheduledJobs = [],
   onTriggerJob,
+  onRunPayroll,
   onNavigateView
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -287,7 +289,11 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
 
     let replyText = '';
     if (actionName === 'PAYROLL') {
-      replyText = `✅ **Automated Monthly Payroll Job Triggered!**\n- Evaluated ${employees.length || 12} active employees.\n- Calculated PAYE tax & SSNIT contributions.\n- Digital payslips generated and ready for release.\n- General Ledger journal entries posted.`;
+      if (onRunPayroll) {
+        onRunPayroll(currentMonthYear, 'Standard');
+      }
+      replyText = `✅ **Automated Monthly Payroll Run Executed & Disbursed!**\n- Processed **${employees.length} active employees** for **${currentMonthYear}**.\n- Calculated PAYE income tax & SSNIT statutory contributions.\n- Generated digital payslips.\n- Posted General Ledger journal entries.\n\nViewing updated payroll run history in **HR & Payroll > Run Payroll**.`;
+      if (onNavigateView) onNavigateView('payroll-run');
     } else if (actionName === 'OVERDUE') {
       const overdueList = invoices.filter(i => i.status === 'Overdue');
       const targetInvoices = overdueList.length ? overdueList : invoices.slice(0, 3);

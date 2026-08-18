@@ -1924,7 +1924,7 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
     let totalCustomTax = 0;
     const breakdown: any[] = [];
 
-    if (Array.isArray(assignedTaxes)) {
+    if (Array.isArray(assignedTaxes) && assignedTaxes.length > 0) {
       assignedTaxes.forEach((taxId: string) => {
         const taxConfig = customTaxes.find((t: any) => t.id === taxId);
         if (taxConfig) {
@@ -1933,6 +1933,13 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
           breakdown.push({ name: taxConfig.name, amount: Math.round(val), type: 'Tax' });
         }
       });
+    } else {
+      // Default Statutory Tax Withholding (PAYE 15% + SSNIT 5.5%)
+      const payeVal = Math.round(baseSalary * 0.15);
+      const ssnitVal = Math.round(baseSalary * 0.055);
+      totalCustomTax = payeVal + ssnitVal;
+      breakdown.push({ name: 'PAYE Income Tax (15%)', amount: payeVal, type: 'Tax' });
+      breakdown.push({ name: 'SSNIT Tier-1 Pension (5.5%)', amount: ssnitVal, type: 'Tax' });
     }
 
     let totalCustomBenefit = 0;
@@ -1979,7 +1986,35 @@ app.post('/api/payroll/run', asyncHandler(async (req, res) => {
     generatedSlips.push({ ...slip, breakdown });
   }
 
-  logAudit(companyId, userId || 'u-system', userName || 'System', 'PAYROLL_RUN', 'Payroll', `Processed monthly payroll for ${period}. Net disbursed: $${generatedSlips.reduce((sum: number, s: any) => sum + s.net, 0).toLocaleString()}`);
+  // Create General Ledger Journal Entry for Payroll Run
+  const totalGrossPayroll = generatedSlips.reduce((sum: number, s: any) => sum + s.gross, 0);
+  const totalNetPayroll = generatedSlips.reduce((sum: number, s: any) => sum + s.net, 0);
+  const totalTaxDeductions = generatedSlips.reduce((sum: number, s: any) => sum + s.deductions, 0);
+
+  const jId = `je-pr-${Date.now()}`;
+  const linesArray = [
+    { id: `jl-${jId}-1`, accountId: 'acc-salary-exp', accountName: 'Salary & Wage Expense', type: 'Debit', amount: totalGrossPayroll },
+    { id: `jl-${jId}-2`, accountId: 'acc-cash', accountName: 'Operating Cash Account', type: 'Credit', amount: totalNetPayroll }
+  ];
+  if (totalTaxDeductions > 0) {
+    linesArray.push({ id: `jl-${jId}-3`, accountId: 'acc-tax-pay', accountName: 'PAYE & Statutory Tax Payable', type: 'Credit', amount: totalTaxDeductions });
+  }
+
+  const journalEntry = {
+    id: jId,
+    companyId,
+    entryNumber: `JE-PAY-${Date.now().toString().slice(-6)}`,
+    date: new Date().toISOString().split('T')[0],
+    description: `Payroll Disbursement & Tax Statutory Filing for ${period}`,
+    status: 'Posted',
+    totalDebit: totalGrossPayroll,
+    totalCredit: totalGrossPayroll,
+    lines: JSON.stringify(linesArray),
+    createdAt: new Date().toISOString()
+  };
+  await dbInsert(schema.journalEntries, journalEntry);
+
+  logAudit(companyId, userId || 'u-system', userName || 'System', 'PAYROLL_RUN', 'Payroll', `Executed monthly payroll run for ${period}. Processed ${generatedSlips.length} employees. Gross: $${totalGrossPayroll.toLocaleString()}, Net: $${totalNetPayroll.toLocaleString()}`);
   res.json(generatedSlips);
 }));
 

@@ -4003,6 +4003,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
       employees={employees}
       leaves={leaves}
       attendance={attendance}
+      onRunPayroll={handleRunPayroll}
       onNavigateView={setActiveView}
     />
     </>
