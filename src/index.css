@@ -367,13 +367,7 @@ h6 { font-size: var(--fs-xs); font-weight: var(--fw-medium); }
   color: #1e3a8a;
 }
 
-/* ─── Typography Sizing Adjustments ───────────────────────────────────────── */
-/* Override Tailwind tiny arbitrary sizes for better legibility */
-.text-\[8px\]  { font-size: 11px !important; }
-.text-\[9px\]  { font-size: 12px !important; }
-.text-\[10px\] { font-size: 13px !important; }
-.text-\[11px\] { font-size: 14px !important; }
-
+.stat-value {
   font-size: var(--fs-3xl);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-tighter);
