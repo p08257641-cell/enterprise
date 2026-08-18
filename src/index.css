@@ -585,6 +585,37 @@ aside .text-\[11px\] { font-size: 14px !important; }
   }
 }
 
+/* ─── Global System Typography Enforcements for Modals, Dialogs, Tables ──────── */
+table,
+thead,
+tbody,
+tfoot,
+tr,
+th,
+td {
+  font-family: var(--ff-sans) !important;
+}
+
+.modal,
+.modal-content,
+[role="dialog"],
+.fixed.inset-0,
+.backdrop-blur-xs,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.dialog,
+.popup {
+  font-family: var(--ff-sans) !important;
+}
+
+input,
+select,
+textarea,
+button,
+label {
+  font-family: var(--ff-sans) !important;
+}
+
 /* ─── Typography Utilities ────────────────────────────────────────────────── */
 .fs-3xs { font-size: 0.5625rem; line-height: 0.75rem; }
 .fs-2xs { font-size: 0.6875rem; line-height: 0.875rem; }
