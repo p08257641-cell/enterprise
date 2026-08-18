@@ -7,7 +7,7 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isSuperAdminRole, isHRRole, isFinanceDeptHead } from '../../permissions';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
-function payslipPDFBody(slip: any, currencyCode?: string, allHistoricalSlips?: any[]) {
+function payslipPDFBody(slip: any, currencyCode?: string) {
   const earnings = slip.breakdown?.filter((b: any) => b.type === 'Benefit') || [];
   const deductions = slip.breakdown?.filter((b: any) => b.type === 'Deduction' || b.type === 'Tax') || [];
   const baseSalary = slip.baseSalary || slip.gross;
@@ -84,37 +84,6 @@ function payslipPDFBody(slip: any, currencyCode?: string, allHistoricalSlips?: a
         </div>
       </div>
     </div>
-
-    <!-- Historical Payroll Run Summary -->
-    ${allHistoricalSlips && allHistoricalSlips.length > 0 ? `
-    <div style="margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px;">
-      <div style="font-size:11px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;">
-        Executed Payroll History Summary (${allHistoricalSlips.length} Cycles)
-      </div>
-      <table style="width:100%; border-collapse:collapse; font-size:11px; color:#475569;">
-        <thead>
-          <tr style="background:#f1f5f9; text-align:left; font-weight:600; color:#334155;">
-            <th style="padding:6px 10px;">Period</th>
-            <th style="padding:6px 10px; text-align:right;">Gross</th>
-            <th style="padding:6px 10px; text-align:right;">Deductions</th>
-            <th style="padding:6px 10px; text-align:right;">Net Disbursed</th>
-            <th style="padding:6px 10px; text-align:center;">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${allHistoricalSlips.map((h: any) => `
-          <tr style="border-bottom:1px solid #f1f5f9;">
-            <td style="padding:6px 10px; font-weight:600; color:#0f172a;">${h.period}</td>
-            <td style="padding:6px 10px; text-align:right; font-family:monospace;">${formatCurrency(h.gross, currencyCode)}</td>
-            <td style="padding:6px 10px; text-align:right; font-family:monospace; color:#dc2626;">-${formatCurrency(h.deductions, currencyCode)}</td>
-            <td style="padding:6px 10px; text-align:right; font-family:monospace; font-weight:700; color:#16a34a;">${formatCurrency(h.net, currencyCode)}</td>
-            <td style="padding:6px 10px; text-align:center;"><span style="color:#166534; font-weight:600;">${h.status || 'Disbursed'}</span></td>
-          </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-    ` : ''}
   `;
 }
 
@@ -179,6 +148,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
     new Set(payslips.filter(p => p.companyId === selectedCompany.id).map(p => p.period))
   ).sort((a, b) => b.localeCompare(a));
   const [slipsPeriod, setSlipsPeriod] = useState<string>('');
+  const [selectedBatchPeriodModal, setSelectedBatchPeriodModal] = useState<string | null>(null);
   const activeSlipsPeriod = slipsPeriod || companySlipPeriods[0] || payMonth;
   
   // Employee selection state
@@ -610,11 +580,181 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
                 <i className="bi bi-check-circle-fill text-emerald-600 fs-2xl block mb-2"></i>
                 <div className="fs-sm fw-bold text-emerald-800">Payroll Processed Successfully!</div>
-                <div className="fs-xs text-emerald-600 mt-1">{localEmployees.length} payslips generated · {payMonth} · Net ${(totalPayroll * 0.75).toLocaleString()} disbursed</div>
+                <div className="fs-xs text-emerald-600 mt-1">{localEmployees.length} payslips generated · {payMonth} · Net ${formatCurrency((totalPayroll * 0.75), selectedCompany?.currency)} disbursed</div>
                 <button onClick={() => setPayrollStep('idle')} className="mt-4 fs-xs fw-semibold text-emerald-700 underline cursor-pointer">Run New Payroll</button>
               </div>
             )}
+
+            {/* Executed Payroll Runs History (Company-Wide Admin Audit Ledger) */}
+            <div className="pt-6 border-t border-slate-200 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h3 className="section-title text-slate-900 flex items-center gap-2">
+                    <i className="bi bi-clock-history text-indigo-600"></i> Executed Payroll Runs History Ledger
+                  </h3>
+                  <p className="fs-xs text-slate-500">Historical archive of all monthly payroll batches executed by administrators for {selectedCompany.name}.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="fs-2xs bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono px-3 py-1.5 rounded-xl fw-bold">
+                    {companySlipPeriods.length} Historical Runs Archived
+                  </span>
+                </div>
+              </div>
+
+              {companySlipPeriods.length === 0 ? (
+                <div className="p-8 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                  <i className="bi bi-receipt-cutoff fs-2xl text-slate-300 block mb-2"></i>
+                  <p className="fs-sm text-slate-500">No executed payroll runs recorded yet.</p>
+                </div>
+              ) : (
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 border-b border-slate-200 fs-xs font-bold text-slate-700">
+                      <tr>
+                        <th className="px-4 py-3">Run Period</th>
+                        <th className="px-4 py-3">Roster Size</th>
+                        <th className="px-4 py-3 text-right">Gross Payroll</th>
+                        <th className="px-4 py-3 text-right">Total Deductions</th>
+                        <th className="px-4 py-3 text-right">Net Disbursed</th>
+                        <th className="px-4 py-3 text-center">Status</th>
+                        <th className="px-4 py-3 text-right">Batch Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 fs-xs">
+                      {companySlipPeriods.map(periodKey => {
+                        const batchSlips = payslips.filter(p => p.companyId === selectedCompany.id && p.period === periodKey);
+                        const grossSum = batchSlips.reduce((s, p) => s + (p.gross || 0), 0);
+                        const dedSum = batchSlips.reduce((s, p) => s + (p.deductions || 0), 0);
+                        const netSum = batchSlips.reduce((s, p) => s + (p.net || 0), 0);
+
+                        return (
+                          <tr key={periodKey} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="px-4 py-3.5 fw-bold text-slate-900 flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                                <i className="bi bi-calendar-check fs-xs"></i>
+                              </div>
+                              <div>
+                                <div>{periodKey}</div>
+                                <div className="fs-3xs text-slate-400 font-mono">Executed Batch</div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3.5 text-slate-700">
+                              <span className="fw-semibold text-slate-900">{batchSlips.length} Employees</span>
+                            </td>
+                            <td className="px-4 py-3.5 text-right font-sans tabular-nums text-slate-900 fw-semibold">
+                              {formatCurrency(grossSum, selectedCompany?.currency)}
+                            </td>
+                            <td className="px-4 py-3.5 text-right font-sans tabular-nums text-rose-600 font-semibold">
+                              -{formatCurrency(dedSum, selectedCompany?.currency)}
+                            </td>
+                            <td className="px-4 py-3.5 text-right font-sans tabular-nums text-emerald-700 fw-bold">
+                              {formatCurrency(netSum, selectedCompany?.currency)}
+                            </td>
+                            <td className="px-4 py-3.5 text-center">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full fs-3xs fw-bold bg-emerald-100 text-emerald-800">
+                                <i className="bi bi-check-circle-fill fs-3xs"></i> Disbursed
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-right space-x-2 whitespace-nowrap">
+                              <button
+                                onClick={() => setSelectedBatchPeriodModal(periodKey)}
+                                className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 fs-xs fw-bold transition-all cursor-pointer"
+                              >
+                                <i className="bi bi-eye mr-1"></i> View Batch Slips ({batchSlips.length})
+                              </button>
+                              <button
+                                onClick={() => downloadCSV(`payroll-summary-${selectedCompany.name}-${periodKey}`, ['Employee', 'Employee ID', 'Department', 'Period', 'Gross', 'Deductions', 'Net', 'Status'], batchSlips.map(s => [getEmployeeNameById(employees, s.employeeId) || s.employeeName, s.employeeId, s.department, s.period, s.gross, s.deductions, s.net, s.status]))}
+                                className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 fs-xs fw-semibold transition-all cursor-pointer"
+                                title="Export CSV Summary"
+                              >
+                                <i className="bi bi-download mr-1"></i> CSV
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
+        )}
+
+        {/* Admin View Batch Slips Breakdown Modal */}
+        {selectedBatchPeriodModal && (
+          <ViewModal
+            title={`Executed Payroll Run — ${selectedBatchPeriodModal}`}
+            subtitle={`Company Payroll Summary for ${selectedCompany.name}`}
+            onClose={() => setSelectedBatchPeriodModal(null)}
+            actions={
+              <PrimaryBtn
+                icon="bi bi-download"
+                onClick={() => downloadCSV(`payroll-batch-${selectedCompany.id}-${selectedBatchPeriodModal}`, ['Employee', 'Employee ID', 'Department', 'Period', 'Gross', 'Deductions', 'Net', 'Status'], payslips.filter(p => p.companyId === selectedCompany.id && p.period === selectedBatchPeriodModal).map(s => [getEmployeeNameById(employees, s.employeeId) || s.employeeName, s.employeeId, s.department, s.period, s.gross, s.deductions, s.net, s.status]))}
+              >
+                Export Batch Summary CSV
+              </PrimaryBtn>
+            }
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                <div>
+                  <span className="fs-3xs text-slate-400 fw-bold uppercase">Total Batch Gross</span>
+                  <div className="text-base fw-bold font-sans tabular-nums text-slate-900">
+                    {formatCurrency(payslips.filter(p => p.companyId === selectedCompany.id && p.period === selectedBatchPeriodModal).reduce((s, p) => s + p.gross, 0), selectedCompany?.currency)}
+                  </div>
+                </div>
+                <div>
+                  <span className="fs-3xs text-slate-400 fw-bold uppercase">Total Deductions</span>
+                  <div className="text-base fw-bold font-sans tabular-nums text-rose-600">
+                    -{formatCurrency(payslips.filter(p => p.companyId === selectedCompany.id && p.period === selectedBatchPeriodModal).reduce((s, p) => s + p.deductions, 0), selectedCompany?.currency)}
+                  </div>
+                </div>
+                <div>
+                  <span className="fs-3xs text-slate-400 fw-bold uppercase">Total Net Disbursed</span>
+                  <div className="text-base fw-bold font-sans tabular-nums text-emerald-700">
+                    {formatCurrency(payslips.filter(p => p.companyId === selectedCompany.id && p.period === selectedBatchPeriodModal).reduce((s, p) => s + p.net, 0), selectedCompany?.currency)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200 fs-xs font-semibold text-slate-600">
+                    <tr>
+                      <th className="px-3.5 py-2.5">Employee</th>
+                      <th className="px-3.5 py-2.5">Department</th>
+                      <th className="px-3.5 py-2.5 text-right">Gross</th>
+                      <th className="px-3.5 py-2.5 text-right">Deductions</th>
+                      <th className="px-3.5 py-2.5 text-right">Net Salary</th>
+                      <th className="px-3.5 py-2.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 fs-xs">
+                    {payslips.filter(p => p.companyId === selectedCompany.id && p.period === selectedBatchPeriodModal).map(slip => (
+                      <tr key={slip.id} className="hover:bg-slate-50">
+                        <td className="px-3.5 py-2.5 fw-bold text-slate-900">
+                          {getEmployeeNameById(employees, slip.employeeId) || slip.employeeName}
+                        </td>
+                        <td className="px-3.5 py-2.5 text-slate-600">{slip.department}</td>
+                        <td className="px-3.5 py-2.5 text-right font-sans tabular-nums">{formatCurrency(slip.gross, selectedCompany?.currency)}</td>
+                        <td className="px-3.5 py-2.5 text-right font-sans tabular-nums text-rose-600">-{formatCurrency(slip.deductions, selectedCompany?.currency)}</td>
+                        <td className="px-3.5 py-2.5 text-right font-sans tabular-nums text-emerald-700 fw-bold">{formatCurrency(slip.net, selectedCompany?.currency)}</td>
+                        <td className="px-3.5 py-2.5 text-right">
+                          <button
+                            onClick={() => { setSelectedBatchPeriodModal(null); payslipModal.open(slip); }}
+                            className="text-indigo-600 hover:underline fw-semibold fs-2xs cursor-pointer"
+                          >
+                            Open Slip →
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </ViewModal>
         )}
 
             {/* New Salary Band Modal */}
@@ -888,7 +1028,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         status: activeSlip.status,
                         customBenefitsTotal: activeSlip.customBenefitsTotal || 0,
                         breakdown: activeSlip.breakdown,
-                      }, selectedCompany?.currency, mySlips), selectedCompany)}>Download PDF</PrimaryBtn>
+                      }, selectedCompany?.currency), selectedCompany)}>Download PDF</PrimaryBtn>
                     </div>
                     <div className="p-5 space-y-5">
                       {/* Earnings */}
@@ -1014,7 +1154,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                                   status: slip.status,
                                   customBenefitsTotal: slip.customBenefitsTotal || 0,
                                   breakdown: slip.breakdown,
-                                }, selectedCompany?.currency, mySlips), selectedCompany);
+                                }, selectedCompany?.currency), selectedCompany);
                               }} className="text-slate-500 hover:text-slate-700 data-value-small fw-semibold cursor-pointer" title="Download PDF">
                                 <i className="bi bi-printer"></i> Print PDF
                               </button>
@@ -1257,7 +1397,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               net: payslipModal.selected!.net,
               status: payslipModal.selected!.status,
               breakdown: payslipModal.selected!.breakdown,
-            }, selectedCompany?.currency, payslips.filter(p => p.employeeId === payslipModal.selected!.employeeId && p.companyId === selectedCompany.id)), selectedCompany)}>
+            }, selectedCompany?.currency), selectedCompany)}>
               Download PDF
             </PrimaryBtn>
           }
