@@ -38,7 +38,7 @@ export const LoginPage: React.FC = () => {
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
 
   const activeImages = useMemo(() => {
@@ -77,7 +77,7 @@ export const LoginPage: React.FC = () => {
       });
   }, []);
 
-  // Preload images
+  // Preload background images asynchronously without blocking UI
   useEffect(() => {
     if (!dataLoaded) return;
     
@@ -103,19 +103,16 @@ export const LoginPage: React.FC = () => {
 
   // Carousel timer
   useEffect(() => {
-    if (!imagesPreloaded) return;
     const interval = setInterval(() => {
-      setBgIndex(prev => (prev + 1) % activeImages.length);
+      setBgIndex(prev => (prev + 1) % (activeImages.length || 1));
     }, 4000);
     return () => clearInterval(interval);
-  }, [imagesPreloaded, activeImages.length]);
+  }, [activeImages.length]);
 
-  // Show splash until everything is ready (min 1.5s to show splash background)
+  // Instant display: hide splash screen immediately without blocking on image downloads or artificial timers
   useEffect(() => {
-    if (dataLoaded && imagesPreloaded) {
-      setTimeout(() => setShowSplash(false), 1500);
-    }
-  }, [dataLoaded, imagesPreloaded]);
+    setShowSplash(false);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

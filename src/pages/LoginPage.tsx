@@ -8,8 +8,8 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   
-  // Splash screen state
-  const [showSplash, setShowSplash] = useState(true);
+  // Splash screen state - disabled for instant loading
+  const [showSplash, setShowSplash] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
 
   const splashImages = [
@@ -18,19 +18,13 @@ export function LoginPage() {
   ];
 
   useEffect(() => {
-    // Alternate images every 3 seconds
+    // Alternate background images asynchronously every 3 seconds
     const interval = setInterval(() => {
       setBgIndex(prev => (prev + 1) % splashImages.length);
     }, 3000);
-    
-    // Hide splash screen after 1.5 seconds
-    const timeout = setTimeout(() => {
-      setShowSplash(false);
-    }, 1500);
 
     return () => {
       clearInterval(interval);
-      clearTimeout(timeout);
     };
   }, []);
 
