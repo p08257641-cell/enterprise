@@ -375,7 +375,7 @@ export function RowModal<T extends Record<string, any>>({ row, fields, title, su
   const renderField = (f: any) => (
     <div key={f.key} className={`rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5 ${f.full ? 'col-span-1 sm:col-span-2 md:col-span-3' : ''}`}>
       <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1">
-        {f.icon && <i className={`${f.icon} text-[10px]`} />}{f.label}
+        {f.icon && <i className={`${f.icon} fs-2xs`} />}{f.label}
       </div>
       <div className={`data-value fw-semibold text-slate-900 ${f.mono ? 'font-mono' : ''}`}>
         {f.format ? f.format(row[f.key], row) : formatModalValue(row[f.key])}

@@ -176,7 +176,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <button onClick={() => setViewOrder(o)} className="fs-xs fw-semibold text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"><i className="bi bi-eye mr-0.5"></i> View</button>
-                      <select value={o.status} onChange={e => onUpdateSalesOrder(o.id, { status: e.target.value as any })} className="text-[10px] fw-semibold border border-slate-200 rounded px-2 py-1 bg-white cursor-pointer">
+                      <select value={o.status} onChange={e => onUpdateSalesOrder(o.id, { status: e.target.value as any })} className="fs-2xs fw-semibold border border-slate-200 rounded px-2 py-1 bg-white cursor-pointer">
                         {['Draft', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Completed', 'Cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
@@ -217,14 +217,14 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                         if (!mobile) return;
                         const res = await sendSMS({ company: selectedCompany, to: mobile, message: `[${selectedCompany.name}] Quotation ${q.quoteNumber} | Total: ${formatCurrency(q.total, selectedCompany?.currency)} | Valid Until: ${q.validUntil || 'N/A'}. Reply to confirm.` });
                         if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
-                      }} className="text-[10px] text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"><i className="bi bi-chat-left-dots"></i></button>
+                      }} className="fs-2xs text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"><i className="bi bi-chat-left-dots"></i></button>
                       <button title="Email quotation to customer" onClick={async () => {
                         const cust = companyCustomers.find(c => c.name === q.customerName);
                         const emailAddr = await modalPrompt(`Email Quotation ${q.quoteNumber} to ${q.customerName}. Email:`, { placeholder: cust?.email || 'customer@example.com', variant: 'info' });
                         if (!emailAddr) return;
                         const res = await sendEmail({ company: selectedCompany, to: emailAddr, subject: `Quotation ${q.quoteNumber} from ${selectedCompany.name}`, htmlBody: `<div style="font-family:sans-serif;padding:20px;border:1px solid #e2e8f0;border-radius:12px;max-width:560px;"><h2>${selectedCompany.name}</h2><h3>Quotation: ${q.quoteNumber}</h3><p>Dear ${q.customerName},</p><table style="width:100%;border-collapse:collapse;margin-top:12px;">${q.items.map((i) => `<tr><td style="padding:6px 4px;border-bottom:1px solid #f1f5f9;">${i.name} x${i.quantity}</td><td style="text-align:right;padding:6px 4px;border-bottom:1px solid #f1f5f9;">${formatCurrency(i.unitPrice * i.quantity, selectedCompany?.currency)}</td></tr>`).join('')}</table><p style="font-weight:700;margin-top:12px;">Total: ${formatCurrency(q.total, selectedCompany?.currency)}</p><p style="color:#64748b;">Valid Until: ${q.validUntil || 'N/A'}</p><p style="color:#94a3b8;font-size:12px;">Please reply to confirm. Thank you!</p></div>` });
                         if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
-                      }} className="text-[10px] text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><i className="bi bi-envelope"></i></button>
+                      }} className="fs-2xs text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><i className="bi bi-envelope"></i></button>
                       <button onClick={() => onDeleteSalesQuotation(q.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
                   </td>
@@ -258,7 +258,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                         if (!msg) return;
                         const res = await sendSMS({ company: selectedCompany, to: c.phone, message: `[${selectedCompany.name}] ${msg}` });
                         if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
-                      }} className="text-[10px] text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"><i className="bi bi-chat-left-dots"></i></button>}
+                      }} className="fs-2xs text-slate-400 hover:text-blue-600 cursor-pointer transition-colors"><i className="bi bi-chat-left-dots"></i></button>}
                       {c.email && <button title="Send Email to customer" onClick={async () => {
                         const subject = await modalPrompt(`Email subject to ${c.name}:`, { placeholder: `Update from ${selectedCompany.name}`, variant: 'info' });
                         if (!subject) return;
@@ -266,7 +266,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                         if (!body) return;
                         const res = await sendEmail({ company: selectedCompany, to: c.email, subject, htmlBody: `<div style="font-family:sans-serif;padding:20px;">${body.replace(/\n/g,'<br>')}<br><br><span style="color:#94a3b8;font-size:12px;">— ${selectedCompany.name}</span></div>` });
                         if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' });
-                      }} className="text-[10px] text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><i className="bi bi-envelope"></i></button>}
+                      }} className="fs-2xs text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><i className="bi bi-envelope"></i></button>}
                       <button onClick={() => onDeleteSalesCustomer(c.id)} className="fs-xs fw-semibold text-slate-400 hover:text-rose-600 cursor-pointer"><i className="bi bi-trash"></i></button>
                     </div>
                   </td>
@@ -331,7 +331,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 </Select></div>
               </div>
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50/50">
-                <span className="text-[10px] fw-bold uppercase text-slate-400 tracking-wider block mb-2">Line Item</span>
+                <span className="fs-2xs fw-bold uppercase text-slate-400 tracking-wider block mb-2">Line Item</span>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2"><Label>Item Name</Label><Input value={form.itemName} onChange={e => setForm({ ...form, itemName: e.target.value })} placeholder="Product or service" /></div>
                   <div><Label>SKU</Label><Input value={form.itemSku} onChange={e => setForm({ ...form, itemSku: e.target.value })} placeholder="Optional" /></div>
@@ -396,9 +396,9 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
               </div>
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50/50 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] fw-bold uppercase text-slate-400 tracking-wider">Line Items</span>
-                  <button type="button" onClick={() => setQuoteItems([...quoteForm.items, { ...emptyQuoteItem }])} className="text-[11px] fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1">
-                    <i className="bi bi-plus-lg text-[10px]"></i> Add Line Item
+                  <span className="fs-2xs fw-bold uppercase text-slate-400 tracking-wider">Line Items</span>
+                  <button type="button" onClick={() => setQuoteItems([...quoteForm.items, { ...emptyQuoteItem }])} className="fs-xs fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1">
+                    <i className="bi bi-plus-lg fs-2xs"></i> Add Line Item
                   </button>
                 </div>
                 {quoteForm.items.map((it, idx) => {
@@ -408,8 +408,8 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="flex items-center justify-between mb-2">
                         <span className="fs-xs fw-semibold text-slate-500">Item {idx + 1}</span>
                         {quoteForm.items.length > 1 && (
-                          <button type="button" onClick={() => setQuoteItems(quoteForm.items.filter((_, i) => i !== idx))} className="text-[11px] fw-semibold text-rose-500 hover:text-rose-700 cursor-pointer flex items-center gap-1">
-                            <i className="bi bi-trash text-[10px]"></i> Remove
+                          <button type="button" onClick={() => setQuoteItems(quoteForm.items.filter((_, i) => i !== idx))} className="fs-xs fw-semibold text-rose-500 hover:text-rose-700 cursor-pointer flex items-center gap-1">
+                            <i className="bi bi-trash fs-2xs"></i> Remove
                           </button>
                         )}
                       </div>
@@ -495,7 +495,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Status', value: <Badge label={viewOrder.status} variant={viewOrder.status === 'Completed' ? 'success' : viewOrder.status === 'Cancelled' ? 'danger' : viewOrder.status === 'Shipped' || viewOrder.status === 'Confirmed' ? 'info' : 'default'} />, icon: 'bi bi-activity' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                   <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
@@ -511,7 +511,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Total', value: formatCurrency(viewOrder.total || 0, selectedCompany?.currency), icon: 'bi bi-wallet2' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                   <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
@@ -572,7 +572,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Last Order', value: viewCust.lastOrderDate || '—', icon: 'bi bi-calendar-event' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                   <div className="data-value fw-semibold text-slate-900">{f.value || '—'}</div>
                 </div>
               ))}
@@ -604,7 +604,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Status', value: <Badge label={viewQuote.status} variant={viewQuote.status === 'Accepted' ? 'success' : viewQuote.status === 'Rejected' || viewQuote.status === 'Expired' ? 'danger' : viewQuote.status === 'Sent' ? 'info' : 'default'} />, icon: 'bi bi-activity', full: true },
               ].map((f) => (
                 <div key={f.label} className={`rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5 ${f.full ? 'col-span-2 sm:col-span-3' : ''}`}>
-                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                   <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}
@@ -619,7 +619,7 @@ export const SalesView: React.FC<ModuleViewsProps> = (props) => {
                 { label: 'Total', value: formatCurrency(viewQuote.total || 0, selectedCompany?.currency), icon: 'bi bi-wallet2' },
               ].map((f) => (
                 <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                  <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                   <div className="data-value fw-semibold text-slate-900">{f.value}</div>
                 </div>
               ))}

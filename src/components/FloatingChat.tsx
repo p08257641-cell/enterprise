@@ -131,7 +131,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
       >
         <i className={`text-white text-xl ${isOpen ? 'bi bi-x-lg' : 'bi bi-chat-dots-fill'}`}></i>
         {!isOpen && totalUnreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-[9px] fw-bold rounded-full flex items-center justify-center px-1 animate-bounce">
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white fs-3xs fw-bold rounded-full flex items-center justify-center px-1 animate-bounce">
             {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
           </span>
         )}
@@ -147,8 +147,8 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                 <i className="bi bi-chat-dots-fill text-xs"></i>
               </div>
               <div>
-                <span className="text-[11px] fw-bold text-white block">Team Chat</span>
-                <span className="text-[9px] text-white/50">{selectedCompany.name}</span>
+                <span className="fs-xs fw-bold text-white block">Team Chat</span>
+                <span className="fs-3xs text-white/50">{selectedCompany.name}</span>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -166,12 +166,12 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
           {/* Group Creator */}
           {showGroupCreator && (
             <div className="px-4 py-3 border-b border-slate-100 bg-slate-50 space-y-2">
-              <div className="text-[10px] fw-bold text-slate-500 uppercase">New Group Chat</div>
+              <div className="fs-2xs fw-bold text-slate-500 uppercase">New Group Chat</div>
               <input
                 placeholder="Group name…"
                 value={groupName}
                 onChange={e => setGroupName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
               />
               <div className="max-h-24 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100 bg-white">
                 {companyEmployees.filter(e => e.id !== selectedUser.id).map(e => {
@@ -182,16 +182,16 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                       <input type="checkbox" checked={selected}
                         onChange={ev => setGroupMembers(prev => ev.target.checked ? [...prev, e.id] : prev.filter(id => id !== e.id))}
                         className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3 w-3" />
-                      <span className="text-[11px] text-slate-700">{fullName}</span>
-                      <span className="text-[9px] text-slate-400 ml-auto">{e.department || ''}</span>
+                      <span className="fs-xs text-slate-700">{fullName}</span>
+                      <span className="fs-3xs text-slate-400 ml-auto">{e.department || ''}</span>
                     </label>
                   );
                 })}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => setShowGroupCreator(false)} className="flex-1 text-[10px] fw-semibold py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+                <button onClick={() => setShowGroupCreator(false)} className="flex-1 fs-2xs fw-semibold py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
                 <button onClick={createGroup} disabled={!groupName.trim() || groupMembers.length === 0}
-                  className="flex-1 text-[10px] fw-bold py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                  className="flex-1 fs-2xs fw-bold py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                   Create ({groupMembers.length})
                 </button>
               </div>
@@ -207,12 +207,12 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                   placeholder="Search…"
                   value={chatSearch}
                   onChange={e => setChatSearch(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
                 />
               </div>
               <div className="flex-1 overflow-y-auto">
                 {/* Teams */}
-                <div className="px-3 pt-2.5 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400">Teams</div>
+                <div className="px-3 pt-2.5 pb-1 fs-3xs fw-bold uppercase tracking-widest text-slate-400">Teams</div>
                 {departments.filter(d => d.companyId === selectedCompany.id && d.name === myDeptName)
                   .filter(d => !chatSearch || d.name.toLowerCase().includes(chatSearch.toLowerCase()))
                   .sort((a, b) => (getLastMessage(b.id)?.timestamp || 0) - (getLastMessage(a.id)?.timestamp || 0))
@@ -223,18 +223,18 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                     const lastMsg = getLastMessage(tid);
                     return (
                       <button key={`ft-${d.id}`} onClick={() => setChatRecipient({ type: 'team', id: d.id, name: d.name })}
-                        className={`w-full text-left px-3 py-2 flex items-center gap-2 text-[11px] cursor-pointer transition-all rounded-md mx-1 ${
+                        className={`w-full text-left px-3 py-2 flex items-center gap-2 fs-xs cursor-pointer transition-all rounded-md mx-1 ${
                           isActive ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'
                         }`}>
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] fw-bold shrink-0 ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center fs-3xs fw-bold shrink-0 ${
                           isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                         }`}>{d.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>
                         <div className="min-w-0 flex-1">
                           <div className={`truncate fw-semibold ${isActive ? 'text-white' : 'text-slate-900'}`}>{d.name}</div>
-                          {lastMsg && <div className={`truncate text-[9px] ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.from.split(' ')[0]}: {lastMsg.text}</div>}
+                          {lastMsg && <div className={`truncate fs-3xs ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.from.split(' ')[0]}: {lastMsg.text}</div>}
                         </div>
                         {unread > 0 && !isActive && (
-                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[8px] fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
+                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white fs-3xs fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
                             {unread > 9 ? '9+' : unread}
                           </span>
                         )}
@@ -243,9 +243,9 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                   })}
 
                 {/* Groups */}
-                <div className="px-3 pt-3 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400 cursor-pointer flex items-center justify-between transition-colors">
+                <div className="px-3 pt-3 pb-1 fs-3xs fw-bold uppercase tracking-widest text-slate-400 cursor-pointer flex items-center justify-between transition-colors">
                   <div onClick={() => setGroupsExpanded(!groupsExpanded)} className="flex items-center gap-1 hover:text-slate-600">
-                    <i className={`bi bi-chevron-${groupsExpanded ? 'down' : 'right'} text-[8px]`}></i> Groups
+                    <i className={`bi bi-chevron-${groupsExpanded ? 'down' : 'right'} fs-3xs`}></i> Groups
                   </div>
                   <button onClick={() => {
                     const name = prompt('Enter group name:');
@@ -264,18 +264,18 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                     const isActive = chatRecipient?.type === 'group' && chatRecipient.id === tid;
                     return (
                       <button key={`ft-grp-${tid}`} onClick={() => setChatRecipient({ type: 'group', id: tid, name: g.name })}
-                        className={`w-full text-left px-3 py-2 flex items-center gap-2 text-[11px] cursor-pointer transition-all rounded-md mx-1 ${
+                        className={`w-full text-left px-3 py-2 flex items-center gap-2 fs-xs cursor-pointer transition-all rounded-md mx-1 ${
                           isActive ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'
                         }`}>
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] shrink-0 ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center fs-3xs shrink-0 ${
                           isActive ? 'bg-white/20 text-white' : 'bg-violet-100 text-violet-600'
-                        }`}><i className="bi bi-people-fill text-[9px]"></i></span>
+                        }`}><i className="bi bi-people-fill fs-3xs"></i></span>
                         <div className="min-w-0 flex-1">
                           <div className={`truncate fw-semibold ${isActive ? 'text-white' : 'text-slate-900'}`}>{g.name}</div>
-                          {lastMsg && <div className={`truncate text-[9px] ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.text}</div>}
+                          {lastMsg && <div className={`truncate fs-3xs ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.text}</div>}
                         </div>
                         {unread > 0 && !isActive && (
-                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[8px] fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
+                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white fs-3xs fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
                             {unread > 9 ? '9+' : unread}
                           </span>
                         )}
@@ -284,7 +284,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                   })}
 
                 {/* People */}
-                <div className="px-3 pt-3 pb-1 text-[9px] fw-bold uppercase tracking-widest text-slate-400">People</div>
+                <div className="px-3 pt-3 pb-1 fs-3xs fw-bold uppercase tracking-widest text-slate-400">People</div>
                 {companyEmployees
                   .filter(e => !chatSearch || `${e.firstName} ${e.lastName}`.toLowerCase().includes(chatSearch.toLowerCase()) || e.department?.toLowerCase().includes(chatSearch.toLowerCase()))
                   .sort((a, b) => {
@@ -301,22 +301,22 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                     const lastMsg = getLastMessage(tid);
                     return (
                       <button key={`fe-${e.id}`} onClick={() => setChatRecipient({ type: 'person', id: e.userId || e.id, name: fullName })}
-                        className={`w-full text-left px-3 py-2 flex items-center gap-2 text-[11px] cursor-pointer transition-all rounded-md mx-1 ${
+                        className={`w-full text-left px-3 py-2 flex items-center gap-2 fs-xs cursor-pointer transition-all rounded-md mx-1 ${
                           isActive ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'
                         }`}>
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] fw-bold shrink-0 ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center fs-3xs fw-bold shrink-0 ${
                           isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                         }`}>{initials}</span>
                         <div className="min-w-0 flex-1">
                           <div className={`truncate fw-semibold ${isActive ? 'text-white' : 'text-slate-900'}`}>{fullName}</div>
                           {lastMsg ? (
-                            <div className={`truncate text-[9px] ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.text}</div>
+                            <div className={`truncate fs-3xs ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{lastMsg.text}</div>
                           ) : (
-                            <div className={`truncate text-[9px] ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{e.department || '—'}</div>
+                            <div className={`truncate fs-3xs ${isActive ? 'text-white/50' : 'text-slate-400'}`}>{e.department || '—'}</div>
                           )}
                         </div>
                         {unread > 0 && !isActive && (
-                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[8px] fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
+                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white fs-3xs fw-bold rounded-full flex items-center justify-center shrink-0 px-1">
                             {unread > 9 ? '9+' : unread}
                           </span>
                         )}
@@ -333,18 +333,18 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                   <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2.5 bg-white">
                     {/* Mobile Back Button */}
                     <button onClick={() => setChatRecipient(null)} className="sm:hidden w-7 h-7 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full cursor-pointer shrink-0">
-                      <i className="bi bi-chevron-left text-[12px]"></i>
+                      <i className="bi bi-chevron-left fs-xs"></i>
                     </button>
                     
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] fw-bold text-white shrink-0 ${
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center fs-3xs fw-bold text-white shrink-0 ${
                       chatRecipient.type === 'group' ? 'bg-violet-600' : 'bg-slate-900'
                     }`}>
-                      {chatRecipient.type === 'group' ? <i className="bi bi-people-fill text-[9px]"></i> :
+                      {chatRecipient.type === 'group' ? <i className="bi bi-people-fill fs-3xs"></i> :
                         chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] fw-bold text-slate-900 truncate">{chatRecipient.name}</div>
-                      <div className="text-[9px] text-slate-400">
+                      <div className="fs-xs fw-bold text-slate-900 truncate">{chatRecipient.name}</div>
+                      <div className="fs-3xs text-slate-400">
                         {chatRecipient.type === 'team' ? 'Department channel' : chatRecipient.type === 'group' ? 'Custom Group' : 'Direct message'}
                       </div>
                     </div>
@@ -370,7 +370,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                             onUpdateChatGroupMembers(chatRecipient.id, newMembers);
                           }
                         }}
-                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[9px] fw-semibold transition-colors">
+                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded fs-3xs fw-semibold transition-colors">
                         Manage Members
                       </button>
                     </div>
@@ -389,7 +389,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                       if (threadMsgs.length === 0) return (
                         <div className="flex flex-col items-center justify-center h-full gap-2">
                           <i className="bi bi-chat-dots text-3xl text-slate-200"></i>
-                          <span className="text-[10px] text-slate-400">No messages yet. Say hello!</span>
+                          <span className="fs-2xs text-slate-400">No messages yet. Say hello!</span>
                         </div>
                       );
                       let lastDate = '';
@@ -402,18 +402,18 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                           <React.Fragment key={m.id || i}>
                             {showDate && (
                               <div className="flex justify-center py-1">
-                                <span className="text-[9px] bg-white border border-slate-200 text-slate-400 px-2 py-0.5 rounded-full">{msgDate}</span>
+                                <span className="fs-3xs bg-white border border-slate-200 text-slate-400 px-2 py-0.5 rounded-full">{msgDate}</span>
                               </div>
                             )}
                             <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-[11px] shadow-xs ${
+                              <div className={`max-w-[80%] rounded-2xl px-3 py-2 fs-xs shadow-xs ${
                                 isMe ? 'bg-slate-900 text-white rounded-br-md' : 'bg-white text-slate-800 border border-slate-100 rounded-bl-md'
                               }`}>
                                 {!isMe && chatRecipient.type !== 'person' && (
-                                  <div className="fw-semibold mb-0.5 text-[9px]" style={{ color: isMe ? 'rgba(255,255,255,0.5)' : '#6366f1' }}>{m.senderName}</div>
+                                  <div className="fw-semibold mb-0.5 fs-3xs" style={{ color: isMe ? 'rgba(255,255,255,0.5)' : '#6366f1' }}>{m.senderName}</div>
                                 )}
                                 <div className="leading-relaxed">{m.message}</div>
-                                <div className={`text-[8px] mt-1 text-right ${isMe ? 'text-white/40' : 'text-slate-300'}`}>
+                                <div className={`fs-3xs mt-1 text-right ${isMe ? 'text-white/40' : 'text-slate-300'}`}>
                                   {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   {isMe && <i className="bi bi-check2-all ml-1"></i>}
                                 </div>
@@ -442,7 +442,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                           setChatInput('');
                         }
                       }}
-                      className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[11px] text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
+                      className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none"
                     />
                     <button
                       className={`w-9 h-9 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white rounded-full flex items-center justify-center cursor-pointer transition-all shrink-0`}
@@ -459,7 +459,7 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                       }}
                       disabled={!chatInput.trim()}
                     >
-                      <i className="bi bi-send-fill text-[10px]"></i>
+                      <i className="bi bi-send-fill fs-2xs"></i>
                     </button>
                   </div>
                 </>
@@ -469,8 +469,8 @@ export const FloatingChat: React.FC<FloatingChatProps> = ({
                     <i className="bi bi-chat-left-text text-2xl text-slate-300"></i>
                   </div>
                   <div className="text-center">
-                    <div className="text-[12px] fw-semibold text-slate-500">Your Messages</div>
-                    <div className="text-[10px] text-slate-400 mt-1">Send private messages to a team or person</div>
+                    <div className="fs-xs fw-semibold text-slate-500">Your Messages</div>
+                    <div className="fs-2xs text-slate-400 mt-1">Send private messages to a team or person</div>
                   </div>
                 </div>
               )}

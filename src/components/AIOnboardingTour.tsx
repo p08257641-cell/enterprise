@@ -284,10 +284,10 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
           </button>
           
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] fw-bold bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-full fs-2xs fw-bold bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 uppercase tracking-wider">
               {current.badge}
             </span>
-            <span className="text-[11px] text-slate-400">Step {currentStep + 1} of {steps.length}</span>
+            <span className="fs-xs text-slate-400">Step {currentStep + 1} of {steps.length}</span>
           </div>
 
           <div className="flex items-center gap-3 mt-2">
@@ -318,7 +318,7 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
           {/* Key Features Bullet List */}
           {current.keyFeatures && current.keyFeatures.length > 0 && (
             <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
-              <span className="text-[11px] fw-bold text-slate-900 uppercase tracking-wider block">Key Capabilities:</span>
+              <span className="fs-xs fw-bold text-slate-900 uppercase tracking-wider block">Key Capabilities:</span>
               <ul className="space-y-2">
                 {current.keyFeatures.map((feat, idx) => (
                   <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
@@ -334,7 +334,7 @@ export const AIOnboardingTour: React.FC<AIOnboardingTourProps> = ({
           <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3.5 flex items-start gap-3">
             <i className="bi bi-lightbulb-fill text-indigo-600 text-base shrink-0 mt-0.5"></i>
             <div>
-              <span className="text-[11px] fw-bold text-indigo-900 uppercase tracking-wider block">Pro Tip</span>
+              <span className="fs-xs fw-bold text-indigo-900 uppercase tracking-wider block">Pro Tip</span>
               <p className="text-xs text-indigo-800 mt-0.5">{current.proTip}</p>
             </div>
           </div>

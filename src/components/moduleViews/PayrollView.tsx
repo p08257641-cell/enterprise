@@ -218,7 +218,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 <h3 className="section-title text-slate-900 flex items-center gap-2">
                   <i className="bi bi-cash-stack text-indigo-600"></i> Run Payroll
                 </h3>
-                <p className="text-[11px] text-slate-500">Calculate employee salaries, tax deductions, digital payslips & GL posting.</p>
+                <p className="fs-xs text-slate-500">Calculate employee salaries, tax deductions, digital payslips & GL posting.</p>
               </div>
               {isHRorAdmin && (
                 <button
@@ -235,15 +235,15 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-950 text-white rounded-2xl p-4 shadow-sm border border-emerald-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] fw-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                      <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Cron Schedule
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md fs-2xs fw-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                      <i className="bi bi-clock-fill text-amber-300 fs-3xs"></i> Active Cron Schedule
                     </span>
                     <span className="text-xs fw-bold text-white">Monthly Day {payrollCronDay} at {payrollCronTime}</span>
-                    <span className="text-[11px] text-emerald-200 bg-white/10 px-2 py-0.5 rounded font-mono">
+                    <span className="fs-xs text-emerald-200 bg-white/10 px-2 py-0.5 rounded font-mono">
                       Target: {payrollCronTarget === 'all' ? `All Staff (${localEmployees.length})` : payrollCronTarget === 'selected' ? `Selected Staff (${payrollCronEmployeeIds.size})` : `Group (${payrollGroups.find(g => g.id === payrollCronGroupId)?.name || 'Custom Group'})`}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300">
+                  <p className="fs-xs text-slate-300">
                     Automated background timer will calculate PAYE, SSNIT, generate digital payslips, and post GL journals automatically.
                   </p>
                 </div>
@@ -299,13 +299,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                             className="font-mono text-sm"
                           />
                           <div className="flex flex-wrap gap-1">
-                            <span className="text-[10px] text-slate-400 font-medium">Quick Presets:</span>
+                            <span className="fs-2xs text-slate-400 font-medium">Quick Presets:</span>
                             {['08:00', '09:00', '17:00', '23:59'].map(t => (
                               <button
                                 key={t}
                                 type="button"
                                 onClick={() => setPayrollCronTime(t)}
-                                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                                className={`fs-2xs font-mono px-1.5 py-0.5 rounded border transition-colors ${
                                   payrollCronTime === t ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
                                 }`}
                               >
@@ -321,7 +321,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3">
                       <div className="flex items-center justify-between">
                         <Label>Automated Cron Employee Selection Scope *</Label>
-                        <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        <span className="fs-2xs fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                           Cron Filter
                         </span>
                       </div>
@@ -362,7 +362,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       {payrollCronTarget === 'selected' && (
                         <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-xl p-2.5 bg-white space-y-1">
                           <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-1 px-1">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Select Staff Members to Automate</span>
+                            <span className="fs-2xs font-bold text-slate-400 uppercase">Select Staff Members to Automate</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -372,7 +372,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                                   setPayrollCronEmployeeIds(new Set(localEmployees.map(e => e.id)));
                                 }
                               }}
-                              className="text-[10px] text-emerald-600 font-bold hover:underline"
+                              className="fs-2xs text-emerald-600 font-bold hover:underline"
                             >
                               {payrollCronEmployeeIds.size === localEmployees.length ? 'Deselect All' : 'Select All'}
                             </button>
@@ -391,7 +391,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                                 className="accent-emerald-600 rounded"
                               />
                               <span className="fs-xs text-slate-900 fw-semibold">{emp.firstName} {emp.lastName}</span>
-                              <span className="text-[10px] text-slate-400 ml-auto font-mono">{emp.department}</span>
+                              <span className="fs-2xs text-slate-400 ml-auto font-mono">{emp.department}</span>
                             </label>
                           ))}
                         </div>
@@ -406,7 +406,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                             ))}
                           </Select>
                           {payrollGroups.filter(g => g.companyId === selectedCompany.id).length === 0 && (
-                            <p className="text-[10px] text-amber-600">No payroll groups created yet. Create one in the Groups tab.</p>
+                            <p className="fs-2xs text-amber-600">No payroll groups created yet. Create one in the Groups tab.</p>
                           )}
                         </div>
                       )}
@@ -415,17 +415,17 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs fw-bold text-slate-900">Background Cron Scheduler Status</span>
-                        <span className={`text-[10px] fw-bold px-2 py-0.5 rounded-full ${payrollCronActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                        <span className={`fs-2xs fw-bold px-2 py-0.5 rounded-full ${payrollCronActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
                           {payrollCronActive ? 'Active & Scheduled' : 'Paused'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600">
+                      <p className="fs-xs text-slate-600">
                         Cron rule string: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-emerald-700">
                           {payrollCronTime.split(':')[1] || '0'} {payrollCronTime.split(':')[0] || '9'} {payrollCronDay} * *
                         </code>
                       </p>
                       {payrollCronLastRun && (
-                        <p className="text-[10px] text-slate-500">Last automated run: {payrollCronLastRun}</p>
+                        <p className="fs-2xs text-slate-500">Last automated run: {payrollCronLastRun}</p>
                       )}
                     </div>
 
@@ -517,7 +517,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                             className="accent-blue-600"
                           />
                           <span className="fs-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
-                          <span className="text-[10px] text-slate-400 ml-auto">{emp.department}</span>
+                          <span className="fs-2xs text-slate-400 ml-auto">{emp.department}</span>
                         </label>
                       ))}
                     </div>
@@ -532,7 +532,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         ))}
                       </Select>
                       {payrollGroups.filter(g => g.companyId === selectedCompany.id).length === 0 && (
-                        <p className="text-[10px] text-amber-600">No groups created yet. Go to "Groups" tab to create one.</p>
+                        <p className="fs-2xs text-amber-600">No groups created yet. Go to "Groups" tab to create one.</p>
                       )}
                     </div>
                   )}
@@ -598,7 +598,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         </div>
                         <h3 className="fs-sm fw-bold text-slate-900">New Salary Band</h3>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Define a new compensation scale with minimum and maximum bounds.</p>
+                      <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Define a new compensation scale with minimum and maximum bounds.</p>
                     </div>
                     <button type="button" onClick={() => setShowBandModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                       <i className="bi bi-x fs-xl"></i>
@@ -641,7 +641,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="text-center py-8">
                   <i className="bi bi-folder fs-3xl text-slate-200 block mb-2"></i>
                   <p className="fs-sm text-slate-400 mb-2">No payroll groups yet</p>
-                  <p className="text-[10px] text-slate-400">Create groups to batch process payroll for specific teams or departments.</p>
+                  <p className="fs-2xs text-slate-400">Create groups to batch process payroll for specific teams or departments.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -650,8 +650,8 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="fs-sm fw-semibold text-slate-900">{group.name}</div>
-                          <div className="text-[10px] text-slate-500 mt-0.5">{group.description || 'No description'}</div>
-                          <div className="text-[10px] text-slate-400 mt-1">{group.employeeIds.length} employees</div>
+                          <div className="fs-2xs text-slate-500 mt-0.5">{group.description || 'No description'}</div>
+                          <div className="fs-2xs text-slate-400 mt-1">{group.employeeIds.length} employees</div>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <SecBtn onClick={() => {
@@ -673,13 +673,13 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         {group.employeeIds.slice(0, 5).map(eid => {
                           const emp = localEmployees.find(e => e.id === eid);
                           return emp ? (
-                            <span key={eid} className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-600">
+                            <span key={eid} className="px-2 py-0.5 bg-slate-100 rounded-full fs-2xs text-slate-600">
                               {emp.firstName} {emp.lastName}
                             </span>
                           ) : null;
                         })}
                         {group.employeeIds.length > 5 && (
-                          <span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] text-slate-500">
+                          <span className="px-2 py-0.5 bg-slate-100 rounded-full fs-2xs text-slate-500">
                             +{group.employeeIds.length - 5} more
                           </span>
                         )}
@@ -707,7 +707,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         </div>
                         <h3 className="fs-sm fw-bold text-slate-900">Create Payroll Group</h3>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Batch process payroll by grouping specific employees together.</p>
+                      <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Batch process payroll by grouping specific employees together.</p>
                     </div>
                     <button type="button" onClick={() => {
                       setShowGroupModal(false);
@@ -745,7 +745,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                               className="accent-blue-600"
                             />
                             <span className="fs-xs text-slate-700">{emp.firstName} {emp.lastName}</span>
-                            <span className="text-[10px] text-slate-400 ml-auto">{emp.department}</span>
+                            <span className="fs-2xs text-slate-400 ml-auto">{emp.department}</span>
                           </label>
                         ))}
                       </div>
@@ -1161,7 +1161,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                             onClick={(e) => { e.stopPropagation(); otModal.open({ ...emp, otHours, otRate, otPay: otHours * otRate }); }}
                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
-                          <i className="bi bi-eye text-[11px]"></i> View
+                          <i className="bi bi-eye fs-xs"></i> View
                         </button>
                         </td>
                       </tr>
@@ -1211,7 +1211,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Net', value: formatCurrency(payslipModal.selected.net, selectedCompany?.currency), icon: 'bi bi-wallet2', section: 'Earnings' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                 <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
@@ -1245,7 +1245,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Net Pay', value: formatCurrency(taxModal.selected.net, selectedCompany?.currency), icon: 'bi bi-wallet2', variant: 'net' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                 <div className={`data-value fw-semibold ${
                   f.variant === 'danger' ? 'text-rose-600' :
                   f.variant === 'success' ? 'text-emerald-600' :
@@ -1276,7 +1276,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               { label: 'Approved By', value: 'HR Manager', icon: 'bi bi-person-check', section: 'Summary' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                 <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}

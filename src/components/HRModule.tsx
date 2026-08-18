@@ -536,7 +536,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">Bulk Employee Upload</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Upload a CSV file to register multiple employees at once.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Upload a CSV file to register multiple employees at once.</p>
                 </div>
                 <button type="button" onClick={() => setShowBulkModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -864,7 +864,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         ].map(s => (
                           <div key={s.label} >
                             <div >{s.value}</div>
-                            <div className="text-[10px] text-slate-500 mt-0.5">{s.label}</div>
+                            <div className="fs-2xs text-slate-500 mt-0.5">{s.label}</div>
                           </div>
                         ))}
                       </div>
@@ -1350,7 +1350,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         onClick={(e) => { e.stopPropagation(); setSelectedEmp(emp); }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                       >
-                        <i className="bi bi-eye text-[11px]"></i> View
+                        <i className="bi bi-eye fs-xs"></i> View
                       </button>
                     </td>
                   </tr>
@@ -1389,7 +1389,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   <h3 className="text-sm fw-bold text-white flex items-center gap-2">
                     Inbound Email CV Ingestion & Webhook Engine
                   </h3>
-                  <p className="text-[11px] text-slate-300">
+                  <p className="fs-xs text-slate-300">
                     CVs emailed to your company address are automatically caught, text-extracted, and AI-screened into the ATS.
                   </p>
                 </div>
@@ -1407,11 +1407,11 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
 
             <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t border-indigo-900/60 text-xs">
               <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                <div className="flex items-center justify-between text-[10px] text-slate-400 fw-bold uppercase">
+                <div className="flex items-center justify-between fs-2xs text-slate-400 fw-bold uppercase">
                   <span>1. Dedicated Inbound Email</span>
                   <i className="bi bi-mailbox text-indigo-400"></i>
                 </div>
-                <div className="font-mono text-indigo-200 fw-semibold truncate text-[11px]">
+                <div className="font-mono text-indigo-200 fw-semibold truncate fs-xs">
                   jobs-{selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app
                 </div>
                 <button
@@ -1421,28 +1421,28 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     navigator.clipboard.writeText(emailStr);
                     modalAlert(`Copied inbound CV email address:\n${emailStr}\n\nSet up automatic email forwarding from your careers@company.com to this address to ingest CVs automatically!`, { variant: 'info' });
                   }}
-                  className="text-[10px] text-indigo-300 hover:text-white underline cursor-pointer"
+                  className="fs-2xs text-indigo-300 hover:text-white underline cursor-pointer"
                 >
                   Copy Inbound Address
                 </button>
               </div>
 
               <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                <div className="flex items-center justify-between text-[10px] text-slate-400 fw-bold uppercase">
+                <div className="flex items-center justify-between fs-2xs text-slate-400 fw-bold uppercase">
                   <span>2. Auto CV Text Extraction</span>
                   <i className="bi bi-file-earmark-text text-emerald-400"></i>
                 </div>
-                <p className="text-[11px] text-slate-200">
+                <p className="fs-xs text-slate-200">
                   Extracts applicant name, email, phone, and raw resume PDF text automatically upon arrival.
                 </p>
               </div>
 
               <div className="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
-                <div className="flex items-center justify-between text-[10px] text-slate-400 fw-bold uppercase">
+                <div className="flex items-center justify-between fs-2xs text-slate-400 fw-bold uppercase">
                   <span>3. AI Keyword Shortlisting</span>
                   <i className="bi bi-stars text-amber-300"></i>
                 </div>
-                <p className="text-[11px] text-slate-200">
+                <p className="fs-xs text-slate-200">
                   Compares CV skills against vacancy keywords (*React, Node*) & auto-shortlists candidates scoring ≥ 70%.
                 </p>
               </div>
@@ -1461,7 +1461,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   </div>
                   <div>
                     <h2 className="text-sm fw-bold">Import Inbound Candidate Email / CV</h2>
-                    <p className="text-[11px] text-slate-300">Test or manually ingest incoming applicant emails & CV files</p>
+                    <p className="fs-xs text-slate-300">Test or manually ingest incoming applicant emails & CV files</p>
                   </div>
                 </div>
                 <button onClick={() => setShowEmailIngestModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -1497,7 +1497,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     onChange={e => setIngestSkills(e.target.value)}
                     placeholder="e.g. React, TypeScript, Node.js, PostgreSQL, Docker, AWS"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">
+                  <p className="fs-2xs text-slate-500 mt-1">
                     Enter or paste the applicant's raw skills/qualifications. The AI screener evaluates these against the vacancy keywords.
                   </p>
                 </div>
@@ -1507,7 +1507,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     <i className="bi bi-info-circle-fill text-amber-600"></i>
                     <span>Inbound Webhook Live Parsing</span>
                   </div>
-                  <p className="text-[11px] text-amber-800">
+                  <p className="fs-xs text-amber-800">
                     When an applicant emails your inbound address <span className="font-mono text-amber-950 font-bold">jobs-{selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app</span>, this parsing occurs automatically in milliseconds without manual entry.
                   </p>
                 </div>
@@ -1531,7 +1531,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                 <h3 className="fs-sm fw-bold text-slate-900 flex items-center gap-2">
                   <i className="bi bi-briefcase-fill text-indigo-600"></i> Active Job Vacancies & AI Screening Keywords
                 </h3>
-                <p className="text-[11px] text-slate-500">Configure target skill keywords per vacancy. The AI screens resumes and shortlists top applicants.</p>
+                <p className="fs-xs text-slate-500">Configure target skill keywords per vacancy. The AI screens resumes and shortlists top applicants.</p>
               </div>
               <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setVacTitle(''); setVacDept(''); setVacCount('1'); setVacKeywords('React, TypeScript, Node.js, PostgreSQL'); setVacMinScore('70'); setShowVacancyModal(true); }}>
                 Post Vacancy with AI Keywords
@@ -1544,18 +1544,18 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h4 className="fs-xs fw-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{vac.title}</h4>
-                      <span className="text-[11px] text-slate-500">{vac.department} · Posted {vac.posted}</span>
+                      <span className="fs-xs text-slate-500">{vac.department} · Posted {vac.posted}</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] fw-bold bg-indigo-100 text-indigo-700 shrink-0">
+                    <span className="px-2 py-0.5 rounded-full fs-2xs fw-bold bg-indigo-100 text-indigo-700 shrink-0">
                       {vac.count} {vac.count === 1 ? 'Opening' : 'Openings'}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider block mb-1">Required AI Keywords:</span>
+                    <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider block mb-1">Required AI Keywords:</span>
                     <div className="flex flex-wrap gap-1">
                       {(vac.keywords || 'Skills required').split(',').map((kw, kwIdx) => (
-                        <span key={kwIdx} className="px-2 py-0.5 rounded-md text-[10px] font-mono fw-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                        <span key={kwIdx} className="px-2 py-0.5 rounded-md fs-2xs font-mono fw-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
                           {kw.trim()}
                         </span>
                       ))}
@@ -1563,7 +1563,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   </div>
 
                   <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                    <span className="text-[10px] fw-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
+                    <span className="fs-2xs fw-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
                       Min {vac.minScore || 70}% Match
                     </span>
                     <button
@@ -1572,9 +1572,9 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         setMinMatchScore(vac.minScore || 70);
                         setShowAiScreeningModal(true);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-[11px] fw-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                      className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white fs-xs fw-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1"
                     >
-                      <i className="bi bi-stars text-amber-300 text-[10px]"></i> AI Shortlist
+                      <i className="bi bi-stars text-amber-300 fs-2xs"></i> AI Shortlist
                     </button>
                   </div>
                 </div>
@@ -1629,7 +1629,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         </div>
                         <div>
                           <h2 className="text-sm fw-bold">AI CV Keyword Screening & Shortlisting Engine</h2>
-                          <p className="text-[11px] text-slate-300">Set target keywords to automatically screen CVs and shortlist top candidates</p>
+                          <p className="fs-xs text-slate-300">Set target keywords to automatically screen CVs and shortlist top candidates</p>
                         </div>
                       </div>
                       <button onClick={() => setShowAiScreeningModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -1646,25 +1646,25 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                           placeholder="e.g. React, Node.js, PostgreSQL, TypeScript, CPA, 5+ Years"
                         />
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="text-[10px] text-slate-400 fw-bold uppercase">Preset Rules:</span>
+                          <span className="fs-2xs text-slate-400 fw-bold uppercase">Preset Rules:</span>
                           <button
                             type="button"
                             onClick={() => setTargetKeywords('React, Node.js, PostgreSQL, TypeScript, Git, Docker')}
-                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                            className="fs-2xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
                           >
                             💻 Full-Stack Software Engineer
                           </button>
                           <button
                             type="button"
                             onClick={() => setTargetKeywords('CPA, GAAP, Payroll Tax, Ledger, Auditing, Excel')}
-                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                            className="fs-2xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
                           >
                             📊 Chief Accountant / CPA
                           </button>
                           <button
                             type="button"
                             onClick={() => setTargetKeywords('CRM, B2B Sales, Negotiation, Lead Generation, Pipeline')}
-                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                            className="fs-2xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded cursor-pointer transition-colors"
                           >
                             🎯 Sales Executive
                           </button>
@@ -1720,24 +1720,24 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       {/* Results list */}
                       {screeningResults.length > 0 && (
                         <div className="mt-4 pt-4 border-t border-slate-100 space-y-2.5">
-                          <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider block">AI Shortlist Screening Results</span>
+                          <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider block">AI Shortlist Screening Results</span>
                           <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                             {screeningResults.map((res, idx) => (
                               <div key={idx} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-start justify-between gap-3">
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className="text-xs fw-bold text-slate-900">{res.name}</span>
-                                    <span className={`text-[9px] fw-bold px-2 py-0.5 rounded-md ${
+                                    <span className={`fs-3xs fw-bold px-2 py-0.5 rounded-md ${
                                       res.score >= minMatchScore ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-700'
                                     }`}>
                                       {res.score}% Match
                                     </span>
                                   </div>
-                                  <p className="text-[11px] text-slate-600 mt-1">{res.summary}</p>
+                                  <p className="fs-xs text-slate-600 mt-1">{res.summary}</p>
                                   {res.keywords.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mt-1.5">
                                       {res.keywords.map((kw, kidx) => (
-                                        <span key={kidx} className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] px-1.5 py-0.5 rounded font-mono">
+                                        <span key={kidx} className="bg-emerald-50 text-emerald-700 border border-emerald-200 fs-3xs px-1.5 py-0.5 rounded font-mono">
                                           ✓ {kw}
                                         </span>
                                       ))}
@@ -1745,7 +1745,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                                   )}
                                 </div>
 
-                                <span className={`text-[10px] fw-bold px-2 py-1 rounded-lg shrink-0 ${
+                                <span className={`fs-2xs fw-bold px-2 py-1 rounded-lg shrink-0 ${
                                   res.stage === 'Shortlisted' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
                                 }`}>
                                   {res.stage}
@@ -1775,7 +1775,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                           </div>
                           <div>
                             <h2 className="text-sm fw-bold">Post New Job Vacancy & AI Screening Rules</h2>
-                            <p className="text-[11px] text-slate-300">Set vacancy details & target CV keywords for automated shortlisting</p>
+                            <p className="fs-xs text-slate-300">Set vacancy details & target CV keywords for automated shortlisting</p>
                           </div>
                         </div>
                         <button onClick={() => setShowVacancyModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -1804,7 +1804,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
                           <div className="flex items-center justify-between">
                             <Label>Required CV Screening Keywords & Skills *</Label>
-                            <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                            <span className="fs-2xs fw-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
                               AI Resume Filter
                             </span>
                           </div>
@@ -1813,7 +1813,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                             onChange={e => setVacKeywords(e.target.value)}
                             placeholder="e.g. React, TypeScript, Node.js, PostgreSQL, Docker"
                           />
-                          <p className="text-[10px] text-slate-500">
+                          <p className="fs-2xs text-slate-500">
                             Comma-separated list of required skills/qualifications the AI evaluates on applicant CVs.
                           </p>
                         </div>
@@ -1827,7 +1827,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                             min="10"
                             max="100"
                           />
-                          <div className="text-[10px] text-slate-400 mt-1">
+                          <div className="fs-2xs text-slate-400 mt-1">
                             Applicants scoring equal or above this % will be auto-shortlisted.
                           </div>
                         </div>
@@ -2063,7 +2063,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     ) : (
                       <div className="border border-dashed border-slate-200 rounded-lg p-3 text-center">
                         <p className="fs-xs text-slate-400">No taxes configured yet.</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Create taxes in Payroll → Tax & Benefits Config</p>
+                        <p className="fs-2xs text-slate-400 mt-0.5">Create taxes in Payroll → Tax & Benefits Config</p>
                       </div>
                     )}
                   </div>
@@ -2084,7 +2084,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     ) : (
                       <div className="border border-dashed border-slate-200 rounded-lg p-3 text-center">
                         <p className="fs-xs text-slate-400">No benefits configured yet.</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Create benefits in Payroll → Tax & Benefits Config</p>
+                        <p className="fs-2xs text-slate-400 mt-0.5">Create benefits in Payroll → Tax & Benefits Config</p>
                       </div>
                     )}
                   </div>
@@ -2244,7 +2244,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                           <i className="bi bi-calendar3 mr-1"></i>{req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.reason}
                         </div>
                         {req.replacementName && (
-                          <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                          <div className="fs-xs text-slate-500 mt-1 flex items-center gap-1">
                             <i className="bi bi-person-fill text-slate-400"></i>
                             Covering officer: <span className="fw-semibold text-slate-600">{req.replacementName}</span>
                           </div>
@@ -2330,9 +2330,9 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       </div>
                       <div className="fs-xs text-slate-400 mt-1 italic">"{req.reason}"</div>
                       {req.replacementName && (
-                        <div className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] fw-semibold text-slate-600 flex items-center gap-1">
-                            <i className="bi bi-arrow-left-right text-[8px]"></i> Covering Officer: {req.replacementName}
+                        <div className="fs-xs text-slate-500 mt-1.5 flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 fs-2xs fw-semibold text-slate-600 flex items-center gap-1">
+                            <i className="bi bi-arrow-left-right fs-3xs"></i> Covering Officer: {req.replacementName}
                           </span>
                         </div>
                       )}
@@ -2356,7 +2356,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                           </div>
                         );
                       }
-                      return <div className="text-[10px] text-slate-400 italic">Awaiting approval</div>;
+                      return <div className="fs-2xs text-slate-400 italic">Awaiting approval</div>;
                     })()}
 
                     {req.status === 'HOD Approved' && (() => {
@@ -2371,11 +2371,11 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                           </div>
                         );
                       }
-                      return <div className="text-[10px] text-slate-400 italic">Awaiting HR approval</div>;
+                      return <div className="fs-2xs text-slate-400 italic">Awaiting HR approval</div>;
                     })()}
                     
                     {req.status === 'Approved' && req.approvedBy && (
-                      <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <div className="fs-2xs text-slate-500 flex items-center gap-1">
                         <i className="bi bi-check2-circle text-emerald-500"></i>
                         Approved by <span className="fw-semibold text-slate-700">{req.approvedBy}</span>
                       </div>
@@ -2533,7 +2533,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       >
                         <i className={`${opt.icon} text-lg mb-1 block ${attSettings.penaltyType === opt.value ? 'text-indigo-600' : 'text-slate-400'}`}></i>
                         <div className="fs-xs fw-bold">{opt.label}</div>
-                        <div className="text-[10px] text-slate-500">{opt.desc}</div>
+                        <div className="fs-2xs text-slate-500">{opt.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -2582,7 +2582,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       </button>
                       <div>
                         <div className="fs-xs fw-semibold text-slate-700">Auto-escalate penalties</div>
-                        <div className="text-[10px] text-slate-400">Automatically escalate after max warnings</div>
+                        <div className="fs-2xs text-slate-400">Automatically escalate after max warnings</div>
                       </div>
                     </div>
                   </div>
@@ -2605,7 +2605,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
             <div className="flex flex-wrap items-center justify-between px-5 py-4 border-b border-slate-100 gap-3">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">Daily Attendance Log</h3>
-                <p className="text-[11px] text-slate-500">Click any employee row to view full attendance history & time logs</p>
+                <p className="fs-xs text-slate-500">Click any employee row to view full attendance history & time logs</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
@@ -2633,7 +2633,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       }`}
                     >
                       <span>{item.label}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      <span className={`px-2 py-0.5 rounded-full fs-2xs font-bold ${
                         attStatusFilter === item.label ? 'bg-white/20 text-white' : item.color
                       }`}>
                         {item.count}
@@ -2713,7 +2713,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <span className="text-xs fw-bold text-indigo-600 group-hover:underline flex items-center gap-1 justify-end">
-                            History <i className="bi bi-chevron-right text-[10px]"></i>
+                            History <i className="bi bi-chevron-right fs-2xs"></i>
                           </span>
                         </td>
                       </tr>
@@ -2735,7 +2735,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-base fw-bold text-white">{selectedEmpAttHistory.firstName} {selectedEmpAttHistory.lastName}</h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] fw-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                        <span className="px-2 py-0.5 rounded-full fs-2xs fw-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                           {selectedEmpAttHistory.employeeNumber || 'EMP'}
                         </span>
                       </div>
@@ -2770,19 +2770,19 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       <>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3.5">
-                            <span className="text-[10px] fw-bold uppercase tracking-wider text-emerald-600 block">Total Present</span>
+                            <span className="fs-2xs fw-bold uppercase tracking-wider text-emerald-600 block">Total Present</span>
                             <span className="text-xl fw-bold font-mono text-emerald-900 mt-1 block">{presentCount} Days</span>
                           </div>
                           <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-3.5">
-                            <span className="text-[10px] fw-bold uppercase tracking-wider text-amber-600 block">Late Arrivals</span>
+                            <span className="fs-2xs fw-bold uppercase tracking-wider text-amber-600 block">Late Arrivals</span>
                             <span className="text-xl fw-bold font-mono text-amber-900 mt-1 block">{lateCount} Days</span>
                           </div>
                           <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-3.5">
-                            <span className="text-[10px] fw-bold uppercase tracking-wider text-blue-600 block">Approved Leaves</span>
+                            <span className="fs-2xs fw-bold uppercase tracking-wider text-blue-600 block">Approved Leaves</span>
                             <span className="text-xl fw-bold font-mono text-blue-900 mt-1 block">{leaveCount} Days</span>
                           </div>
                           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
-                            <span className="text-[10px] fw-bold uppercase tracking-wider text-slate-500 block">Total Hours Worked</span>
+                            <span className="fs-2xs fw-bold uppercase tracking-wider text-slate-500 block">Total Hours Worked</span>
                             <span className="text-xl fw-bold font-mono text-slate-900 mt-1 block">{Math.round(totalHours)} Hours</span>
                           </div>
                         </div>
@@ -3312,7 +3312,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                 ].map(s => (
                   <div key={s.label} >
                     <span >{s.count}</span>
-                    <span className="text-[10px] text-slate-500">{s.label}</span>
+                    <span className="fs-2xs text-slate-500">{s.label}</span>
                   </div>
                 ))}
               </div>
@@ -3320,7 +3320,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
             <div className="shrink-0 text-right hidden sm:block">
               <div className="fs-xs text-slate-400 mb-1">Quarter Deadline</div>
               <div className="fs-sm fw-bold text-slate-800">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); })()}</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); const diff = Math.ceil((end.getTime() - now.getTime()) / 86400000); return `${diff} days remaining`; })()}</div>
+              <div className="fs-2xs text-slate-400 mt-0.5">{(() => { const now = new Date(); const q = Math.floor(now.getMonth() / 3); const end = new Date(now.getFullYear(), (q + 1) * 3, 0); const diff = Math.ceil((end.getTime() - now.getTime()) / 86400000); return `${diff} days remaining`; })()}</div>
             </div>
           </div>
         </div>
@@ -3354,7 +3354,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       <div className="fs-xs text-slate-500 flex items-center gap-2">
                         <span className="flex items-center gap-1"><i className="bi bi-arrow-right-short text-slate-400"></i>KR: {okr.keyResult}</span>
                         <span className="text-slate-300">·</span>
-                        <span className="flex items-center gap-1"><i className="bi bi-calendar3 text-slate-400 text-[10px]"></i>{okr.period}</span>
+                        <span className="flex items-center gap-1"><i className="bi bi-calendar3 text-slate-400 fs-2xs"></i>{okr.period}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-4">
@@ -3384,7 +3384,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                               <div key={item.label} className="flex items-start gap-2">
                                 <i ></i>
                                 <div>
-                                  <div className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">{item.label}</div>
+                                  <div className="fs-2xs fw-semibold text-slate-400 uppercase tracking-wider">{item.label}</div>
                                   <div className="fs-xs text-slate-800 fw-medium">{item.value}</div>
                                 </div>
                               </div>
@@ -3433,7 +3433,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                               onChange={e => setProgressSlider(Number(e.target.value))}
                               className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-slate-900"
                             />
-                            <div className="flex justify-between text-[10px] text-slate-400 mt-1 tabular-nums">
+                            <div className="flex justify-between fs-2xs text-slate-400 mt-1 tabular-nums">
                               <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
                             </div>
                             <div className="mt-4">
@@ -3732,19 +3732,19 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       )}
 
                       {req.status === 'Approved' && req.hrApprovedBy && (
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <div className="fs-2xs text-slate-500 flex items-center gap-1">
                           <i className="bi bi-check2-circle text-emerald-500"></i>
                           Approved by <span className="fw-semibold text-slate-700">{req.hrApprovedBy}</span>
                         </div>
                       )}
                       {req.status === 'HOD Approved' && req.hodApprovedBy && (
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <div className="fs-2xs text-slate-500 flex items-center gap-1">
                           <i className="bi bi-check2-circle text-amber-500"></i>
                           HOD approved by <span className="fw-semibold text-slate-700">{req.hodApprovedBy}</span> · Awaiting HR
                         </div>
                       )}
                       {req.status === 'Rejected' && req.rejectedBy && (
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <div className="fs-2xs text-slate-500 flex items-center gap-1">
                           <i className="bi bi-x-circle text-rose-500"></i>
                           Rejected by <span className="fw-semibold text-slate-700">{req.rejectedBy}</span>
                         </div>
@@ -3927,7 +3927,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         </div>
                         <div>
                           <div className="fs-sm fw-medium text-slate-800">{req.employeeName}</div>
-                          <div className="text-[11px] text-slate-500">EMP-{req.employeeId.slice(0, 4)}</div>
+                          <div className="fs-xs text-slate-500">EMP-{req.employeeId.slice(0, 4)}</div>
                         </div>
                       </div>
                     </td>
@@ -4055,7 +4055,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         </div>
                         <div>
                           <div className="fs-sm fw-medium text-slate-800">{req.employeeName}</div>
-                          <div className="text-[11px] text-slate-500">{req.department}</div>
+                          <div className="fs-xs text-slate-500">{req.department}</div>
                         </div>
                       </div>
                     </td>
@@ -4304,7 +4304,7 @@ const HRLettersSection: React.FC<HRLettersSectionProps> = ({ selectedCompany, se
           </div>
           <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center gap-2">
             <i className="bi bi-info-circle fs-xs text-slate-400"></i>
-            <span className="text-[10px] text-slate-500">Edit the content above before printing. Changes will reflect in the printed/downloaded letter.</span>
+            <span className="fs-2xs text-slate-500">Edit the content above before printing. Changes will reflect in the printed/downloaded letter.</span>
           </div>
         </div>
       )}

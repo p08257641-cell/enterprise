@@ -3867,8 +3867,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
 
             <div className="mt-4 space-y-4">
               <div>
-                <span className="text-[10px] fw-bold uppercase text-slate-400 tracking-wider">Business Modules (SaaS Core)</span>
-                <p className="text-[11px] text-slate-400">Companies subscribe to modules individually. Toggling here instantly updates the sidebar context.</p>
+                <span className="fs-2xs fw-bold uppercase text-slate-400 tracking-wider">Business Modules (SaaS Core)</span>
+                <p className="fs-xs text-slate-400">Companies subscribe to modules individually. Toggling here instantly updates the sidebar context.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {[
                     {
@@ -3889,7 +3889,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
                     }
                   ].map(group => (
                     <div key={group.title} className="border border-slate-100 rounded-lg p-3 bg-slate-50/50">
-                      <span className="text-[10px] fw-bold uppercase text-slate-500 tracking-wider block mb-2">{group.title}</span>
+                      <span className="fs-2xs fw-bold uppercase text-slate-500 tracking-wider block mb-2">{group.title}</span>
                       <div className="space-y-1.5">
                         {group.modules.map(mod => {
                           const isInstalled = selectedCompany.activeModules.includes(mod);
@@ -3920,8 +3920,8 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
               </div>
 
               <div>
-                <span className="text-[10px] fw-semibold uppercase text-slate-400 tracking-wider">Premium Feature Packs</span>
-                <p className="text-[11px] text-slate-400">Unlock high-density add-ons, geofencing coordinates, and machine-learning scoring algorithms.</p>
+                <span className="fs-2xs fw-semibold uppercase text-slate-400 tracking-wider">Premium Feature Packs</span>
+                <p className="fs-xs text-slate-400">Unlock high-density add-ons, geofencing coordinates, and machine-learning scoring algorithms.</p>
                 <div className="mt-2 space-y-2">
                   {[
                     { id: 'GPS Attendance', label: 'GPS Geofenced Attendance (HR add-on)' },
@@ -3949,7 +3949,7 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
                           />
                           {feat.label}
                         </span>
-                        <span className="text-[9px] bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold tracking-wide">Premium</span>
+                        <span className="fs-3xs bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold tracking-wide">Premium</span>
                       </label>
                     );
                   })}

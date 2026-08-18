@@ -582,7 +582,7 @@ export const LoginPage: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="fs-sm fw-bold text-slate-900">Whisper Report</h2>
-                  <p className="text-[11px] text-slate-500">Submit anonymously — your identity is never recorded</p>
+                  <p className="fs-xs text-slate-500">Submit anonymously — your identity is never recorded</p>
                 </div>
               </div>
               <button

@@ -62,7 +62,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Corporate Name</label>
+            <label className="block fs-2xs fw-semibold uppercase tracking-wider text-slate-400">Corporate Name</label>
             <input
               type="text"
               value={name}
@@ -72,7 +72,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               required
             />
             {name && (
-              <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1.5">
+              <div className="mt-2 fs-xs text-slate-500 flex items-center gap-1.5">
                 <i className="bi bi-globe text-slate-400"></i>
                 Portal URL: <span className="fw-semibold text-slate-700">{name.toLowerCase().replace(/[^a-z0-9]/g, '')}.core360.site</span>
               </div>
@@ -81,7 +81,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Industry Sector</label>
+              <label className="block fs-2xs fw-semibold uppercase tracking-wider text-slate-400">Industry Sector</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
@@ -95,7 +95,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               </select>
             </div>
             <div>
-              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Operating Currency</label>
+              <label className="block fs-2xs fw-semibold uppercase tracking-wider text-slate-400">Operating Currency</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
@@ -112,7 +112,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Time Zone</label>
+              <label className="block fs-2xs fw-semibold uppercase tracking-wider text-slate-400">Time Zone</label>
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
@@ -126,7 +126,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               </select>
             </div>
             <div>
-              <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Language</label>
+              <label className="block fs-2xs fw-semibold uppercase tracking-wider text-slate-400">Language</label>
               <input
                 type="text"
                 value={language}
@@ -138,7 +138,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
           </div>
 
           <div>
-            <label className="block text-[10px] fw-semibold uppercase tracking-wider text-slate-400">Billing Plan / Subscription tier</label>
+            <label className="block fs-2xs fw-semibold uppercase tracking-wider text-slate-400">Billing Plan / Subscription tier</label>
             <div className="mt-1.5 grid gap-2 sm:grid-cols-4 fs-xs fw-semibold">
               {(['Trial', 'Core', 'Premium', 'Enterprise'] as any[]).map(plan => (
                 <button
@@ -175,7 +175,7 @@ export const TenantSetup: React.FC<TenantSetupProps> = ({ onAddCompany, onClose 
               type="submit"
               className="rounded-lg bg-slate-900 hover:bg-slate-800 px-4 py-2 fs-xs fw-semibold text-white cursor-pointer transition-all flex items-center gap-1 shadow-xs"
             >
-              <i className="bi bi-plus-lg text-[10px]"></i>
+              <i className="bi bi-plus-lg fs-2xs"></i>
               Spawn Tenant Container
             </button>
           </div>

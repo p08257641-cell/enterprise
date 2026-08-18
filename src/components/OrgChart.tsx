@@ -120,13 +120,13 @@ export const OrgChart: React.FC<OrgChartProps> = ({ employees, departments, comp
               <i className="bi bi-building"></i>
             </div>
             <div className="min-w-0">
-              <div className="text-[11px] font-bold truncate leading-tight">{dept.name}</div>
-              {mgr && <div className="text-[9px] opacity-70 truncate">{mgr}</div>}
+              <div className="fs-xs font-bold truncate leading-tight">{dept.name}</div>
+              {mgr && <div className="fs-3xs opacity-70 truncate">{mgr}</div>}
             </div>
           </div>
 
           {/* Stats row */}
-          <div className="flex items-center gap-3 text-[9px] opacity-80">
+          <div className="flex items-center gap-3 fs-3xs opacity-80">
             <span className="flex items-center gap-1">
               <i className="bi bi-people-fill"></i>
               {emps.length}
@@ -188,24 +188,24 @@ export const OrgChart: React.FC<OrgChartProps> = ({ employees, departments, comp
                         onClick={(e) => { e.stopPropagation(); toggleDesig(groupKey); }}
                         className="flex items-center gap-2 w-full px-2.5 py-1.5 text-left cursor-pointer hover:bg-slate-50 transition-colors"
                       >
-                        <i className={`bi ${isOpen ? 'bi-chevron-down' : 'bi-chevron-right'} text-[8px] text-slate-400`}></i>
-                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-wide">{desig}</span>
-                        <span className="text-[8px] text-slate-400 ml-auto">{groupEmps.length}</span>
+                        <i className={`bi ${isOpen ? 'bi-chevron-down' : 'bi-chevron-right'} fs-3xs text-slate-400`}></i>
+                        <span className="fs-3xs font-bold text-slate-600 uppercase tracking-wide">{desig}</span>
+                        <span className="fs-3xs text-slate-400 ml-auto">{groupEmps.length}</span>
                       </button>
                       {isOpen && (
                         <div className="px-2.5 pb-2 space-y-1">
                           {(compact ? groupEmps.slice(0, 3) : groupEmps).map(emp => (
                             <div key={emp.id} className="flex items-center gap-2 py-1 px-1.5 rounded-md hover:bg-slate-50 transition-colors">
-                              <div className="h-5 w-5 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0" style={{ backgroundColor: `${color}15`, color }}>
+                              <div className="h-5 w-5 rounded-full flex items-center justify-center fs-3xs font-bold shrink-0" style={{ backgroundColor: `${color}15`, color }}>
                                 {emp.firstName[0]}{emp.lastName[0]}
                               </div>
                               <div className="min-w-0">
-                                <div className="text-[9px] font-semibold text-slate-800 truncate">{emp.firstName} {emp.lastName}</div>
+                                <div className="fs-3xs font-semibold text-slate-800 truncate">{emp.firstName} {emp.lastName}</div>
                               </div>
                             </div>
                           ))}
                           {!compact && groupEmps.length > 3 && (
-                            <div className="text-center text-[8px] text-slate-400 py-0.5">+{groupEmps.length - 3} more</div>
+                            <div className="text-center fs-3xs text-slate-400 py-0.5">+{groupEmps.length - 3} more</div>
                           )}
                         </div>
                       )}
@@ -239,10 +239,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ employees, departments, comp
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Organization Chart</h3>
-          <p className="text-[10px] text-slate-400 mt-0.5">{localDepts.length} departments · {localEmployees.length} employees</p>
+          <p className="fs-2xs text-slate-400 mt-0.5">{localDepts.length} departments · {localEmployees.length} employees</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={expandAll} className="text-[10px] fw-semibold text-slate-500 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100 transition-all cursor-pointer">
+          <button onClick={expandAll} className="fs-2xs fw-semibold text-slate-500 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100 transition-all cursor-pointer">
             {expandedDepts.size === localDepts.length ? 'Collapse All' : 'Expand All'}
           </button>
         </div>
@@ -283,20 +283,20 @@ export const OrgChart: React.FC<OrgChartProps> = ({ employees, departments, comp
           <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }}></div>
-              <span className="text-[11px] font-bold text-slate-800">{dept.name}</span>
-              <span className="text-[9px] text-slate-400">·</span>
-              <span className="text-[9px] text-slate-400">{emps.length} employees</span>
-              {children.length > 0 && <span className="text-[9px] text-slate-400">· {children.length} sub-departments</span>}
+              <span className="fs-xs font-bold text-slate-800">{dept.name}</span>
+              <span className="fs-3xs text-slate-400">·</span>
+              <span className="fs-3xs text-slate-400">{emps.length} employees</span>
+              {children.length > 0 && <span className="fs-3xs text-slate-400">· {children.length} sub-departments</span>}
             </div>
             <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
               {emps.map(emp => (
                 <div key={emp.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-white border border-slate-100">
-                  <div className="h-7 w-7 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0" style={{ backgroundColor: `${color}12`, color }}>
+                  <div className="h-7 w-7 rounded-full flex items-center justify-center fs-3xs font-bold shrink-0" style={{ backgroundColor: `${color}12`, color }}>
                     {emp.firstName[0]}{emp.lastName[0]}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] font-semibold text-slate-800 truncate">{emp.firstName} {emp.lastName}</div>
-                    <div className="text-[8px] text-slate-400 truncate">{emp.designation}</div>
+                    <div className="fs-2xs font-semibold text-slate-800 truncate">{emp.firstName} {emp.lastName}</div>
+                    <div className="fs-3xs text-slate-400 truncate">{emp.designation}</div>
                   </div>
                 </div>
               ))}

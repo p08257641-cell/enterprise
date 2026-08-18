@@ -430,7 +430,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                             onClick={(e) => { e.stopPropagation(); billingModal.open({ ...t, monthlyPrice: planPriceForModules(t.activeModules) }); }}
                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                           >
-                            <i className="bi bi-eye text-[11px]"></i> View
+                            <i className="bi bi-eye fs-xs"></i> View
                           </button>
                         </td>
                       </tr>
@@ -455,15 +455,15 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex gap-3 flex-shrink-0">
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
                   <div className="fs-lg fw-bold text-white tabular-nums">4</div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Suites</div>
+                  <div className="fs-2xs text-slate-400 uppercase tracking-wider">Suites</div>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
                   <div className="fs-lg fw-bold text-white tabular-nums">{totalModules}</div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Modules</div>
+                  <div className="fs-2xs text-slate-400 uppercase tracking-wider">Modules</div>
                 </div>
                 <div className="text-center px-4 py-2 rounded-xl bg-white/10 border border-white/20">
                   <div className="fs-lg fw-bold text-white tabular-nums">{platformCompanies.length}</div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-wider">Tenants</div>
+                  <div className="fs-2xs text-slate-400 uppercase tracking-wider">Tenants</div>
                 </div>
               </div>
             </div>
@@ -475,7 +475,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                 <div className={`bg-gradient-to-r ${suite.headerGrad} px-6 py-5`}>
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] fw-semibold uppercase tracking-widest border border-white/30 mb-2">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white fs-2xs fw-semibold uppercase tracking-widest border border-white/30 mb-2">
                         {suite.suiteTag}
                       </span>
                       <h3 className="fs-lg fw-bold text-white tracking-tight">{suite.suiteName}</h3>
@@ -483,7 +483,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <div className="text-right flex-shrink-0 ml-4">
                       <div className="fs-2xl fw-bold text-white tabular-nums">{suite.modules.length}</div>
-                      <div className="text-[10px] text-white/60 uppercase tracking-wider">Module{suite.modules.length > 1 ? 's' : ''}</div>
+                      <div className="fs-2xs text-white/60 uppercase tracking-wider">Module{suite.modules.length > 1 ? 's' : ''}</div>
                     </div>
                   </div>
                 </div>
@@ -506,15 +506,15 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="flex-1 min-w-0">
                             <div className="fw-semibold text-slate-900 fs-sm leading-tight">{mod.name}</div>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] fw-bold uppercase tracking-wide border ${suite.badgeCls}`}>
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded fs-3xs fw-bold uppercase tracking-wide border ${suite.badgeCls}`}>
                                 {mod.tag}
                               </span>
-                              <span className="text-[10px] text-slate-400 tabular-nums">{mod.tenants} tenants</span>
+                              <span className="fs-2xs text-slate-400 tabular-nums">{mod.tenants} tenants</span>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="fs-sm fw-bold text-slate-900 tabular-nums">{mod.price}</div>
-                            <div className="text-[9px] text-slate-400">per company</div>
+                            <div className="fs-3xs text-slate-400">per company</div>
                           </div>
                         </div>
 
@@ -540,7 +540,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                           {mod.deps && (
                             <div className="flex items-center gap-1.5 mt-2 p-2 bg-slate-100 rounded-lg">
                               <i className="bi bi-link-45deg text-slate-400 fs-xs"></i>
-                              <span className="text-[10px] text-slate-500">{mod.deps}</span>
+                              <span className="fs-2xs text-slate-500">{mod.deps}</span>
                             </div>
                           )}
                           <div className="mt-3 flex items-center justify-between">
@@ -555,7 +555,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                                 ></div>
                               </div>
                             </div>
-                            <span className="text-[10px] fw-bold text-slate-500 tabular-nums">{Math.round((mod.tenants / platformCompanies.length) * 100)}% deployed</span>
+                            <span className="fs-2xs fw-bold text-slate-500 tabular-nums">{Math.round((mod.tenants / platformCompanies.length) * 100)}% deployed</span>
                           </div>
                         </div>
                       </div>
@@ -597,7 +597,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <Label>Modules</Label>
-                        <span className="text-[10px] text-slate-400">{planModuleIds.length} selected</span>
+                        <span className="fs-2xs text-slate-400">{planModuleIds.length} selected</span>
                       </div>
                       <div className="space-y-3">
                         {([...new Set(MODULE_CATALOG.map(m => m.suite))] as string[]).map(suite => (
@@ -614,7 +614,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
                                     className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left transition-all cursor-pointer ${checked ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400'}`}
                                   >
                                     <span className="fs-xs fw-medium">{m.name}</span>
-                                    <span className={`text-[11px] font-sans tabular-nums ${checked ? 'text-slate-300' : 'text-slate-400'}`}>${m.price}</span>
+                                    <span className={`fs-xs font-sans tabular-nums ${checked ? 'text-slate-300' : 'text-slate-400'}`}>${m.price}</span>
                                   </button>
                                 );
                               })}
@@ -636,7 +636,7 @@ export const PlatformView: React.FC<ModuleViewsProps> = (props) => {
 
                   <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400">Monthly Total</div>
+                      <div className="fs-2xs uppercase tracking-wider text-slate-400">Monthly Total</div>
                       <div className="fs-xl fw-bold text-slate-900 font-sans tabular-nums">${planTotal.toLocaleString()}</div>
                     </div>
                     <div className="flex flex-wrap gap-2">

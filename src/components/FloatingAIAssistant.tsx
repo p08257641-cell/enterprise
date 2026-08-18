@@ -495,11 +495,11 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                   <i className="bi bi-lightning-fill text-amber-300 text-sm"></i>
                   <span className="text-xs fw-bold uppercase tracking-wider">Role-Tailored AI Automations</span>
                 </div>
-                <p className="text-[11px] text-slate-300">Targeted workflow triggers customized for your active role (<span className="text-indigo-300 fw-semibold">{userRole}</span>).</p>
+                <p className="fs-xs text-slate-300">Targeted workflow triggers customized for your active role (<span className="text-indigo-300 fw-semibold">{userRole}</span>).</p>
               </div>
 
               <div className="space-y-2.5">
-                <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider block">Recommended Role Actions</span>
+                <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider block">Recommended Role Actions</span>
                 
                 {/* 1. EMPLOYEE AUTOMATIONS */}
                 {isEmployee && (
@@ -512,10 +512,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">Request Annual / Sick Leave</h4>
-                            <p className="text-[10px] text-slate-500">Submit leave request for manager approval</p>
+                            <p className="fs-2xs text-slate-500">Submit leave request for manager approval</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded fw-bold font-mono">Self-Service</span>
+                        <span className="fs-3xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded fw-bold font-mono">Self-Service</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('LEAVE_APPLY')}
@@ -533,10 +533,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">View & Download Payslips</h4>
-                            <p className="text-[10px] text-slate-500">Access earnings details & official PDF payslips</p>
+                            <p className="fs-2xs text-slate-500">Access earnings details & official PDF payslips</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded fw-bold font-mono">Monthly</span>
+                        <span className="fs-3xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded fw-bold font-mono">Monthly</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('MY_PAYSLIPS')}
@@ -554,10 +554,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">Attendance Clock In / Out</h4>
-                            <p className="text-[10px] text-slate-500">Record daily arrival time & office/remote mode</p>
+                            <p className="fs-2xs text-slate-500">Record daily arrival time & office/remote mode</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded fw-bold font-mono">Daily</span>
+                        <span className="fs-3xs bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded fw-bold font-mono">Daily</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('MY_ATTENDANCE')}
@@ -580,10 +580,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">Run Monthly Payroll Automation</h4>
-                            <p className="text-[10px] text-slate-500">Calculates PAYE, SSNIT, and generates digital payslips</p>
+                            <p className="fs-2xs text-slate-500">Calculates PAYE, SSNIT, and generates digital payslips</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded fw-bold font-mono">Monthly</span>
+                        <span className="fs-3xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded fw-bold font-mono">Monthly</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('PAYROLL')}
@@ -601,10 +601,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">Vacancy AI Resume Shortlist</h4>
-                            <p className="text-[10px] text-slate-500">Screen candidate CVs against target skill keywords</p>
+                            <p className="fs-2xs text-slate-500">Screen candidate CVs against target skill keywords</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded fw-bold font-mono">Auto</span>
+                        <span className="fs-3xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded fw-bold font-mono">Auto</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('AI_SHORTLIST')}
@@ -627,10 +627,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">Send Overdue Invoice Reminders</h4>
-                            <p className="text-[10px] text-slate-500">Dispatches WhatsApp & Email links for unpaid invoices</p>
+                            <p className="fs-2xs text-slate-500">Dispatches WhatsApp & Email links for unpaid invoices</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded fw-bold font-mono">Weekly</span>
+                        <span className="fs-3xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded fw-bold font-mono">Weekly</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('OVERDUE')}
@@ -648,10 +648,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                           </div>
                           <div>
                             <h4 className="text-xs fw-bold text-slate-900">Automated Bank Reconciliation Audit</h4>
-                            <p className="text-[10px] text-slate-500">Match statement transactions against GL cash ledger</p>
+                            <p className="fs-2xs text-slate-500">Match statement transactions against GL cash ledger</p>
                           </div>
                         </div>
-                        <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded fw-bold font-mono">Audit</span>
+                        <span className="fs-3xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded fw-bold font-mono">Audit</span>
                       </div>
                       <button
                         onClick={() => handleQuickAction('BANK_RECON')}
@@ -673,10 +673,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                         </div>
                         <div>
                           <h4 className="text-xs fw-bold text-slate-900">Low Stock Reorder Generator</h4>
-                          <p className="text-[10px] text-slate-500">Creates draft Purchase Orders for low inventory items</p>
+                          <p className="fs-2xs text-slate-500">Creates draft Purchase Orders for low inventory items</p>
                         </div>
                       </div>
-                      <span className="text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded fw-bold font-mono">Auto</span>
+                      <span className="fs-3xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded fw-bold font-mono">Auto</span>
                     </div>
                     <button
                       onClick={() => handleQuickAction('REORDER')}
@@ -697,10 +697,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                         </div>
                         <div>
                           <h4 className="text-xs fw-bold text-slate-900">Sales Lead Follow-up Dispatch</h4>
-                          <p className="text-[10px] text-slate-500">Dispatches follow-up reminders to active CRM leads</p>
+                          <p className="fs-2xs text-slate-500">Dispatches follow-up reminders to active CRM leads</p>
                         </div>
                       </div>
-                      <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded fw-bold font-mono">Daily</span>
+                      <span className="fs-3xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded fw-bold font-mono">Daily</span>
                     </div>
                     <button
                       onClick={() => handleQuickAction('LEAD_FOLLOWUP')}
@@ -719,8 +719,8 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
           {activeTab === 'insights' && (
             <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider">Role Intelligence ({userRole})</span>
-                <span className="text-[10px] text-slate-500 font-mono">Live Sync</span>
+                <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider">Role Intelligence ({userRole})</span>
+                <span className="fs-2xs text-slate-500 font-mono">Live Sync</span>
               </div>
 
               {/* 1. EMPLOYEE INSIGHTS */}
@@ -732,14 +732,14 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                     </h4>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
-                        <span className="text-[10px] text-emerald-600 fw-bold uppercase">Attendance Rate</span>
+                        <span className="fs-2xs text-emerald-600 fw-bold uppercase">Attendance Rate</span>
                         <div className="text-lg fw-bold text-emerald-900 font-mono mt-0.5">95%</div>
-                        <span className="text-[9px] text-emerald-600">Present this month</span>
+                        <span className="fs-3xs text-emerald-600">Present this month</span>
                       </div>
                       <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                        <span className="text-[10px] text-blue-600 fw-bold uppercase">Leave Balance</span>
+                        <span className="fs-2xs text-blue-600 fw-bold uppercase">Leave Balance</span>
                         <div className="text-lg fw-bold text-blue-900 font-mono mt-0.5">14 Days</div>
-                        <span className="text-[9px] text-blue-600">Annual leave remaining</span>
+                        <span className="fs-3xs text-blue-600">Annual leave remaining</span>
                       </div>
                     </div>
                     <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 space-y-1">
@@ -764,17 +764,17 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                       <h4 className="text-xs fw-bold text-slate-900 flex items-center gap-2">
                         <i className="bi bi-people-fill text-indigo-600"></i> HR Staff Roster Status
                       </h4>
-                      <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
+                      <span className="fs-2xs fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
                         {employees.length || 12} Active Employees
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                       <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
-                        <span className="text-[10px] text-slate-500 fw-bold">Today's Attendance</span>
+                        <span className="fs-2xs text-slate-500 fw-bold">Today's Attendance</span>
                         <div className="text-base fw-bold text-slate-900 font-mono">91% Present</div>
                       </div>
                       <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
-                        <span className="text-[10px] text-amber-700 fw-bold">Pending Leaves</span>
+                        <span className="fs-2xs text-amber-700 fw-bold">Pending Leaves</span>
                         <div className="text-base fw-bold text-amber-900 font-mono">{pendingLeavesCount} Requests</div>
                       </div>
                     </div>
@@ -789,10 +789,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                     <i className="bi bi-exclamation-circle-fill text-amber-600"></i>
                     <span>{overdueInvoicesCount} Overdue Invoices Detected</span>
                   </div>
-                  <p className="text-[11px] text-amber-800">Outstanding balances require follow-up to optimize cash flow.</p>
+                  <p className="fs-xs text-amber-800">Outstanding balances require follow-up to optimize cash flow.</p>
                   <button
                     onClick={() => onNavigateView && onNavigateView('accounting')}
-                    className="text-[11px] fw-bold text-amber-900 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="fs-xs fw-bold text-amber-900 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     Go to Accounting Invoices →
                   </button>
@@ -806,10 +806,10 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                     <i className="bi bi-box-seam-fill text-rose-600"></i>
                     <span>{lowStockCount} Items Below Safety Stock Threshold</span>
                   </div>
-                  <p className="text-[11px] text-rose-800">Inventory levels are low. Replenish items to prevent stockouts.</p>
+                  <p className="fs-xs text-rose-800">Inventory levels are low. Replenish items to prevent stockouts.</p>
                   <button
                     onClick={() => onNavigateView && onNavigateView('inventory')}
-                    className="text-[11px] fw-bold text-rose-900 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="fs-xs fw-bold text-rose-900 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     Go to Inventory Stock →
                   </button>

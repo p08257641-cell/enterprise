@@ -180,7 +180,7 @@ export const GalleryView: React.FC<ModuleViewsProps> = (props) => {
               }}>
                 <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-indigo-500 transition-colors duration-300">
                   <i className={`bi ${catIcon} text-3xl`}></i>
-                  <span className="text-[10px] fw-semibold uppercase tracking-wider">Click to view</span>
+                  <span className="fs-2xs fw-semibold uppercase tracking-wider">Click to view</span>
                 </div>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
               </div>
@@ -188,12 +188,12 @@ export const GalleryView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h4 className="fs-xs fw-bold text-slate-900 truncate group-hover:text-indigo-900 transition-colors">{img.title}</h4>
-                    {img.description && <p className="text-[10px] text-slate-500 truncate mt-0.5">{img.description}</p>}
+                    {img.description && <p className="fs-2xs text-slate-500 truncate mt-0.5">{img.description}</p>}
                   </div>
                   <Badge label={img.category} variant="info" />
                 </div>
                 <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-100">
-                  <span className="text-[10px] text-slate-400 flex items-center gap-1"><i className="bi bi-person text-[9px]"></i> {img.uploadedByName} · {new Date(img.createdAt).toLocaleDateString()}</span>
+                  <span className="fs-2xs text-slate-400 flex items-center gap-1"><i className="bi bi-person fs-3xs"></i> {img.uploadedByName} · {new Date(img.createdAt).toLocaleDateString()}</span>
                   {canManage && (
                     <button
                       onClick={(e) => { e.stopPropagation(); if (confirm('Delete this image?')) onDeleteCompanyImage(img.id); }}
@@ -217,7 +217,7 @@ export const GalleryView: React.FC<ModuleViewsProps> = (props) => {
             <div className="flex items-center justify-between p-4 border-b border-slate-100">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">{viewImage.title}</h3>
-                <p className="text-[11px] text-slate-500">{viewImage.uploadedByName} · {new Date(viewImage.createdAt).toLocaleDateString()}</p>
+                <p className="fs-xs text-slate-500">{viewImage.uploadedByName} · {new Date(viewImage.createdAt).toLocaleDateString()}</p>
               </div>
               <button onClick={() => setViewImage(null)} className="p-1.5 hover:bg-slate-100 rounded-lg cursor-pointer text-slate-400 hover:text-slate-600">
                 <i className="bi bi-x-lg"></i>

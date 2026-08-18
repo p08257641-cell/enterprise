@@ -80,12 +80,12 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
       <div className="mb-5 bg-gradient-to-r from-slate-900 via-amber-950 to-orange-950 text-white rounded-2xl p-4 shadow-sm border border-amber-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] fw-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-              <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Stock Reorder Cron
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md fs-2xs fw-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+              <i className="bi bi-clock-fill text-amber-300 fs-3xs"></i> Active Stock Reorder Cron
             </span>
             <span className="text-xs fw-bold text-white">Monthly Day {stockCronDay} at {stockCronTime}</span>
           </div>
-          <p className="text-[11px] text-slate-300">
+          <p className="fs-xs text-slate-300">
             Background timer automatically scans items below minimum stock threshold ({lowStock.length} items flagged) and drafts Purchase Orders to suppliers.
           </p>
         </div>
@@ -108,7 +108,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div>
                   <h3 className="text-sm fw-bold">Automated Low Stock Auto-PO Reorder Cron</h3>
-                  <p className="text-[11px] text-amber-200/80">Auto-create purchase orders for depleted inventory items</p>
+                  <p className="fs-xs text-amber-200/80">Auto-create purchase orders for depleted inventory items</p>
                 </div>
               </div>
               <button onClick={() => setShowStockCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -140,15 +140,15 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
               <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs fw-bold text-slate-900">Background Cron Timer Status</span>
-                  <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                  <span className="fs-2xs fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                     Active & Monitoring ({lowStock.length} Low Stock Items)
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-600">
+                <p className="fs-xs text-slate-600">
                   Cron rule expression: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-amber-700">0 8 {stockCronDay} * *</code>
                 </p>
                 {stockCronLastRun && (
-                  <p className="text-[10px] text-slate-500">Last automated run: {stockCronLastRun}</p>
+                  <p className="fs-2xs text-slate-500">Last automated run: {stockCronLastRun}</p>
                 )}
               </div>
 
@@ -214,7 +214,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                         onClick={(e) => { e.stopPropagation(); stockModal.open(item); }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                       >
-                        <i className="bi bi-eye text-[11px]"></i> View
+                        <i className="bi bi-eye fs-xs"></i> View
                       </button>
                     </td>
                   </tr>
@@ -287,7 +287,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                         onClick={(e) => { e.stopPropagation(); transferModal.open(t); }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                       >
-                        <i className="bi bi-eye text-[11px]"></i> View
+                        <i className="bi bi-eye fs-xs"></i> View
                       </button>
                     </td>
                   </tr>
@@ -308,7 +308,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <h3 className="fs-sm fw-bold text-slate-900">New Stock Transfer</h3>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Transfer stock items between warehouse locations or stores.</p>
+                <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Transfer stock items between warehouse locations or stores.</p>
               </div>
               <button type="button" onClick={() => setShowTransferModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                 <i className="bi bi-x fs-xl"></i>
@@ -361,7 +361,7 @@ export const InventoryView: React.FC<ModuleViewsProps> = (props) => {
                         onClick={(e) => { e.stopPropagation(); stockModal.open(item); }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                       >
-                        <i className="bi bi-eye text-[11px]"></i> View
+                        <i className="bi bi-eye fs-xs"></i> View
                       </button>
                     </td>
                   </tr>

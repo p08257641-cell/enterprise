@@ -144,7 +144,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="fs-xs fw-semibold text-slate-900 truncate">{d.name}</span>
-                      <span className={`shrink-0 text-[9px] fw-bold px-1.5 py-0.5 rounded-full ${
+                      <span className={`shrink-0 fs-3xs fw-bold px-1.5 py-0.5 rounded-full ${
                         d.visibility === 'only_me' ? 'bg-amber-50 text-amber-600' :
                         d.visibility === 'specific' ? 'bg-blue-50 text-blue-600' :
                         d.visibility === 'department' ? 'bg-indigo-50 text-indigo-600' :
@@ -158,22 +158,22 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                         }`}></i>
                       </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{d.type} · {d.size} · {d.date}</div>
+                    <div className="fs-2xs text-slate-400 mt-0.5">{d.type} · {d.size} · {d.date}</div>
                     <div className="mt-2"><Badge label={d.status} variant={getStatusVariant(d.status)} /></div>
                   </div>
                 </div>
                 {isAdmin && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100" onClick={e => e.stopPropagation()}>
                     {d.status === 'Draft' && (
-                      <button onClick={() => onUpdateDocument(d.id, { status: 'Pending Signature' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">Send for Signature</button>
+                      <button onClick={() => onUpdateDocument(d.id, { status: 'Pending Signature' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">Send for Signature</button>
                     )}
                     {d.status === 'Pending Signature' && (
-                      <button onClick={() => onUpdateDocument(d.id, { status: 'Signed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Mark Signed</button>
+                      <button onClick={() => onUpdateDocument(d.id, { status: 'Signed' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Mark Signed</button>
                     )}
                     {(d.status === 'Signed' || d.status === 'Approved') && (
-                      <button onClick={() => onUpdateDocument(d.id, { status: 'Archived' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-slate-600 text-white hover:bg-slate-700 cursor-pointer">Archive</button>
+                      <button onClick={() => onUpdateDocument(d.id, { status: 'Archived' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-slate-600 text-white hover:bg-slate-700 cursor-pointer">Archive</button>
                     )}
-                    <button onClick={() => onDeleteDocument(d.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
+                    <button onClick={() => onDeleteDocument(d.id)} className="fs-3xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
                   </div>
                 )}
               </div>
@@ -192,7 +192,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div>
                   <h3 className="section-title text-slate-900">HR Policy Documents</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Policies sourced from HR compliance module.</p>
+                  <p className="fs-2xs text-slate-400 mt-0.5">Policies sourced from HR compliance module.</p>
                 </div>
               </div>
               <table className="w-full text-left">
@@ -202,16 +202,16 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                     <tr key={p.id} className="hover:bg-slate-50/40">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{p.title}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{p.category}</td>
-                      <td className="px-4 py-3 text-[10px] font-sans text-slate-400">{p.version}</td>
+                      <td className="px-4 py-3 fs-2xs font-sans text-slate-400">{p.version}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{p.dueDate || '—'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-600">{(p.acknowledgedBy || []).length} / {p.totalEmployees || '—'}</td>
                       <td className="px-4 py-3"><Badge label={p.status || 'Active'} variant="success" /></td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button onClick={() => policyModal.open(p)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-[10px] fw-semibold transition-all duration-150 cursor-pointer mr-2">
+                        <button onClick={() => policyModal.open(p)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md fs-2xs fw-semibold transition-all duration-150 cursor-pointer mr-2">
                           View
                         </button>
                         {isAdmin && (
-                          <button onClick={() => alert('Editing Policy: ' + p.title)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 text-blue-600 rounded-md text-[10px] fw-semibold transition-all duration-150 cursor-pointer">
+                          <button onClick={() => alert('Editing Policy: ' + p.title)} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 text-blue-600 rounded-md fs-2xs fw-semibold transition-all duration-150 cursor-pointer">
                             Edit
                           </button>
                         )}
@@ -232,7 +232,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div>
                 <h3 className="section-title text-slate-900">eSign Requests</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">Documents sent for digital signature.</p>
+                <p className="fs-2xs text-slate-400 mt-0.5">Documents sent for digital signature.</p>
               </div>
               <PrimaryBtn icon="bi bi-cloud-upload" onClick={() => { setNewDocName(''); setNewDocStatus('Pending Signature'); setShowDocModal(true); }}>Upload for eSign</PrimaryBtn>
             </div>
@@ -248,7 +248,7 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                     {isAdmin && (
                       <td className="px-4 py-3 text-right">
                         {d.status === 'Pending Signature' && (
-                          <button onClick={() => onUpdateDocument(d.id, { status: 'Signed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Mark Signed</button>
+                          <button onClick={() => onUpdateDocument(d.id, { status: 'Signed' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Mark Signed</button>
                         )}
                       </td>
                     )}
@@ -283,9 +283,9 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                   <i className={`${fileIcons[d.type] || 'bi bi-file-earmark'} text-slate-400`} />
                   <div className="flex-1">
                     <div className="fs-xs fw-semibold text-slate-900">{d.name}</div>
-                    <div className="text-[10px] text-slate-400">{d.type} · {d.size}</div>
+                    <div className="fs-2xs text-slate-400">{d.type} · {d.size}</div>
                   </div>
-                  <button className="text-[9px] fw-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">Extract</button>
+                  <button className="fs-3xs fw-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">Extract</button>
                 </div>
               ))}
               {localDocs.length === 0 && <p className="fs-xs text-slate-400">Upload documents first to run OCR extraction.</p>}
@@ -335,8 +335,8 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                         newDocVisibility === opt.value ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                       }`}>
                       <i className={`bi ${opt.icon} block text-base mb-1`}></i>
-                      <span className="text-[10px] fw-bold block">{opt.label}</span>
-                      <span className="text-[9px] opacity-60 block">{opt.desc}</span>
+                      <span className="fs-2xs fw-bold block">{opt.label}</span>
+                      <span className="fs-3xs opacity-60 block">{opt.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -352,16 +352,16 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                           className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 h-3.5 w-3.5" />
                         <div>
                           <span className="fs-xs fw-semibold text-slate-900 block">{u.name}</span>
-                          <span className="text-[10px] text-slate-400">{u.activeRole}</span>
+                          <span className="fs-2xs text-slate-400">{u.activeRole}</span>
                         </div>
                       </label>
                     ))}
                     {props.users.filter(u => u.id !== selectedUser.id && u.companyId === selectedCompany.id).length === 0 && (
-                      <p className="px-3 py-3 text-[11px] text-slate-400">No other users in this company.</p>
+                      <p className="px-3 py-3 fs-xs text-slate-400">No other users in this company.</p>
                     )}
                   </div>
                   {newDocSharedWith.length > 0 && (
-                    <p className="text-[10px] text-slate-500 mt-1">{newDocSharedWith.length} people selected</p>
+                    <p className="fs-2xs text-slate-500 mt-1">{newDocSharedWith.length} people selected</p>
                   )}
                 </div>
               )}
@@ -390,17 +390,17 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div>
                   <h2 className="fs-sm fw-semibold text-slate-900 uppercase tracking-wide">OCR Extraction Results</h2>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{ocrDoc.name}</p>
+                  <p className="fs-2xs text-slate-400 mt-0.5">{ocrDoc.name}</p>
                 </div>
               </div>
 
               <div className="flex-1 overflow-y-auto space-y-4 pr-1">
                 <div>
-                  <h4 className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-1.5">Extracted Key-Value Fields</h4>
+                  <h4 className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-1.5">Extracted Key-Value Fields</h4>
                   <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     {ocrData.metadata.map(meta => (
                       <div key={meta.key}>
-                        <div className="text-[9px] text-slate-400 fw-semibold">{meta.key}</div>
+                        <div className="fs-3xs text-slate-400 fw-semibold">{meta.key}</div>
                         <div className="fs-xs text-slate-900 fw-bold mt-0.5">{meta.val}</div>
                       </div>
                     ))}
@@ -408,8 +408,8 @@ export const DocumentView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
 
                 <div>
-                  <h4 className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-1.5">Extracted Raw Text</h4>
-                  <div className="p-3 bg-slate-900 text-slate-100 font-mono text-[10px] rounded-lg leading-relaxed border border-slate-800 break-words whitespace-pre-wrap">
+                  <h4 className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-1.5">Extracted Raw Text</h4>
+                  <div className="p-3 bg-slate-900 text-slate-100 font-mono fs-2xs rounded-lg leading-relaxed border border-slate-800 break-words whitespace-pre-wrap">
                     {ocrData.text}
                   </div>
                 </div>

@@ -136,7 +136,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
           <i className="bi bi-stars text-slate-950 animate-pulse fs-sm"></i>
           <div>
             <h2 className="fs-sm fw-semibold tracking-tight text-slate-900">Gemini Enterprise Co-Pilot</h2>
-            <p className="text-[10px] text-slate-500 font-mono">Current Context: {selectedCompany.name}</p>
+            <p className="fs-2xs text-slate-500 font-mono">Current Context: {selectedCompany.name}</p>
           </div>
         </div>
 
@@ -196,12 +196,12 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
           <div className="flex justify-between items-center pb-3 border-b border-slate-200">
             <div>
               <h3 className="fs-sm fw-bold text-slate-950">AI Smart Trend Insights</h3>
-              <p className="text-[10px] text-slate-500">Live operational & anomaly detections scan for {selectedCompany.name}</p>
+              <p className="fs-2xs text-slate-500">Live operational & anomaly detections scan for {selectedCompany.name}</p>
             </div>
             <button
               onClick={handleScanDB}
               disabled={scanning}
-              className="bg-slate-950 hover:bg-slate-800 disabled:bg-slate-200 text-white fw-semibold text-[10px] px-3.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
+              className="bg-slate-950 hover:bg-slate-800 disabled:bg-slate-200 text-white fw-semibold fs-2xs px-3.5 py-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
             >
               {scanning ? (
                 <>
@@ -228,20 +228,20 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
                 <div key={insight.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-3xs flex flex-col justify-between hover:shadow-xs transition-all">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className={`text-[9px] fw-bold px-2 py-0.5 rounded-full uppercase border ${
+                      <span className={`fs-3xs fw-bold px-2 py-0.5 rounded-full uppercase border ${
                         insight.severity === 'high' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                         insight.severity === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                         'bg-blue-50 text-blue-700 border-blue-200'
                       }`}>
                         {insight.category}
                       </span>
-                      <span className="text-[9px] text-slate-400 font-mono fw-medium">Severity: {insight.severity}</span>
+                      <span className="fs-3xs text-slate-400 font-mono fw-medium">Severity: {insight.severity}</span>
                     </div>
                     <p className="fs-xs fw-semibold text-slate-900 leading-snug">{insight.desc}</p>
                   </div>
                   <div className="mt-4 pt-4 border-t border-slate-100 bg-slate-50/50 -mx-5 -mb-5 p-4 rounded-b-xl">
-                    <span className="text-[9px] fw-bold text-slate-400 uppercase block mb-1">Recommended Action</span>
-                    <p className="text-[11px] text-slate-600 leading-relaxed italic">{insight.action}</p>
+                    <span className="fs-3xs fw-bold text-slate-400 uppercase block mb-1">Recommended Action</span>
+                    <p className="fs-xs text-slate-600 leading-relaxed italic">{insight.action}</p>
                   </div>
                 </div>
               ))}
@@ -260,7 +260,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
                   ? 'bg-slate-950 text-white fw-medium rounded-tr-none' 
                   : 'bg-white border border-slate-200/80 text-slate-800 rounded-tl-none whitespace-pre-wrap'
               }`}>
-                <div className={`flex items-center gap-1 pb-1.5 mb-1.5 border-b text-[9px] uppercase tracking-wider fw-bold opacity-80 ${
+                <div className={`flex items-center gap-1 pb-1.5 mb-1.5 border-b fs-3xs uppercase tracking-wider fw-bold opacity-80 ${
                   msg.sender === 'user' ? 'border-white/10 text-slate-200' : 'border-slate-100 text-slate-400'
                 }`}>
                   <span>{msg.sender === 'user' ? 'User Operator' : 'Gemini AI Assistant'}</span>
@@ -282,12 +282,12 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
       {/* QUICK PRESETS FOOTER PANEL */}
       {activeTab !== 'insights' && (
         <div className="border-t border-slate-200/80 p-3 bg-slate-50/50 flex items-center gap-2 overflow-x-auto">
-          <span className="text-[10px] fw-bold text-slate-400 uppercase shrink-0">Presets:</span>
+          <span className="fs-2xs fw-bold text-slate-400 uppercase shrink-0">Presets:</span>
           {activeTab === 'chat' && chatPresets.map(preset => (
             <button
               key={preset.label}
               onClick={() => handleSend(preset.text)}
-              className="text-[10px] bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
+              className="fs-2xs bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
             >
               ✨ {preset.label}
             </button>
@@ -296,7 +296,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
             <button
               key={preset.label}
               onClick={() => handleSend(preset.text)}
-              className="text-[10px] bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
+              className="fs-2xs bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
             >
               📈 {preset.label}
             </button>
@@ -305,7 +305,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
             <button
               key={preset.label}
               onClick={() => handleSend(preset.text)}
-              className="text-[10px] bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
+              className="fs-2xs bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
             >
               👩‍💼 {preset.label}
             </button>
@@ -314,7 +314,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ selectedCompany, activ
             <button
               key={preset.label}
               onClick={() => handleSend(preset.text)}
-              className="text-[10px] bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
+              className="fs-2xs bg-white border border-slate-200 hover:border-slate-400 px-3 py-1.5 rounded-lg fw-semibold text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-all"
             >
               📄 {preset.label}
             </button>

@@ -127,7 +127,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                   <span className="fs-xs fw-semibold text-slate-900">{check.title}</span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge label={check.category} variant="info" />
-                    <span className="text-[10px] text-slate-400">Due: {check.dueDate}</span>
+                    <span className="fs-2xs text-slate-400">Due: {check.dueDate}</span>
                   </div>
                 </div>
               </div>
@@ -136,11 +136,11 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 {canEditCompliance && (
                   <div className="flex items-center gap-1">
                     <button onClick={(e) => { e.stopPropagation(); toggleCheckStatus(check); }}
-                      className={`text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer border transition-all ${check.status === 'Compliant' ? 'border-slate-200 text-slate-500 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+                      className={`fs-2xs fw-semibold px-3 py-1.5 rounded-lg cursor-pointer border transition-all ${check.status === 'Compliant' ? 'border-slate-200 text-slate-500 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
                       {check.status === 'Compliant' ? 'Mark Fail' : 'Mark Pass'}
                     </button>
                     <button onClick={async (e) => { e.stopPropagation(); if (await modalConfirm('Delete this compliance check?', { variant: 'danger' })) onDeleteComplianceCheck(check.id); }}
-                      className="text-[10px] fw-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                      className="fs-2xs fw-semibold px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
                       Delete
                     </button>
                   </div>
@@ -158,14 +158,14 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
             <div key={p.id} onClick={() => policyModal.open(p)} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all flex items-start justify-between cursor-pointer">
               <div>
                 <div className="fs-xs fw-semibold text-slate-900">{p.title}</div>
-                <div className="text-[10px] text-slate-400 mt-1">{p.version} · {p.category} · {p.totalEmployees} employees</div>
-                {p.dueDate && <div className="text-[10px] text-slate-400 mt-0.5">Due: {p.dueDate}</div>}
+                <div className="fs-2xs text-slate-400 mt-1">{p.version} · {p.category} · {p.totalEmployees} employees</div>
+                {p.dueDate && <div className="fs-2xs text-slate-400 mt-0.5">Due: {p.dueDate}</div>}
               </div>
               <div className="flex flex-col items-end gap-2">
                 <Badge label={p.status || 'Active'} variant={p.status === 'Active' ? 'success' : 'default'} />
                 {canEditCompliance && (
                   <button onClick={async (e) => { e.stopPropagation(); if (await modalConfirm('Delete this policy?', { variant: 'danger' })) onDeletePolicyDocument?.(p.id); }}
-                    className="text-[10px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
+                    className="fs-2xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors">
                     Delete
                   </button>
                 )}
@@ -253,7 +253,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
             <div key={inc.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-sans tabular-nums text-slate-400">{inc.id.substring(0, 12)}</span>
+                  <span className="fs-2xs font-sans tabular-nums text-slate-400">{inc.id.substring(0, 12)}</span>
                   <Badge label={inc.category} variant="danger" />
                 </div>
                 <div className="fs-xs fw-bold text-slate-900">{inc.title}</div>
@@ -262,7 +262,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge label={inc.status} variant={inc.status === 'Overdue' ? 'danger' : 'warning'} />
                 {canEditCompliance && (
-                  <button onClick={() => onResolveComplianceCheck(inc.id, 'Compliant')} className="text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer bg-slate-900 text-white hover:bg-slate-800 transition-all">
+                  <button onClick={() => onResolveComplianceCheck(inc.id, 'Compliant')} className="fs-2xs fw-semibold px-3 py-1.5 rounded-lg cursor-pointer bg-slate-900 text-white hover:bg-slate-800 transition-all">
                     Resolve
                   </button>
                 )}
@@ -288,7 +288,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <div>
                       <div className="fs-lg fw-bold text-slate-900 tabular-nums">{passed}</div>
-                      <div className="text-[10px] text-slate-500">Checks Passing</div>
+                      <div className="fs-2xs text-slate-500">Checks Passing</div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -297,7 +297,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <div>
                       <div className="fs-lg fw-bold text-slate-900 tabular-nums">{localPolicies.filter(p => p.status === 'Active').length}</div>
-                      <div className="text-[10px] text-slate-500">Active Policies</div>
+                      <div className="fs-2xs text-slate-500">Active Policies</div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -306,7 +306,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <div>
                       <div className="fs-lg fw-bold text-slate-900 tabular-nums">{total}</div>
-                      <div className="text-[10px] text-slate-500">Total Checks</div>
+                      <div className="fs-2xs text-slate-500">Total Checks</div>
                     </div>
                   </div>
                 </div>
@@ -347,8 +347,8 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 ].map(f => (
                   <div key={f.label} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <i className={`${f.icon} text-slate-400 text-[10px]`}></i>
-                      <span className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">{f.label}</span>
+                      <i className={`${f.icon} text-slate-400 fs-2xs`}></i>
+                      <span className="fs-2xs fw-semibold text-slate-400 uppercase tracking-wider">{f.label}</span>
                     </div>
                     <div className="fs-xs fw-semibold text-slate-900">{f.value}</div>
                   </div>
@@ -357,8 +357,8 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
               {checkModal.selected.description && (
                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                   <div className="flex items-center gap-1.5 mb-2">
-                    <i className="bi bi-text-paragraph text-slate-400 text-[10px]"></i>
-                    <span className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">Description</span>
+                    <i className="bi bi-text-paragraph text-slate-400 fs-2xs"></i>
+                    <span className="fs-2xs fw-semibold text-slate-400 uppercase tracking-wider">Description</span>
                   </div>
                   <div className="fs-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{checkModal.selected.description}</div>
                 </div>
@@ -423,8 +423,8 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                   ].map(f => (
                     <div key={f.label} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <i className={`${f.icon} text-slate-400 text-[10px]`}></i>
-                        <span className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">{f.label}</span>
+                        <i className={`${f.icon} text-slate-400 fs-2xs`}></i>
+                        <span className="fs-2xs fw-semibold text-slate-400 uppercase tracking-wider">{f.label}</span>
                       </div>
                       <div className="fs-xs fw-semibold text-slate-900">{f.value}</div>
                     </div>
@@ -446,7 +446,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                       </div>
                       <div>
                         <div className="fs-xs fw-bold text-slate-900">{pol.attachmentName || 'Attached Document'}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">{(pol.attachmentType || 'file').toUpperCase()} Document</div>
+                        <div className="fs-2xs text-slate-500 mt-0.5">{(pol.attachmentType || 'file').toUpperCase()} Document</div>
                       </div>
                     </div>
                     <a href={pol.attachmentUrl} target="_blank" rel="noopener noreferrer"
@@ -461,11 +461,11 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
                     <div className="px-4 pt-4 pb-2 flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <i className="bi bi-text-paragraph text-slate-400 text-[10px]"></i>
-                        <span className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">Policy Content</span>
+                        <i className="bi bi-text-paragraph text-slate-400 fs-2xs"></i>
+                        <span className="fs-2xs fw-semibold text-slate-400 uppercase tracking-wider">Policy Content</span>
                       </div>
                       {isLongContent && (
-                        <span className="text-[10px] text-slate-400">{pol.content.length.toLocaleString()} characters</span>
+                        <span className="fs-2xs text-slate-400">{pol.content.length.toLocaleString()} characters</span>
                       )}
                     </div>
                     <div className="px-4 pb-4">
@@ -473,7 +473,7 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     {isLongContent && (
                       <button onClick={() => setPolicyContentExpanded(!policyContentExpanded)}
-                        className="w-full py-2.5 text-[10px] fw-semibold text-sky-600 bg-sky-50/50 border-t border-slate-200 hover:bg-sky-50 transition-colors cursor-pointer flex items-center justify-center gap-1">
+                        className="w-full py-2.5 fs-2xs fw-semibold text-sky-600 bg-sky-50/50 border-t border-slate-200 hover:bg-sky-50 transition-colors cursor-pointer flex items-center justify-center gap-1">
                         <i className={`bi ${policyContentExpanded ? 'bi-chevron-up' : 'bi-chevron-down'}`}></i>
                         {policyContentExpanded ? 'Show Less' : `Show Full Content (${pol.content.length.toLocaleString()} chars)`}
                       </button>
@@ -484,8 +484,8 @@ export const ComplianceView: React.FC<ModuleViewsProps> = (props) => {
                 {pol.acknowledgedBy.length > 0 && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-2">
-                      <i className="bi bi-check2-all text-slate-400 text-[10px]"></i>
-                      <span className="text-[10px] fw-semibold text-slate-400 uppercase tracking-wider">Acknowledged ({pol.acknowledgedBy.length} / {pol.totalEmployees})</span>
+                      <i className="bi bi-check2-all text-slate-400 fs-2xs"></i>
+                      <span className="fs-2xs fw-semibold text-slate-400 uppercase tracking-wider">Acknowledged ({pol.acknowledgedBy.length} / {pol.totalEmployees})</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">{pol.acknowledgedBy.map(name => <Badge key={name} label={name} variant="success" />)}</div>
                   </div>

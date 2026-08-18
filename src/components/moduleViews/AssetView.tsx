@@ -105,7 +105,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                 <tbody className="divide-y divide-slate-100">
                   {localAssets.filter(a => !searchTerm || a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.assetCode.toLowerCase().includes(searchTerm.toLowerCase())).map(a => (
                     <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{a.assetCode}</td>
+                      <td className="px-4 py-3 fs-2xs font-sans tabular-nums fw-bold text-slate-500">{a.assetCode}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{a.name}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{a.category}</td>
                       <td className="px-4 py-3 fs-xs text-slate-500">{a.location}</td>
@@ -116,13 +116,13 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                           onClick={(e) => { e.stopPropagation(); assetModal.open(a); }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
-                          <i className="bi bi-eye text-[11px]"></i> View
+                          <i className="bi bi-eye fs-xs"></i> View
                         </button>
                       </td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           {a.status === 'Active' && (
-                            <button onClick={() => onDisposeAsset(a.id, (a.purchasePrice || 0) * 0.1)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Dispose</button>
+                            <button onClick={() => onDisposeAsset(a.id, (a.purchasePrice || 0) * 0.1)} className="fs-3xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Dispose</button>
                           )}
                         </td>
                       )}
@@ -196,14 +196,14 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
                           onClick={(e) => { e.stopPropagation(); maintModal.open(m); }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
-                          <i className="bi bi-eye text-[11px]"></i> View
+                          <i className="bi bi-eye fs-xs"></i> View
                         </button>
                       </td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex gap-1 justify-end">
-                            {m.status !== 'Completed' && <button onClick={() => onUpdateMaintenanceTask(m.id, { status: 'Completed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Done</button>}
-                            <button onClick={() => onDeleteMaintenanceTask(m.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                            {m.status !== 'Completed' && <button onClick={() => onUpdateMaintenanceTask(m.id, { status: 'Completed' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Done</button>}
+                            <button onClick={() => onDeleteMaintenanceTask(m.id)} className="fs-3xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                           </div>
                         </td>
                       )}
@@ -274,7 +274,7 @@ export const AssetView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {depRows.filter(r => !searchTerm || r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.assetCode.toLowerCase().includes(searchTerm.toLowerCase())).map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-500">{r.assetCode}</td>
+                    <td className="px-4 py-3 fs-2xs font-sans tabular-nums fw-bold text-slate-500">{r.assetCode}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{r.name}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{formatCurrency((r.purchasePrice || 0), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-400">{r.usefulLifeYears}</td>

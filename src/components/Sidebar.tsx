@@ -370,7 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           return (
             <div key={group.title}>
-              <div className="px-2 pb-2 text-[11px] fw-bold uppercase tracking-widest text-slate-400">
+              <div className="px-2 pb-2 fs-xs fw-bold uppercase tracking-widest text-slate-400">
                 {group.title}
               </div>
               <nav className="space-y-0.5">
@@ -478,12 +478,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                   ? 'bg-white/10 border-white/20'
                                   : 'bg-white border-slate-200/60 shadow-[0_1px_2px_rgba(0,0,0,0.02)] group-hover:border-slate-300 group-hover:shadow-sm group-hover:scale-105'
                               }`}>
-                                <i className={`${sub.iconClass} text-[11px] ${isSubActive ? '!text-white' : ''}`}></i>
+                                <i className={`${sub.iconClass} fs-xs ${isSubActive ? '!text-white' : ''}`}></i>
                               </div>
                               {isEmployee && employeeSubmenuLabelOverrides[sub.id] ? employeeSubmenuLabelOverrides[sub.id] : sub.label}
                             </span>
                             {sub.id === 'pending-approvals' && pendingApprovalCount > 0 && (
-                              <span className="bg-amber-500 text-white rounded-full px-1.5 py-0.5 text-[9px] fw-bold leading-none">{pendingApprovalCount}</span>
+                              <span className="bg-amber-500 text-white rounded-full px-1.5 py-0.5 fs-3xs fw-bold leading-none">{pendingApprovalCount}</span>
                             )}
                           </button>
                         );

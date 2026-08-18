@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <h2 className="fs-sm fw-bold uppercase tracking-widest text-rose-700">Something went wrong</h2>
           <p className="mt-2 fs-xs text-rose-600">This view failed to render. Try switching to another module, or reload the page.</p>
           {this.state.error && (
-            <pre className="mt-3 max-h-48 overflow-auto rounded bg-white/70 p-3 text-[11px] leading-relaxed text-rose-700">
+            <pre className="mt-3 max-h-48 overflow-auto rounded bg-white/70 p-3 fs-xs leading-relaxed text-rose-700">
               {this.state.error.message}
             </pre>
           )}

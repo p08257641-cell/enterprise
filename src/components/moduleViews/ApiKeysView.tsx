@@ -21,13 +21,13 @@ export const ApiKeysView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="fs-xs fw-bold text-slate-900">{k.name}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Created: {new Date(k.createdAt).toLocaleDateString()} · Expires: {new Date(k.expiresAt).toLocaleDateString()}</div>
+                    <div className="fs-2xs text-slate-400 mt-0.5">Created: {new Date(k.createdAt).toLocaleDateString()} · Expires: {new Date(k.expiresAt).toLocaleDateString()}</div>
                   </div>
                   <Badge label={k.permissions} variant={k.permissions === 'Full Access' ? 'danger' : 'info'} />
                 </div>
                 <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <span className="text-[10px] font-mono text-slate-600 flex-1 truncate">{k.key}</span>
-                   <button onClick={() => { navigator.clipboard.writeText(k.key); }} className="text-[10px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer shrink-0">Copy</button>
+                  <span className="fs-2xs font-mono text-slate-600 flex-1 truncate">{k.key}</span>
+                   <button onClick={() => { navigator.clipboard.writeText(k.key); }} className="fs-2xs fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer shrink-0">Copy</button>
                 </div>
               </div>
             ))}

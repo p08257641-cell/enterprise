@@ -418,7 +418,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3"><Badge label={acc.type} variant={acc.type === 'Revenue' ? 'success' : acc.type === 'Expense' ? 'danger' : acc.type === 'Asset' ? 'info' : 'default'} /></td>
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-right text-slate-900">{formatCurrency(acc.balance ?? 0, selectedCompany?.currency)}</td>
                         <td className="px-4 py-3 text-right">
-                          <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer mr-2"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
+                          <button onClick={e => { e.stopPropagation(); setEditingGLAccount(acc); setGlFormCode(acc.code); setGlFormName(acc.name); setGlFormType(acc.type); setShowGLModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer mr-2"><i className="bi bi-pencil fs-xs"></i> Edit</button>
                           <button
                             disabled={!canDeleteGL}
                             onClick={async e => {
@@ -438,7 +438,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                           >
                             Delete
                           </button>
-                          <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                          <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                         </td>
                       </tr>
                     ))}
@@ -486,12 +486,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
             <div className="mb-5 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-4 shadow-sm border border-blue-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] fw-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                    <i className="bi bi-clock-fill text-amber-300 text-[9px]"></i> Active Invoice Cron
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md fs-2xs fw-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                    <i className="bi bi-clock-fill text-amber-300 fs-3xs"></i> Active Invoice Cron
                   </span>
                   <span className="text-xs fw-bold text-white">Every {invCronDay} at {invCronTime}</span>
                 </div>
-                <p className="text-[11px] text-slate-300">
+                <p className="fs-xs text-slate-300">
                   Background cron timer scans past due invoices and automatically dispatches WhatsApp & Email digital payment links to customers.
                 </p>
               </div>
@@ -514,7 +514,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       </div>
                       <div>
                         <h3 className="text-sm fw-bold">Automated Overdue Invoice Reminders (Cron)</h3>
-                        <p className="text-[11px] text-slate-300">Auto-dispatch digital payment links for past-due invoices</p>
+                        <p className="fs-xs text-slate-300">Auto-dispatch digital payment links for past-due invoices</p>
                       </div>
                     </div>
                     <button onClick={() => setShowInvCronModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -546,15 +546,15 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs fw-bold text-slate-900">Background Cron Timer Status</span>
-                        <span className="text-[10px] fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                        <span className="fs-2xs fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                           Active & Scheduled
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600">
+                      <p className="fs-xs text-slate-600">
                         Cron expression: <code className="bg-white px-1.5 py-0.5 rounded font-mono border border-slate-200 text-blue-700">0 9 * * 1</code>
                       </p>
                       {invCronLastRun && (
-                        <p className="text-[10px] text-slate-500">Last automated dispatch: {invCronLastRun}</p>
+                        <p className="fs-2xs text-slate-500">Last automated dispatch: {invCronLastRun}</p>
                       )}
                     </div>
 
@@ -599,9 +599,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
                       <td className="px-4 py-3 text-right">
                         {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={e => { e.stopPropagation(); onPayInvoice(inv.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Pay</button>}
-                        <button onClick={e => { e.stopPropagation(); accInvoiceModal.open(inv); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
-                        <button title="SMS Invoice to customer" onClick={async e => { e.stopPropagation(); const mobile = await modalPrompt(`SMS Invoice ${inv.invoiceNumber} to ${inv.customerName}. Phone:`, { placeholder: '+233240000000', variant: 'info' }); if (!mobile) return; const res = await sendSMS({ company: selectedCompany, to: mobile, message: `[${selectedCompany.name}] Invoice ${inv.invoiceNumber} | Amount: ${formatCurrency(inv.total, selectedCompany?.currency)} | Due: ${inv.dueDate}. Please make payment. Thank you!` }); if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-blue-600 hover:text-white border border-slate-200 hover:border-blue-600 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-chat-left-dots text-[11px]"></i> SMS</button>
-                        <button title="Email Invoice to customer" onClick={async e => { e.stopPropagation(); const emailAddr = await modalPrompt(`Email Invoice ${inv.invoiceNumber} to ${inv.customerName}. Email:`, { placeholder: 'customer@example.com', variant: 'info' }); if (!emailAddr) return; const res = await sendEmail({ company: selectedCompany, to: emailAddr, subject: `Invoice ${inv.invoiceNumber} from ${selectedCompany.name}`, htmlBody: `<div style="font-family:sans-serif;padding:20px;border:1px solid #e2e8f0;border-radius:12px;max-width:560px;"><h2>${selectedCompany.name}</h2><h3>Invoice: ${inv.invoiceNumber}</h3><p>Dear ${inv.customerName},</p><p>Please find your invoice details below:</p><table style="width:100%;border-collapse:collapse;margin-top:12px;">${((inv as any).items||[]).map(i => `<tr><td style="padding:6px 4px;border-bottom:1px solid #f1f5f9;">${i.description||i.name}</td><td style="text-align:right;padding:6px 4px;border-bottom:1px solid #f1f5f9;">${formatCurrency((i.unitPrice||i.price||0)*(i.quantity||1), selectedCompany?.currency)}</td></tr>`).join('')}</table><p style="font-weight:700;margin-top:12px;">Total: ${formatCurrency(inv.total, selectedCompany?.currency)}</p><p><strong>Due Date:</strong> ${inv.dueDate}</p><p style="color:#94a3b8;font-size:12px;">Please make payment by the due date. Thank you!</p></div>` }); if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-violet-600 hover:text-white border border-slate-200 hover:border-violet-600 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-envelope text-[11px]"></i> Email</button>
+                        <button onClick={e => { e.stopPropagation(); accInvoiceModal.open(inv); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
+                        <button title="SMS Invoice to customer" onClick={async e => { e.stopPropagation(); const mobile = await modalPrompt(`SMS Invoice ${inv.invoiceNumber} to ${inv.customerName}. Phone:`, { placeholder: '+233240000000', variant: 'info' }); if (!mobile) return; const res = await sendSMS({ company: selectedCompany, to: mobile, message: `[${selectedCompany.name}] Invoice ${inv.invoiceNumber} | Amount: ${formatCurrency(inv.total, selectedCompany?.currency)} | Due: ${inv.dueDate}. Please make payment. Thank you!` }); if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-blue-600 hover:text-white border border-slate-200 hover:border-blue-600 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-chat-left-dots fs-xs"></i> SMS</button>
+                        <button title="Email Invoice to customer" onClick={async e => { e.stopPropagation(); const emailAddr = await modalPrompt(`Email Invoice ${inv.invoiceNumber} to ${inv.customerName}. Email:`, { placeholder: 'customer@example.com', variant: 'info' }); if (!emailAddr) return; const res = await sendEmail({ company: selectedCompany, to: emailAddr, subject: `Invoice ${inv.invoiceNumber} from ${selectedCompany.name}`, htmlBody: `<div style="font-family:sans-serif;padding:20px;border:1px solid #e2e8f0;border-radius:12px;max-width:560px;"><h2>${selectedCompany.name}</h2><h3>Invoice: ${inv.invoiceNumber}</h3><p>Dear ${inv.customerName},</p><p>Please find your invoice details below:</p><table style="width:100%;border-collapse:collapse;margin-top:12px;">${((inv as any).items||[]).map(i => `<tr><td style="padding:6px 4px;border-bottom:1px solid #f1f5f9;">${i.description||i.name}</td><td style="text-align:right;padding:6px 4px;border-bottom:1px solid #f1f5f9;">${formatCurrency((i.unitPrice||i.price||0)*(i.quantity||1), selectedCompany?.currency)}</td></tr>`).join('')}</table><p style="font-weight:700;margin-top:12px;">Total: ${formatCurrency(inv.total, selectedCompany?.currency)}</p><p><strong>Due Date:</strong> ${inv.dueDate}</p><p style="color:#94a3b8;font-size:12px;">Please make payment by the due date. Thank you!</p></div>` }); if (res.success) toast(res.message, 'success'); else modalAlert(res.message, { variant: 'danger' }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-violet-600 hover:text-white border border-slate-200 hover:border-violet-600 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-envelope fs-xs"></i> Email</button>
                       </td>
                     </tr>
                   ))}
@@ -635,7 +635,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3"><Badge label={exp.status} variant={exp.status === 'Approved' ? 'success' : exp.status === 'Rejected' ? 'danger' : 'warning'} /></td>
                       <td className="px-4 py-3 text-right">
                         {exp.status === 'Pending' && canApproveExpense && <button onClick={e => { e.stopPropagation(); onApproveExpense(exp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Approve</button>}
-                        <button onClick={e => { e.stopPropagation(); accExpenseModal.open(exp); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        <button onClick={e => { e.stopPropagation(); accExpenseModal.open(exp); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -758,7 +758,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Asset' || acc.type === 'Expense') ? formatCurrency(acc.balance ?? 0, selectedCompany?.currency) : '-'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{(acc.type === 'Liability' || acc.type === 'Revenue' || acc.type === 'Equity') ? formatCurrency(acc.balance ?? 0, selectedCompany?.currency) : '-'}</td>
                       <td className="px-4 py-3 text-right">
-                        <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        <button onClick={e => { e.stopPropagation(); accGLModal.open(acc); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -864,7 +864,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.debit > 0 ? formatCurrency(ob.debit, selectedCompany?.currency) : '-'}</td>
                       <td className="px-4 py-3 fs-xs font-sans tabular-nums text-right text-slate-900">{ob.credit > 0 ? formatCurrency(ob.credit, selectedCompany?.currency) : '-'}</td>
                       <td className="px-4 py-3 text-right">
-                        <button onClick={e => { e.stopPropagation(); accOpeningBalModal.open(ob); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        <button onClick={e => { e.stopPropagation(); accOpeningBalModal.open(ob); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -891,7 +891,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs text-slate-500">{fp.closedBy ? 'David Vance' : '-'}</td>
                       <td className="px-4 py-3 text-right">
                         {fp.status === 'Open' && canCloseFiscalPeriod && <button onClick={async e => { e.stopPropagation(); if (await modalConfirm(`Close ${fp.name}?`, { variant: 'warning' })) onCloseFiscalPeriod(fp.id); }} className="data-value-small fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all mr-2">Close Period</button>}
-                        <button onClick={e => { e.stopPropagation(); accFiscalModal.open(fp); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        <button onClick={e => { e.stopPropagation(); accFiscalModal.open(fp); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -925,9 +925,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs text-slate-500">{bill.dueDate}</td>
                       <td className="px-4 py-3"><Badge label={bill.status} variant={bill.status === 'Paid' ? 'success' : bill.status === 'Overdue' ? 'danger' : bill.status === 'Approved' ? 'info' : bill.status === 'Partially Paid' ? 'warning' : 'default'} /></td>
                       <td className="px-4 py-3 text-right space-x-1">
-                        {bill.status === 'Pending' && canApproveBill && <button onClick={e => { e.stopPropagation(); onApproveBill(bill.id); }} className="text-[10px] fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
-                        {(bill.status === 'Approved' || bill.status === 'Partially Paid') && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Pay bill ${bill.billNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onPayBill(bill.id, Number(amt), 'Bank Transfer', 'ba-1'); }} className="text-[10px] fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Pay</button>}
-                        <button onClick={e => { e.stopPropagation(); accBillModal.open(bill); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        {bill.status === 'Pending' && canApproveBill && <button onClick={e => { e.stopPropagation(); onApproveBill(bill.id); }} className="fs-2xs fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700">Approve</button>}
+                        {(bill.status === 'Approved' || bill.status === 'Partially Paid') && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Pay bill ${bill.billNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onPayBill(bill.id, Number(amt), 'Bank Transfer', 'ba-1'); }} className="fs-2xs fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800">Pay</button>}
+                        <button onClick={e => { e.stopPropagation(); accBillModal.open(bill); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -963,13 +963,13 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         {inv.evatIrn ? (
                           <Badge label="GRA" variant="success" />
                         ) : (
-                          <span className="text-[10px] text-slate-400">—</span>
+                          <span className="fs-2xs text-slate-400">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3"><Badge label={inv.status} variant={inv.status === 'Paid' ? 'success' : inv.status === 'Overdue' ? 'danger' : inv.status === 'Sent' ? 'info' : 'default'} /></td>
                       <td className="px-4 py-3 text-right">
-                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Record payment for ${inv.invoiceNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(amt), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Bank Transfer', bankAccountId: 'ba-1' }); }} className="text-[10px] fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800 mr-2">Receive Payment</button>}
-                        <button onClick={e => { e.stopPropagation(); accInvoiceModal.open(inv); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        {inv.status !== 'Paid' && inv.status !== 'Void' && <button onClick={async e => { e.stopPropagation(); const amt = await modalPrompt(`Record payment for ${inv.invoiceNumber}. Amount:`, { variant: 'info', inputType: 'number', placeholder: '0.00' }); if (amt) onReceiveCustomerPayment({ invoiceId: inv.id, customerName: inv.customerName, amount: Number(amt), paymentDate: new Date().toISOString().split('T')[0], paymentMethod: 'Bank Transfer', bankAccountId: 'ba-1' }); }} className="fs-2xs fw-semibold bg-slate-900 text-white px-2 py-1 rounded cursor-pointer hover:bg-slate-800 mr-2">Receive Payment</button>}
+                        <button onClick={e => { e.stopPropagation(); accInvoiceModal.open(inv); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -991,12 +991,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <span className="section-title text-slate-400">{ba.accountType}</span>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge label={ba.isActive ? 'Active' : 'Inactive'} variant={ba.isActive ? 'success' : 'default'} />
-                      {canEditBankAccount && <button onClick={() => { setEditingBankAccount(ba); setBaName(ba.name); setBaBankName(ba.bankName); setBaAccountNumber(ba.accountNumber); setBaAccountType(ba.accountType); setBaBalance(String(ba.balance ?? 0)); setShowBankAccountModal(true); }} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i></button>}
+                      {canEditBankAccount && <button onClick={() => { setEditingBankAccount(ba); setBaName(ba.name); setBaBankName(ba.bankName); setBaAccountNumber(ba.accountNumber); setBaAccountType(ba.accountType); setBaBalance(String(ba.balance ?? 0)); setShowBankAccountModal(true); }} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil fs-xs"></i></button>}
                     </div>
                   </div>
                   <p className="fs-lg fw-bold text-slate-900 font-sans tabular-nums">{formatCurrency(ba.balance ?? 0, selectedCompany?.currency)}</p>
                   <p className="fs-xs text-slate-500 mt-1">{ba.bankName} {ba.accountNumber}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{ba.name}</p>
+                  <p className="fs-2xs text-slate-400 mt-0.5">{ba.name}</p>
                 </div>
               ))}
             </div>
@@ -1014,9 +1014,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3"><Badge label={tx.type} variant={tx.type === 'Credit' ? 'success' : 'danger'} /></td>
                       <td className={`px-4 py-3 fs-xs font-sans tabular-nums fw-semibold ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-rose-600'}`}>{tx.type === 'Credit' ? '+' : '-'}{formatCurrency(tx.amount ?? 0, selectedCompany?.currency)}</td>
                       <td className="px-4 py-3">{tx.reconciled ? <i className="bi bi-check-circle-fill text-emerald-500 fs-sm"></i> : <i className="bi bi-circle text-slate-300 fs-sm"></i>}</td>
-                      <td className="px-4 py-3 text-[10px] text-slate-400 font-mono">{tx.reference || '-'}</td>
+                      <td className="px-4 py-3 fs-2xs text-slate-400 font-mono">{tx.reference || '-'}</td>
                       <td className="px-4 py-3 text-right">
-                        <button onClick={e => { e.stopPropagation(); accBankTxModal.open(tx); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        <button onClick={e => { e.stopPropagation(); accBankTxModal.open(tx); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -1040,7 +1040,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3"><Badge label={rec.status} variant={rec.status === 'Completed' ? 'success' : 'danger'} /></td>
                         <td className="px-4 py-3 fs-xs text-slate-500">{resolveUserName(rec.completedBy || '')}</td>
                         <td className="px-4 py-3 text-right">
-                          <button onClick={e => { e.stopPropagation(); accReconModal.open(rec); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                          <button onClick={e => { e.stopPropagation(); accReconModal.open(rec); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                         </td>
                       </tr>
                     ))}
@@ -1075,8 +1075,8 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <td className="px-4 py-3 fs-xs text-slate-500">{asset.location}</td>
                       <td className="px-4 py-3"><Badge label={asset.status} variant={asset.status === 'Active' ? 'success' : asset.status === 'Disposed' ? 'danger' : 'default'} /></td>
                       <td className="px-4 py-3 text-right">
-                        {asset.status === 'Active' && canRegisterAsset && <button onClick={async e => { e.stopPropagation(); const price = await modalPrompt(`Dispose ${asset.name}. Disposal price:`, { variant: 'danger', inputType: 'number', placeholder: '0.00' }); if (price) onDisposeAsset(asset.id, Number(price)); }} className="text-[10px] fw-semibold bg-rose-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-rose-700 mr-2">Dispose</button>}
-                        <button onClick={e => { e.stopPropagation(); accAssetModal.open(asset); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                        {asset.status === 'Active' && canRegisterAsset && <button onClick={async e => { e.stopPropagation(); const price = await modalPrompt(`Dispose ${asset.name}. Disposal price:`, { variant: 'danger', inputType: 'number', placeholder: '0.00' }); if (price) onDisposeAsset(asset.id, Number(price)); }} className="fs-2xs fw-semibold bg-rose-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-rose-700 mr-2">Dispose</button>}
+                        <button onClick={e => { e.stopPropagation(); accAssetModal.open(asset); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                       </td>
                     </tr>
                   ))}
@@ -1101,7 +1101,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900">{formatCurrency((de.bookValue ?? 0), selectedCompany?.currency)}</td>
                         <td className="px-4 py-3"><Badge label={de.status} variant={de.status === 'Posted' ? 'success' : 'warning'} /></td>
                         <td className="px-4 py-3 text-right">
-                          <button onClick={e => { e.stopPropagation(); accDeprModal.open(de); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                          <button onClick={e => { e.stopPropagation(); accDeprModal.open(de); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                         </td>
                       </tr>
                     ))}
@@ -1140,13 +1140,13 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${pctUsed > 90 ? 'bg-rose-500' : pctUsed > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(pctUsed, 100)}%` }}></div></div>
-                            <span className="text-[10px] fw-semibold text-slate-500">{pctUsed}%</span>
+                            <span className="fs-2xs fw-semibold text-slate-500">{pctUsed}%</span>
                           </div>
                         </td>
                         <td className="px-4 py-3"><Badge label={bud.status} variant={bud.status === 'Active' ? 'success' : bud.status === 'Approved' ? 'info' : 'default'} /></td>
                         <td className="px-4 py-3 text-right">
-                          {bud.status === 'Draft' && canManageBudget && <button onClick={e => { e.stopPropagation(); onApproveBudget(bud.id); }} className="text-[10px] fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700 mr-2">Approve</button>}
-                          <button onClick={e => { e.stopPropagation(); accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                          {bud.status === 'Draft' && canManageBudget && <button onClick={e => { e.stopPropagation(); onApproveBudget(bud.id); }} className="fs-2xs fw-semibold bg-emerald-600 text-white px-2 py-1 rounded cursor-pointer hover:bg-emerald-700 mr-2">Approve</button>}
+                          <button onClick={e => { e.stopPropagation(); accBudgetModal.open({ ...bud, budgetAmt, actualAmt, varianceAmt, pctUsed }); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                         </td>
                       </tr>
                     );
@@ -1173,12 +1173,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <Badge label={cc.status} variant={cc.status === 'Active' ? 'success' : 'default'} />
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900 mb-1">{cc.name}</h3>
-                    <p className="text-[10px] text-slate-400 mb-3">{cc.departmentName} · {cc.managerName}</p>
+                    <p className="fs-2xs text-slate-400 mb-3">{cc.departmentName} · {cc.managerName}</p>
                     <div className="space-y-2">
                       <div className="flex justify-between fs-xs"><span className="text-slate-500">Budget</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(ccBudget, selectedCompany?.currency)}</span></div>
                       <div className="flex justify-between fs-xs"><span className="text-slate-500">Actual Spend</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency(ccActual, selectedCompany?.currency)}</span></div>
                       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${pctUsed > 90 ? 'bg-rose-500' : pctUsed > 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(pctUsed, 100)}%` }}></div></div>
-                      <div className="flex justify-between text-[10px]"><span className="text-slate-400">{pctUsed}% utilized</span><span className={`fw-semibold ${ccBudget - ccActual >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{ccBudget - ccActual >= 0 ? `${formatCurrency(ccBudget - ccActual, selectedCompany?.currency)} remaining` : `${formatCurrency(Math.abs(ccBudget - ccActual), selectedCompany?.currency)} over budget`}</span></div>
+                      <div className="flex justify-between fs-2xs"><span className="text-slate-400">{pctUsed}% utilized</span><span className={`fw-semibold ${ccBudget - ccActual >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{ccBudget - ccActual >= 0 ? `${formatCurrency(ccBudget - ccActual, selectedCompany?.currency)} remaining` : `${formatCurrency(Math.abs(ccBudget - ccActual), selectedCompany?.currency)} over budget`}</span></div>
                     </div>
                   </div>
                 );
@@ -1196,10 +1196,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={cr.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-3">
                     <span className="fs-xs fw-bold text-slate-900 tracking-wide">{cr.baseCurrency} / {cr.targetCurrency}</span>
-                    <span className="text-[9px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold">{cr.source}</span>
+                    <span className="fs-3xs bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold">{cr.source}</span>
                   </div>
                   <p className="fs-2xl fw-bold text-slate-900 font-sans tabular-nums">{cr.rate}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">Effective: {cr.effectiveDate}</p>
+                  <p className="fs-2xs text-slate-400 mt-1">Effective: {cr.effectiveDate}</p>
                 </div>
               ))}
             </div>
@@ -1227,14 +1227,14 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={tc.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-sm transition-all">
                   <div className="flex items-center justify-between mb-3">
                     <span className="fs-xs fw-bold text-slate-900 tracking-wide">{tc.code}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${tc.isActive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}>{tc.isActive ? 'Active' : 'Inactive'}</span>
+                    <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${tc.isActive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}>{tc.isActive ? 'Active' : 'Inactive'}</span>
                   </div>
                   <p className="fs-sm fw-semibold text-slate-700 mb-1">{tc.name}</p>
                   <p className="fs-2xl fw-bold text-slate-900 font-sans tabular-nums">{tc.rate}%</p>
-                  <p className="text-[10px] text-slate-400 mt-1">{tc.jurisdiction} · {tc.type}</p>
-                  <p className="text-[10px] text-slate-400">Account: {tc.accountName}</p>
+                  <p className="fs-2xs text-slate-400 mt-1">{tc.jurisdiction} · {tc.type}</p>
+                  <p className="fs-2xs text-slate-400">Account: {tc.accountName}</p>
                   {canManageTax && <div className="flex gap-2 mt-3">
-                    <button onClick={() => { setEditingTaxCode(tc); setTcCode(tc.code); setTcName(tc.name); setTcRate(String(tc.rate)); setTcType(tc.type); setTcJurisdiction(tc.jurisdiction || ''); setShowTaxCodeModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
+                    <button onClick={() => { setEditingTaxCode(tc); setTcCode(tc.code); setTcName(tc.name); setTcRate(String(tc.rate)); setTcType(tc.type); setTcJurisdiction(tc.jurisdiction || ''); setShowTaxCodeModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil fs-xs"></i> Edit</button>
                     <button onClick={async () => { if (await modalConfirm('Delete this tax code?', { variant: 'danger' })) onDeleteTaxCode(tc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
                   </div>}
                 </div>
@@ -1252,10 +1252,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h3 className="fs-sm fw-bold text-slate-900">{tr.type} Return — {tr.period}</h3>
-                      <p className="text-[10px] text-slate-400">{tr.jurisdiction} · Due {tr.dueDate}</p>
+                      <p className="fs-2xs text-slate-400">{tr.jurisdiction} · Due {tr.dueDate}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${tr.status === 'Filed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                      <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${tr.status === 'Filed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         tr.status === 'Draft' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
                           'bg-amber-50 text-amber-600 border border-amber-200'
                         }`}>{tr.status}</span>
@@ -1268,9 +1268,9 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <div><span className="text-slate-500 block">Credits</span><span className="font-sans tabular-nums fw-semibold text-slate-900">{formatCurrency((tr.credits ?? 0), selectedCompany?.currency)}</span></div>
                     <div><span className="text-slate-500 block">Net Payable</span><span className="font-sans tabular-nums fw-bold text-slate-900">{formatCurrency((tr.netPayable ?? 0), selectedCompany?.currency)}</span></div>
                   </div>
-                  {tr.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {tr.filedDate} by {tr.filedBy}</p>}
+                  {tr.filedDate && <p className="fs-2xs text-slate-400 mt-2">Filed {tr.filedDate} by {tr.filedBy}</p>}
                   {canManageTax && <div className="flex gap-2 mt-3">
-                    <button onClick={() => { setEditingTaxReturn(tr); setTrPeriod(tr.period); setTrTaxCodeId(tr.taxCodeId); setTrTaxableAmount(String(tr.taxableAmount ?? 0)); setTrTaxAmount(String(tr.taxAmount ?? 0)); setTrDueDate(tr.dueDate); setTrStatus(tr.status); setShowTaxReturnModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>
+                    <button onClick={() => { setEditingTaxReturn(tr); setTrPeriod(tr.period); setTrTaxCodeId(tr.taxCodeId); setTrTaxableAmount(String(tr.taxableAmount ?? 0)); setTrTaxAmount(String(tr.taxAmount ?? 0)); setTrDueDate(tr.dueDate); setTrStatus(tr.status); setShowTaxReturnModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil fs-xs"></i> Edit</button>
                     <button onClick={async () => { if (await modalConfirm('Delete this tax return?', { variant: 'danger' })) onDeleteTaxReturn(tr.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>
                   </div>}
                 </div>
@@ -1289,10 +1289,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h3 className="fs-sm fw-bold text-slate-900">{tx.description}</h3>
-                      <p className="text-[10px] text-slate-400">{tx.type} · {tx.fromCompanyName} → {tx.toCompanyName}</p>
+                      <p className="fs-2xs text-slate-400">{tx.type} · {tx.fromCompanyName} → {tx.toCompanyName}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${tx.status === 'Settled' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                      <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${tx.status === 'Settled' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         tx.status === 'Eliminated' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
                           'bg-amber-50 text-amber-600 border border-amber-200'
                         }`}>{tx.status}</span>
@@ -1305,7 +1305,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     <div><span className="text-slate-500 block">Currency</span><span className="fw-semibold text-slate-900">{tx.currency}</span></div>
                     <div><span className="text-slate-500 block">Date</span><span className="fw-semibold text-slate-900">{tx.date}</span></div>
                   </div>
-                  {tx.eliminationEntryId && <p className="text-[10px] text-slate-400 mt-2">Elimination Entry: {tx.eliminationEntryId}</p>}
+                  {tx.eliminationEntryId && <p className="fs-2xs text-slate-400 mt-2">Elimination Entry: {tx.eliminationEntryId}</p>}
                 </div>
               ))}
             </div>
@@ -1321,15 +1321,15 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={rule.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="fs-sm fw-bold text-slate-900">{rule.name}</h3>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${rule.isActive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}>{rule.isActive ? 'Active' : 'Inactive'}</span>
+                    <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${rule.isActive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-400 border border-slate-200'}`}>{rule.isActive ? 'Active' : 'Inactive'}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mb-2">{rule.description}</p>
+                  <p className="fs-2xs text-slate-400 mb-2">{rule.description}</p>
                   <div className="grid grid-cols-3 gap-4 fs-xs">
                     <div><span className="text-slate-500 block">Parent Account</span><span className="fw-semibold text-slate-900">{rule.parentAccountName}</span></div>
                     <div><span className="text-slate-500 block">Method</span><span className="fw-semibold text-slate-900">{rule.method}</span></div>
                     <div><span className="text-slate-500 block">Subsidiaries</span><span className="fw-semibold text-slate-900">{rule.subsidiaryIds?.length ?? 0} entities</span></div>
                   </div>
-                  {rule.intercompanyEliminationAccountId && <p className="text-[10px] text-slate-400 mt-2">Elimination Account: {rule.intercompanyEliminationAccountId}</p>}
+                  {rule.intercompanyEliminationAccountId && <p className="fs-2xs text-slate-400 mt-2">Elimination Account: {rule.intercompanyEliminationAccountId}</p>}
                 </div>
               ))}
             </div>
@@ -1344,18 +1344,18 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
               {localComplianceChecks.map(cc => (
                 <div key={cc.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[9px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold">{cc.category}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${cc.status === 'Compliant' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                    <span className="fs-3xs bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded uppercase fw-bold">{cc.category}</span>
+                    <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${cc.status === 'Compliant' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                       cc.status === 'Non-Compliant' ? 'bg-rose-50 text-rose-600 border border-rose-200' :
                         'bg-amber-50 text-amber-600 border border-amber-200'
                       }`}>{cc.status}</span>
                   </div>
                   <h3 className="fs-sm fw-bold text-slate-900 mb-1">{cc.title}</h3>
-                  <p className="text-[10px] text-slate-400 mb-3">{cc.description}</p>
-                  <p className="text-[10px] text-slate-400">Assigned: {resolveUserName(cc.assignee)} · Due: {cc.dueDate}</p>
+                  <p className="fs-2xs text-slate-400 mb-3">{cc.description}</p>
+                  <p className="fs-2xs text-slate-400">Assigned: {resolveUserName(cc.assignee)} · Due: {cc.dueDate}</p>
                   <div className="flex gap-2 mt-3">
                     {cc.status !== 'Compliant' && canManageCompliance && <PrimaryBtn onClick={() => onResolveComplianceCheck(cc.id, 'Pass')} icon="bi bi-check-lg">Mark Resolved</PrimaryBtn>}
-                    {canManageCompliance && <button onClick={() => { setEditingCompliance(cc); setCompCheckName(cc.title); setCompCheckDesc(cc.description); setCompCheckCategory(cc.category); setCompCheckDueDate(cc.dueDate); setCompCheckAssignee(cc.assignee); setShowComplianceModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>}
+                    {canManageCompliance && <button onClick={() => { setEditingCompliance(cc); setCompCheckName(cc.title); setCompCheckDesc(cc.description); setCompCheckCategory(cc.category); setCompCheckDueDate(cc.dueDate); setCompCheckAssignee(cc.assignee); setShowComplianceModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil fs-xs"></i> Edit</button>}
                     {canManageCompliance && <button onClick={async () => { if (await modalConfirm('Delete this compliance check?', { variant: 'danger' })) onDeleteComplianceCheck(cc.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>}
                   </div>
                 </div>
@@ -1374,18 +1374,18 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={log.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${/CREATE|POST|APPROVE|RECEIVE|PAY|FILE|RUN|RESOLVE|SET/.test(log.action) ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                      <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${/CREATE|POST|APPROVE|RECEIVE|PAY|FILE|RUN|RESOLVE|SET/.test(log.action) ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         /UPDATE|VOID|ELIMINATE|CLOSE/.test(log.action) ? 'bg-blue-50 text-blue-600 border border-blue-200' :
                           'bg-rose-50 text-rose-600 border border-rose-200'
                         }`}>{log.action}</span>
                       <div>
                         <h4 className="fs-xs fw-bold text-slate-900">{log.details}</h4>
-                        <p className="text-[10px] text-slate-400">{log.module}</p>
+                        <p className="fs-2xs text-slate-400">{log.module}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="fs-xs fw-semibold text-slate-900">{log.userName}</p>
-                      <p className="text-[10px] text-slate-400">{new Date(log.timestamp).toLocaleString()}</p>
+                      <p className="fs-2xs text-slate-400">{new Date(log.timestamp).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -1404,12 +1404,12 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                 <div key={pd.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="fs-sm fw-bold text-slate-900">{pd.title}</h3>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${pd.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                    <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${pd.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                       pd.status === 'Archived' ? 'bg-slate-50 text-slate-400 border border-slate-200' :
                         'bg-amber-50 text-amber-600 border border-amber-200'
                       }`}>{pd.status}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mb-2">{pd.content}</p>
+                  <p className="fs-2xs text-slate-400 mb-2">{pd.content}</p>
                   <div className="grid grid-cols-3 gap-4 fs-xs">
                     <div><span className="text-slate-500 block">Category</span><span className="fw-semibold text-slate-900">{pd.category}</span></div>
                     <div><span className="text-slate-500 block">Version</span><span className="fw-semibold text-slate-900">{pd.version}</span></div>
@@ -1434,10 +1434,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h3 className="fs-sm fw-bold text-slate-900">{fd.title}</h3>
-                      <p className="text-[10px] text-slate-400">{fd.type} · {fd.jurisdiction} · Due {fd.dueDate}</p>
+                      <p className="fs-2xs text-slate-400">{fd.type} · {fd.jurisdiction} · Due {fd.dueDate}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase fw-bold ${fd.status === 'Filed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                      <span className={`fs-3xs px-1.5 py-0.5 rounded uppercase fw-bold ${fd.status === 'Filed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                         fd.status === 'Overdue' ? 'bg-rose-50 text-rose-600 border border-rose-200' :
                           'bg-amber-50 text-amber-600 border border-amber-200'
                         }`}>{fd.status}</span>
@@ -1451,10 +1451,10 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="flex gap-2 mt-3">
                     {fd.status === 'Upcoming' && canManageFilingDeadlines && <PrimaryBtn onClick={() => onFileDeadline(fd.id)} icon="bi bi-send">File</PrimaryBtn>}
-                    {canManageFilingDeadlines && <button onClick={() => { setEditingFiling(fd); setFilingName(fd.title); setFilingDesc(fd.description || ''); setFilingType(fd.type); setFilingDueDate(fd.dueDate); setFilingAssignee(fd.assignee); setShowFilingModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil text-[11px]"></i> Edit</button>}
+                    {canManageFilingDeadlines && <button onClick={() => { setEditingFiling(fd); setFilingName(fd.title); setFilingDesc(fd.description || ''); setFilingType(fd.type); setFilingDueDate(fd.dueDate); setFilingAssignee(fd.assignee); setShowFilingModal(true); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-pencil fs-xs"></i> Edit</button>}
                     {canManageFilingDeadlines && <button onClick={async () => { if (await modalConfirm('Delete this filing deadline?', { variant: 'danger' })) onDeleteFilingDeadline(fd.id); }} className="data-value-small text-slate-500 hover:text-rose-600 cursor-pointer">Delete</button>}
                   </div>
-                  {fd.filedDate && <p className="text-[10px] text-slate-400 mt-2">Filed {fd.filedDate} by {resolveUserName(fd.filedBy || '')}</p>}
+                  {fd.filedDate && <p className="fs-2xs text-slate-400 mt-2">Filed {fd.filedDate} by {resolveUserName(fd.filedBy || '')}</p>}
                 </div>
               ))}
             </div>
@@ -1803,7 +1803,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">{editingTaxReturn ? 'Edit Tax Return' : 'New Tax Return'}</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Calculate and file corporate tax returns for a specific period.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Calculate and file corporate tax returns for a specific period.</p>
                 </div>
                 <button type="button" onClick={() => { setShowTaxReturnModal(false); setEditingTaxReturn(null); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -1854,7 +1854,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">Record Customer Payment</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Manually apply customer payment to an outstanding invoice.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Manually apply customer payment to an outstanding invoice.</p>
                 </div>
                 <button type="button" onClick={() => setShowCustomerPaymentModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -1898,7 +1898,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">Register Fixed Asset</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Add a physical asset to the register to track depreciation.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Add a physical asset to the register to track depreciation.</p>
                 </div>
                 <button type="button" onClick={() => setShowAssetModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -1946,7 +1946,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">New Budget</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Set a spending budget limit for a fiscal period.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Set a spending budget limit for a fiscal period.</p>
                 </div>
                 <button type="button" onClick={() => setShowBudgetModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -1972,7 +1972,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                           <div className="flex-1 min-w-0">
                             <span className="fs-xs fw-semibold text-slate-900">{item.category}</span>
                             {item.department && <span className="fs-xs text-slate-500 ml-2">/ {item.department}</span>}
-                            {item.notes && <p className="text-[10px] text-slate-400 mt-0.5">{item.notes}</p>}
+                            {item.notes && <p className="fs-2xs text-slate-400 mt-0.5">{item.notes}</p>}
                           </div>
                           <span className="fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(Number(item.amount) || 0, selectedCompany?.currency)}</span>
                           <button onClick={() => setBudItems(budItems.filter((_, i) => i !== idx))} className="text-slate-300 hover:text-rose-500 cursor-pointer transition-colors"><i className="bi bi-trash fs-xs"></i></button>
@@ -2023,7 +2023,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">New Cost Center</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Establish a department or unit cost tracking node.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Establish a department or unit cost tracking node.</p>
                 </div>
                 <button type="button" onClick={() => setShowCostCenterModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -2065,7 +2065,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">{editingBankAccount ? 'Edit Bank Account' : 'New Bank Account'}</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">{editingBankAccount ? 'Update bank account details.' : 'Add a bank account to track balances and reconciliation.'}</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">{editingBankAccount ? 'Update bank account details.' : 'Add a bank account to track balances and reconciliation.'}</p>
                 </div>
                 <button type="button" onClick={() => { setShowBankAccountModal(false); setEditingBankAccount(null); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -2113,7 +2113,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                     <h3 className="fs-sm fw-bold text-slate-900">New Bank Reconciliation</h3>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Reconcile your bank statement with book records.</p>
+                  <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Reconcile your bank statement with book records.</p>
                 </div>
                 <button type="button" onClick={() => setShowReconModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                   <i className="bi bi-x fs-xl"></i>
@@ -2515,7 +2515,7 @@ export const AccountingView: React.FC<ModuleViewsProps> = (props) => {
                       <div>
                         <span className="fs-xs fw-semibold text-slate-900">{it.category}</span>
                         {it.department && <span className="fs-xs text-slate-500 ml-1.5">/ {it.department}</span>}
-                        {it.notes && <p className="text-[10px] text-slate-400 mt-0.5">{it.notes}</p>}
+                        {it.notes && <p className="fs-2xs text-slate-400 mt-0.5">{it.notes}</p>}
                       </div>
                       <span className="fs-xs font-sans tabular-nums text-slate-900">{formatCurrency(Number(it.amount || 0), selectedCompany?.currency)}</span>
                     </div>

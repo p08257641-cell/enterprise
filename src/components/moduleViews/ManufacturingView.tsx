@@ -146,7 +146,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="text-right">
                     <div className="fs-2xl fw-bold font-sans tabular-nums text-slate-900">{wo.completion}%</div>
-                    <div className="text-[10px] text-slate-400">completion</div>
+                    <div className="fs-2xs text-slate-400">completion</div>
                   </div>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -154,16 +154,16 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 {isAdmin && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100" onClick={e => e.stopPropagation()}>
-                    {wo.status === 'Scheduled' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Start</button>}
+                    {wo.status === 'Scheduled' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Start</button>}
                     {wo.status === 'In Progress' && (
                       <>
-                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: Math.min(100, (wo.completion || 0) + 10), status: (wo.completion || 0) + 10 >= 100 ? 'Completed' : 'In Progress' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">+10%</button>
-                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: 100, status: 'Completed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Complete</button>
-                        <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'On Hold' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">Hold</button>
+                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: Math.min(100, (wo.completion || 0) + 10), status: (wo.completion || 0) + 10 >= 100 ? 'Completed' : 'In Progress' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-slate-800 text-white hover:bg-slate-700 cursor-pointer">+10%</button>
+                        <button onClick={() => onUpdateWorkOrder(wo.id, { completion: 100, status: 'Completed' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Complete</button>
+                        <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'On Hold' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-amber-500 text-white hover:bg-amber-600 cursor-pointer">Hold</button>
                       </>
                     )}
-                    {wo.status === 'On Hold' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Resume</button>}
-                    <button onClick={() => onDeleteWorkOrder(wo.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
+                    {wo.status === 'On Hold' && <button onClick={() => onUpdateWorkOrder(wo.id, { status: 'In Progress' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 cursor-pointer">Resume</button>}
+                    <button onClick={() => onDeleteWorkOrder(wo.id)} className="fs-3xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer ml-auto">Del</button>
                   </div>
                 )}
               </div>
@@ -206,12 +206,12 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                         onClick={(e) => { e.stopPropagation(); bomModal.open(b); }}
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                       >
-                        <i className="bi bi-eye text-[11px]"></i> View
+                        <i className="bi bi-eye fs-xs"></i> View
                       </button>
                     </td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => onDeleteBOMItem(b.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                        <button onClick={() => onDeleteBOMItem(b.id)} className="fs-3xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                       </td>
                     )}
                   </tr>
@@ -243,15 +243,15 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                 <div>
                   <div className="table-cell-semibold text-slate-900">{q.check}</div>
                   <div className="data-value text-slate-500 mt-0.5">{q.inspector} · {q.date}</div>
-                  {q.notes && <div className="text-[10px] text-slate-400 mt-0.5 italic">{q.notes}</div>}
+                  {q.notes && <div className="fs-2xs text-slate-400 mt-0.5 italic">{q.notes}</div>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge label={q.result} variant={q.result === 'Passed' ? 'success' : q.result === 'Failed' ? 'danger' : 'warning'} />
                   {isAdmin && (
                     <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Passed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Pass</button>}
-                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Failed' })} className="text-[9px] fw-bold px-2 py-1 rounded bg-rose-500 text-white hover:bg-rose-600 cursor-pointer">Fail</button>}
-                      <button onClick={() => onDeleteQualityCheck(q.id)} className="text-[9px] fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
+                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Passed' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">Pass</button>}
+                      {q.result === 'Pending' && <button onClick={() => onUpdateQualityCheck(q.id, { result: 'Failed' })} className="fs-3xs fw-bold px-2 py-1 rounded bg-rose-500 text-white hover:bg-rose-600 cursor-pointer">Fail</button>}
+                      <button onClick={() => onDeleteQualityCheck(q.id)} className="fs-3xs fw-semibold px-2 py-1 rounded border border-rose-200 text-rose-500 hover:bg-rose-50 cursor-pointer">Del</button>
                     </div>
                   )}
                 </div>
@@ -274,7 +274,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <h3 className="fs-sm fw-bold text-slate-900">New Work Order</h3>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Initiate a new production run or assembly job.</p>
+                <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Initiate a new production run or assembly job.</p>
               </div>
               <button type="button" onClick={() => { setShowWOModal(false); setSelectedWoInvId(''); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                 <i className="bi bi-x fs-xl"></i>
@@ -321,7 +321,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <h3 className="fs-sm fw-bold text-slate-900">Add BOM Item</h3>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Add a component or raw material to this product bill of materials.</p>
+                <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Add a component or raw material to this product bill of materials.</p>
               </div>
               <button type="button" onClick={() => { setShowBOMModal(false); setSelectedBomProductInvId(''); setSelectedBomPartInvId(''); }} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                 <i className="bi bi-x fs-xl"></i>
@@ -379,7 +379,7 @@ export const ManufacturingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <h3 className="fs-sm fw-bold text-slate-900">Log Quality Check</h3>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Perform a quality inspection on manufactured goods.</p>
+                <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Perform a quality inspection on manufactured goods.</p>
               </div>
               <button type="button" onClick={() => setShowQCModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                 <i className="bi bi-x fs-xl"></i>

@@ -53,21 +53,21 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
                     <div className="min-w-0 flex-1">
                       <div className="fs-sm fw-bold text-slate-900 group-hover:text-indigo-900 transition-colors truncate">{c.title}</div>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                        <span className={`inline-flex items-center gap-1 text-[10px] fw-bold px-2 py-0.5 rounded-full border ${levelBg}`}><i className={`bi ${levelIcon} text-[9px]`}></i> {c.level}</span>
-                        <span className="text-[10px] text-slate-400 font-sans">{c.duration}</span>
+                        <span className={`inline-flex items-center gap-1 fs-2xs fw-bold px-2 py-0.5 rounded-full border ${levelBg}`}><i className={`bi ${levelIcon} fs-3xs`}></i> {c.level}</span>
+                        <span className="fs-2xs text-slate-400 font-sans">{c.duration}</span>
                       </div>
                     </div>
                     <Badge label={c.category} variant="info" />
                   </div>
-                  <div className="mb-2.5 flex justify-between text-[11px] text-slate-500">
-                    <span className="flex items-center gap-1"><i className="bi bi-people text-[10px] opacity-60"></i> {c.enrolled} enrolled</span>
+                  <div className="mb-2.5 flex justify-between fs-xs text-slate-500">
+                    <span className="flex items-center gap-1"><i className="bi bi-people fs-2xs opacity-60"></i> {c.enrolled} enrolled</span>
                     <span className="fw-bold text-slate-700 font-sans tabular-nums">{c.completion}%</span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full bg-gradient-to-r ${levelColor} transition-all duration-700`} style={{ width: `${c.completion}%` }} />
                   </div>
                   <button onClick={() => setLmsTab('quiz')} className="mt-4 w-full fs-xs fw-semibold border border-slate-200 text-slate-700 py-2.5 rounded-lg hover:bg-slate-900 hover:text-white hover:border-slate-900 cursor-pointer transition-all duration-200 flex items-center justify-center gap-2">
-                    <i className="bi bi-play-circle text-[13px]"></i> Start Course
+                    <i className="bi bi-play-circle fs-xs"></i> Start Course
                   </button>
                 </div>
               );
@@ -142,14 +142,14 @@ export const LMSView: React.FC<ModuleViewsProps> = (props) => {
                     <tr key={emp.id} className="hover:bg-slate-50/40 transition-colors">
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</td>
                       <td className="px-4 py-3 fs-xs text-slate-600">{course.title}</td>
-                      <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${prog > 0 ? `bg-gradient-to-r ${progColor}` : 'bg-slate-200'}`} style={{ width: `${prog}%` }} /></div><span className="text-[10px] font-sans tabular-nums fw-bold text-slate-700 w-8">{prog}%</span></div></td>
+                      <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-2"><div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${prog > 0 ? `bg-gradient-to-r ${progColor}` : 'bg-slate-200'}`} style={{ width: `${prog}%` }} /></div><span className="fs-2xs font-sans tabular-nums fw-bold text-slate-700 w-8">{prog}%</span></div></td>
                       <td className="px-4 py-3"><Badge label={statusLabel} variant={statusVariant as any} /></td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={(e) => { e.stopPropagation(); progressModal.open({ emp, course, prog }); }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
-                          <i className="bi bi-eye text-[11px]"></i> View
+                          <i className="bi bi-eye fs-xs"></i> View
                         </button>
                       </td>
                     </tr>
@@ -205,7 +205,7 @@ const AddCourseForm: React.FC<{ selectedCompany: { id: string }, onAddLmsCourse:
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="w-full sm:w-auto text-[11px] fw-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
+      <button onClick={() => setOpen(true)} className="w-full sm:w-auto fs-xs fw-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
         <i className="bi bi-plus-lg fs-xs"></i> Add Course
       </button>
     );

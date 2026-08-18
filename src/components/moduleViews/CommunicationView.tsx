@@ -112,11 +112,11 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                   {a.pinned && <span className="data-value-small fw-bold uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded">📌 Pinned</span>}
                   <Badge label={a.channel} variant="info" />
                 </div>
-                <span className="text-[10px] font-sans tabular-nums text-slate-400">{a.date}</span>
+                <span className="fs-2xs font-sans tabular-nums text-slate-400">{a.date}</span>
               </div>
               <h3 className="fs-sm fw-bold text-slate-900 mb-1">{a.title}</h3>
               <p className="fs-xs text-slate-600 leading-relaxed">{a.body}</p>
-              <div className="mt-3 text-[10px] text-slate-400">Posted by <span className="fw-semibold text-slate-600">{a.author}</span></div>
+              <div className="mt-3 fs-2xs text-slate-400">Posted by <span className="fw-semibold text-slate-600">{a.author}</span></div>
             </div>
           ))}
         </div>
@@ -150,7 +150,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
             </div>
             <div className="flex-1 overflow-y-auto overflow-x-hidden">
               {/* Teams */}
-              <div className="px-4 pt-3 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400">Teams</div>
+              <div className="px-4 pt-3 pb-1 fs-2xs fw-bold uppercase tracking-widest text-slate-400">Teams</div>
               {departments.filter(d => d.companyId === selectedCompany.id && d.name === myDeptName)
                 .filter(d => !searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .sort((a, b) => getThreadLastMessageTime(b.id) - getThreadLastMessageTime(a.id))
@@ -159,15 +159,15 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <button key={`dept-${d.id}`} onClick={() => { setChatRecipient({ type: 'team', id: d.id, name: d.name }); }}
                       className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 fs-xs cursor-pointer transition-all ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
-                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{d.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center fs-2xs fw-bold shrink-0 ${chatRecipient?.type === 'team' && chatRecipient.id === d.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{d.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>
                       <span className="truncate fw-semibold flex-1">{d.name}</span>
-                      {unread > 0 && <span className="bg-rose-500 text-white text-[9px] fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
+                      {unread > 0 && <span className="bg-rose-500 text-white fs-3xs fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
                     </button>
                   );
                 })}
 
               {/* Custom Groups */}
-              <div className="px-4 pt-4 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400 flex items-center justify-between">
+              <div className="px-4 pt-4 pb-1 fs-2xs fw-bold uppercase tracking-widest text-slate-400 flex items-center justify-between">
                 <span>Groups</span>
                 <button onClick={() => {
                   const name = prompt('Enter group name:');
@@ -184,14 +184,14 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <button key={`cgrp-${g.id}`} onClick={() => { setChatRecipient({ type: 'custom_group', id: g.id, name: g.name }); }}
                       className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 fs-xs cursor-pointer transition-all ${chatRecipient?.type === 'custom_group' && chatRecipient.id === g.id ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
-                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${chatRecipient?.type === 'custom_group' && chatRecipient.id === g.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}><i className="bi bi-people-fill"></i></span>
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center fs-2xs fw-bold shrink-0 ${chatRecipient?.type === 'custom_group' && chatRecipient.id === g.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}><i className="bi bi-people-fill"></i></span>
                       <span className="truncate fw-semibold flex-1">{g.name}</span>
-                      {unread > 0 && <span className="bg-rose-500 text-white text-[9px] fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
+                      {unread > 0 && <span className="bg-rose-500 text-white fs-3xs fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
                     </button>
                   );
                 })}
               {/* People */}
-              <div className="px-4 pt-4 pb-1 text-[10px] fw-bold uppercase tracking-widest text-slate-400">People</div>
+              <div className="px-4 pt-4 pb-1 fs-2xs fw-bold uppercase tracking-widest text-slate-400">People</div>
               {employees.filter(e => e.companyId === selectedCompany.id)
                 .filter(e => !searchTerm || `${e.firstName} ${e.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) || e.department?.toLowerCase().includes(searchTerm.toLowerCase()))
                 .sort((a, b) => {
@@ -206,12 +206,12 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <button key={`emp-${e.id}`} onClick={() => { setChatRecipient({ type: 'person', id: e.userId || e.id, name: fullName }); }}
                       className={`w-full text-left px-4 py-2.5 flex items-center gap-2.5 fs-xs cursor-pointer transition-all ${chatRecipient?.type === 'person' && chatRecipient.id === (e.userId || e.id) ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-700'}`}>
-                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] fw-bold shrink-0 ${chatRecipient?.type === 'person' && chatRecipient.id === (e.userId || e.id) ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{initials}</span>
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center fs-2xs fw-bold shrink-0 ${chatRecipient?.type === 'person' && chatRecipient.id === (e.userId || e.id) ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>{initials}</span>
                       <div className="min-w-0 flex-1">
                         <div className={`truncate fw-semibold ${chatRecipient?.type === 'person' && chatRecipient.id === (e.userId || e.id) ? 'text-white' : 'text-slate-900'}`}>{fullName}</div>
-                        <div className={`truncate text-[10px] ${chatRecipient?.type === 'person' && chatRecipient.id === (e.userId || e.id) ? 'text-white/60' : 'text-slate-400'}`}>{e.department || '—'}</div>
+                        <div className={`truncate fs-2xs ${chatRecipient?.type === 'person' && chatRecipient.id === (e.userId || e.id) ? 'text-white/60' : 'text-slate-400'}`}>{e.department || '—'}</div>
                       </div>
-                      {unread > 0 && <span className="bg-rose-500 text-white text-[9px] fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
+                      {unread > 0 && <span className="bg-rose-500 text-white fs-3xs fw-bold px-1.5 py-0.5 rounded-full">{unread}</span>}
                     </button>
                   );
                 })}
@@ -225,10 +225,10 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                   <button onClick={() => setChatRecipient(null)} className="md:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-slate-100 rounded-full">
                     <i className="bi bi-arrow-left"></i>
                   </button>
-                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] fw-bold shrink-0">{chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
+                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center fs-2xs fw-bold shrink-0">{chatRecipient.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>
                   <div>
                     <div className="fs-sm fw-bold text-slate-900">{chatRecipient.name}</div>
-                    <div className="text-[10px] text-slate-400">{chatRecipient.type === 'team' ? 'Department channel' : chatRecipient.type === 'custom_group' ? 'Custom Group' : 'Direct message'}</div>
+                    <div className="fs-2xs text-slate-400">{chatRecipient.type === 'team' ? 'Department channel' : chatRecipient.type === 'custom_group' ? 'Custom Group' : 'Direct message'}</div>
                   </div>
                   {chatRecipient.type === 'custom_group' && onUpdateChatGroupMembers && (
                     <div className="ml-auto">
@@ -251,7 +251,7 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                             onUpdateChatGroupMembers(chatRecipient.id, newMembers);
                           }
                         }}
-                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] fw-semibold transition-colors">
+                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded fs-2xs fw-semibold transition-colors">
                         Manage Members
                       </button>
                     </div>
@@ -277,9 +277,9 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
                     return threadMsgs.map((m: any, i: number) => (
                       <div key={m.id || i} className={`flex ${m.senderId === selectedUser.id ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 fs-xs shadow-xs ${m.senderId === selectedUser.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'}`}>
-                          {m.senderId !== selectedUser.id && <div className="fw-semibold mb-0.5 text-slate-500 text-[10px]">{m.senderName}</div>}
+                          {m.senderId !== selectedUser.id && <div className="fw-semibold mb-0.5 text-slate-500 fs-2xs">{m.senderName}</div>}
                           <div className="leading-relaxed">{m.message}</div>
-                          <div className={`text-[9px] mt-1 ${m.senderId === selectedUser.id ? 'text-white/50' : 'text-slate-400'}`}>
+                          <div className={`fs-3xs mt-1 ${m.senderId === selectedUser.id ? 'text-white/50' : 'text-slate-400'}`}>
                             {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
@@ -352,9 +352,9 @@ export const CommunicationView: React.FC<ModuleViewsProps> = (props) => {
               <div key={t.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all">
                 <div className="fs-xs fw-bold text-slate-900">{t.name}</div>
                 <div className="data-value text-slate-500 mt-1">{t.subject}</div>
-                {t.body && <div className="text-[10px] text-slate-400 mt-2 line-clamp-2">{t.body.substring(0, 80)}...</div>}
-                <div className="text-[10px] text-slate-400 mt-2">Updated {t.updated}</div>
-                <button onClick={() => { setCommTitle(t.subject); setCommBody(t.body); setCommTab('compose'); }} className="mt-3 text-[10px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
+                {t.body && <div className="fs-2xs text-slate-400 mt-2 line-clamp-2">{t.body.substring(0, 80)}...</div>}
+                <div className="fs-2xs text-slate-400 mt-2">Updated {t.updated}</div>
+                <button onClick={() => { setCommTitle(t.subject); setCommBody(t.body); setCommTab('compose'); }} className="mt-3 fs-2xs fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer border border-slate-200 px-2 py-1 rounded-lg">Use Template</button>
               </div>
             ))}
             {emailTemplates.filter(t => t.companyId === selectedCompany.id).length === 0 && !showAddTemplate && (

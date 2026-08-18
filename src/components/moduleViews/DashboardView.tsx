@@ -196,7 +196,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">Financial Performance Trend</h3>
-                <p className="text-[10px] text-slate-400 font-sans mt-0.5">
+                <p className="fs-2xs text-slate-400 font-sans mt-0.5">
                   {hasRealFinancials ? "Live general ledger tracking" : "Simulated trend baseline · Create invoices/expenses to update"}
                 </p>
               </div>
@@ -227,7 +227,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
                   return (
                     <g key={i} className="opacity-40">
                       <line x1={padL} y1={yVal} x2={svgW - padR} y2={yVal} stroke="#e2e8f0" strokeDasharray="3,3" />
-                      <text x={padL - 8} y={yVal + 3} textAnchor="end" className="fill-slate-400 font-mono text-[9px]">{formatCurrency(textVal, selectedCompany?.currency)}</text>
+                      <text x={padL - 8} y={yVal + 3} textAnchor="end" className="fill-slate-400 font-mono fs-3xs">{formatCurrency(textVal, selectedCompany?.currency)}</text>
                     </g>
                   );
                 })}
@@ -242,7 +242,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
 
                 {/* X-Axis labels */}
                 {chartData.map((d, i) => (
-                  <text key={i} x={getX(i)} y={padT + chartH + 16} textAnchor="middle" className="fill-slate-400 font-medium text-[10px]">
+                  <text key={i} x={getX(i)} y={padT + chartH + 16} textAnchor="middle" className="fill-slate-400 font-medium fs-2xs">
                     {d.name}
                   </text>
                 ))}
@@ -298,7 +298,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
                 <i className="bi bi-stars text-slate-900 fs-sm animate-pulse"></i>
                 <h3 className="fs-sm fw-bold text-slate-950">Gemini AI Advisor</h3>
               </div>
-              <button onClick={() => onNavigateView('ai-copilot')} className="text-[10px] fw-bold text-slate-500 hover:text-slate-900 cursor-pointer">
+              <button onClick={() => onNavigateView('ai-copilot')} className="fs-2xs fw-bold text-slate-500 hover:text-slate-900 cursor-pointer">
                 Open Co-Pilot <i className="bi bi-arrow-right"></i>
               </button>
             </div>
@@ -315,7 +315,7 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="h-3.5 bg-slate-100 rounded-full w-5/6 animate-pulse"></div>
                 </div>
               ) : (
-                <div className="rounded-lg bg-slate-50 border border-slate-100/60 p-3 text-[11px] text-slate-700 leading-relaxed font-sans whitespace-pre-wrap max-h-36 overflow-y-auto">
+                <div className="rounded-lg bg-slate-50 border border-slate-100/60 p-3 fs-xs text-slate-700 leading-relaxed font-sans whitespace-pre-wrap max-h-36 overflow-y-auto">
                   {aiReply || "Advisor idle. Ask anything or view insights."}
                 </div>
               )}
@@ -330,12 +330,12 @@ export const DashboardView: React.FC<ModuleViewsProps> = (props) => {
               onChange={e => setAiPrompt(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAskGemini()}
               placeholder="Ask anything about the company data..."
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] outline-hidden focus:border-slate-400 focus:ring-1 focus:ring-slate-300 font-sans"
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 fs-xs outline-hidden focus:border-slate-400 focus:ring-1 focus:ring-slate-300 font-sans"
             />
             <button
               onClick={handleAskGemini}
               disabled={aiLoading || !aiPrompt.trim()}
-              className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-lg px-3 py-1.5 text-[11px] fw-bold cursor-pointer"
+              className="bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-lg px-3 py-1.5 fs-xs fw-bold cursor-pointer"
             >
               Ask
             </button>

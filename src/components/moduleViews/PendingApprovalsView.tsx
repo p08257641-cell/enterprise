@@ -102,11 +102,11 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">Module Access</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {data.changes.modules.from?.map((m: string) => (
-                    <span key={m} className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-red-100 text-red-600 line-through">{m}</span>
+                    <span key={m} className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-red-100 text-red-600 line-through">{m}</span>
                   ))}
                   <i className="bi bi-arrow-right text-slate-400 mx-1 self-center"></i>
                   {data.changes.modules.to?.map((m: string) => (
-                    <span key={m} className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-emerald-100 text-emerald-700">{m}</span>
+                    <span key={m} className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-emerald-100 text-emerald-700">{m}</span>
                   ))}
                 </div>
               </div>
@@ -114,7 +114,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
             {data.changes.submenus && (
               <div className="p-3 bg-slate-50 rounded-lg">
                 <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">Submenu Access</div>
-                <div className="text-[11px] text-slate-600 mt-1">
+                <div className="fs-xs text-slate-600 mt-1">
                   {data.changes.submenus.from?.length || 0} items → {data.changes.submenus.to?.length || 0} items
                 </div>
               </div>
@@ -124,11 +124,11 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="fs-[10px] fw-semibold text-slate-500 uppercase tracking-wider mb-1">Module Actions (Create, View, Edit, Delete)</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {data.changes.crudPermissions.from?.map((p: string) => (
-                    <span key={p} className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-red-100 text-red-600 line-through">{p}</span>
+                    <span key={p} className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-red-100 text-red-600 line-through">{p}</span>
                   ))}
                   <i className="bi bi-arrow-right text-slate-400 mx-1 self-center"></i>
                   {data.changes.crudPermissions.to?.map((p: string) => (
-                    <span key={p} className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-emerald-100 text-emerald-700">{p}</span>
+                    <span key={p} className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-emerald-100 text-emerald-700">{p}</span>
                   ))}
                 </div>
               </div>
@@ -172,7 +172,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
             >
               {s}
               {s === 'Pending' && (
-                <span className="ml-1.5 bg-amber-500 text-white rounded-full px-1 py-0 text-[9px] fw-bold">
+                <span className="ml-1.5 bg-amber-500 text-white rounded-full px-1 py-0 fs-3xs fw-bold">
                   {localApprovals.filter(a => a.status === 'Pending').length}
                 </span>
               )}
@@ -214,15 +214,15 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="fs-sm fw-semibold text-slate-900 truncate">{a.title}</span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] fw-bold ${a.status === 'Pending' ? 'bg-amber-100 text-amber-700' : a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full fs-2xs fw-bold ${a.status === 'Pending' ? 'bg-amber-100 text-amber-700' : a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                         {a.status}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
+                    <div className="fs-xs text-slate-400 mt-0.5">
                       {a.module} · Requested by {a.requesterName} · {new Date(a.createdAt).toLocaleDateString()}
                     </div>
                     {a.description && (
-                      <div className="text-[11px] text-slate-500 mt-1 max-w-lg truncate">{a.description}</div>
+                      <div className="fs-xs text-slate-500 mt-1 max-w-lg truncate">{a.description}</div>
                     )}
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
                 </div>
                 <div>
                   <h3 className="fs-sm fw-bold text-slate-900">{selectedApproval.title}</h3>
-                  <div className="text-[11px] text-slate-400">{selectedApproval.module}</div>
+                  <div className="fs-xs text-slate-400">{selectedApproval.module}</div>
                 </div>
               </div>
               <button
@@ -281,7 +281,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
               {/* Status */}
               <div className="flex flex-wrap items-center gap-3">
                 <span className="fs-xs fw-semibold text-slate-500 w-20">Status</span>
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] fw-bold ${
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full fs-xs fw-bold ${
                   selectedApproval.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
                   selectedApproval.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
                   'bg-red-100 text-red-700'
@@ -308,7 +308,7 @@ export const PendingApprovalsView: React.FC<ModuleViewsProps> = (props) => {
                   <span className="fs-xs fw-semibold text-slate-500 w-20 shrink-0 pt-0.5">Approvers</span>
                   <div className="flex flex-wrap gap-1">
                     {selectedApproval.assignedRoles.map(r => (
-                      <span key={r} className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-slate-100 text-slate-600">{r}</span>
+                      <span key={r} className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-slate-100 text-slate-600">{r}</span>
                     ))}
                   </div>
                 </div>

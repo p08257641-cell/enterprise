@@ -374,6 +374,201 @@ h6 { font-size: var(--fs-xs); font-weight: var(--fw-medium); }
 .text-\[10px\] { font-size: 13px !important; }
 .text-\[11px\] { font-size: 14px !important; }
 
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tighter);
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+
+.stat-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* ─── Page Content Typography ─────────────────────────────────────────────────── */
+.page-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.page-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+.page-text {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #475569;
+}
+
+.page-text-small {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+/* ─── Consistent Component Sizing ───────────────────────────────────────────── */
+.page-header-title {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.page-header-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+.section-title {
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.data-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: #64748b;
+}
+
+.data-value {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #0f172a;
+}
+
+.data-value-small {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+}
+
+/* ─── Badge / Pill Typography ─────────────────────────────────────────────── */
+.badge {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  line-height: 1;
+}
+
+/* ─── Button Typography ─────────────────────────────────────────────────────── */
+.btn {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-tight);
+}
+
+.btn-small {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-normal);
+}
+
+/* ─── Avatar Typography ─────────────────────────────────────────────────────── */
+.avatar-text {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+}
+
+.avatar-text-large {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+
+/* ─── Icon Typography ───────────────────────────────────────────────────────── */
+.icon-small {
+  font-size: var(--fs-xs);
+}
+
+.icon-medium {
+  font-size: var(--fs-sm);
+}
+
+.icon-large {
+  font-size: var(--fs-md);
+}
+
+/* ─── Table Cell Typography ─────────────────────────────────────────────────── */
+.table-cell {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+}
+
+.table-cell-semibold {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.table-cell-mono {
+  font-size: var(--fs-xs);
+  font-family: var(--ff-mono);
+  font-weight: var(--fw-regular);
+}
+
+/* ─── Form Label Typography ─────────────────────────────────────────────────── */
+.form-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+
+.form-input {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+}
+
+/* ─── Section Headers ─────────────────────────────────────────────────────── */
+.section-header {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  color: #0f172a;
+}
+
+.section-subtitle {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: #64748b;
+  line-height: var(--lh-relaxed);
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ─── Focus Rings ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Selection ───────────────────────────────────────────────────────────── */
+::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+/* ─── Typography Sizing Adjustments ───────────────────────────────────────── */
+/* Override Tailwind tiny arbitrary sizes for better legibility */
+.text-\[8px\]  { font-size: 11px !important; }
+.text-\[9px\]  { font-size: 12px !important; }
+.text-\[10px\] { font-size: 13px !important; }
+.text-\[11px\] { font-size: 14px !important; }
+
 /* Ensure Tailwind default text-xs and text-sm are comfortably readable */
 aside .text-xs  { font-size: 13px !important; }
 aside .text-sm  { font-size: 15px !important; }
@@ -391,6 +586,8 @@ aside .text-\[11px\] { font-size: 14px !important; }
 }
 
 /* ─── Typography Utilities ────────────────────────────────────────────────── */
+.fs-3xs { font-size: 0.5625rem; line-height: 0.75rem; }
+.fs-2xs { font-size: 0.6875rem; line-height: 0.875rem; }
 .fs-xs { font-size: 0.75rem; line-height: 1rem; }
 .fs-sm { font-size: 0.875rem; line-height: 1.25rem; }
 .fs-base { font-size: 1rem; line-height: 1.5rem; }

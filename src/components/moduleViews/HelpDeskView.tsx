@@ -119,19 +119,19 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
             <tbody className="divide-y divide-slate-100">
               {localTickets.filter(t => !searchTerm || t.subject.toLowerCase().includes(searchTerm.toLowerCase()) || t.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) || t.customerName.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
                 <tr key={t.id} className="hover:bg-slate-50/40 transition-colors">
-                  <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
+                  <td className="px-4 py-3 fs-2xs font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
                   <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.customerName}</td>
                   <td className="px-4 py-3 fs-xs text-slate-600 max-w-[200px] truncate">{t.subject}</td>
                   <td className="px-4 py-3"><Badge label={t.category} /></td>
                   <td className="px-4 py-3"><Badge label={t.priority} variant={t.priority === 'Critical' ? 'danger' : t.priority === 'High' ? 'warning' : 'default'} /></td>
                   <td className="px-4 py-3"><Badge label={t.status} variant={t.status === 'Resolved' ? 'success' : t.status === 'In Progress' ? 'info' : 'warning'} /></td>
-                  <td className="px-4 py-3 text-[10px] font-sans tabular-nums text-slate-400">{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 fs-2xs font-sans tabular-nums text-slate-400">{new Date(t.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={(e) => { e.stopPropagation(); ticketModal.open(t); }}
                       className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                     >
-                      <i className={`bi ${canManage ? 'bi-pencil' : 'bi-eye'} text-[11px]`}></i> {canManage ? 'Edit' : 'View'}
+                      <i className={`bi ${canManage ? 'bi-pencil' : 'bi-eye'} fs-xs`}></i> {canManage ? 'Edit' : 'View'}
                     </button>
                   </td>
                 </tr>
@@ -192,7 +192,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">Ticket Queue</h3>
-                <p className="text-[10px] text-slate-400">{localTickets.length} total tickets</p>
+                <p className="fs-2xs text-slate-400">{localTickets.length} total tickets</p>
               </div>
               <button onClick={() => setHdTab('queue')} className="fs-[10px] fw-semibold text-slate-400 hover:text-slate-700 cursor-pointer transition-colors">View All →</button>
             </div>
@@ -200,7 +200,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
               {localTickets.slice(0, 15).map(t => (
                 <div key={t.id} className="px-4 py-3 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => { setHdTab('queue'); }}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-sans tabular-nums fw-bold text-slate-500">{t.ticketNumber}</span>
+                    <span className="fs-2xs font-sans tabular-nums fw-bold text-slate-500">{t.ticketNumber}</span>
                     <Badge label={t.status} variant={t.status === 'Resolved' ? 'success' : t.status === 'In Progress' ? 'info' : 'warning'} />
                   </div>
                   <div className="fs-xs fw-semibold text-slate-800 truncate">{t.subject}</div>
@@ -226,7 +226,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
           <div className="grid gap-4 sm:grid-cols-2">
             {kbArticles.map(a => (
               <div key={a.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs hover:border-slate-300 transition-all cursor-pointer flex items-start justify-between">
-                <div><div className="fs-xs fw-semibold text-slate-900">{a.title}</div><div className="text-[10px] text-slate-400 mt-1">{a.category} · {a.views} views</div></div>
+                <div><div className="fs-xs fw-semibold text-slate-900">{a.title}</div><div className="fs-2xs text-slate-400 mt-1">{a.category} · {a.views} views</div></div>
                 <i className="bi bi-arrow-right text-slate-300 fs-sm shrink-0 ml-3"></i>
               </div>
             ))}
@@ -253,7 +253,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                   const s = slaStatus(t);
                   return (
                     <tr key={t.id} className="hover:bg-slate-50/40">
-                      <td className="px-4 py-3 text-[10px] font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
+                      <td className="px-4 py-3 fs-2xs font-sans tabular-nums fw-bold text-slate-600">{t.ticketNumber}</td>
                       <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{t.customerName}</td>
                       <td className="px-4 py-3"><Badge label={t.priority} variant={t.priority === 'Critical' ? 'danger' : t.priority === 'High' ? 'warning' : 'default'} /></td>
                       <td className="px-4 py-3 fs-xs text-slate-600 tabular-nums">{s.elapsedH}h</td>
@@ -264,7 +264,7 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                           onClick={(e) => { e.stopPropagation(); ticketModal.open(t); }}
                           className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                         >
-                          <i className="bi bi-eye text-[11px]"></i> View
+                          <i className="bi bi-eye fs-xs"></i> View
                         </button>
                       </td>
                     </tr>
@@ -325,15 +325,15 @@ export const HelpDeskView: React.FC<ModuleViewsProps> = (props) => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="fs-xs fw-semibold text-slate-600 uppercase tracking-wide">Conversation</span>
-                    <span className="text-[10px] text-slate-400">{replies.length} message{replies.length === 1 ? '' : 's'}</span>
+                    <span className="fs-2xs text-slate-400">{replies.length} message{replies.length === 1 ? '' : 's'}</span>
                   </div>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {replies.length === 0 && <div className="fs-xs text-slate-400 italic">No replies yet.</div>}
                     {replies.map((r, i) => (
                       <div key={i} className={`rounded-xl p-3 fs-xs ${r.fromRole === 'Customer' ? 'bg-blue-50 border border-blue-100' : 'bg-slate-50 border border-slate-100'}`}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="fw-semibold text-slate-800">{r.from} <span className="text-[10px] fw-normal text-slate-400">· {r.fromRole}</span></span>
-                          <span className="text-[10px] text-slate-400">{new Date(r.at).toLocaleString()}</span>
+                          <span className="fw-semibold text-slate-800">{r.from} <span className="fs-2xs fw-normal text-slate-400">· {r.fromRole}</span></span>
+                          <span className="fs-2xs text-slate-400">{new Date(r.at).toLocaleString()}</span>
                         </div>
                         <div className="text-slate-700 whitespace-pre-wrap">{r.message}</div>
                       </div>
@@ -401,7 +401,7 @@ const AddKBArticleForm: React.FC<{ selectedCompany: { id: string }, onAddKbArtic
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="w-full sm:w-auto text-[11px] fw-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
+      <button onClick={() => setOpen(true)} className="w-full sm:w-auto fs-xs fw-semibold px-3 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all inline-flex items-center gap-1.5">
         <i className="bi bi-plus-lg fs-xs"></i> Add Article
       </button>
     );

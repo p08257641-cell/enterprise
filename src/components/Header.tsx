@@ -140,17 +140,17 @@ export const Header: React.FC<HeaderProps> = ({
                 className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white rounded-full transition-all cursor-pointer shadow-md ring-1 ring-white/10"
               >
                 <div className="flex items-center justify-center w-5 h-5 rounded-full bg-white/20">
-                  <i className="bi bi-person-badge text-[10px] text-white"></i>
+                  <i className="bi bi-person-badge fs-2xs text-white"></i>
                 </div>
                 <span className="fs-xs fw-bold max-w-[80px] sm:max-w-[150px] truncate">{selectedUser.activeRole}</span>
-                <i className={`bi bi-chevron-down text-[10px] text-slate-300 transition-transform duration-200 ${roleMenuOpen ? 'rotate-180' : ''}`}></i>
+                <i className={`bi bi-chevron-down fs-2xs text-slate-300 transition-transform duration-200 ${roleMenuOpen ? 'rotate-180' : ''}`}></i>
               </div>
               
               {/* Dropdown Menu */}
               {roleMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-3 pb-2 mb-2 border-b border-slate-100">
-                    <span className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
+                    <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider">Switch Role</span>
                   </div>
                   <div className="max-h-60 overflow-y-auto">
                     {selectedUser.roles.map((role) => (
@@ -223,7 +223,7 @@ export const Header: React.FC<HeaderProps> = ({
                       if (onNavigateView) onNavigateView('admin');
                       setAppsMenuOpen(false);
                     }}
-                    className="text-[11px] fw-semibold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                    className="fs-xs fw-semibold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
                   >
                     Manage All →
                   </button>
@@ -370,8 +370,8 @@ export const Header: React.FC<HeaderProps> = ({
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105" style={{ background: app.bg }}>
                         {app.icon}
                       </div>
-                      <span className="text-[11px] fw-bold text-slate-800 group-hover:text-indigo-900 truncate w-full">{app.name}</span>
-                      <span className="text-[9px] text-slate-400 group-hover:text-indigo-600 truncate w-full">{app.category}</span>
+                      <span className="fs-xs fw-bold text-slate-800 group-hover:text-indigo-900 truncate w-full">{app.name}</span>
+                      <span className="fs-3xs text-slate-400 group-hover:text-indigo-600 truncate w-full">{app.category}</span>
                     </button>
                   ))}
                 </div>
@@ -390,7 +390,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <i className={`bi bi-bell${totalCount > 0 ? '-fill' : ''} text-slate-500 hover:text-slate-900 fs-sm`}></i>
             {totalCount > 0 && (
-              <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-900 text-[10px] fw-bold text-white ring-2 ring-white">
+              <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-900 fs-2xs fw-bold text-white ring-2 ring-white">
                 {totalCount > 9 ? '9+' : totalCount}
               </span>
             )}
@@ -403,7 +403,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <div>
                   <h3 className="fs-sm fw-bold text-slate-900">Notifications</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="fs-2xs text-slate-400 mt-0.5">
                     {totalCount > 0 ? `${totalCount} unread` : 'All caught up'}
                   </p>
                 </div>
@@ -411,7 +411,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {totalCount > 0 && (
                     <button
                       onClick={() => { onClearNotifications(); setPanelOpen(false); }}
-                      className="text-[11px] fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer transition-colors"
+                      className="fs-xs fw-semibold text-slate-500 hover:text-slate-900 cursor-pointer transition-colors"
                     >
                       Mark all read
                     </button>
@@ -433,7 +433,7 @@ export const Header: React.FC<HeaderProps> = ({
                       <i className="bi bi-check2-all text-slate-400 fs-lg"></i>
                     </div>
                     <p className="fs-xs fw-semibold text-slate-600">You're all caught up!</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">No pending notifications</p>
+                    <p className="fs-xs text-slate-400 mt-0.5">No pending notifications</p>
                   </div>
                 ) : (
                   <>
@@ -441,17 +441,17 @@ export const Header: React.FC<HeaderProps> = ({
                     {notificationCount > 0 && (
                       <div className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors">
                         <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center shrink-0 mt-0.5">
-                          <i className="bi bi-info-circle text-white text-[11px]"></i>
+                          <i className="bi bi-info-circle text-white fs-xs"></i>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="fs-xs fw-semibold text-slate-900">
                             {notificationCount} system alert{notificationCount > 1 ? 's' : ''}
                           </p>
-                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                          <p className="fs-xs text-slate-500 mt-0.5 leading-relaxed">
                             Activity updates and system events
                           </p>
                         </div>
-                        <span className="text-[10px] text-slate-400 shrink-0 mt-1">now</span>
+                        <span className="fs-2xs text-slate-400 shrink-0 mt-1">now</span>
                       </div>
                     )}
 
@@ -466,25 +466,25 @@ export const Header: React.FC<HeaderProps> = ({
                         className="w-full flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors text-left cursor-pointer"
                       >
                         <div className="h-8 w-8 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 mt-0.5">
-                          <i className={`bi ${getModuleIcon(approval.module)} text-amber-600 text-[11px]`}></i>
+                          <i className={`bi ${getModuleIcon(approval.module)} text-amber-600 fs-xs`}></i>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="fs-xs fw-semibold text-slate-900 truncate">{approval.title}</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
+                          <p className="fs-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
                             {approval.description}
                           </p>
-                          <p className="text-[10px] text-amber-600 fw-semibold mt-1">
+                          <p className="fs-2xs text-amber-600 fw-semibold mt-1">
                             <i className="bi bi-clock mr-1"></i>{approval.module} · by {approval.requesterName}
                           </p>
                         </div>
-                        <span className="text-[10px] text-slate-400 shrink-0 mt-1">
+                        <span className="fs-2xs text-slate-400 shrink-0 mt-1">
                           {timeAgo(approval.createdAt)}
                         </span>
                       </button>
                     ))}
 
                     {companyApprovals.length > 8 && (
-                      <div className="px-4 py-2 text-center text-[11px] text-slate-400">
+                      <div className="px-4 py-2 text-center fs-xs text-slate-400">
                         +{companyApprovals.length - 8} more approvals
                       </div>
                     )}
@@ -500,7 +500,7 @@ export const Header: React.FC<HeaderProps> = ({
                       if (onNavigateView) onNavigateView('pending-approvals');
                       setPanelOpen(false);
                     }}
-                    className="w-full text-center text-[11px] fw-semibold text-slate-700 hover:text-slate-900 cursor-pointer transition-colors"
+                    className="w-full text-center fs-xs fw-semibold text-slate-700 hover:text-slate-900 cursor-pointer transition-colors"
                   >
                     View all pending approvals <i className="bi bi-arrow-right ml-1"></i>
                   </button>

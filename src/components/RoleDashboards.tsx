@@ -149,7 +149,7 @@ const DoughnutChart = ({ data, title }: { data: { label: string; value: number; 
             ))}
           </svg>
           <div className="flex flex-col items-center justify-center relative z-10 text-center">
-             <span className="text-[10px] text-slate-400 fw-semibold uppercase tracking-wider mb-0.5">Total</span>
+             <span className="fs-2xs text-slate-400 fw-semibold uppercase tracking-wider mb-0.5">Total</span>
              <span className="fs-xl fw-bold text-slate-800 leading-none">{total}</span>
           </div>
         </div>
@@ -209,8 +209,8 @@ const UpsellOverlay = ({ children, isActive, title, icon = 'bi-lock-fill' }: { c
           <i className={`bi ${icon} fs-lg text-slate-700`}></i>
         </div>
         <h4 className="fs-sm fw-bold text-slate-900 mb-1.5">Unlock {title}</h4>
-        <p className="text-[11px] text-slate-600 mb-4 max-w-[220px] leading-relaxed">Upgrade your plan to enable this module and unlock powerful real-time insights.</p>
-        <button className="px-4 py-2 bg-slate-900 text-white text-[11px] fw-semibold rounded-lg hover:bg-slate-800 transition-all shadow-xs flex items-center gap-2">
+        <p className="fs-xs text-slate-600 mb-4 max-w-[220px] leading-relaxed">Upgrade your plan to enable this module and unlock powerful real-time insights.</p>
+        <button className="px-4 py-2 bg-slate-900 text-white fs-xs fw-semibold rounded-lg hover:bg-slate-800 transition-all shadow-xs flex items-center gap-2">
           <i className="bi bi-stars text-amber-400"></i> Upgrade Plan
         </button>
       </div>
@@ -251,8 +251,8 @@ const FunnelChart = ({ data, title }: { data: { label: string; value: number; co
   return (
     <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
       <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
-      <div className="space-y-2">{data.map((d, i) => (<div key={i} className="flex items-center gap-3"><span className="text-[10px] fw-semibold text-slate-500 w-20 text-right truncate">{d.label}</span><div className="flex-1"><div className="h-8 rounded-lg flex items-center px-3 transition-all duration-500" style={{ width: `${Math.max((d.value / maxVal) * 100, 12)}%`, backgroundColor: d.color, minWidth: '50px' }}><span className="text-[10px] fw-bold text-white drop-shadow-sm">{d.value.toLocaleString()}</span></div></div></div>))}</div>
-      <div className="flex items-center justify-center gap-1 mt-3 text-[9px] text-slate-400 fw-semibold uppercase tracking-wider"><i className="bi bi-funnel-fill text-slate-300" /> Pipeline Conversion Flow</div>
+      <div className="space-y-2">{data.map((d, i) => (<div key={i} className="flex items-center gap-3"><span className="fs-2xs fw-semibold text-slate-500 w-20 text-right truncate">{d.label}</span><div className="flex-1"><div className="h-8 rounded-lg flex items-center px-3 transition-all duration-500" style={{ width: `${Math.max((d.value / maxVal) * 100, 12)}%`, backgroundColor: d.color, minWidth: '50px' }}><span className="fs-2xs fw-bold text-white drop-shadow-sm">{d.value.toLocaleString()}</span></div></div></div>))}</div>
+      <div className="flex items-center justify-center gap-1 mt-3 fs-3xs text-slate-400 fw-semibold uppercase tracking-wider"><i className="bi bi-funnel-fill text-slate-300" /> Pipeline Conversion Flow</div>
     </div>
   );
 };
@@ -265,7 +265,7 @@ const StackedBarChart = ({ data, title, currency = '$' }: { data: { dept: string
   return (
     <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
       <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-2">{title}</h3>
-      <div className="flex items-center gap-4 mb-3">{[{ l: 'Base Salary', c: '#0f172a' }, { l: 'Taxes', c: '#ef4444' }, { l: 'Benefits', c: '#10b981' }].map(x => (<div key={x.l} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: x.c }} /><span className="text-[9px] text-slate-500 fw-medium">{x.l}</span></div>))}</div>
+      <div className="flex items-center gap-4 mb-3">{[{ l: 'Base Salary', c: '#0f172a' }, { l: 'Taxes', c: '#ef4444' }, { l: 'Benefits', c: '#10b981' }].map(x => (<div key={x.l} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: x.c }} /><span className="fs-3xs text-slate-500 fw-medium">{x.l}</span></div>))}</div>
       <svg viewBox={`0 0 ${pL + cW + 80} ${tH}`} className="w-full" preserveAspectRatio="xMinYMin meet">
         {data.map((d, i) => { const y = i * (bH + gp), tot = d.salary + d.taxes + d.benefits, sW = (d.salary / maxV) * cW, tW = (d.taxes / maxV) * cW, bW = (d.benefits / maxV) * cW; return (<g key={i}><text x={pL - 6} y={y + bH / 2 + 4} textAnchor="end" fontSize="9" fill="#475569" fontFamily="system-ui">{d.dept.length > 14 ? d.dept.slice(0, 12) + '…' : d.dept}</text><rect x={pL} y={y} width={sW} height={bH} rx={3} fill="#0f172a" /><rect x={pL + sW} y={y} width={tW} height={bH} fill="#ef4444" /><rect x={pL + sW + tW} y={y} width={bW} height={bH} rx={3} fill="#10b981" /><text x={pL + sW + tW + bW + 6} y={y + bH / 2 + 3} fontSize="8" fill="#94a3b8" fontFamily="system-ui, monospace">{currency}{tot.toLocaleString()}</text></g>); })}
       </svg>
@@ -281,7 +281,7 @@ const HeatmapGrid = ({ data, title }: { data: { day: string; rate: number }[]; t
     <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
       <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
       <div className="flex gap-1.5 flex-wrap">{wks.map((wk, wi) => (<div key={wi} className="flex flex-col gap-1">{wk.map((d, di) => (<div key={di} className="h-6 w-6 rounded-sm transition-all hover:scale-110 cursor-default" style={{ backgroundColor: gc(d.rate) }} title={`${d.day}: ${d.rate}%`} />))}</div>))}</div>
-      <div className="flex items-center gap-3 mt-3"><span className="text-[9px] text-slate-400 fw-medium">Low</span>{['#ef4444','#f59e0b','#fbbf24','#10b981','#059669'].map(c => (<span key={c} className="h-3 w-6 rounded-sm" style={{ backgroundColor: c }} />))}<span className="text-[9px] text-slate-400 fw-medium">High</span></div>
+      <div className="flex items-center gap-3 mt-3"><span className="fs-3xs text-slate-400 fw-medium">Low</span>{['#ef4444','#f59e0b','#fbbf24','#10b981','#059669'].map(c => (<span key={c} className="h-3 w-6 rounded-sm" style={{ backgroundColor: c }} />))}<span className="fs-3xs text-slate-400 fw-medium">High</span></div>
     </div>
   );
 };
@@ -292,7 +292,7 @@ const InvoiceAgingChart = ({ buckets, title, currency = '$' }: { buckets: { labe
   return (
     <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-5">
       <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">{title}</h3>
-      <div className="space-y-3">{buckets.map((b, i) => (<div key={i}><div className="flex items-center justify-between mb-1"><span className="text-[11px] fw-semibold text-slate-700">{b.label}</span><div className="flex items-center gap-2"><span className="text-[10px] text-slate-400">{b.count} inv</span><span className="text-[11px] fw-bold text-slate-900 font-mono tabular-nums">{currency}{b.amount.toLocaleString()}</span></div></div><div className="h-4 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.max((b.amount / mx) * 100, 2)}%`, backgroundColor: b.color }} /></div></div>))}</div>
+      <div className="space-y-3">{buckets.map((b, i) => (<div key={i}><div className="flex items-center justify-between mb-1"><span className="fs-xs fw-semibold text-slate-700">{b.label}</span><div className="flex items-center gap-2"><span className="fs-2xs text-slate-400">{b.count} inv</span><span className="fs-xs fw-bold text-slate-900 font-mono tabular-nums">{currency}{b.amount.toLocaleString()}</span></div></div><div className="h-4 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.max((b.amount / mx) * 100, 2)}%`, backgroundColor: b.color }} /></div></div>))}</div>
     </div>
   );
 };
@@ -341,7 +341,7 @@ const StatCard = ({ label, value, sub, accent = false, icon }: {
     accent ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200/80'
   }`}>
     <div className="flex items-center justify-between">
-      <span className={`text-[10px] fw-bold uppercase tracking-widest ${accent ? 'text-slate-400' : 'text-slate-400'}`}>{label}</span>
+      <span className={`fs-2xs fw-bold uppercase tracking-widest ${accent ? 'text-slate-400' : 'text-slate-400'}`}>{label}</span>
       <div className={`h-8 w-8 rounded-md flex shrink-0 items-center justify-center border transition-all ${
         accent 
           ? 'bg-white/10 border-white/20' 
@@ -351,7 +351,7 @@ const StatCard = ({ label, value, sub, accent = false, icon }: {
       </div>
     </div>
     <div className={`fs-2xl fw-bold tracking-tight font-sans tabular-nums ${accent ? 'text-white' : 'text-slate-900'}`}>{value}</div>
-    {sub && <p className={`text-[11px] leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
+    {sub && <p className={`fs-xs leading-snug ${accent ? 'text-slate-400' : 'text-slate-500'}`}>{sub}</p>}
   </div>
 );
 
@@ -365,7 +365,7 @@ const Badge = ({ label, variant = 'default' }: { label: string; variant?: 'succe
     default: 'bg-slate-50 text-slate-600 border-slate-200',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] fw-semibold border ${styles[variant]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded fs-2xs fw-semibold border ${styles[variant]}`}>
       {label}
     </span>
   );
@@ -474,7 +474,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">
                 <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                 System Administrator
               </span>
@@ -526,18 +526,18 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div className="lg:col-span-3 rounded-xl border border-slate-200/80 bg-white shadow-xs">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Multi-Tenant Registry</h3>
-              <span className="text-[10px] text-slate-400 font-sans">{companies.length} tenants</span>
+              <span className="fs-2xs text-slate-400 font-sans">{companies.length} tenants</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50/60 border-b border-slate-100">
                   <tr>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Organisation</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Industry</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Modules</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Plan</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Status</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400 text-right">MRR</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Organisation</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Industry</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Modules</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Plan</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Status</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400 text-right">MRR</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -548,14 +548,14 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                           <span className="fs-xl">{c.logo}</span>
                           <div>
                             <div className="fs-xs fw-semibold text-slate-900">{c.name}</div>
-                            <div className="text-[10px] text-slate-400 font-sans">{c.domain}</div>
+                            <div className="fs-2xs text-slate-400 font-sans">{c.domain}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-3 fs-xs text-slate-600">{c.industry}</td>
                       <td className="px-5 py-3">
                         <span className="fs-xs fw-bold text-slate-900 font-sans tabular-nums">{c.activeModules.length}</span>
-                        <span className="text-[10px] text-slate-400"> / {Object.keys(MODULE_CATALOG).length}</span>
+                        <span className="fs-2xs text-slate-400"> / {Object.keys(MODULE_CATALOG).length}</span>
                       </td>
                       <td className="px-5 py-3">{planBadge(c.billingPlan)}</td>
                       <td className="px-5 py-3">{statusBadge(c.billingStatus)}</td>
@@ -585,7 +585,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 ].map(s => (
                   <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
                     <span className="fs-xs text-slate-600">{s.label}</span>
-                    <span className={`flex items-center gap-1.5 text-[10px] fw-semibold ${s.ok ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className={`flex items-center gap-1.5 fs-2xs fw-semibold ${s.ok ? 'text-emerald-600' : 'text-rose-600'}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${s.ok ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
                       {s.value}
                     </span>
@@ -601,11 +601,11 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 {auditLogs.slice(0, 5).map(log => (
                   <div key={log.id} className="border-l-2 border-slate-200 pl-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[11px] fw-semibold text-slate-800">{log.userName}</span>
-                      <span className="text-[9px] text-slate-400 font-mono shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      <span className="fs-xs fw-semibold text-slate-800">{log.userName}</span>
+                      <span className="fs-3xs text-slate-400 font-mono shrink-0">{new Date(log.timestamp).toLocaleTimeString()}</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{log.details}</p>
-                    <span className="mt-1 inline-block text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-sans fw-semibold uppercase tracking-wider">{log.module}</span>
+                    <p className="fs-xs text-slate-500 mt-0.5 leading-snug">{log.details}</p>
+                    <span className="mt-1 inline-block fs-3xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-sans fw-semibold uppercase tracking-wider">{log.module}</span>
                   </div>
                 ))}
               </div>
@@ -627,8 +627,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             ].map(p => (
               <div key={p.plan} className="p-5 text-center">
                 <div className={`fs-2xl fw-bold tracking-tight font-sans tabular-nums ${p.color}`}>{p.count}</div>
-                <div className="text-[11px] fw-semibold text-slate-700 mt-1">{p.plan} Plan</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">{p.mrr} per tenant</div>
+                <div className="fs-xs fw-semibold text-slate-700 mt-1">{p.plan} Plan</div>
+                <div className="fs-2xs text-slate-400 mt-0.5">{p.mrr} per tenant</div>
               </div>
             ))}
           </div>
@@ -693,12 +693,12 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="fs-2xl">{selectedCompany.logo}</span>
-              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">
                 {role === 'CEO' ? 'Chief Executive Officer' : 'Company Administrator'}
               </span>
               {totalPending > 0 && (
-                <span className="inline-flex items-center gap-1 bg-red-500 text-white text-[9px] fw-bold px-2 py-0.5 rounded-full">
-                  <i className="bi bi-bell-fill text-[8px]"></i> {totalPending} pending
+                <span className="inline-flex items-center gap-1 bg-red-500 text-white fs-3xs fw-bold px-2 py-0.5 rounded-full">
+                  <i className="bi bi-bell-fill fs-3xs"></i> {totalPending} pending
                 </span>
               )}
             </div>
@@ -762,10 +762,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 </div>
                 <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Pending Approvals</h3>
                 {totalPending > 0 && (
-                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] fw-bold">{totalPending}</span>
+                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white fs-3xs fw-bold">{totalPending}</span>
                 )}
               </div>
-              <button onClick={() => onNavigateView('hr-leave')} className="text-[10px] fw-semibold text-slate-400 hover:text-slate-700 cursor-pointer transition-colors">View All →</button>
+              <button onClick={() => onNavigateView('hr-leave')} className="fs-2xs fw-semibold text-slate-400 hover:text-slate-700 cursor-pointer transition-colors">View All →</button>
             </div>
             <div className="divide-y divide-slate-50 max-h-80 overflow-y-auto">
               {pendingLeaves.map(req => {
@@ -774,12 +774,12 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   <div key={req.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
                     <div className="min-w-0">
                       <div className="fs-xs fw-semibold text-slate-900 truncate">{emp ? `${emp.firstName} ${emp.lastName}` : 'Employee'}</div>
-                      <div className="text-[10px] text-slate-400">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}</div>
+                      <div className="fs-2xs text-slate-400">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''}</div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                      <span className="text-[9px] fw-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">Leave</span>
-                      <button onClick={() => onApproveLeave(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
-                      <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Reject</button>
+                      <span className="fs-3xs fw-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded">Leave</span>
+                      <button onClick={() => onApproveLeave(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
+                      <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Reject</button>
                     </div>
                   </div>
                 );
@@ -788,11 +788,11 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
                   <div className="min-w-0">
                     <div className="fs-xs fw-semibold text-slate-900 truncate">{exp.description || 'Expense Claim'}</div>
-                    <div className="text-[10px] text-slate-400">{selectedCompany.currency} {exp.amount?.toLocaleString()} · {exp.category}</div>
+                    <div className="fs-2xs text-slate-400">{selectedCompany.currency} {exp.amount?.toLocaleString()} · {exp.category}</div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                    <span className="text-[9px] fw-bold uppercase tracking-wider text-violet-600 bg-violet-50 border border-violet-100 px-1.5 py-0.5 rounded">Expense</span>
-                    <button onClick={() => onApproveExpense(exp.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
+                    <span className="fs-3xs fw-bold uppercase tracking-wider text-violet-600 bg-violet-50 border border-violet-100 px-1.5 py-0.5 rounded">Expense</span>
+                    <button onClick={() => onApproveExpense(exp.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
                   </div>
                 </div>
               ))}
@@ -800,11 +800,11 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 <div key={bill.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
                   <div className="min-w-0">
                     <div className="fs-xs fw-semibold text-slate-900 truncate">{bill.vendorName || 'Vendor Bill'}</div>
-                    <div className="text-[10px] text-slate-400">{selectedCompany.currency} {bill.total?.toLocaleString()} · Due {bill.dueDate}</div>
+                    <div className="fs-2xs text-slate-400">{selectedCompany.currency} {bill.total?.toLocaleString()} · Due {bill.dueDate}</div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                    <span className="text-[9px] fw-bold uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">Bill</span>
-                    <button onClick={() => onApproveBill(bill.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
+                    <span className="fs-3xs fw-bold uppercase tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">Bill</span>
+                    <button onClick={() => onApproveBill(bill.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Approve</button>
                   </div>
                 </div>
               ))}
@@ -812,11 +812,11 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 <div key={je.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
                   <div className="min-w-0">
                     <div className="fs-xs fw-semibold text-slate-900 truncate">{je.description || 'Journal Entry'}</div>
-                    <div className="text-[10px] text-slate-400">{je.date} · {je.lines?.length || 0} lines</div>
+                    <div className="fs-2xs text-slate-400">{je.date} · {je.lines?.length || 0} lines</div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                    <span className="text-[9px] fw-bold uppercase tracking-wider text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Journal</span>
-                    <button onClick={() => onApproveJournalEntry(je.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Post</button>
+                    <span className="fs-3xs fw-bold uppercase tracking-wider text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Journal</span>
+                    <button onClick={() => onApproveJournalEntry(je.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">Post</button>
                   </div>
                 </div>
               ))}
@@ -843,7 +843,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   <div key={row.label} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <i className={`${row.icon} ${row.color} fs-sm`}></i>
-                      <span className="text-[11px] text-slate-500">{row.label}</span>
+                      <span className="fs-xs text-slate-500">{row.label}</span>
                     </div>
                     <span className="fs-xs fw-bold text-slate-900 font-mono tabular-nums">{row.value}</span>
                   </div>
@@ -863,7 +863,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                <div className="w-24 sm:w-32 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                  <div className="h-full bg-indigo-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min((selectedCompany.activeModules.length / Object.keys(MODULE_CATALOG).length) * 100, 100)}%` }}></div>
                </div>
-               <span className="text-[11px] text-slate-700 fw-bold">{selectedCompany.activeModules.length} <span className="text-slate-400 fw-normal">of {Object.keys(MODULE_CATALOG).length}</span></span>
+               <span className="fs-xs text-slate-700 fw-bold">{selectedCompany.activeModules.length} <span className="text-slate-400 fw-normal">of {Object.keys(MODULE_CATALOG).length}</span></span>
             </div>
           </div>
           <div className="p-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -876,8 +876,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                     <i className={`bi ${iconClass} fs-sm ${!isActive && 'text-slate-500'}`}></i>
                   </div>
                   <div className="flex flex-col overflow-hidden">
-                    <span className={`text-[11px] fw-semibold truncate leading-tight transition-colors ${isActive ? 'text-slate-700 group-hover:text-indigo-700' : 'text-slate-500'}`} title={mod}>{mod}</span>
-                    {!isActive && <span className="text-[9px] text-slate-400 mt-0.5"><i className="bi bi-lock-fill"></i> Locked</span>}
+                    <span className={`fs-xs fw-semibold truncate leading-tight transition-colors ${isActive ? 'text-slate-700 group-hover:text-indigo-700' : 'text-slate-500'}`} title={mod}>{mod}</span>
+                    {!isActive && <span className="fs-3xs text-slate-400 mt-0.5"><i className="bi bi-lock-fill"></i> Locked</span>}
                   </div>
                 </div>
               );
@@ -897,11 +897,11 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   <h3 className="fs-lg fw-bold text-slate-900">{selectedModuleMeta}</h3>
                   <div className="mt-1.5">
                     {selectedCompany.activeModules.includes(selectedModuleMeta) ? (
-                      <span className="inline-flex items-center gap-1.5 text-[10px] fw-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1.5 fs-2xs fw-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                         <i className="bi bi-check-circle-fill"></i> Active License
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[10px] fw-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1.5 fs-2xs fw-bold uppercase tracking-wider text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
                         <i className="bi bi-lock-fill"></i> Not Subscribed
                       </span>
                     )}
@@ -910,14 +910,14 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               </div>
               <div className="p-6 space-y-6">
                 <div>
-                  <h4 className="text-[10px] fw-bold uppercase tracking-wider text-slate-400 mb-2">Overview</h4>
+                  <h4 className="fs-2xs fw-bold uppercase tracking-wider text-slate-400 mb-2">Overview</h4>
                   <p className="fs-sm text-slate-700 leading-relaxed">{MODULE_CATALOG[selectedModuleMeta]?.desc}</p>
                 </div>
                 <div>
-                  <h4 className="text-[10px] fw-bold uppercase tracking-wider text-slate-400 mb-2">Integrates With</h4>
+                  <h4 className="fs-2xs fw-bold uppercase tracking-wider text-slate-400 mb-2">Integrates With</h4>
                   <div className="flex flex-wrap gap-2">
                     {MODULE_CATALOG[selectedModuleMeta]?.integrations.map(integ => (
-                      <span key={integ} className="text-[11px] fw-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md">{integ}</span>
+                      <span key={integ} className="fs-xs fw-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md">{integ}</span>
                     ))}
                   </div>
                 </div>
@@ -983,10 +983,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                     </div>
                     <div>
                       <div className="fs-xs fw-semibold text-slate-900">{emp.firstName} {emp.lastName}</div>
-                      <div className="text-[10px] text-slate-500">{emp.department} · {emp.designation}</div>
+                      <div className="fs-2xs text-slate-500">{emp.department} · {emp.designation}</div>
                     </div>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full fw-semibold ${emp.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : emp.status === 'On Leave' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`fs-2xs px-2 py-0.5 rounded-full fw-semibold ${emp.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : emp.status === 'On Leave' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                     {emp.status}
                   </span>
                 </div>
@@ -1009,8 +1009,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <h1 className="fs-xl fw-bold tracking-tight text-slate-900">HR &amp; Workforce Command</h1>
               {totalPendingHR > 0 && (
-                <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[9px] fw-bold px-2 py-0.5 rounded-full">
-                  <i className="bi bi-bell-fill text-[8px]"></i> {totalPendingHR} pending
+                <span className="inline-flex items-center gap-1 bg-amber-500 text-white fs-3xs fw-bold px-2 py-0.5 rounded-full">
+                  <i className="bi bi-bell-fill fs-3xs"></i> {totalPendingHR} pending
                 </span>
               )}
             </div>
@@ -1061,10 +1061,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 </div>
                 <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Pending Leave Requests</h3>
                 {pendingLeaves.length > 0 && (
-                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] fw-bold">{pendingLeaves.length}</span>
+                  <span className="inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white fs-3xs fw-bold">{pendingLeaves.length}</span>
                 )}
               </div>
-              <button onClick={() => onNavigateView('hr-leave')} className="text-[10px] fw-semibold text-slate-400 hover:text-slate-700 cursor-pointer">View All →</button>
+              <button onClick={() => onNavigateView('hr-leave')} className="fs-2xs fw-semibold text-slate-400 hover:text-slate-700 cursor-pointer">View All →</button>
             </div>
             <div className="divide-y divide-slate-50 max-h-72 overflow-y-auto">
               {pendingLeaves.length === 0 && (
@@ -1082,14 +1082,14 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="fs-xs fw-bold text-slate-900">{empName} <span className="fw-normal text-slate-500">· {empDept}</span></div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.days} day{req.days !== 1 ? 's' : ''}</div>
-                        {req.reason && <div className="text-[10px] text-slate-400 mt-0.5 italic truncate">&ldquo;{req.reason}&rdquo;</div>}
+                        <div className="fs-2xs text-slate-400 mt-0.5">{req.leaveType} · {req.startDate}{req.endDate && req.endDate !== req.startDate ? ` – ${req.endDate}` : ''} · {req.days} day{req.days !== 1 ? 's' : ''}</div>
+                        {req.reason && <div className="fs-2xs text-slate-400 mt-0.5 italic truncate">&ldquo;{req.reason}&rdquo;</div>}
                       </div>
                       <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => onApproveLeave(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
+                        <button onClick={() => onApproveLeave(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
                           Approve
                         </button>
-                        <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
+                        <button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600 fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
                           Reject
                         </button>
                       </div>
@@ -1102,16 +1102,16 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               <>
                 <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2">
                   <i className="bi bi-wallet2 text-violet-500 fs-xs"></i>
-                  <span className="text-[10px] fw-bold uppercase tracking-wider text-slate-500">Pending Expense Claims ({pendingExpenses.length})</span>
+                  <span className="fs-2xs fw-bold uppercase tracking-wider text-slate-500">Pending Expense Claims ({pendingExpenses.length})</span>
                 </div>
                 <div className="divide-y divide-slate-50 max-h-48 overflow-y-auto">
                   {pendingExpenses.map(exp => (
                     <div key={exp.id} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50/50 transition-colors">
                       <div className="min-w-0">
                         <div className="fs-xs fw-semibold text-slate-900 truncate">{exp.description || 'Expense Claim'}</div>
-                        <div className="text-[10px] text-slate-400">{selectedCompany.currency} {exp.amount?.toLocaleString()} · {exp.category}</div>
+                        <div className="fs-2xs text-slate-400">{selectedCompany.currency} {exp.amount?.toLocaleString()} · {exp.category}</div>
                       </div>
-                      <button onClick={() => onApproveExpense(exp.id)} className="shrink-0 ml-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
+                      <button onClick={() => onApproveExpense(exp.id)} className="shrink-0 ml-3 bg-emerald-600 hover:bg-emerald-700 text-white fs-2xs fw-semibold px-2.5 py-1 rounded-lg cursor-pointer transition-all">
                         Approve
                       </button>
                     </div>
@@ -1132,7 +1132,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   <div key={dept}>
                     <div className="flex justify-between items-center mb-1">
                       <span className="fs-xs fw-medium text-slate-700">{dept}</span>
-                      <span className="text-[10px] font-sans tabular-nums text-slate-500">{count} employees ({pct}%)</span>
+                      <span className="fs-2xs font-sans tabular-nums text-slate-500">{count} employees ({pct}%)</span>
                     </div>
                     <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div className="h-full bg-slate-800 rounded-full" style={{ width: `${pct}%` }} />
@@ -1146,10 +1146,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <div className="mt-4 p-4 bg-slate-900 rounded-xl text-white">
               <div className="flex items-center gap-2 mb-1.5">
                 <i className="bi bi-robot fs-xs text-slate-300"></i>
-                <span className="text-[10px] fw-bold uppercase tracking-wider text-slate-300">AI Resume Screener</span>
+                <span className="fs-2xs fw-bold uppercase tracking-wider text-slate-300">AI Resume Screener</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-snug">Gemini Co-pilot extracts skills, matches departments, and writes targeted interview prompts.</p>
-              <button onClick={() => onNavigateView('ai-copilot')} className="mt-3 text-[10px] fw-semibold text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg cursor-pointer transition-all border border-white/10">
+              <p className="fs-xs text-slate-400 leading-snug">Gemini Co-pilot extracts skills, matches departments, and writes targeted interview prompts.</p>
+              <button onClick={() => onNavigateView('ai-copilot')} className="mt-3 fs-2xs fw-semibold text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg cursor-pointer transition-all border border-white/10">
                 Screen Applicant Now →
               </button>
             </div>
@@ -1237,20 +1237,20 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div className="lg:col-span-2 rounded-xl border border-slate-200/80 bg-white shadow-xs">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Outstanding Invoices</h3>
-              <button onClick={() => onNavigateView('accounting')} className="text-[11px] fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
-                View All <i className="bi bi-arrow-right text-[10px]"></i>
+              <button onClick={() => onNavigateView('accounting')} className="fs-xs fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
+                View All <i className="bi bi-arrow-right fs-2xs"></i>
               </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50/60 border-b border-slate-100">
                   <tr>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Invoice</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Client</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Due</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400 text-right">Amount</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Status</th>
-                    <th className="px-5 py-3 text-[10px] fw-bold uppercase tracking-wider text-slate-400 text-right">Action</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Invoice</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Client</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Due</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400 text-right">Amount</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Status</th>
+                    <th className="px-5 py-3 fs-2xs fw-bold uppercase tracking-wider text-slate-400 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1264,7 +1264,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                         <Badge label={inv.status} variant={inv.status === 'Overdue' ? 'danger' : 'info'} />
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <button onClick={() => onPayInvoice(inv.id)} className="text-[10px] fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">
+                        <button onClick={() => onPayInvoice(inv.id)} className="fs-2xs fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">
                           Record Payment
                         </button>
                       </td>
@@ -1302,8 +1302,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               </div>
             </div>
             <div className="mt-5 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="text-[9px] fw-bold uppercase tracking-wider text-slate-500 mb-1">AI Financial Forecasting</div>
-              <p className="text-[11px] text-slate-500 leading-snug">Activate Predictive Cash Projections in your Licensing Panel to enable Gemini trend analysis.</p>
+              <div className="fs-3xs fw-bold uppercase tracking-wider text-slate-500 mb-1">AI Financial Forecasting</div>
+              <p className="fs-xs text-slate-500 leading-snug">Activate Predictive Cash Projections in your Licensing Panel to enable Gemini trend analysis.</p>
             </div>
           </div>
         </div>
@@ -1384,20 +1384,20 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">Pipeline Deals</h3>
-            <button onClick={() => onNavigateView('crm')} className="text-[11px] fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
-              Open CRM Board <i className="bi bi-arrow-right text-[10px]"></i>
+            <button onClick={() => onNavigateView('crm')} className="fs-xs fw-semibold text-slate-600 hover:text-slate-900 cursor-pointer">
+              Open CRM Board <i className="bi bi-arrow-right fs-2xs"></i>
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="px-5 py-2.5 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Company</th>
-                  <th className="px-5 py-2.5 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Contact</th>
-                  <th className="px-5 py-2.5 text-[10px] fw-bold uppercase tracking-wider text-slate-400 text-right">Value</th>
-                  <th className="px-5 py-2.5 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Score</th>
-                  <th className="px-5 py-2.5 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Stage</th>
-                  <th className="px-5 py-2.5 text-[10px] fw-bold uppercase tracking-wider text-slate-400">Source</th>
+                  <th className="px-5 py-2.5 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Company</th>
+                  <th className="px-5 py-2.5 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Contact</th>
+                  <th className="px-5 py-2.5 fs-2xs fw-bold uppercase tracking-wider text-slate-400 text-right">Value</th>
+                  <th className="px-5 py-2.5 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Score</th>
+                  <th className="px-5 py-2.5 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Stage</th>
+                  <th className="px-5 py-2.5 fs-2xs fw-bold uppercase tracking-wider text-slate-400">Source</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -1407,15 +1407,15 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   .map(l => (
                   <tr key={l.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-5 py-3 fs-xs fw-semibold text-slate-900">{l.companyName}</td>
-                    <td className="px-5 py-3 text-[11px] text-slate-600">{l.firstName} {l.lastName}</td>
-                    <td className="px-5 py-3 text-[11px] font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(l.value, selectedCompany?.currency)}</td>
+                    <td className="px-5 py-3 fs-xs text-slate-600">{l.firstName} {l.lastName}</td>
+                    <td className="px-5 py-3 fs-xs font-sans tabular-nums fw-semibold text-slate-900 text-right">{formatCurrency(l.value, selectedCompany?.currency)}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-[10px] fw-bold px-2 py-0.5 rounded-full ${(l.aiLeadScore ?? 0) >= 80 ? 'bg-emerald-50 text-emerald-700' : (l.aiLeadScore ?? 0) >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                      <span className={`fs-2xs fw-bold px-2 py-0.5 rounded-full ${(l.aiLeadScore ?? 0) >= 80 ? 'bg-emerald-50 text-emerald-700' : (l.aiLeadScore ?? 0) >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
                         {l.aiLeadScore ?? '—'}%
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`text-[10px] fw-bold px-2 py-0.5 rounded-full ${
+                      <span className={`fs-2xs fw-bold px-2 py-0.5 rounded-full ${
                         l.status === 'Won' ? 'bg-emerald-50 text-emerald-700' :
                         l.status === 'Qualified' ? 'bg-blue-50 text-blue-700' :
                         l.status === 'Proposal Sent' ? 'bg-violet-50 text-violet-700' :
@@ -1423,7 +1423,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                         'bg-slate-100 text-slate-500'
                       }`}>{l.status}</span>
                     </td>
-                    <td className="px-5 py-3 text-[11px] text-slate-500">{l.source}</td>
+                    <td className="px-5 py-3 fs-xs text-slate-500">{l.source}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1514,20 +1514,20 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <i className="bi bi-exclamation-triangle text-amber-500"></i> Low Stock Alerts
             </h3>
-            <span className="text-[10px] text-slate-400 font-sans">{lowStock.length} items flagged</span>
+            <span className="fs-2xs text-slate-400 font-sans">{lowStock.length} items flagged</span>
           </div>
           <div className="divide-y divide-slate-100">
             {lowStock.map(item => (
               <div key={item.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50/40">
                 <div>
-                  <div className="fs-xs fw-semibold text-slate-900">{item.name} <span className="font-mono fw-normal text-slate-400 text-[10px]">({item.sku})</span></div>
-                  <div className="text-[11px] text-slate-500 mt-0.5">
+                  <div className="fs-xs fw-semibold text-slate-900">{item.name} <span className="font-mono fw-normal text-slate-400 fs-2xs">({item.sku})</span></div>
+                  <div className="fs-xs text-slate-500 mt-0.5">
                     Warehouse: <span className="fw-medium text-slate-700">{item.warehouse}</span> ·
                     Stock: <span className="font-sans tabular-nums fw-bold text-rose-600"> {item.stockLevel}</span> /
                     Min: <span className="font-sans tabular-nums text-slate-600"> {item.minStockLevel}</span>
                   </div>
                 </div>
-                <button onClick={() => onAdjustStock(item.id, 100)} className="text-[10px] fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shrink-0 ml-4">
+                <button onClick={() => onAdjustStock(item.id, 100)} className="fs-2xs fw-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg cursor-pointer hover:bg-slate-800 transition-all shrink-0 ml-4">
                   Receive +100
                 </button>
               </div>
@@ -1555,7 +1555,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">
                 Employee Self Service (ESS)
               </span>
             </div>
@@ -1585,7 +1585,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col h-full">
             <div className="flex items-center justify-between mb-4">
               <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">My Active Tasks</h3>
-              <div className="text-[10px] fw-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
+              <div className="fs-2xs fw-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
                 Utilisation: {empRecord?.utilisation || 0}%
               </div>
             </div>
@@ -1594,9 +1594,9 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 <div key={t.id} className="p-3 border border-slate-100 bg-slate-50 rounded-lg">
                   <div className="flex items-start justify-between gap-2">
                     <div className="fs-xs fw-bold text-slate-900">{t.title}</div>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] fw-bold ${t.priority === 'Critical' ? 'bg-rose-100 text-rose-700' : t.priority === 'High' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{t.priority}</span>
+                    <span className={`px-2 py-0.5 rounded-full fs-3xs fw-bold ${t.priority === 'Critical' ? 'bg-rose-100 text-rose-700' : t.priority === 'High' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{t.priority}</span>
                   </div>
-                  <div className="flex items-center justify-between mt-2 text-[10px] text-slate-500">
+                  <div className="flex items-center justify-between mt-2 fs-2xs text-slate-500">
                     <div><i className="bi bi-clock"></i> Due: {t.due || 'No date'}</div>
                     <div className="fw-semibold text-slate-700">{t.status}</div>
                   </div>
@@ -1618,8 +1618,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               {okrs.filter(o => o.employeeId === empRecord?.id && o.status !== 'Completed').map(o => (
                 <div key={o.id} className="p-3 border border-slate-100 bg-slate-50 rounded-lg">
                   <div className="fs-xs fw-bold text-slate-900 mb-1">{o.objective}</div>
-                  <div className="text-[10px] text-slate-500 mb-2">{o.keyResult}</div>
-                  <div className="flex items-center gap-3 text-[10px]">
+                  <div className="fs-2xs text-slate-500 mb-2">{o.keyResult}</div>
+                  <div className="flex items-center gap-3 fs-2xs">
                     <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                       <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${o.progress}%` }}></div>
                     </div>
@@ -1644,8 +1644,8 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 <div key={a.id} className="p-4 border border-slate-100 bg-white rounded-xl shadow-xs relative overflow-hidden">
                   <div className={`absolute top-0 left-0 w-1 h-full ${a.type === 'Important' ? 'bg-rose-500' : a.type === 'Event' ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-flex items-center gap-1 text-[10px] fw-bold px-2 py-0.5 rounded-full ${a.type === 'Important' ? 'bg-rose-50 text-rose-600' : a.type === 'Event' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'}`}>{a.type}</span>
-                    <span className="text-[9px] text-slate-400 font-medium tracking-wide uppercase">{new Date(a.date).toLocaleDateString()}</span>
+                    <span className={`inline-flex items-center gap-1 fs-2xs fw-bold px-2 py-0.5 rounded-full ${a.type === 'Important' ? 'bg-rose-50 text-rose-600' : a.type === 'Event' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'}`}>{a.type}</span>
+                    <span className="fs-3xs text-slate-400 font-medium tracking-wide uppercase">{new Date(a.date).toLocaleDateString()}</span>
                   </div>
                   <h4 className="fs-sm fw-bold text-slate-900 mb-1">{a.title}</h4>
                   <p className="text-xs text-slate-600 line-clamp-2">{a.content}</p>
@@ -1666,7 +1666,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider">My Employment Profile</h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">Personal details, contact info, and emergency contacts. Changes require HR approval.</p>
+              <p className="fs-2xs text-slate-400 mt-0.5">Personal details, contact info, and emergency contacts. Changes require HR approval.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {isProfileEditing && (
@@ -1746,7 +1746,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           <div className="space-y-4">
             {/* Basic Info */}
             <div>
-              <div className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-2">Basic Information</div>
+              <div className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-2">Basic Information</div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { label: 'Employee ID', value: empRecord?.employeeNumber || '—', editable: false },
@@ -1759,7 +1759,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   { label: 'Reporting Location', value: empRecord?.branch || '—', editable: false },
                 ].map(f => (
                   <div key={f.label} className="py-2 px-3 rounded-lg bg-slate-50 border border-slate-100">
-                    <div className="text-[9px] text-slate-400 fw-medium uppercase tracking-wide">{f.label}</div>
+                    <div className="fs-3xs text-slate-400 fw-medium uppercase tracking-wide">{f.label}</div>
                     <div className="fs-xs fw-semibold text-slate-800 mt-0.5">{f.value}</div>
                   </div>
                 ))}
@@ -1770,7 +1770,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <>
             {/* Editable Personal Info */}
             <div>
-              <div className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-2">Personal Details</div>
+              <div className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-2">Personal Details</div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { key: 'phone', label: 'Phone', placeholder: '+1 234 567 890', icon: 'bi-telephone' },
@@ -1780,7 +1780,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   { key: 'nationality', label: 'Nationality', placeholder: 'e.g. Nigerian', icon: 'bi-globe' },
                 ].map(f => (
                   <div key={f.key}>
-                    <label className="block text-[10px] fw-medium text-slate-500 mb-1">{f.label}</label>
+                    <label className="block fs-2xs fw-medium text-slate-500 mb-1">{f.label}</label>
                     {isProfileEditing ? (
                       <input
                         type={f.type || 'text'}
@@ -1801,7 +1801,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
             {/* Address */}
             <div>
-              <div className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-2">Address</div>
+              <div className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-2">Address</div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { key: 'address', label: 'Street Address', placeholder: '123 Main St' },
@@ -1811,7 +1811,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   { key: 'postalCode', label: 'Postal Code', placeholder: '100001' },
                 ].map(f => (
                   <div key={f.key}>
-                    <label className="block text-[10px] fw-medium text-slate-500 mb-1">{f.label}</label>
+                    <label className="block fs-2xs fw-medium text-slate-500 mb-1">{f.label}</label>
                     {isProfileEditing ? (
                       <input
                         type="text"
@@ -1832,7 +1832,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
             {/* Emergency Contact */}
             <div>
-              <div className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-2">Emergency Contact</div>
+              <div className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-2">Emergency Contact</div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { key: 'emergencyContactName', label: 'Contact Name', placeholder: 'Jane Doe' },
@@ -1840,7 +1840,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   { key: 'emergencyContactRelation', label: 'Relationship', placeholder: 'Spouse / Parent / Sibling' },
                 ].map(f => (
                   <div key={f.key}>
-                    <label className="block text-[10px] fw-medium text-slate-500 mb-1">{f.label}</label>
+                    <label className="block fs-2xs fw-medium text-slate-500 mb-1">{f.label}</label>
                     {isProfileEditing ? (
                       <input
                         type="text"
@@ -1861,10 +1861,10 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
 
             {/* Work Preferences */}
             <div>
-              <div className="text-[10px] fw-bold text-slate-400 uppercase tracking-wider mb-2">Work Preferences</div>
+              <div className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider mb-2">Work Preferences</div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-[10px] fw-medium text-slate-500 mb-1">Work Location</label>
+                  <label className="block fs-2xs fw-medium text-slate-500 mb-1">Work Location</label>
                   {isProfileEditing ? (
                     <select
                       value={profileForm.workLocation}
@@ -1883,7 +1883,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                   )}
                 </div>
                 <div>
-                  <label className="block text-[10px] fw-medium text-slate-500 mb-1">Bio / About</label>
+                  <label className="block fs-2xs fw-medium text-slate-500 mb-1">Bio / About</label>
                   {isProfileEditing ? (
                     <textarea
                       value={profileForm.bio}
@@ -1913,7 +1913,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
               </div>
               <div className="space-y-1">
                 {profileUpdateRequests.filter(r => r.employeeId === empRecord?.id && r.status === 'Pending').map(r => (
-                  <div key={r.id} className="flex items-center justify-between text-[10px] text-amber-700">
+                  <div key={r.id} className="flex items-center justify-between fs-2xs text-amber-700">
                     <span>{r.label}: "{r.currentValue || '(empty)'}" → "{r.newValue}"</span>
                     <span className="text-amber-500">Awaiting HR</span>
                   </div>
@@ -2056,12 +2056,12 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
           {localTickets.map(t => (
             <div key={t.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50/40 transition-colors">
               <div>
-                <div className="fs-xs fw-semibold text-slate-900">{t.customerName} <span className="font-mono fw-normal text-slate-400 text-[10px]">({t.ticketNumber})</span></div>
-                <p className="text-[11px] text-slate-500 mt-0.5">{t.subject}</p>
+                <div className="fs-xs fw-semibold text-slate-900">{t.customerName} <span className="font-mono fw-normal text-slate-400 fs-2xs">({t.ticketNumber})</span></div>
+                <p className="fs-xs text-slate-500 mt-0.5">{t.subject}</p>
               </div>
               <div className="text-right shrink-0 ml-4">
                 <Badge label={t.priority} variant={t.priority === 'Critical' ? 'danger' : t.priority === 'High' ? 'warning' : 'default'} />
-                <div className="text-[10px] text-slate-400 font-sans fw-semibold uppercase mt-1 tracking-wider">{t.status}</div>
+                <div className="fs-2xs text-slate-400 font-sans fw-semibold uppercase mt-1 tracking-wider">{t.status}</div>
               </div>
             </div>
           ))}
@@ -2084,7 +2084,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">HR Department Head</span>
+            <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">HR Department Head</span>
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">HR Command Center</h1>
             <p className="fs-sm text-slate-500 mt-0.5">Manage employees, payroll, compliance and leave approvals.</p>
           </div>
@@ -2101,7 +2101,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             <h3 className="fs-xs fw-bold text-slate-900 uppercase tracking-wider mb-4">Leave Approvals</h3>
             <div className="space-y-3">
               {pendingLeaves.length === 0 && <div className="fs-xs text-slate-400 italic">No pending requests</div>}
-              {pendingLeaves.map(req => { const emp = localEmployees.find(e => e.id === req.employeeId); return (<div key={req.id} className="p-4 rounded-xl border border-slate-100 bg-amber-50/30"><div className="flex items-start justify-between gap-3"><div><div className="fs-xs fw-bold text-slate-900">{emp ? `${emp.firstName} ${emp.lastName}` : 'Employee'}</div><div className="text-[11px] text-slate-500 mt-0.5">{req.leaveType} · {req.startDate}</div></div><div className="flex gap-1.5 shrink-0"><button onClick={() => onApproveLeave(req.id)} className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer">Approve</button><button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[10px] fw-semibold px-3 py-1.5 rounded-lg cursor-pointer">Decline</button></div></div></div>);})}
+              {pendingLeaves.map(req => { const emp = localEmployees.find(e => e.id === req.employeeId); return (<div key={req.id} className="p-4 rounded-xl border border-slate-100 bg-amber-50/30"><div className="flex items-start justify-between gap-3"><div><div className="fs-xs fw-bold text-slate-900">{emp ? `${emp.firstName} ${emp.lastName}` : 'Employee'}</div><div className="fs-xs text-slate-500 mt-0.5">{req.leaveType} · {req.startDate}</div></div><div className="flex gap-1.5 shrink-0"><button onClick={() => onApproveLeave(req.id)} className="bg-slate-900 hover:bg-slate-800 text-white fs-2xs fw-semibold px-3 py-1.5 rounded-lg cursor-pointer">Approve</button><button onClick={() => onRejectLeave(req.id)} className="border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 fs-2xs fw-semibold px-3 py-1.5 rounded-lg cursor-pointer">Decline</button></div></div></div>);})}
             </div>
           </div>
           <DoughnutChart
@@ -2127,7 +2127,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">Sales Department Head</span>
+            <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">Sales Department Head</span>
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">Sales Command Center</h1>
             <p className="fs-sm text-slate-500 mt-0.5">Pipeline, sales orders and POS management.</p>
           </div>
@@ -2177,7 +2177,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">Finance Department Head</span>
+            <span className="inline-flex items-center gap-1.5 bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">Finance Department Head</span>
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">Finance Command Center</h1>
             <p className="fs-sm text-slate-500 mt-0.5">General ledger, invoices, payroll and bank reconciliation.</p>
           </div>
@@ -2226,7 +2226,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">Operations Department Head</span>
+            <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">Operations Department Head</span>
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">Operations Command Center</h1>
             <p className="fs-sm text-slate-500 mt-0.5">Projects, inventory, procurement and manufacturing.</p>
           </div>
@@ -2275,7 +2275,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
-            <span className="inline-flex items-center gap-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">IT Department Head</span>
+            <span className="inline-flex items-center gap-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">IT Department Head</span>
             <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">IT Command Center</h1>
             <p className="fs-sm text-slate-500 mt-0.5">User management, help desk and POS administration.</p>
           </div>
@@ -2326,7 +2326,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
     <div className="space-y-6">
       <div className="flex items-start justify-between pb-4 border-b border-slate-200">
         <div>
-          <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">
             {role}
           </span>
           <h1 className="fs-xl fw-bold tracking-tight text-slate-900 mt-1">Business Overview</h1>
@@ -2348,7 +2348,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
             {shortcuts.map(sc => (
               <button key={sc.view} onClick={() => onNavigateView(sc.view)} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 hover:text-slate-900 fs-xs fw-semibold transition-all cursor-pointer text-left">
                 <span className="flex flex-wrap items-center gap-2"><i className={`${sc.icon} text-slate-400`}></i>{sc.label}</span>
-                <i className="bi bi-chevron-right text-[10px] text-slate-400"></i>
+                <i className="bi bi-chevron-right fs-2xs text-slate-400"></i>
               </button>
             ))}
           </div>

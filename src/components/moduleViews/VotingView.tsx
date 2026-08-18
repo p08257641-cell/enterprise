@@ -144,11 +144,11 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                   </div>
                   <div className="text-right">
                     {poll.endDate && (
-                      <div className="text-[10px] text-slate-400">
+                      <div className="fs-2xs text-slate-400">
                         {getTimeRemaining(poll.endDate)}
                       </div>
                     )}
-                    {poll.anonymous && <div className="text-[10px] text-slate-400 mt-0.5"><i className="bi bi-eye-slash"></i> Anonymous</div>}
+                    {poll.anonymous && <div className="fs-2xs text-slate-400 mt-0.5"><i className="bi bi-eye-slash"></i> Anonymous</div>}
                   </div>
                 </div>
 
@@ -166,13 +166,13 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                         />
                         <button
                           onClick={() => handleSetEndDate(poll.id)}
-                          className="px-2 py-1 bg-slate-900 text-white rounded text-[10px] fw-semibold cursor-pointer hover:bg-slate-800"
+                          className="px-2 py-1 bg-slate-900 text-white rounded fs-2xs fw-semibold cursor-pointer hover:bg-slate-800"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => { setEditingPollId(null); setEditEndDate(''); }}
-                          className="px-2 py-1 border border-slate-200 text-slate-500 rounded text-[10px] fw-semibold cursor-pointer hover:bg-white"
+                          className="px-2 py-1 border border-slate-200 text-slate-500 rounded fs-2xs fw-semibold cursor-pointer hover:bg-white"
                         >
                           Cancel
                         </button>
@@ -181,13 +181,13 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                       <>
                         <button
                           onClick={() => { setEditingPollId(poll.id); setEditEndDate(poll.endDate || ''); }}
-                          className="flex items-center gap-1 px-2 py-1 border border-slate-200 text-slate-600 rounded text-[10px] fw-semibold cursor-pointer hover:bg-white transition-all"
+                          className="flex items-center gap-1 px-2 py-1 border border-slate-200 text-slate-600 rounded fs-2xs fw-semibold cursor-pointer hover:bg-white transition-all"
                         >
                           <i className="bi bi-calendar-event"></i> Set Close Date
                         </button>
                         <button
                           onClick={() => handleEndNow(poll.id)}
-                          className="flex items-center gap-1 px-2 py-1 bg-red-50 border border-red-200 text-red-600 rounded text-[10px] fw-semibold cursor-pointer hover:bg-red-100 transition-all"
+                          className="flex items-center gap-1 px-2 py-1 bg-red-50 border border-red-200 text-red-600 rounded fs-2xs fw-semibold cursor-pointer hover:bg-red-100 transition-all"
                         >
                           <i className="bi bi-stop-circle"></i> End Now
                         </button>
@@ -372,7 +372,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex items-center gap-2 mb-3">
                   <Badge label={poll.category} variant="info" />
                   <Badge label={poll.status} variant={poll.status === 'Active' ? 'success' : 'default'} />
-                  <span className="text-[10px] text-slate-400 ml-auto">{total} total votes</span>
+                  <span className="fs-2xs text-slate-400 ml-auto">{total} total votes</span>
                 </div>
                 <h3 className="fs-sm fw-bold text-slate-900 mb-4">{poll.title}</h3>
                 {results.length > 0 && results[0].count > 0 && (
@@ -383,7 +383,7 @@ export const VotingView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="space-y-2">
                   {results.map((opt, i) => (
                     <div key={opt.id} className="flex flex-wrap items-center gap-3">
-                      <span className="text-[10px] font-mono text-slate-400 w-4">{i + 1}</span>
+                      <span className="fs-2xs font-mono text-slate-400 w-4">{i + 1}</span>
                       <div className="flex-1">
                         <div className="flex justify-between mb-1">
                           <span className="fs-xs fw-semibold text-slate-700">{opt.label}</span>

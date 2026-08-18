@@ -271,7 +271,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex-1 min-w-0">
                   <div className="fs-xs fw-bold text-slate-900 truncate">{v.name}</div>
                   <div className="data-value text-slate-500 truncate">{v.company} · Host: {v.host}</div>
-                  <div className="text-[10px] font-mono text-slate-400 mt-0.5">{v.id}</div>
+                  <div className="fs-2xs font-mono text-slate-400 mt-0.5">{v.id}</div>
                 </div>
                 <button
                   onClick={() => printVisitorBadge(v, selectedCompany.name)}
@@ -304,7 +304,7 @@ export const VisitorView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="flex-1 min-w-0">
                   <div className="fs-xs fw-bold text-slate-900 truncate">{emp.firstName} {emp.lastName}</div>
                   <div className="data-value text-slate-500 truncate">{emp.designation} · {emp.department}</div>
-                  <div className="text-[10px] font-mono text-slate-400 mt-0.5">{emp.employeeNumber}</div>
+                  <div className="fs-2xs font-mono text-slate-400 mt-0.5">{emp.employeeNumber}</div>
                 </div>
                 <button
                   onClick={() => printEmployeeIdCard(emp, selectedCompany.name)}

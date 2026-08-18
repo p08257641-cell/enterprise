@@ -306,7 +306,7 @@ const [deptParent, setDeptParent] = useState('');
             <button
               key={tab.id}
               onClick={() => setAdminTab(tab.id as any)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] fw-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg fs-xs fw-semibold whitespace-nowrap transition-all cursor-pointer ${
                 adminTab === tab.id
                   ? (tab.highlight ? 'bg-violet-600 text-white shadow-sm' : 'bg-slate-900 text-white shadow-sm')
                   : (tab.highlight ? 'text-violet-600 hover:bg-violet-50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700')
@@ -365,7 +365,7 @@ const [deptParent, setDeptParent] = useState('');
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                   <div>
                     <h3 className="fs-sm fw-bold text-slate-900">Department Structure</h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5">Configure reporting hierarchy and department assignments.</p>
+                    <p className="fs-xs text-slate-500 mt-0.5">Configure reporting hierarchy and department assignments.</p>
                   </div>
                   <div className="flex items-center gap-2.5">
                     {isAdmin && <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setDeptName(''); setDeptManager(''); setDeptParent(''); setShowDeptModal(true); }}>Add Department</PrimaryBtn>}
@@ -429,7 +429,7 @@ const [deptParent, setDeptParent] = useState('');
                           </div>
                           <h3 className="fs-sm fw-bold text-slate-900">Add Department</h3>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new organisational unit within this company.</p>
+                        <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Create a new organisational unit within this company.</p>
                       </div>
                       <button type="button" onClick={() => setShowDeptModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                         <i className="bi bi-x fs-xl"></i>
@@ -464,7 +464,7 @@ const [deptParent, setDeptParent] = useState('');
                           </div>
                           <h3 className="fs-sm fw-bold text-slate-900">Edit Department</h3>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Update this department's name, manager, and budget.</p>
+                        <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Update this department's name, manager, and budget.</p>
                       </div>
                       <button type="button" onClick={() => setEditDeptModal(null)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                         <i className="bi bi-x fs-xl"></i>
@@ -533,7 +533,7 @@ const [deptParent, setDeptParent] = useState('');
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div>
                 <h3 className="fs-sm fw-bold text-slate-900">Role Management</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Define roles and assign granular permissions (Create, View, Edit, Delete).</p>
+                <p className="fs-xs text-slate-500 mt-0.5">Define roles and assign granular permissions (Create, View, Edit, Delete).</p>
               </div>
               {isAdmin && (
                 <button
@@ -546,7 +546,7 @@ const [deptParent, setDeptParent] = useState('');
             </div>
             <div className="divide-y divide-slate-100">
               {customRoles.filter(r => r.name !== 'Super Admin' && r.id !== 'role-super').length === 0 && (
-                <div className="px-5 py-8 text-center text-[11px] text-slate-400">No roles found. Click "Add Role" to create one.</div>
+                <div className="px-5 py-8 text-center fs-xs text-slate-400">No roles found. Click "Add Role" to create one.</div>
               )}
               {customRoles.filter(r => r.name !== 'Super Admin' && r.id !== 'role-super').map(r => {
                 const userCount = countUsersForRole(r.name);
@@ -580,22 +580,22 @@ const [deptParent, setDeptParent] = useState('');
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="fs-sm fw-bold text-slate-900">{r.name}</span>
-                          {r.isSystem && <span className="bg-slate-100 border border-slate-200 text-slate-500 rounded px-1.5 py-0.5 text-[9px] font-mono">built-in</span>}
+                          {r.isSystem && <span className="bg-slate-100 border border-slate-200 text-slate-500 rounded px-1.5 py-0.5 fs-3xs font-mono">built-in</span>}
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">{r.description || 'No description'}</div>
+                        <div className="fs-xs text-slate-500 mt-0.5 leading-normal">{r.description || 'No description'}</div>
                         <div className="flex flex-wrap gap-1 mt-2">
                           {(r.modules || []).slice(0, 8).map(m => (
-                            <span key={m} className="bg-slate-100 border border-slate-200 text-slate-600 rounded px-1.5 py-0.5 text-[9px] font-mono">{m}</span>
+                            <span key={m} className="bg-slate-100 border border-slate-200 text-slate-600 rounded px-1.5 py-0.5 fs-3xs font-mono">{m}</span>
                           ))}
                           {(r.modules || []).length > 8 && (
-                            <span className="text-[9px] text-slate-400">+{(r.modules || []).length - 8} more</span>
+                            <span className="fs-3xs text-slate-400">+{(r.modules || []).length - 8} more</span>
                           )}
                         </div>
                         {Object.keys(crudByModule).length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-2.5">
                             {Object.entries(crudByModule).map(([mod, actions]: [string, any]) => (
                               <div key={mod} className="flex flex-wrap items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1">
-                                <span className="text-[10px] font-mono fw-bold text-slate-700 uppercase tracking-wide">{mod}</span>
+                                <span className="fs-2xs font-mono fw-bold text-slate-700 uppercase tracking-wide">{mod}</span>
                                 <span className="text-slate-300">|</span>
                                 <div className="flex flex-wrap items-center gap-1">
                                   {[
@@ -604,7 +604,7 @@ const [deptParent, setDeptParent] = useState('');
                                     { k: 'Update', l: 'Edit', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
                                     { k: 'Delete', l: 'Delete', cls: 'bg-rose-50 text-rose-700 border-rose-200' }
                                   ].map(a => (
-                                    <span key={a.k} className={`text-[9px] px-1.5 py-0.5 rounded border fw-bold ${actions.includes(a.k) ? a.cls : 'text-slate-300 border-slate-100 opacity-40'}`}>{a.l}</span>
+                                    <span key={a.k} className={`fs-3xs px-1.5 py-0.5 rounded border fw-bold ${actions.includes(a.k) ? a.cls : 'text-slate-300 border-slate-100 opacity-40'}`}>{a.l}</span>
                                   ))}
                                 </div>
                               </div>
@@ -614,14 +614,14 @@ const [deptParent, setDeptParent] = useState('');
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-2 pt-0.5">
-                      <span className="text-[11px] text-slate-400 font-sans tabular-nums whitespace-nowrap">{userCount} user{userCount !== 1 ? 's' : ''}</span>
+                      <span className="fs-xs text-slate-400 font-sans tabular-nums whitespace-nowrap">{userCount} user{userCount !== 1 ? 's' : ''}</span>
                       {isAdmin && (
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleOpenRoleModal(r)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
                           >
-                            <i className="bi bi-pencil text-[11px]"></i>
+                            <i className="bi bi-pencil fs-xs"></i>
                           </button>
                             <button
                               disabled={!canDeleteRole}
@@ -641,7 +641,7 @@ const [deptParent, setDeptParent] = useState('');
                                   : 'opacity-40 filter saturate-50 cursor-not-allowed border-slate-200 text-slate-400 bg-slate-50'
                               }`}
                             >
-                              <i className="bi bi-trash text-[11px]"></i>
+                              <i className="bi bi-trash fs-xs"></i>
                             </button>
                         </div>
                       )}
@@ -660,7 +660,7 @@ const [deptParent, setDeptParent] = useState('');
                 <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center text-white"><i className="bi bi-diagram-3 fs-sm"></i></div>
                 <div>
                   <div className="fs-sm fw-bold text-slate-900">Approval Workflow Configuration</div>
-                  <div className="text-[11px] text-slate-500">Define who approves requests for each module. Select multiple roles as needed.</div>
+                  <div className="fs-xs text-slate-500">Define who approves requests for each module. Select multiple roles as needed.</div>
                 </div>
               </div>
               <button
@@ -735,13 +735,13 @@ const [deptParent, setDeptParent] = useState('');
                       </div>
                       <div className="min-w-0">
                         <div className="fs-sm fw-semibold text-slate-900">{module}</div>
-                        <div className="text-[11px] text-slate-400 leading-normal mt-0.5">{descriptions[module]}</div>
+                        <div className="fs-xs text-slate-400 leading-normal mt-0.5">{descriptions[module]}</div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5 max-w-[280px] sm:max-w-md justify-end">
                       {(approvers as string[]).map(role => (
-                        <div key={role} className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full text-[10px] fw-bold bg-slate-900 text-white shadow-xs">
+                        <div key={role} className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full fs-2xs fw-bold bg-slate-900 text-white shadow-xs">
                           {role}
                           <button type="button" onClick={() => toggleRole(role)} className="h-4 w-4 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors cursor-pointer text-white shrink-0">
                             <i className="bi bi-x fs-[9px]"></i>
@@ -786,7 +786,7 @@ const [deptParent, setDeptParent] = useState('');
               })}
             </div>
             <div className="px-6 py-3 bg-slate-50 border-t border-slate-100">
-              <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
+              <div className="fs-2xs text-slate-400 flex items-center gap-1.5">
                 <i className="bi bi-info-circle"></i>
                 Authorized roles will be able to review, approve, or reject requests. Company Admin always has override rights.
               </div>
@@ -811,10 +811,10 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                   ) : (
                     <div className="mb-3 h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
-                      <div className="text-center"><i className="bi bi-image fs-2xl text-slate-300"></i><p className="text-[10px] text-slate-400 mt-1">No logo uploaded</p></div>
+                      <div className="text-center"><i className="bi bi-image fs-2xl text-slate-300"></i><p className="fs-2xs text-slate-400 mt-1">No logo uploaded</p></div>
                     </div>
                   )}
-                  <p className="text-[10px] text-slate-500 mb-2">Paste an image URL or upload a file:</p>
+                  <p className="fs-2xs text-slate-500 mb-2">Paste an image URL or upload a file:</p>
                   <div className="space-y-2">
                     <input type="text" placeholder="https://example.com/logo.png" defaultValue={selectedCompany.companyLogo || ''} id="logoUrl" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
                     <input type="file" accept="image/*" id="logoFile" className="w-full fs-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:fs-xs file:fw-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 file:cursor-pointer" onChange={e => {
@@ -842,10 +842,10 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                   ) : (
                     <div className="mb-3 h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
-                      <div className="text-center"><i className="bi bi-pen fs-2xl text-slate-300"></i><p className="text-[10px] text-slate-400 mt-1">No signature uploaded</p></div>
+                      <div className="text-center"><i className="bi bi-pen fs-2xl text-slate-300"></i><p className="fs-2xs text-slate-400 mt-1">No signature uploaded</p></div>
                     </div>
                   )}
-                  <p className="text-[10px] text-slate-500 mb-2">Paste an image URL or upload a file:</p>
+                  <p className="fs-2xs text-slate-500 mb-2">Paste an image URL or upload a file:</p>
                   <div className="space-y-2">
                     <input type="text" placeholder="https://example.com/signature.png" defaultValue={selectedCompany.companySignature || ''} id="sigUrl" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 fs-xs text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none" />
                     <input type="file" accept="image/*" id="sigFile" className="w-full fs-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:fs-xs file:fw-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 file:cursor-pointer" onChange={e => {
@@ -866,15 +866,15 @@ const [deptParent, setDeptParent] = useState('');
 
                   <div>
                     <Label>Action Permissions (Create, View, Edit, Delete)</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose permissions per module (Create, View, Edit, Delete).</p>
+                    <p className="fs-2xs text-slate-400 mt-0.5 mb-2">Choose permissions per module (Create, View, Edit, Delete).</p>
                     <div className="space-y-2">
-                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above to configure permissions.</p>}
+                      {roleFormModules.length === 0 && <p className="fs-xs text-slate-400 italic">Select modules above to configure permissions.</p>}
                       {roleFormModules.map(mod => {
                         const crudActions = ['Create', 'Read', 'Update', 'Delete'];
                         const current = crudActions.find(a => roleFormCrudPermissions.includes(`${mod}.${a}`));
                         return (
                           <div key={mod} className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 bg-white">
-                            <span className="text-[11px] fw-bold text-slate-700 w-24 shrink-0">{mod}</span>
+                            <span className="fs-xs fw-bold text-slate-700 w-24 shrink-0">{mod}</span>
                             <div className="flex gap-1.5">
                               {crudActions.map(action => {
                                 const perm = `${mod}.${action}`;
@@ -882,7 +882,7 @@ const [deptParent, setDeptParent] = useState('');
                                 return (
                                   <label
                                     key={perm}
-                                    className={`px-2.5 py-1 rounded-md border text-[10px] fw-semibold cursor-pointer transition-all ${checked
+                                    className={`px-2.5 py-1 rounded-md border fs-2xs fw-semibold cursor-pointer transition-all ${checked
                                       ? 'bg-slate-900 text-white border-slate-900'
                                       : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
                                       }`}
@@ -901,7 +901,7 @@ const [deptParent, setDeptParent] = useState('');
                               <button
                                 type="button"
                                 onClick={() => setRoleFormCrudPermissions(prev => prev.filter(p => !p.startsWith(`${mod}.`)))}
-                                className={`px-2.5 py-1 rounded-md border text-[10px] fw-semibold cursor-pointer transition-all ${!current ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                className={`px-2.5 py-1 rounded-md border fs-2xs fw-semibold cursor-pointer transition-all ${!current ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                               >
                                 None
                               </button>
@@ -915,15 +915,15 @@ const [deptParent, setDeptParent] = useState('');
 
                   <div>
                     <Label>Action Permissions (Create, View, Edit, Delete)</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Choose one action per module (or None).</p>
+                    <p className="fs-2xs text-slate-400 mt-0.5 mb-2">Choose one action per module (or None).</p>
                     <div className="space-y-1.5">
-                      {roleFormModules.length === 0 && <p className="text-[11px] text-slate-400 italic">Select modules above first.</p>}
+                      {roleFormModules.length === 0 && <p className="fs-xs text-slate-400 italic">Select modules above first.</p>}
                       {roleFormModules.map(mod => {
                         const crudActions = ['Create', 'Read', 'Update', 'Delete'];
                         const current = crudActions.find(a => roleFormCrudPermissions.includes(`${mod}.${a}`));
                         return (
                           <div key={mod} className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 bg-white">
-                            <span className="text-[10px] fw-bold text-slate-700 w-20 shrink-0">{mod}</span>
+                            <span className="fs-2xs fw-bold text-slate-700 w-20 shrink-0">{mod}</span>
                             <div className="flex gap-1">
                               {crudActions.map(action => {
                                 const perm = `${mod}.${action}`;
@@ -931,7 +931,7 @@ const [deptParent, setDeptParent] = useState('');
                                 return (
                                   <label
                                     key={perm}
-                                    className={`px-2 py-0.5 rounded border text-[9px] fw-semibold cursor-pointer transition-all ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                    className={`px-2 py-0.5 rounded border fs-3xs fw-semibold cursor-pointer transition-all ${checked ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                                   >
                                     <input type="radio" name={`crud-${mod}`} checked={checked} onChange={() => setRoleFormCrudPermissions(prev => [...prev.filter(p => !p.startsWith(`${mod}.`)), perm])} className="sr-only" />
                                     {action}
@@ -941,7 +941,7 @@ const [deptParent, setDeptParent] = useState('');
                               <button
                                 type="button"
                                 onClick={() => setRoleFormCrudPermissions(prev => prev.filter(p => !p.startsWith(`${mod}.`)))}
-                                className={`px-2 py-0.5 rounded border text-[9px] fw-semibold cursor-pointer transition-all ${!current ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                className={`px-2 py-0.5 rounded border fs-3xs fw-semibold cursor-pointer transition-all ${!current ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                               >
                                 None
                               </button>
@@ -977,7 +977,7 @@ const [deptParent, setDeptParent] = useState('');
                   ))}
                   <div className="h-24 w-40 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center relative cursor-pointer hover:bg-slate-100 transition-colors">
                     <i className="bi bi-plus-lg fs-xl text-slate-400"></i>
-                    <span className="text-[10px] text-slate-400 mt-1">Add Image</span>
+                    <span className="fs-2xs text-slate-400 mt-1">Add Image</span>
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -1016,7 +1016,7 @@ const [deptParent, setDeptParent] = useState('');
               <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">
                 <div>
                   <h4 className="fs-sm fw-bold text-slate-900 mb-1">Password Reset & Security Channel</h4>
-                  <p className="text-[11px] text-slate-500 mb-3">Choose how password reset links, OTPs, and security alerts are dispatched to users.</p>
+                  <p className="fs-xs text-slate-500 mb-3">Choose how password reset links, OTPs, and security alerts are dispatched to users.</p>
                   <div className="grid gap-3 sm:grid-cols-3">
                     {[
                       { id: 'Both', label: 'Email & SMS (Recommended)', desc: 'Sends via both Email & SMS gateways', icon: 'bi-shield-check text-emerald-600' },
@@ -1037,7 +1037,7 @@ const [deptParent, setDeptParent] = useState('');
                           <i className={`bi ${ch.icon} fs-sm`}></i>
                           <span className="fs-xs fw-bold text-slate-900">{ch.label}</span>
                         </div>
-                        <p className="text-[10px] text-slate-500">{ch.desc}</p>
+                        <p className="fs-2xs text-slate-500">{ch.desc}</p>
                       </button>
                     ))}
                   </div>
@@ -1178,7 +1178,7 @@ const [deptParent, setDeptParent] = useState('');
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label>System Currency</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-2">Default currency for all financial transactions.</p>
+                    <p className="fs-2xs text-slate-400 mt-0.5 mb-2">Default currency for all financial transactions.</p>
                     <Select 
                       value={selectedCompany.currency || 'GHS'} 
                       onChange={(e) => onUpdateCompanySettings(selectedCompany.id, { currency: e.target.value })}
@@ -1318,11 +1318,11 @@ const [deptParent, setDeptParent] = useState('');
                   <div className="flex flex-col justify-between gap-2 min-w-0">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest fw-semibold">Your API Key</p>
-                        <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Active</span>
+                        <p className="fs-2xs text-slate-400 uppercase tracking-widest fw-semibold">Your API Key</p>
+                        <span className="fs-2xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Active</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <code className="text-[11px] sm:text-xs font-mono text-emerald-400 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-700/80 flex-1 min-w-0 overflow-x-auto select-all break-all leading-snug">
+                        <code className="fs-xs sm:text-xs font-mono text-emerald-400 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-700/80 flex-1 min-w-0 overflow-x-auto select-all break-all leading-snug">
                           {companyApiKey}
                         </code>
                         <button
@@ -1338,18 +1338,18 @@ const [deptParent, setDeptParent] = useState('');
                         </button>
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1">Authenticate requests from external webhooks & APIs with this key.</p>
+                    <p className="fs-2xs text-slate-400 mt-1">Authenticate requests from external webhooks & APIs with this key.</p>
                   </div>
 
                   {/* Webhook Endpoint Box */}
                   <div className="flex flex-col justify-between gap-2 min-w-0">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest fw-semibold">Webhook Endpoint</p>
-                        <span className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">POST</span>
+                        <p className="fs-2xs text-slate-400 uppercase tracking-widest fw-semibold">Webhook Endpoint</p>
+                        <span className="fs-2xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">POST</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <code className="text-[11px] sm:text-xs font-mono text-blue-400 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-700/80 flex-1 min-w-0 overflow-x-auto select-all break-all leading-snug">
+                        <code className="fs-xs sm:text-xs font-mono text-blue-400 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-700/80 flex-1 min-w-0 overflow-x-auto select-all break-all leading-snug">
                           {webhookEndpoint}
                         </code>
                         <button
@@ -1365,7 +1365,7 @@ const [deptParent, setDeptParent] = useState('');
                         </button>
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1">Point Shopify, WooCommerce & Zapier webhooks here to push data.</p>
+                    <p className="fs-2xs text-slate-400 mt-1">Point Shopify, WooCommerce & Zapier webhooks here to push data.</p>
                   </div>
 
                 </div>
@@ -1382,10 +1382,10 @@ const [deptParent, setDeptParent] = useState('');
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="fw-bold text-slate-900 fs-sm">WhatsApp Business API</h3>
                         {(selectedCompany.whatsappApiKey && selectedCompany.whatsappPhoneNumberId)
-                          ? <span className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-emerald-100 text-emerald-700">✓ Connected</span>
-                          : <span className="px-2 py-0.5 rounded-full text-[10px] fw-semibold bg-slate-100 text-slate-500">Not Connected</span>}
+                          ? <span className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-emerald-100 text-emerald-700">✓ Connected</span>
+                          : <span className="px-2 py-0.5 rounded-full fs-2xs fw-semibold bg-slate-100 text-slate-500">Not Connected</span>}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Send invoices, quotes & payment reminders via WhatsApp. Powered by Meta Cloud API.</p>
+                      <p className="fs-xs text-slate-500 mt-0.5 leading-relaxed">Send invoices, quotes & payment reminders via WhatsApp. Powered by Meta Cloud API.</p>
                     </div>
                   </div>
                   {isFullAdmin && (
@@ -1413,7 +1413,7 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                     <div className="min-w-0">
                       <h3 className="fw-bold text-slate-900 fs-sm">Website Integration</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">Paste this snippet — contact forms, quotes & orders flow into your workspace automatically.</p>
+                      <p className="fs-xs text-slate-500 mt-0.5 leading-relaxed">Paste this snippet — contact forms, quotes & orders flow into your workspace automatically.</p>
                     </div>
                   </div>
                   <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-3">
@@ -1426,15 +1426,15 @@ const [deptParent, setDeptParent] = useState('');
                           navigator.clipboard.writeText(code);
                           toast('Snippet copied to clipboard!', 'success');
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] fw-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 fs-xs fw-semibold transition-colors flex items-center gap-1 cursor-pointer"
                       >
                         <i className="bi bi-clipboard"></i> Copy Snippet
                       </button>
                     </div>
-                    <div className="rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono text-[11px] text-emerald-400 leading-relaxed overflow-x-auto max-w-full select-all whitespace-pre break-all sm:break-normal">
+                    <div className="rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono fs-xs text-emerald-400 leading-relaxed overflow-x-auto max-w-full select-all whitespace-pre break-all sm:break-normal">
                       {`<!-- Core360 Integration -->\n<script>\n  window.Core360 = {\n    apiKey: "${companyApiKey}",\n    endpoint: "${webhookEndpoint}"\n  };\n</script>\n<script src="https://cdn.core360.app/widget.js" async></script>`}
                     </div>
-                    <p className="text-[11px] text-slate-500">Submissions appear in <strong>CRM → Leads</strong> and <strong>Sales → Quotations</strong> automatically.</p>
+                    <p className="fs-xs text-slate-500">Submissions appear in <strong>CRM → Leads</strong> and <strong>Sales → Quotations</strong> automatically.</p>
                   </div>
                 </div>
               )}
@@ -1443,12 +1443,12 @@ const [deptParent, setDeptParent] = useState('');
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="fw-bold text-slate-900 fs-sm">{isFullAdmin ? 'All Integrations' : 'Integrations for your role'}</h3>
-                  <span className="text-[11px] text-slate-400">{visibleIntegrations.length} app{visibleIntegrations.length !== 1 ? 's' : ''}</span>
+                  <span className="fs-xs text-slate-400">{visibleIntegrations.length} app{visibleIntegrations.length !== 1 ? 's' : ''}</span>
                 </div>
                 {visibleIntegrations.length === 0 ? (
                   <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
                     <i className="bi bi-plug text-2xl text-slate-300"></i>
-                    <p className="text-[12px] text-slate-400 mt-2">No integrations available for your role.</p>
+                    <p className="fs-xs text-slate-400 mt-2">No integrations available for your role.</p>
                   </div>
                 ) : (
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1459,18 +1459,18 @@ const [deptParent, setDeptParent] = useState('');
                             {integ.logo}
                           </div>
                           <div className="flex flex-col items-end gap-1">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] fw-semibold ${integ.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            <span className={`px-2 py-0.5 rounded-full fs-2xs fw-semibold ${integ.connected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                               {integ.connected ? '✓ Connected' : 'Not Connected'}
                             </span>
-                            <span className="text-[10px] fw-semibold uppercase tracking-wider" style={{color: integ.color}}>{integ.category}</span>
+                            <span className="fs-2xs fw-semibold uppercase tracking-wider" style={{color: integ.color}}>{integ.category}</span>
                           </div>
                         </div>
                         <div>
                           <p className="fw-bold text-slate-900 fs-xs">{integ.name}</p>
-                          <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{integ.description}</p>
+                          <p className="fs-xs text-slate-500 mt-1 leading-relaxed">{integ.description}</p>
                         </div>
                         <div className="mt-auto pt-2 border-t border-slate-100">
-                          <p className="text-[10px] text-slate-400">Use your API key & webhook URL above to connect {integ.name}.</p>
+                          <p className="fs-2xs text-slate-400">Use your API key & webhook URL above to connect {integ.name}.</p>
                         </div>
                       </div>
                     ))}
@@ -1492,8 +1492,8 @@ const [deptParent, setDeptParent] = useState('');
                         <i className={`${step.icon} text-sm`} style={{color: step.color}}></i>
                       </div>
                       <div>
-                        <p className="fw-semibold text-slate-800 text-[12px]">{step.title}</p>
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{step.desc}</p>
+                        <p className="fw-semibold text-slate-800 fs-xs">{step.title}</p>
+                        <p className="fs-xs text-slate-500 mt-0.5 leading-relaxed">{step.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -1531,7 +1531,7 @@ const [deptParent, setDeptParent] = useState('');
                           <h3 className="fs-sm fw-bold text-slate-900 capitalize">
                             Configure {activeIntegModal.replace('-', ' ')}
                           </h3>
-                          <p className="text-[10px] text-slate-500">API Credentials & Sync Settings</p>
+                          <p className="fs-2xs text-slate-500">API Credentials & Sync Settings</p>
                         </div>
                       </div>
                       <button
@@ -1635,7 +1635,7 @@ const [deptParent, setDeptParent] = useState('');
                               onChange={e => setShopifyEnabled(e.target.checked)}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable Automatic Order Ingestion to Sales Orders</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable Automatic Order Ingestion to Sales Orders</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -1704,7 +1704,7 @@ const [deptParent, setDeptParent] = useState('');
                               onChange={e => setWooEnabled(e.target.checked)}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable Automatic Order Sync to Sales Orders</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable Automatic Order Sync to Sales Orders</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -1745,7 +1745,7 @@ const [deptParent, setDeptParent] = useState('');
                             <Input
                               readOnly
                               value={`https://api.core360.app/webhooks/${selectedCompany.id}`}
-                              className="bg-slate-50 font-mono text-[11px] select-all"
+                              className="bg-slate-50 font-mono fs-xs select-all"
                             />
                           </div>
                           <div>
@@ -1753,7 +1753,7 @@ const [deptParent, setDeptParent] = useState('');
                             <Input
                               readOnly
                               value={'ak_live_' + selectedCompany.id.replace(/-/g, '').slice(0, 32)}
-                              className="bg-slate-50 font-mono text-[11px] select-all"
+                              className="bg-slate-50 font-mono fs-xs select-all"
                             />
                           </div>
                           <label className="flex items-center gap-2 cursor-pointer pt-2">
@@ -1763,7 +1763,7 @@ const [deptParent, setDeptParent] = useState('');
                               onChange={e => setZapierEnabled(e.target.checked)}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable Zapier Automation Webhook Engine</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable Zapier Automation Webhook Engine</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -1821,7 +1821,7 @@ const [deptParent, setDeptParent] = useState('');
                               onChange={e => setXeroEnabled(e.target.checked)}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable Xero Accounting Ledger & Invoices Sync</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable Xero Accounting Ledger & Invoices Sync</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -1881,7 +1881,7 @@ const [deptParent, setDeptParent] = useState('');
                               onChange={e => setQbEnabled(e.target.checked)}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable QuickBooks Online Financial Sync</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable QuickBooks Online Financial Sync</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -1941,7 +1941,7 @@ const [deptParent, setDeptParent] = useState('');
                               onChange={e => setGoogleEnabled(e.target.checked)}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable Employee Directory & Calendar Sync</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable Employee Directory & Calendar Sync</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -1978,7 +1978,7 @@ const [deptParent, setDeptParent] = useState('');
                         <>
                           <div>
                             <Label>Embed Snippet — paste before &lt;/body&gt;</Label>
-                            <div className="mt-2 rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono text-[11px] text-emerald-400 leading-relaxed overflow-x-auto select-all whitespace-pre">
+                            <div className="mt-2 rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono fs-xs text-emerald-400 leading-relaxed overflow-x-auto select-all whitespace-pre">
 {`<!-- Core360 Integration -->
 <script>
   window.Core360 = {
@@ -2000,7 +2000,7 @@ const [deptParent, setDeptParent] = useState('');
                               }}
                               className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                             />
-                            <span className="text-[11px] fw-semibold text-slate-700">Enable Website Form Ingestion into CRM Leads</span>
+                            <span className="fs-xs fw-semibold text-slate-700">Enable Website Form Ingestion into CRM Leads</span>
                           </label>
                           <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                             <PrimaryBtn
@@ -2039,7 +2039,7 @@ const [deptParent, setDeptParent] = useState('');
                     </div>
                     <div>
                       <h3 className="fs-sm fw-bold text-slate-900">{editingRole ? `Edit ${editingRole.name}` : 'Create Custom Role'}</h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{editingRole ? 'Modify modules and action permissions (Create, View, Edit, Delete).' : 'Define a new role with custom access scopes.'}</p>
+                      <p className="fs-2xs text-slate-500 mt-0.5">{editingRole ? 'Modify modules and action permissions (Create, View, Edit, Delete).' : 'Define a new role with custom access scopes.'}</p>
                     </div>
                   </div>
                   <button type="button" onClick={() => setShowRoleModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors"><i className="bi bi-x fs-xl"></i></button>
@@ -2069,7 +2069,7 @@ const [deptParent, setDeptParent] = useState('');
 
                   <div>
                     <Label>Module Access & Submodule Permissions</Label>
-                    <p className="text-[10px] text-slate-400 mt-0.5 mb-3">Select main modules, toggle submodules, and assign action permissions (Create, View, Edit, Delete).</p>
+                    <p className="fs-2xs text-slate-400 mt-0.5 mb-3">Select main modules, toggle submodules, and assign action permissions (Create, View, Edit, Delete).</p>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                       {MODULE_HIERARCHY.map(mod => {
                         const hasModule = roleFormModules.includes(mod.id);
@@ -2147,7 +2147,7 @@ const [deptParent, setDeptParent] = useState('');
                                         key={action.key}
                                         type="button"
                                         onClick={() => toggleCrud([mod.id], action.key)}
-                                        className={`px-2.5 py-1 rounded-md border text-[10px] fw-bold transition-all cursor-pointer ${checked ? `${action.activeCls} shadow-2xs` : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
+                                        className={`px-2.5 py-1 rounded-md border fs-2xs fw-bold transition-all cursor-pointer ${checked ? `${action.activeCls} shadow-2xs` : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'}`}
                                       >
                                         {action.label}
                                       </button>
@@ -2171,7 +2171,7 @@ const [deptParent, setDeptParent] = useState('');
                                           onChange={() => toggleSubmenu(sub.id)}
                                           className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                         />
-                                        <span className={`text-[11px] ${isSubActive ? 'fw-semibold text-slate-800' : 'text-slate-400'}`}>
+                                        <span className={`fs-xs ${isSubActive ? 'fw-semibold text-slate-800' : 'text-slate-400'}`}>
                                           {sub.label}
                                         </span>
                                       </label>
@@ -2274,7 +2274,7 @@ const [deptParent, setDeptParent] = useState('');
               { label: 'Employee #', value: userModal.selected.employeeNumber, icon: 'bi bi-hash' },
             ].map(f => (
               <div key={f.label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
-                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} text-[10px]`} />{f.label}</div>
+                <div className="flex items-center gap-1.5 data-value-small text-slate-400 mb-1"><i className={`${f.icon} fs-2xs`} />{f.label}</div>
                 <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
@@ -2294,7 +2294,7 @@ const [deptParent, setDeptParent] = useState('');
                   </div>
                   <h3 className="fs-sm fw-bold text-slate-900">Add Branch</h3>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 ml-9">Create a new company location, office or facility.</p>
+                <p className="fs-2xs text-slate-500 mt-0.5 ml-9">Create a new company location, office or facility.</p>
               </div>
               <button type="button" onClick={() => setShowBranchModal(false)} className="h-7 w-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
                 <i className="bi bi-x fs-xl"></i>
@@ -2392,14 +2392,14 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
     setTesting(false);
   };
 
-  if (loading) return <div className="p-6 text-[11px] text-slate-400">Loading E-VAT configuration...</div>;
+  if (loading) return <div className="p-6 fs-xs text-slate-400">Loading E-VAT configuration...</div>;
 
   return (
     <div className="space-y-5 p-6">
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="fs-sm fw-bold text-slate-900">GRA E-VAT Credentials</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">Configure your Ghana Revenue Authority E-VAT API credentials.</p>
+          <p className="fs-xs text-slate-500 mt-0.5">Configure your Ghana Revenue Authority E-VAT API credentials.</p>
         </div>
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2419,11 +2419,11 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
           <div className="flex items-center gap-6">
             <div className="flex flex-wrap items-center gap-3">
               <Label>API Mode</Label>
-              <label className={`px-3 py-1.5 rounded-lg border text-[11px] fw-semibold cursor-pointer transition-all ${form.apiMode === 'test' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white text-slate-400 border-slate-200'}`}>
+              <label className={`px-3 py-1.5 rounded-lg border fs-xs fw-semibold cursor-pointer transition-all ${form.apiMode === 'test' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-white text-slate-400 border-slate-200'}`}>
                 <input type="radio" name="apiMode" checked={form.apiMode === 'test'} onChange={() => setForm(f => ({ ...f, apiMode: 'test' }))} className="sr-only" />
                 Test (Sandbox)
               </label>
-              <label className={`px-3 py-1.5 rounded-lg border text-[11px] fw-semibold cursor-pointer transition-all ${form.apiMode === 'production' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white text-slate-400 border-slate-200'}`}>
+              <label className={`px-3 py-1.5 rounded-lg border fs-xs fw-semibold cursor-pointer transition-all ${form.apiMode === 'production' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-white text-slate-400 border-slate-200'}`}>
                 <input type="radio" name="apiMode" checked={form.apiMode === 'production'} onChange={() => setForm(f => ({ ...f, apiMode: 'production' }))} className="sr-only" />
                 Production (Live)
               </label>
@@ -2432,7 +2432,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
               <div className={`relative h-5 w-9 rounded-full cursor-pointer transition-colors ${form.isActive ? 'bg-slate-900' : 'bg-slate-200'}`} onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}>
                 <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${form.isActive ? 'left-4' : 'left-0.5'}`}></div>
               </div>
-              <span className="text-[11px] text-slate-600">E-VAT Active</span>
+              <span className="fs-xs text-slate-600">E-VAT Active</span>
             </label>
           </div>
           <div className="flex items-center gap-3 pt-2">
@@ -2444,7 +2444,7 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
             </button>
           </div>
           {testResult && (
-            <div className={`p-3 rounded-lg border text-[11px] fw-semibold flex items-center gap-2 ${testResult.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+            <div className={`p-3 rounded-lg border fs-xs fw-semibold flex items-center gap-2 ${testResult.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
               <i className={`bi ${testResult.ok ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}`}></i>
               {testResult.message}
             </div>
@@ -2456,29 +2456,29 @@ const EvatSettingsView: React.FC<{ selectedCompany: any, searchTerm: string }> =
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <div>
             <h3 className="fs-sm fw-bold text-slate-900">E-VAT Submission History</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Recent submissions to GRA.</p>
+            <p className="fs-xs text-slate-500 mt-0.5">Recent submissions to GRA.</p>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead><tr className="border-b border-slate-100">
-              {['Entity', 'Number', 'IRN', 'Status', 'Submitted', 'Error'].map(h => <th key={h} className="text-left px-4 py-3 text-[10px] fw-semibold text-slate-500 uppercase tracking-wider">{h}</th>)}
+              {['Entity', 'Number', 'IRN', 'Status', 'Submitted', 'Error'].map(h => <th key={h} className="text-left px-4 py-3 fs-2xs fw-semibold text-slate-500 uppercase tracking-wider">{h}</th>)}
             </tr></thead>
             <tbody>
-              {submissions.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-[11px] text-slate-400">No submissions yet.</td></tr>}
+              {submissions.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center fs-xs text-slate-400">No submissions yet.</td></tr>}
               {submissions.filter((s: any) => !searchTerm || s.entityNumber.includes(searchTerm) || (s.irn || '').includes(searchTerm)).map((s: any) => (
                 <tr key={s.id} className="border-b border-slate-50 hover:bg-slate-50/40">
-                  <td className="px-4 py-2.5 text-[11px] text-slate-600">{s.entityType}</td>
-                  <td className="px-4 py-2.5 text-[11px] font-mono text-slate-900">{s.entityNumber}</td>
-                  <td className="px-4 py-2.5 text-[11px] font-mono text-slate-600">{s.irn || '—'}</td>
-                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded text-[10px] fw-semibold ${
+                  <td className="px-4 py-2.5 fs-xs text-slate-600">{s.entityType}</td>
+                  <td className="px-4 py-2.5 fs-xs font-mono text-slate-900">{s.entityNumber}</td>
+                  <td className="px-4 py-2.5 fs-xs font-mono text-slate-600">{s.irn || '—'}</td>
+                  <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded fs-2xs fw-semibold ${
                     s.status === 'Validated' ? 'bg-emerald-100 text-emerald-700' :
                     s.status === 'Failed' ? 'bg-red-100 text-red-600' :
                     s.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
                     'bg-slate-100 text-slate-500'
                   }`}>{s.status}</span></td>
-                  <td className="px-4 py-2.5 text-[11px] text-slate-500">{s.submittedAt ? new Date(s.submittedAt).toLocaleString() : '—'}</td>
-                  <td className="px-4 py-2.5 text-[11px] text-red-500 max-w-[200px] truncate">{s.errorMessage || '—'}</td>
+                  <td className="px-4 py-2.5 fs-xs text-slate-500">{s.submittedAt ? new Date(s.submittedAt).toLocaleString() : '—'}</td>
+                  <td className="px-4 py-2.5 fs-xs text-red-500 max-w-[200px] truncate">{s.errorMessage || '—'}</td>
                 </tr>
               ))}
             </tbody>

@@ -63,7 +63,7 @@ export const SuperAdminView: React.FC<ModuleViewsProps> = (props) => {
           <div className="flex items-start justify-between pb-5 border-b border-slate-200 mb-6">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full text-[10px] fw-bold uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">
                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                   System Administrator Console
                 </span>
@@ -90,7 +90,7 @@ export const SuperAdminView: React.FC<ModuleViewsProps> = (props) => {
                   <div key={s.service} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
                     <span className="data-value text-slate-700">{s.service}</span>
                     <div className="text-right">
-                      <span className="text-[10px] text-emerald-600 fw-semibold flex items-center gap-1 justify-end">
+                      <span className="fs-2xs text-emerald-600 fw-semibold flex items-center gap-1 justify-end">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>{s.status}
                       </span>
                       <span className="data-value-small font-sans tabular-nums text-slate-400">{s.uptime}</span>
@@ -110,7 +110,7 @@ export const SuperAdminView: React.FC<ModuleViewsProps> = (props) => {
                       <span className="data-value fw-semibold text-slate-800">{log.userName}</span>
                       <span className="data-value-small font-sans tabular-nums text-slate-400 shrink-0 ml-2">{new Date(log.timestamp).toLocaleTimeString()}</span>
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">{log.details}</p>
+                    <p className="fs-2xs text-slate-500 mt-0.5 leading-snug">{log.details}</p>
                     <span className="mt-1 inline-block data-value-small bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-sans tabular-nums uppercase">{log.module}</span>
                   </div>
                 ))}

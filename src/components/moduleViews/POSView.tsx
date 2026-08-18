@@ -197,7 +197,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
           <div className="bg-white border border-dashed border-slate-300 rounded-2xl shadow-xs max-w-sm mx-auto p-6 text-center">
             <i className="bi bi-receipt fs-3xl text-slate-300 block mb-2"></i>
             <div className="fs-sm fw-bold text-slate-900">{selectedCompany.name}</div>
-            <div className="text-[10px] text-slate-400 mt-1">{receipt.ts}</div>
+            <div className="fs-2xs text-slate-400 mt-1">{receipt.ts}</div>
             <div className="border-y border-dashed border-slate-200 py-3 my-3 space-y-1">
               {cart.map(i => (
                 <div key={i.id} className="flex justify-between fs-xs"><span>{i.name} x{i.qty}</span><span className="font-mono fw-semibold">{formatCurrency((i.price * i.qty), selectedCompany?.currency)}</span></div>
@@ -207,7 +207,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <div className="flex justify-between fs-xs text-rose-600"><span>Discount ({discount}%)</span><span>-${(subtotal * discount / 100).toFixed(2)}</span></div>
             )}
             <div className="flex justify-between fs-sm fw-bold text-slate-900 mt-2"><span>TOTAL</span><span>{formatCurrency(receipt.total, selectedCompany?.currency)}</span></div>
-            <div className="text-[10px] text-slate-400 mt-3">Ref: {receipt.ref}</div>
+            <div className="fs-2xs text-slate-400 mt-3">Ref: {receipt.ref}</div>
             <div className="flex flex-wrap gap-2 mt-3">
               <PrimaryBtn onClick={() => { setReceipt(null); setCart([]); setDiscount(0); }}>New Transaction</PrimaryBtn>
               <button className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 fs-xs fw-semibold transition-all cursor-pointer" onClick={async () => {
@@ -240,7 +240,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               {localProducts.filter(p => p.isActive !== false).map(p => (
                 <button key={p.id} onClick={() => addToCart(p)} className="bg-white border border-slate-200 rounded-xl p-3.5 text-left hover:shadow-md transition-all cursor-pointer">
                   <div className="fs-xs fw-bold text-slate-900">{p.name}</div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">{p.category}</div>
+                  <div className="fs-2xs text-slate-400 mt-0.5">{p.category}</div>
                   <div className="fs-sm fw-bold text-slate-900 mt-2">{formatCurrency(p.unitPrice, selectedCompany?.currency)}</div>
                 </button>
               ))}
@@ -256,10 +256,10 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                   <div key={i.id} className="flex items-center justify-between fs-xs mb-2">
                     <span className="fw-semibold text-slate-900 truncate flex-1 mr-2">{i.name}</span>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => updateQty(i.id, -1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"><i className="bi bi-dash text-[10px]"></i></button>
+                      <button onClick={() => updateQty(i.id, -1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"><i className="bi bi-dash fs-2xs"></i></button>
                       <span className="w-6 text-center fw-semibold text-slate-900 tabular-nums">{i.qty}</span>
-                      <button onClick={() => updateQty(i.id, 1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"><i className="bi bi-plus text-[10px]"></i></button>
-                      <button onClick={() => removeFromCart(i.id)} className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 cursor-pointer ml-1"><i className="bi bi-x text-[10px]"></i></button>
+                      <button onClick={() => updateQty(i.id, 1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"><i className="bi bi-plus fs-2xs"></i></button>
+                      <button onClick={() => removeFromCart(i.id)} className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 cursor-pointer ml-1"><i className="bi bi-x fs-2xs"></i></button>
                     </div>
                     <span className="text-slate-500 w-16 text-right tabular-nums shrink-0">{formatCurrency((i.price * i.qty), selectedCompany?.currency)}</span>
                   </div>
@@ -310,13 +310,13 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localProducts.map(p => (
                   <tr key={p.id} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{p.sku}</td>
+                    <td className="px-4 py-3 fs-2xs font-mono text-slate-500">{p.sku}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{p.name}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{p.category}</td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">{formatCurrency(p.unitPrice, selectedCompany?.currency)}</td>
                     <td className={`px-4 py-3 fs-xs font-mono fw-semibold text-right ${p.stockLevel <= p.reorderLevel ? 'text-rose-600' : 'text-slate-900'}`}>{p.stockLevel}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); productModal.open(p); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); productModal.open(p); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
@@ -345,7 +345,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3"><Badge label={c.tier || 'Standard'} variant={c.tier === 'Gold' ? 'warning' : c.tier === 'Platinum' ? 'info' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">{formatCurrency((c.totalSpent || 0), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); customerModal.open(c); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); customerModal.open(c); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
@@ -367,7 +367,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                   <td className="px-4 py-3"><Badge label={t.isActive !== false ? 'Active' : 'Inactive'} variant={t.isActive !== false ? 'success' : 'default'} /></td>
                   <td className="px-4 py-3 fs-xs font-mono text-slate-500">{t.lastSync || '—'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={(e) => { e.stopPropagation(); terminalModal.open(t); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                    <button onClick={(e) => { e.stopPropagation(); terminalModal.open(t); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                   </td>
                 </tr>
               ))}
@@ -396,7 +396,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">{formatCurrency((s.total || 0), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); saleModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); saleModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
@@ -419,14 +419,14 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localShifts.map(s => (
                   <tr key={s.id} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{s.id}</td>
+                    <td className="px-4 py-3 fs-2xs font-mono text-slate-500">{s.id}</td>
                     <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{s.terminalId || '—'}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.employeeName || '—'}</td>
                     <td className="px-4 py-3"><Badge label={s.status} variant={s.status === 'Open' ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.startTime ? new Date(s.startTime).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.endTime ? new Date(s.endTime).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); shiftModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); shiftModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
@@ -452,14 +452,14 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localSales.map(s => (
                   <tr key={s.id} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-mono fw-semibold text-slate-900">{s.saleNumber || s.id}</td>
+                    <td className="px-4 py-3 fs-2xs font-mono fw-semibold text-slate-900">{s.saleNumber || s.id}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.paymentMethod}</td>
                     <td className="px-4 py-3"><Badge label={s.paymentStatus} variant={s.paymentStatus === 'Paid' ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{s.items?.length || 0}</td>
                     <td className="px-4 py-3 fs-xs font-mono fw-semibold text-slate-900 text-right">{formatCurrency((s.total || 0), selectedCompany?.currency)}</td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); saleModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); saleModal.open(s); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
@@ -492,7 +492,7 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
                     <td className="px-4 py-3 fs-xs text-slate-500">{d.maxUsage ?? 'Unlimited'}</td>
                     <td className="px-4 py-3"><Badge label={d.isActive !== false ? 'Active' : 'Inactive'} variant={d.isActive !== false ? 'success' : 'default'} /></td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); discountModal.open(d); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); discountModal.open(d); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
@@ -518,14 +518,14 @@ export const POSView: React.FC<ModuleViewsProps> = (props) => {
               <tbody className="divide-y divide-slate-100">
                 {localReturns.map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="px-4 py-3 text-[10px] font-mono fw-semibold text-slate-900">{r.returnNumber || r.id}</td>
-                    <td className="px-4 py-3 text-[10px] font-mono text-slate-500">{r.originalSaleId || '—'}</td>
+                    <td className="px-4 py-3 fs-2xs font-mono fw-semibold text-slate-900">{r.returnNumber || r.id}</td>
+                    <td className="px-4 py-3 fs-2xs font-mono text-slate-500">{r.originalSaleId || '—'}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{r.reason || '—'}</td>
                     <td className="px-4 py-3 fs-xs text-slate-500">{r.refundMethod || '—'}</td>
                     <td className="px-4 py-3"><Badge label={r.refundStatus || 'Pending'} variant={r.refundStatus === 'Processed' ? 'success' : 'warning'} /></td>
                     <td className="px-4 py-3 fs-xs font-mono text-slate-500 text-right">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={(e) => { e.stopPropagation(); returnModal.open(r); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye text-[11px]"></i> View</button>
+                      <button onClick={(e) => { e.stopPropagation(); returnModal.open(r); }} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 hover:border-slate-900 text-slate-600 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"><i className="bi bi-eye fs-xs"></i> View</button>
                     </td>
                   </tr>
                 ))}
