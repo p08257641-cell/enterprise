@@ -8,7 +8,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   
-  // Splash screen state - fast 500ms branded splash intro
+  // Splash screen state - let images finish sliding before revealing login form
   const [showSplash, setShowSplash] = useState(true);
   const [bgIndex, setBgIndex] = useState(0);
 
@@ -18,21 +18,23 @@ export function LoginPage() {
   ];
 
   useEffect(() => {
-    // Fast 500ms splash screen intro
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 500);
+    if (!showSplash) return;
 
-    // Alternate background images asynchronously every 3 seconds
+    // Slide images every 2 seconds during splash screen intro
     const interval = setInterval(() => {
       setBgIndex(prev => (prev + 1) % splashImages.length);
-    }, 3000);
+    }, 2000);
+
+    // Dismiss splash screen after images finish sliding (5 seconds)
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 5000);
 
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
     };
-  }, []);
+  }, [showSplash, splashImages.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

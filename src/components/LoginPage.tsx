@@ -101,21 +101,35 @@ export const LoginPage: React.FC = () => {
     });
   }, [dataLoaded, activeImages]);
 
-  // Carousel timer
+  // Splash Screen Carousel & Dismissal: Let splash screen images finish sliding before showing login page
   useEffect(() => {
+    if (!showSplash) return;
+
+    // Slide images every 2 seconds during splash screen intro
     const interval = setInterval(() => {
       setBgIndex(prev => (prev + 1) % (activeImages.length || 1));
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [activeImages.length]);
+    }, 2000);
 
-  // Fast splash screen intro: displays brief 500ms branded splash intro then reveals login form without blocking on image preloading
-  useEffect(() => {
+    // Dismiss splash screen after images finish their slide cycle (5.5 seconds)
+    const splashDuration = Math.max(5000, (activeImages.length || 3) * 1800);
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    }, splashDuration);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
+  }, [showSplash, activeImages.length]);
+
+  // Main login background carousel timer (runs after splash screen transitions to login form)
+  useEffect(() => {
+    if (showSplash) return;
+    const interval = setInterval(() => {
+      setBgIndex(prev => (prev + 1) % (activeImages.length || 1));
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [showSplash, activeImages.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
