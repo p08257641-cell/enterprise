@@ -72,6 +72,22 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
   const lowStockCount = inventory.filter(i => i.stockLevel < i.minStockLevel).length;
   const pendingLeavesCount = leaves.filter(l => l.status === 'Pending').length;
 
+  // Dynamic Live Metrics Calculations
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayAttendanceRecords = attendance.filter(a => a.date === todayStr || (a.date && a.date.startsWith(todayStr)));
+  const presentCount = todayAttendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late' || a.checkIn).length;
+  const lateCount = todayAttendanceRecords.filter(a => a.status === 'Late').length;
+  const totalStaffCount = employees.length || 1;
+  const attendanceRateToday = Math.round((presentCount / totalStaffCount) * 100);
+
+  const totalPayrollObligation = employees.reduce((sum, e) => sum + (e.salary || 0), 0);
+  const overdueInvoicesList = invoices.filter(i => i.status === 'Overdue');
+  const overdueTotalAmount = overdueInvoicesList.reduce((sum, i) => sum + (i.total || i.subtotal || (i as any).amount || 0), 0);
+  const inventoryStockValuation = inventory.reduce((sum, i) => sum + ((i.unitPrice || 0) * (i.stockLevel || 0)), 0);
+
+  const currSymbol = selectedCompany.currency === 'USD' ? '$' : selectedCompany.currency === 'EUR' ? '€' : selectedCompany.currency === 'GBP' ? '£' : `${selectedCompany.currency || 'GHS'} `;
+  const currentMonthYear = new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
   // Dynamic Employee Leave Quota Balances
   const myLeaves = leaves.filter(l => l.employeeId === selectedUser?.id || (selectedUser?.name && (l as any).employeeName === selectedUser.name));
   const approvedByType = myLeaves
@@ -138,24 +154,24 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
 
     // 1. Executive 360 Summary & Company Overview
     if (q.includes('executive') || q.includes('summary') || q.includes('overview') || q.includes('360')) {
-      const currencySymbol = selectedCompany.currency === 'USD' ? '$' : selectedCompany.currency === 'EUR' ? '€' : selectedCompany.currency === 'GBP' ? '£' : 'GHS ';
       return `🏢 **Executive 360 Summary — ${selectedCompany.name}**
 
 📊 **1. Finance & Revenue Operations**
-- Total Invoices Tracked: **${invoices.length || 8} Invoices**
-- Outstanding / Overdue: **${overdueInvoicesCount || 2} Invoices** (${currencySymbol}18,400 pending collection)
+- Total Invoices Tracked: **${invoices.length} Invoices**
+- Outstanding / Overdue: **${overdueInvoicesCount} Invoices** (${currSymbol}${overdueTotalAmount.toLocaleString()} pending collection)
 - Payment Reminders: **Active** (WhatsApp & Email dispatch ready)
 - Fiscal Margin: **+24.8% MTD**
 
 👥 **2. HR & Staff Roster Intelligence**
-- Active Employee Roster: **${employees.length || 12} Enrolled Staff**
-- Today's Staff Attendance Rate: **91% Present** (10 Present, 1 Late, 1 On Leave)
-- Monthly Payroll Obligation: **${currencySymbol}68,900** (PAYE & SSNIT Tier 1/2/3 auto-filed)
+- Active Employee Roster: **${employees.length} Enrolled Staff**
+- Today's Staff Attendance Rate: **${attendanceRateToday}% Present** (${presentCount} Present, ${lateCount} Late)
+- Monthly Payroll Obligation: **${currSymbol}${totalPayrollObligation.toLocaleString()}** (PAYE & SSNIT Tier 1/2/3 auto-filed)
 - Pending Leave Requests: **${pendingLeavesCount} Application(s)** awaiting review
 
 📦 **3. Supply Chain & Inventory Health**
-- Managed Stock SKUs: **${inventory.length || 15} Active Items**
-- Reorder Risk Level: **${lowStockCount || 3} Items Below Safety Threshold**
+- Managed Stock SKUs: **${inventory.length} Active Items**
+- Reorder Risk Level: **${lowStockCount} Items Below Safety Threshold**
+- Stock Valuation: **${currSymbol}${inventoryStockValuation.toLocaleString()}**
 - Auto-PO Purchase Order Engine: **Ready for 1-click dispatch**
 
 💡 *All core ERP modules are synchronized for ${userRole}. You can trigger automated jobs directly under the Automations tab.*`;
@@ -166,21 +182,20 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
       if (isEmployee) {
         return `🌴 **Your Personal Leave Summary:**\n- Annual Leave Balance: **${annualLeft} / 25 Days Remaining**\n- Sick Leave: **${sickLeft} / 10 Days Available**\n- Casual Leave: **${casualLeft} / 5 Days Available**\n- Pending Requests: **${myPendingLeavesCount}**\n\nYou can submit a new leave application under **HR & Payroll > Leave Management**.`;
       }
-      return `🌴 **Company Leave Intelligence:**\n- Active Employees: **${employees.length || 12}**\n- Pending Leave Requests: **${pendingLeavesCount}** requiring review.\n\nGo to **HR Management > Leave Requests** to approve or decline applications.`;
+      return `🌴 **Company Leave Intelligence:**\n- Active Employees: **${employees.length}**\n- Pending Leave Requests: **${pendingLeavesCount}** requiring review.\n\nGo to **HR Management > Leave Requests** to approve or decline applications.`;
     }
 
     // 3. Payslips, Payroll & Salary
     if (q.includes('payslip') || q.includes('pay slip') || q.includes('salary') || q.includes('payroll') || q.includes('paye') || q.includes('ssnit')) {
       if (isEmployee) {
-        return `📄 **Digital Payslip Status:**\n- Latest Released Period: **July 2026**\n- Net Salary Disbursed: Confidential\n\nYou can view and download official PDF payslips under **HR & Payroll > My Payslips**.`;
+        return `📄 **Digital Payslip Status:**\n- Latest Released Period: **${currentMonthYear}**\n- Net Salary Disbursed: Confidential\n\nYou can view and download official PDF payslips under **HR & Payroll > My Payslips**.`;
       }
-      return `💸 **Payroll Automation Status:**\n- Total Active Roster: **${employees.length || 12} Staff**\n- Automated Cron Schedule: **Custom Execution Time**\n- Monthly Gross Obligation: **GHS 68,900**\n\nYou can trigger or configure automated monthly payroll runs under **Payroll > Run Payroll**.`;
+      return `💸 **Payroll Automation Status:**\n- Total Active Roster: **${employees.length} Staff**\n- Automated Cron Schedule: **Custom Execution Time**\n- Monthly Gross Obligation: **${currSymbol}${totalPayrollObligation.toLocaleString()}**\n\nYou can trigger or configure automated monthly payroll runs under **Payroll > Run Payroll**.`;
     }
 
     // 4. Attendance & Shift Clock-In
     if (q.includes('attendance') || q.includes('clock') || q.includes('absent') || q.includes('roster')) {
       if (isEmployee) {
-        const todayStr = new Date().toISOString().split('T')[0];
         const empId = selectedUser?.employeeId || selectedUser?.id;
         const myTodayAttendance = attendance.find(a =>
           (a.date === todayStr || (a.date && a.date.startsWith(todayStr))) &&
@@ -195,17 +210,17 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
           return `⏰ **Attendance & Shift Log:**\n- Status Today: 🔴 **Not Clocked In (Awaiting clock-in)**\n- Work Mode: **Awaiting Check-In**\n- Monthly Attendance Rate: **95%**\n\n💡 **Need to record arrival?** Click **Check In** on your dashboard or under **HR & Payroll > Attendance Log**.`;
         }
       }
-      return `👥 **Daily Staff Attendance Breakdown:**\n- Staff Present Today: **91% (10 Staff)**\n- Late Arrivals: **1 Staff**\n- Approved Leaves: **1 Staff**\n\nView individual clock-in/out histories in **HR Management > Attendance Management**.`;
+      return `👥 **Daily Staff Attendance Breakdown:**\n- Staff Present Today: **${attendanceRateToday}% (${presentCount} of ${totalStaffCount} Staff)**\n- Late Arrivals: **${lateCount} Staff**\n- Approved Leaves: **${leaves.filter(l => l.status === 'Approved').length} Staff**\n\nView individual clock-in/out histories in **HR Management > Attendance Management**.`;
     }
 
     // 5. Invoices, Revenue & Overdue Payment Reminders
     if (q.includes('invoice') || q.includes('financial') || q.includes('revenue') || q.includes('overdue') || q.includes('payment') || q.includes('reminder')) {
-      return `📊 **Financial & Invoicing Summary for ${selectedCompany.name}:**\n- Total Invoices Tracked: **${invoices.length || 8} Invoices**\n- Overdue Invoices: **${overdueInvoicesCount || 2} Invoices** requiring follow-up.\n- Automation Engine: WhatsApp & Email payment reminders active.\n\nGo to **Accounting & Finance > Invoices** to view client ledgers.`;
+      return `📊 **Financial & Invoicing Summary for ${selectedCompany.name}:**\n- Total Invoices Tracked: **${invoices.length} Invoices**\n- Overdue Invoices: **${overdueInvoicesCount} Invoices** (${currSymbol}${overdueTotalAmount.toLocaleString()} pending collection).\n- Automation Engine: WhatsApp & Email payment reminders active.\n\nGo to **Accounting & Finance > Invoices** to view client ledgers.`;
     }
 
     // 6. Stock, Inventory, Reorder & Purchase Orders / Valuation
     if (q.includes('stock') || q.includes('inventory') || q.includes('reorder') || q.includes('purchase order') || q.includes('valuation') || q.includes('warehouse')) {
-      return `📦 **Inventory Safety & Stock Valuation for ${selectedCompany.name}:**\n- Items Below Reorder Threshold: **${lowStockCount || 3} Items**\n- Total Warehouse Items: **${inventory.length || 15} Managed SKUs**\n- Warehouse Stock Valuation: **GHS 184,500**\n- Auto PO Engine: Ready to generate draft Purchase Orders.\n\nGo to **Operations & Supply > Inventory** to audit stock levels.`;
+      return `📦 **Inventory Safety & Stock Valuation for ${selectedCompany.name}:**\n- Items Below Reorder Threshold: **${lowStockCount} Items**\n- Total Warehouse Items: **${inventory.length} Managed SKUs**\n- Warehouse Stock Valuation: **${currSymbol}${inventoryStockValuation.toLocaleString()}**\n- Auto PO Engine: Ready to generate draft Purchase Orders.\n\nGo to **Operations & Supply > Inventory** to audit stock levels.`;
     }
 
     // 7. Bank Reconciliation
@@ -745,24 +760,26 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                     </h4>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
-                        <span className="fs-2xs text-emerald-600 fw-bold uppercase">Attendance Rate</span>
-                        <div className="text-lg fw-bold text-emerald-900 font-mono mt-0.5">95%</div>
-                        <span className="fs-3xs text-emerald-600">Present this month</span>
+                        <span className="fs-2xs text-emerald-600 fw-bold uppercase">Attendance Status</span>
+                        <div className="text-sm fw-bold text-emerald-900 font-mono mt-0.5">
+                          {attendanceRateToday}% ({presentCount}/{totalStaffCount} Present)
+                        </div>
+                        <span className="fs-3xs text-emerald-600">Today's company rate</span>
                       </div>
                       <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
                         <span className="fs-2xs text-blue-600 fw-bold uppercase">Leave Balance</span>
-                        <div className="text-lg fw-bold text-blue-900 font-mono mt-0.5">14 Days</div>
+                        <div className="text-lg fw-bold text-blue-900 font-mono mt-0.5">{annualLeft} Days</div>
                         <span className="fs-3xs text-blue-600">Annual leave remaining</span>
                       </div>
                     </div>
                     <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 space-y-1">
                       <div className="flex justify-between">
                         <span>Latest Payslip Released:</span>
-                        <span className="fw-semibold text-slate-900">July 2026</span>
+                        <span className="fw-semibold text-slate-900">{currentMonthYear}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Enrolled Department:</span>
-                        <span className="fw-semibold text-slate-900">{selectedUser?.email ? selectedCompany.name : 'Staff'}</span>
+                        <span>Enrolled Company:</span>
+                        <span className="fw-semibold text-slate-900">{selectedCompany.name}</span>
                       </div>
                     </div>
                   </div>
@@ -778,13 +795,13 @@ export const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
                         <i className="bi bi-people-fill text-indigo-600"></i> HR Staff Roster Status
                       </h4>
                       <span className="fs-2xs fw-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
-                        {employees.length || 12} Active Employees
+                        {employees.length} Active Employees
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                       <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
                         <span className="fs-2xs text-slate-500 fw-bold">Today's Attendance</span>
-                        <div className="text-base fw-bold text-slate-900 font-mono">91% Present</div>
+                        <div className="text-base fw-bold text-slate-900 font-mono">{attendanceRateToday}% Present</div>
                       </div>
                       <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
                         <span className="fs-2xs text-amber-700 fw-bold">Pending Leaves</span>
