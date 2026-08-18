@@ -7,9 +7,9 @@ import { MODULE_CATALOG, planPriceForModules } from '../../data/moduleCatalog';
 import { isAdminRole, isSuperAdminRole, isHRRole, isFinanceDeptHead } from '../../permissions';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
-function payslipPDFBody(slip: any, currencyCode?: string) {
-  const earnings = slip.breakdown?.filter(b => b.type === 'Benefit') || [];
-  const deductions = slip.breakdown?.filter(b => b.type === 'Deduction' || b.type === 'Tax') || [];
+function payslipPDFBody(slip: any, currencyCode?: string, allHistoricalSlips?: any[]) {
+  const earnings = slip.breakdown?.filter((b: any) => b.type === 'Benefit') || [];
+  const deductions = slip.breakdown?.filter((b: any) => b.type === 'Deduction' || b.type === 'Tax') || [];
   const baseSalary = slip.baseSalary || slip.gross;
 
   return `
@@ -40,7 +40,7 @@ function payslipPDFBody(slip: any, currencyCode?: string) {
           <span>Base Salary</span>
           <span style="font-family:monospace; font-weight:600; color:#0f172a;">${formatCurrency(baseSalary, currencyCode)}</span>
         </div>
-        ${earnings.map(e => `
+        ${earnings.map((e: any) => `
         <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
           <span>${e.name}</span>
           <span style="font-family:monospace; font-weight:600; color:#16a34a;">+${formatCurrency(e.amount, currencyCode)}</span>
@@ -58,7 +58,7 @@ function payslipPDFBody(slip: any, currencyCode?: string) {
         <div style="font-size:12px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.05em; padding-bottom:10px; border-bottom:1px solid #e2e8f0; margin-bottom:12px;">
           Deductions & Taxes
         </div>
-        ${deductions.length > 0 ? deductions.map(d => `
+        ${deductions.length > 0 ? deductions.map((d: any) => `
         <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:12px; color:#475569;">
           <span>${d.name}</span>
           <span style="font-family:monospace; font-weight:600; color:#dc2626;">-${formatCurrency(d.amount, currencyCode)}</span>
@@ -73,17 +73,48 @@ function payslipPDFBody(slip: any, currencyCode?: string) {
     </div>
 
     <!-- Net Pay Highlight -->
-    <div style="margin-top:40px; background:linear-gradient(to right, #0f172a, #1e293b); border-radius:12px; padding:24px; color:white; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-top:30px; background:linear-gradient(to right, #0f172a, #1e293b); border-radius:12px; padding:20px; color:white; display:flex; justify-content:space-between; align-items:center;">
       <div>
         <div style="font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Total Net Pay</div>
         <div style="font-size:11px; color:#cbd5e1; max-width:220px; line-height:1.5;">This amount will be directly deposited into your registered bank account.</div>
       </div>
       <div style="text-align:right;">
-        <div style="font-size:28px; font-weight:800; font-family:monospace; letter-spacing:-0.02em;">
+        <div style="font-size:26px; font-weight:800; font-family:monospace; letter-spacing:-0.02em;">
           ${formatCurrency(slip.net || 0, currencyCode)}
         </div>
       </div>
     </div>
+
+    <!-- Historical Payroll Run Summary -->
+    ${allHistoricalSlips && allHistoricalSlips.length > 0 ? `
+    <div style="margin-top:30px; border-top:1px solid #e2e8f0; padding-top:20px;">
+      <div style="font-size:11px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px;">
+        Executed Payroll History Summary (${allHistoricalSlips.length} Cycles)
+      </div>
+      <table style="width:100%; border-collapse:collapse; font-size:11px; color:#475569;">
+        <thead>
+          <tr style="background:#f1f5f9; text-align:left; font-weight:600; color:#334155;">
+            <th style="padding:6px 10px;">Period</th>
+            <th style="padding:6px 10px; text-align:right;">Gross</th>
+            <th style="padding:6px 10px; text-align:right;">Deductions</th>
+            <th style="padding:6px 10px; text-align:right;">Net Disbursed</th>
+            <th style="padding:6px 10px; text-align:center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allHistoricalSlips.map((h: any) => `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:6px 10px; font-weight:600; color:#0f172a;">${h.period}</td>
+            <td style="padding:6px 10px; text-align:right; font-family:monospace;">${formatCurrency(h.gross, currencyCode)}</td>
+            <td style="padding:6px 10px; text-align:right; font-family:monospace; color:#dc2626;">-${formatCurrency(h.deductions, currencyCode)}</td>
+            <td style="padding:6px 10px; text-align:right; font-family:monospace; font-weight:700; color:#16a34a;">${formatCurrency(h.net, currencyCode)}</td>
+            <td style="padding:6px 10px; text-align:center;"><span style="color:#166534; font-weight:600;">${h.status || 'Disbursed'}</span></td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    ` : ''}
   `;
 }
 
@@ -857,7 +888,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                         status: activeSlip.status,
                         customBenefitsTotal: activeSlip.customBenefitsTotal || 0,
                         breakdown: activeSlip.breakdown,
-                      }), selectedCompany)}>Download PDF</PrimaryBtn>
+                      }, selectedCompany?.currency, mySlips), selectedCompany)}>Download PDF</PrimaryBtn>
                     </div>
                     <div className="p-5 space-y-5">
                       {/* Earnings */}
@@ -909,21 +940,58 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                     </div>
                   </div>
 
-                  {/* Previous payslips list */}
+                  {/* Payroll Run History & YTD Summary */}
                   <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden overflow-x-auto">
-                    <div className="px-5 py-4 border-b border-slate-100">
-                      <h3 className="section-title text-slate-900">All Available Payslips</h3>
+                    <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h3 className="section-title text-slate-900 flex items-center gap-2">
+                          <i className="bi bi-clock-history text-indigo-600"></i> Payroll Run History & Disbursed Slips
+                        </h3>
+                        <p className="fs-2xs text-slate-500 mt-0.5">Complete historical log of executed payroll runs and salary disbursements.</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="fs-2xs bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg fw-bold font-mono">
+                          {mySlips.length} Cycles Completed
+                        </span>
+                      </div>
                     </div>
+
+                    {/* YTD Summary Stats */}
+                    <div className="p-4 bg-slate-50/70 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                        <span className="fs-3xs text-slate-400 fw-bold uppercase">Total Net Paid YTD</span>
+                        <div className="fs-lg fw-bold text-emerald-600 font-sans tabular-nums mt-0.5">
+                          {showSlipsValues ? formatCurrency(mySlips.reduce((s, p) => s + (p.net || 0), 0), selectedCompany?.currency) : '****'}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                        <span className="fs-3xs text-slate-400 fw-bold uppercase">Total Deductions YTD</span>
+                        <div className="fs-lg fw-bold text-rose-600 font-sans tabular-nums mt-0.5">
+                          {showSlipsValues ? formatCurrency(mySlips.reduce((s, p) => s + (p.deductions || 0), 0), selectedCompany?.currency) : '****'}
+                        </div>
+                      </div>
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                        <span className="fs-3xs text-slate-400 fw-bold uppercase">Average Net per Cycle</span>
+                        <div className="fs-lg fw-bold text-slate-900 font-sans tabular-nums mt-0.5">
+                          {showSlipsValues && mySlips.length > 0 ? formatCurrency(Math.round(mySlips.reduce((s, p) => s + (p.net || 0), 0) / mySlips.length), selectedCompany?.currency) : '****'}
+                        </div>
+                      </div>
+                    </div>
+
                     <table className="w-full text-left">
-                      <TableHead cols={[{ label: 'Period' }, { label: 'Gross', right: true }, { label: 'Deductions', right: true }, { label: 'Net', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
+                      <TableHead cols={[{ label: 'Payroll Period' }, { label: 'Gross Salary', right: true }, { label: 'Deductions', right: true }, { label: 'Net Salary', right: true }, { label: 'Status' }, { label: 'Actions', right: true }]} />
                       <tbody className="divide-y divide-slate-100">
                         {mySlips.map(slip => (
-                          <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors ${activeSlip.id === slip.id ? 'bg-slate-50' : ''}`}>
-                            <td className="px-4 py-3 fs-xs fw-semibold text-slate-900">{slip.period}</td>
+                          <tr key={slip.id} className={`hover:bg-slate-50/40 transition-colors ${activeSlip.id === slip.id ? 'bg-indigo-50/30' : ''}`}>
+                            <td className="px-4 py-3 fs-xs fw-semibold text-slate-900 flex items-center gap-2">
+                              <i className="bi bi-calendar-check text-indigo-600 fs-xs"></i>
+                              {slip.period}
+                              {activeSlip.id === slip.id && <span className="fs-3xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded fw-bold">Active</span>}
+                            </td>
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums text-slate-900 text-right">{showSlipsValues ? formatCurrency(slip.gross, selectedCompany?.currency) : '****'}</td>
                             <td className="px-4 py-3 fs-xs font-sans tabular-nums text-rose-600 text-right">{showSlipsValues ? `-${formatCurrency(slip.deductions, selectedCompany?.currency)}` : '****'}</td>
-                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-slate-900 text-right">{showSlipsValues ? formatCurrency(slip.net, selectedCompany?.currency) : '****'}</td>
-                            <td className="px-4 py-3"><Badge label={slip.status} variant="success" /></td>
+                            <td className="px-4 py-3 fs-xs font-sans tabular-nums fw-bold text-emerald-700 text-right">{showSlipsValues ? formatCurrency(slip.net, selectedCompany?.currency) : '****'}</td>
+                            <td className="px-4 py-3"><Badge label={slip.status || 'Disbursed'} variant="success" /></td>
                             <td className="px-4 py-3 text-right whitespace-nowrap">
                               <button onClick={(e) => { 
                                 e.stopPropagation(); 
@@ -946,9 +1014,9 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                                   status: slip.status,
                                   customBenefitsTotal: slip.customBenefitsTotal || 0,
                                   breakdown: slip.breakdown,
-                                }), selectedCompany);
+                                }, selectedCompany?.currency, mySlips), selectedCompany);
                               }} className="text-slate-500 hover:text-slate-700 data-value-small fw-semibold cursor-pointer" title="Download PDF">
-                                <i className="bi bi-printer"></i> Print
+                                <i className="bi bi-printer"></i> Print PDF
                               </button>
                             </td>
                           </tr>
@@ -1189,7 +1257,7 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
               net: payslipModal.selected!.net,
               status: payslipModal.selected!.status,
               breakdown: payslipModal.selected!.breakdown,
-            }), selectedCompany)}>
+            }, selectedCompany?.currency, payslips.filter(p => p.employeeId === payslipModal.selected!.employeeId && p.companyId === selectedCompany.id)), selectedCompany)}>
               Download PDF
             </PrimaryBtn>
           }
@@ -1215,6 +1283,44 @@ export const PayrollView: React.FC<ModuleViewsProps> = (props) => {
                 <div className="data-value fw-semibold text-slate-900">{f.value}</div>
               </div>
             ))}
+          </div>
+
+          {/* Historical Payroll Runs for Employee */}
+          <div className="mt-5 pt-4 border-t border-slate-200">
+            <h4 className="fs-xs fw-bold text-slate-900 mb-2.5 flex items-center gap-1.5">
+              <i className="bi bi-clock-history text-slate-600"></i> Payroll Run History ({getEmployeeNameById(employees, payslipModal.selected.employeeId) || payslipModal.selected.employeeName})
+            </h4>
+            <div className="border border-slate-200 rounded-xl overflow-hidden overflow-x-auto max-h-48 overflow-y-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 border-b border-slate-100 fs-2xs text-slate-500 font-semibold">
+                  <tr>
+                    <th className="px-3 py-2">Period</th>
+                    <th className="px-3 py-2 text-right">Gross</th>
+                    <th className="px-3 py-2 text-right">Deductions</th>
+                    <th className="px-3 py-2 text-right">Net</th>
+                    <th className="px-3 py-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 fs-xs">
+                  {payslips.filter(p => p.employeeId === payslipModal.selected.employeeId && p.companyId === selectedCompany.id).map(hisSlip => (
+                    <tr key={hisSlip.id} className={`hover:bg-slate-50 ${hisSlip.id === payslipModal.selected.id ? 'bg-cyan-50/50 fw-bold' : ''}`}>
+                      <td className="px-3 py-2 flex items-center gap-1.5">
+                        <i className="bi bi-calendar-check text-cyan-600 fs-xs"></i>
+                        {hisSlip.period}
+                      </td>
+                      <td className="px-3 py-2 text-right font-sans tabular-nums">{formatCurrency(hisSlip.gross, selectedCompany?.currency)}</td>
+                      <td className="px-3 py-2 text-right font-sans tabular-nums text-rose-600">-{formatCurrency(hisSlip.deductions, selectedCompany?.currency)}</td>
+                      <td className="px-3 py-2 text-right font-sans tabular-nums text-emerald-600 fw-bold">{formatCurrency(hisSlip.net, selectedCompany?.currency)}</td>
+                      <td className="px-3 py-2 text-right">
+                        <button onClick={() => payslipModal.open(hisSlip)} className="text-cyan-600 hover:text-cyan-800 text-2xs fw-semibold cursor-pointer">
+                          Select
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </ViewModal>
       )}
