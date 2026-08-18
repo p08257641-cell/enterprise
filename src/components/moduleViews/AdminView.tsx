@@ -1132,6 +1132,15 @@ const [deptParent, setDeptParent] = useState('');
                         placeholder="smtp.sendgrid.net:587"
                       />
                     </div>
+                    <div>
+                      <Label>Recruitment Inbound CV Email Address</Label>
+                      <Input
+                        defaultValue={selectedCompany.recruitmentInboundEmail || ''}
+                        onBlur={e => onUpdateCompanySettings(selectedCompany.id, { recruitmentInboundEmail: e.target.value })}
+                        placeholder={`careers@${selectedCompany.domain || 'company.com'}`}
+                      />
+                      <p className="fs-3xs text-slate-500 mt-1">Applicants emailing this address will be automatically parsed & AI-screened into ATS.</p>
+                    </div>
                   </div>
                 </div>
 

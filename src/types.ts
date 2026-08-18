@@ -33,6 +33,7 @@ export interface Company {
   emailApiKey?: string;
   emailFromAddress?: string;
   emailFromName?: string;
+  recruitmentInboundEmail?: string;
   passwordResetChannel?: 'Email' | 'SMS' | 'Both';
   leadAssignmentNotifyEmail?: boolean;
   leadAssignmentNotifySMS?: boolean;

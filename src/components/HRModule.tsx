@@ -252,12 +252,25 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const [isScreeningRunning, setIsScreeningRunning] = useState(false);
   const [screeningResults, setScreeningResults] = useState<Array<{ name: string; score: number; keywords: string[]; summary: string; stage: string }>>([]);
 
-  // Inbound Email CV Ingestion State
+  // Inbound Email CV Ingestion & Settings State
   const [showEmailIngestModal, setShowEmailIngestModal] = useState(false);
+  const [showRecruitmentSettingsModal, setShowRecruitmentSettingsModal] = useState(false);
+  const [customInboundEmailInput, setCustomInboundEmailInput] = useState(selectedCompany.recruitmentInboundEmail || '');
   const [ingestName, setIngestName] = useState('');
   const [ingestEmail, setIngestEmail] = useState('');
   const [ingestVacancyTitle, setIngestVacancyTitle] = useState('Senior Full-Stack Engineer');
   const [ingestSkills, setIngestSkills] = useState('React, TypeScript, Node.js, PostgreSQL, Docker, Git');
+
+  const activeInboundEmail = selectedCompany.recruitmentInboundEmail || `jobs-${selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app`;
+
+  const handleSaveRecruitmentEmailSettings = async () => {
+    if (!selectedCompany) return;
+    await onUpdateCompanySettings(selectedCompany.id, {
+      recruitmentInboundEmail: customInboundEmailInput.trim()
+    });
+    setShowRecruitmentSettingsModal(false);
+    modalAlert(`Recruitment inbound email address configured:\n${customInboundEmailInput.trim() || activeInboundEmail}`, { variant: 'success' });
+  };
 
   const handleIngestCandidateCV = () => {
     if (!ingestName || !ingestEmail) {
@@ -1397,6 +1410,12 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => { setCustomInboundEmailInput(selectedCompany.recruitmentInboundEmail || ''); setShowRecruitmentSettingsModal(true); }}
+                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs fw-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 border border-white/20"
+                >
+                  <i className="bi bi-gear-fill text-indigo-300"></i> Configure Inbound Email / Settings
+                </button>
+                <button
                   onClick={() => setShowEmailIngestModal(true)}
                   className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs fw-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 border border-indigo-400/30"
                 >
@@ -1411,15 +1430,14 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                   <span>1. Dedicated Inbound Email</span>
                   <i className="bi bi-mailbox text-indigo-400"></i>
                 </div>
-                <div className="font-mono text-indigo-200 fw-semibold truncate fs-xs">
-                  jobs-{selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app
+                <div className="font-mono text-indigo-200 fw-semibold truncate fs-xs" title={activeInboundEmail}>
+                  {activeInboundEmail}
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    const emailStr = `jobs-${selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app`;
-                    navigator.clipboard.writeText(emailStr);
-                    modalAlert(`Copied inbound CV email address:\n${emailStr}\n\nSet up automatic email forwarding from your careers@company.com to this address to ingest CVs automatically!`, { variant: 'info' });
+                    navigator.clipboard.writeText(activeInboundEmail);
+                    modalAlert(`Copied recruitment inbound CV email address:\n${activeInboundEmail}\n\nSet up automatic email forwarding from your custom careers@company.com to this address to ingest CVs automatically!`, { variant: 'info' });
                   }}
                   className="fs-2xs text-indigo-300 hover:text-white underline cursor-pointer"
                 >
@@ -1445,6 +1463,73 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                 <p className="fs-xs text-slate-200">
                   Compares CV skills against vacancy keywords (*React, Node*) & auto-shortlists candidates scoring ≥ 70%.
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Recruitment Inbound Email Settings Modal */}
+        {showRecruitmentSettingsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-5 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md border border-white/20">
+                    <i className="bi bi-mailbox2 text-amber-300 text-lg"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-sm fw-bold">Recruitment Inbound Email & ATS Settings</h2>
+                    <p className="fs-xs text-slate-300">Configure your custom company career email for automated CV ingestion</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowRecruitmentSettingsModal(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                  <i className="bi bi-x-lg text-sm"></i>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <Label>Custom Company Recruitment / Career Email Address *</Label>
+                  <Input
+                    value={customInboundEmailInput}
+                    onChange={e => setCustomInboundEmailInput(e.target.value)}
+                    placeholder={`careers@${selectedCompany.domain || 'company.com'}`}
+                  />
+                  <p className="fs-2xs text-slate-500 mt-1">
+                    Enter your custom email address (e.g. <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono">careers@{selectedCompany.domain || 'company.com'}</code> or <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono">jobs@{selectedCompany.domain || 'company.com'}</code>).
+                  </p>
+                </div>
+
+                <div className="border border-indigo-100 rounded-2xl p-4 bg-indigo-50/60 space-y-2">
+                  <div className="flex items-center justify-between text-xs fw-bold text-indigo-950">
+                    <span className="flex items-center gap-1.5"><i className="bi bi-[#25D366] bi-arrow-repeat text-indigo-600"></i> Automated Email Forwarding & Webhook Endpoint</span>
+                    <span className="fs-3xs px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-800 fw-bold">System Default</span>
+                  </div>
+                  <div className="p-2.5 bg-white border border-indigo-200 rounded-xl font-mono text-xs text-indigo-900 flex items-center justify-between">
+                    <span className="truncate">jobs-{selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const defaultStr = `jobs-${selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app`;
+                        navigator.clipboard.writeText(defaultStr);
+                        modalAlert(`Copied webhook endpoint:\n${defaultStr}`, { variant: 'info' });
+                      }}
+                      className="fs-2xs text-indigo-600 hover:text-indigo-800 font-sans font-semibold underline cursor-pointer ml-2 shrink-0"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p className="fs-xs text-indigo-900 leading-relaxed">
+                    💡 <strong>Setup Tip:</strong> In your domain email provider (Gmail Workspace, Outlook 365, or cPanel), create an auto-forwarding rule from <span className="font-semibold">{customInboundEmailInput || `careers@${selectedCompany.domain || 'company.com'}`}</span> to the webhook address above. incoming job applicant resumes will automatically populate your ATS pipeline in milliseconds!
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <SecBtn onClick={() => setShowRecruitmentSettingsModal(false)}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={handleSaveRecruitmentEmailSettings}>
+                  Save Inbound Email Address
+                </PrimaryBtn>
               </div>
             </div>
           </div>
@@ -1508,7 +1593,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                     <span>Inbound Webhook Live Parsing</span>
                   </div>
                   <p className="fs-xs text-amber-800">
-                    When an applicant emails your inbound address <span className="font-mono text-amber-950 font-bold">jobs-{selectedCompany.id.replace(/-/g, '').slice(0, 10)}@inbound.core360.app</span>, this parsing occurs automatically in milliseconds without manual entry.
+                    When an applicant emails your inbound address <span className="font-mono text-amber-950 font-bold">{activeInboundEmail}</span>, this parsing occurs automatically in milliseconds without manual entry.
                   </p>
                 </div>
               </div>
