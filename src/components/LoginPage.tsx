@@ -38,7 +38,7 @@ export const LoginPage: React.FC = () => {
   const [imagesPreloaded, setImagesPreloaded] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   
-  const [showSplash, setShowSplash] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [bgIndex, setBgIndex] = useState(0);
 
   const activeImages = useMemo(() => {
@@ -109,9 +109,12 @@ export const LoginPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [activeImages.length]);
 
-  // Instant display: hide splash screen immediately without blocking on image downloads or artificial timers
+  // Fast splash screen intro: displays brief 500ms branded splash intro then reveals login form without blocking on image preloading
   useEffect(() => {
-    setShowSplash(false);
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
