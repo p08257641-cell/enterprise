@@ -1618,3 +1618,15 @@ export interface Applicant {
   aiSummary?: string;
   matchedKeywords?: string[];
 }
+
+export interface JobVacancy {
+  id: string;
+  companyId: string;
+  title: string;
+  department: string;
+  count: number;
+  posted: string;
+  keywords: string;
+  minScore: number;
+  createdAt?: string;
+}

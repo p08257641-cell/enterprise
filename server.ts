@@ -1305,6 +1305,36 @@ app.post('/api/branches', asyncHandler(async (req, res) => {
     res.json(updated);
   }));
 
+  // Job Vacancies API
+  app.get('/api/job-vacancies', asyncHandler(async (req, res) => {
+    const { companyId } = req.query;
+    const all = await dbAll<any>(schema.jobVacancies);
+    res.json(companyId ? all.filter((v: any) => v.companyId === companyId) : all);
+  }));
+
+  app.post('/api/job-vacancies', asyncHandler(async (req, res) => {
+    const { companyId, title, department, count, keywords, minScore } = req.body;
+    const newVac = {
+      id: `vac-${Date.now()}`,
+      companyId,
+      title,
+      department,
+      count: Number(count) || 1,
+      posted: new Date().toISOString().split('T')[0],
+      keywords: keywords || '',
+      minScore: Number(minScore) || 70,
+      createdAt: new Date().toISOString()
+    };
+    await dbInsert(schema.jobVacancies, newVac);
+    res.status(201).json(newVac);
+  }));
+
+  app.delete('/api/job-vacancies/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    await dbDelete(schema.jobVacancies, id);
+    res.json({ success: true, id });
+  }));
+
   app.post('/api/screen-cv', asyncHandler(async (req, res) => {
     const { cvText, jobRole } = req.body;
     if (!cvText || !jobRole) return res.status(400).json({ error: 'Missing cvText or jobRole' });

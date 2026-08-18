@@ -476,11 +476,25 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
   const [vacCount, setVacCount] = useState('1');
   const [vacKeywords, setVacKeywords] = useState('React, TypeScript, Node.js, PostgreSQL');
   const [vacMinScore, setVacMinScore] = useState('70');
-  const [vacancies, setVacancies] = useState<{ id: string; title: string; department: string; count: number; posted: string; keywords: string; minScore: number }[]>([
-    { id: 'vac-1', title: 'Senior Full-Stack Engineer', department: 'Engineering', count: 2, posted: '2026-08-01', keywords: 'React, TypeScript, Node.js, PostgreSQL, Docker', minScore: 70 },
-    { id: 'vac-2', title: 'Chief Accountant / CPA', department: 'Finance', count: 1, posted: '2026-08-05', keywords: 'CPA, GAAP, Financial Accounting, Auditing, Tax', minScore: 75 },
-    { id: 'vac-3', title: 'B2B Sales Representative', department: 'Sales', count: 3, posted: '2026-08-10', keywords: 'CRM, B2B Sales, Lead Generation, Negotiation, Pipeline', minScore: 65 }
-  ]);
+  const [vacancies, setVacancies] = useState<{ id: string; title: string; department: string; count: number; posted: string; keywords: string; minScore: number }[]>([]);
+
+  // Fetch company job vacancies from DB
+  useEffect(() => {
+    if (!selectedCompany) return;
+    fetch(`/api/job-vacancies?companyId=${selectedCompany.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setVacancies(data);
+      })
+      .catch(console.error);
+  }, [selectedCompany.id]);
+
+  const handleDeleteVacancy = async (vacId: string) => {
+    try {
+      await fetch(`/api/job-vacancies/${vacId}`, { method: 'DELETE' });
+      setVacancies(vacancies.filter(v => v.id !== vacId));
+    } catch (err) { console.error(err); }
+  };
   // Edit Department modal
   const [editDeptModal, setEditDeptModal] = useState<Department | null>(null);
   const [editDeptName, setEditDeptName] = useState('');
@@ -1623,48 +1637,75 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
               </PrimaryBtn>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {vacancies.map((vac) => (
-                <div key={vac.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:shadow-md hover:border-indigo-200 transition-all space-y-3 group">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="fs-xs fw-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{vac.title}</h4>
-                      <span className="fs-xs text-slate-500">{vac.department} · Posted {vac.posted}</span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full fs-2xs fw-bold bg-indigo-100 text-indigo-700 shrink-0">
-                      {vac.count} {vac.count === 1 ? 'Opening' : 'Openings'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider block mb-1">Required AI Keywords:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {(vac.keywords || 'Skills required').split(',').map((kw, kwIdx) => (
-                        <span key={kwIdx} className="px-2 py-0.5 rounded-md fs-2xs font-mono fw-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
-                          {kw.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                    <span className="fs-2xs fw-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
-                      Min {vac.minScore || 70}% Match
-                    </span>
-                    <button
-                      onClick={() => {
-                        setTargetKeywords(vac.keywords);
-                        setMinMatchScore(vac.minScore || 70);
-                        setShowAiScreeningModal(true);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white fs-xs fw-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1"
-                    >
-                      <i className="bi bi-stars text-amber-300 fs-2xs"></i> AI Shortlist
-                    </button>
-                  </div>
+            {vacancies.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl shadow-xs">
+                  <i className="bi bi-briefcase-fill"></i>
                 </div>
-              ))}
-            </div>
+                <div>
+                  <h4 className="fs-sm fw-bold text-slate-800">No Job Vacancies Posted Yet</h4>
+                  <p className="fs-xs text-slate-500 max-w-md mx-auto mt-1">
+                    Post your first company vacancy with AI screening keywords to begin automatically shortlisting incoming candidate resumes.
+                  </p>
+                </div>
+                <PrimaryBtn icon="bi bi-plus-lg" onClick={() => { setVacTitle(''); setVacDept(''); setVacCount('1'); setVacKeywords('React, TypeScript, Node.js, PostgreSQL'); setVacMinScore('70'); setShowVacancyModal(true); }}>
+                  Post First Job Vacancy
+                </PrimaryBtn>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-3">
+                {vacancies.map((vac) => (
+                  <div key={vac.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:shadow-md hover:border-indigo-200 transition-all space-y-3 group relative">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="fs-xs fw-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{vac.title}</h4>
+                        <span className="fs-xs text-slate-500">{vac.department} · Posted {vac.posted}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="px-2 py-0.5 rounded-full fs-2xs fw-bold bg-indigo-100 text-indigo-700">
+                          {vac.count} {vac.count === 1 ? 'Opening' : 'Openings'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteVacancy(vac.id)}
+                          className="text-slate-300 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                          title="Delete Vacancy"
+                        >
+                          <i className="bi bi-trash fs-xs"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="fs-2xs fw-bold text-slate-400 uppercase tracking-wider block mb-1">Required AI Keywords:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {(vac.keywords || 'Skills required').split(',').map((kw, kwIdx) => (
+                          <span key={kwIdx} className="px-2 py-0.5 rounded-md fs-2xs font-mono fw-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                            {kw.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                      <span className="fs-2xs fw-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-mono">
+                        Min {vac.minScore || 70}% Match
+                      </span>
+                      <button
+                        onClick={() => {
+                          setTargetKeywords(vac.keywords);
+                          setMinMatchScore(vac.minScore || 70);
+                          setShowAiScreeningModal(true);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white fs-xs fw-semibold transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                      >
+                        <i className="bi bi-stars text-amber-300 fs-2xs"></i> AI Shortlist
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1920,24 +1961,28 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
 
                       <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
                         <SecBtn onClick={() => setShowVacancyModal(false)}>Cancel</SecBtn>
-                        <PrimaryBtn icon="bi bi-check-lg" onClick={() => {
+                        <PrimaryBtn icon="bi bi-check-lg" onClick={async () => {
                           if (!vacTitle) return void modalAlert('Job title required', { variant: 'warning' });
-                          setVacancies([
-                            ...vacancies,
-                            {
-                              id: `vac-${Date.now()}`,
-                              title: vacTitle,
-                              department: vacDept || 'General',
-                              count: Number(vacCount) || 1,
-                              posted: new Date().toISOString().split('T')[0],
-                              keywords: vacKeywords || 'Required Skills',
-                              minScore: Number(vacMinScore) || 70
-                            }
-                          ]);
-                          setShowVacancyModal(false);
-                          setVacTitle('');
-                          setVacDept('');
-                          modalAlert('Job vacancy posted successfully with custom AI CV screening keywords!', { variant: 'success' });
+                          try {
+                            const res = await fetch('/api/job-vacancies', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                companyId: selectedCompany.id,
+                                title: vacTitle,
+                                department: vacDept || 'General',
+                                count: Number(vacCount) || 1,
+                                keywords: vacKeywords || 'Required Skills',
+                                minScore: Number(vacMinScore) || 70
+                              })
+                            });
+                            const newVac = await res.json();
+                            setVacancies([...vacancies, newVac]);
+                            setShowVacancyModal(false);
+                            setVacTitle('');
+                            setVacDept('');
+                            modalAlert('Job vacancy posted and saved to database successfully with custom AI CV screening keywords!', { variant: 'success' });
+                          } catch (err) { console.error(err); modalAlert('Failed to save job vacancy', { variant: 'danger' }); }
                         }}>Post Vacancy & Save AI Rules</PrimaryBtn>
                       </div>
                     </div>

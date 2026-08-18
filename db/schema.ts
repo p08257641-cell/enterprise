@@ -59,6 +59,18 @@ export const departments = pgTable('departments', {
   employeeCount: integer('employeeCount'),
 });
 
+export const jobVacancies = pgTable('job_vacancies', {
+  id: text('id').primaryKey(),
+  companyId: text('companyId'),
+  title: text('title'),
+  department: text('department'),
+  count: integer('count'),
+  posted: text('posted'),
+  keywords: text('keywords'),
+  minScore: integer('minScore'),
+  createdAt: text('createdAt'),
+});
+
 export const branches = pgTable('branches', {
   id: text('id').primaryKey(),
   companyId: text('companyId'),

@@ -47,6 +47,7 @@ export default function App() {
   // Core database tables
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [jobVacancies, setJobVacancies] = useState<JobVacancy[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
 const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
