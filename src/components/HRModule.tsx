@@ -13,7 +13,7 @@ import { ViewModal, TableHead, EmptyRow } from './moduleViews/shared';
 import { Company, User, Applicant, Employee, Department, Branch, LeaveRequest, AttendanceRecord, OKRRecord, OnboardingRecord, ExitRequest } from '../types';
 import { isAdminRole, isHRRole, isHRDeptHead, isDeptHeadRole, hasCrudPermission } from '../permissions';
 import { downloadCSV } from '../utils/export';
-import { modalAlert, modalConfirm } from '../utils/modal';
+import { modalAlert, modalConfirm, toast } from '../utils/modal';
 import { OrgChart } from './OrgChart';
 
 interface HRModuleProps {
@@ -4162,8 +4162,8 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
           title="Whistleblower & Anonymous Reports" 
           subtitle="Review and manage anonymous concerns submitted to HR. Reporter identities are never logged."
           action={
-            <SecBtn icon="bi bi-download" onClick={() => downloadCSV(`whistleblower-reports-${selectedCompany.id}`, ['Report ID', 'Category', 'Status', 'Department', 'Location', 'Submitted At', 'Description'], filteredReports.map(r => [r.id, r.category, r.status, r.department || 'N/A', r.location || 'N/A', new Date(r.createdAt).toLocaleDateString(), r.description]))}>
-              Export CSV
+            <SecBtn onClick={() => downloadCSV(`whistleblower-reports-${selectedCompany.id}`, ['Report ID', 'Category', 'Status', 'Department', 'Location', 'Submitted At', 'Description'], filteredReports.map(r => [r.id, r.category, r.status, r.department || 'N/A', r.location || 'N/A', new Date(r.createdAt).toLocaleDateString(), r.description]))}>
+              <i className="bi bi-download mr-1"></i> Export CSV
             </SecBtn>
           }
         />
@@ -4220,20 +4220,12 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <TableHead>
-                <Th>Submitted</Th>
-                <Th>Category</Th>
-                <Th>Department / Location</Th>
-                <Th>Concern Summary</Th>
-                <Th>Status</Th>
-                <Th>Assigned To</Th>
-                <Th>Action</Th>
-              </TableHead>
+              <TableHead cols={[{ label: 'Submitted' }, { label: 'Category' }, { label: 'Department / Location' }, { label: 'Concern Summary' }, { label: 'Status' }, { label: 'Assigned To' }, { label: 'Action' }]} />
               <tbody className="divide-y divide-slate-100">
                 {loadingWhisper ? (
                   <tr><td colSpan={7} className="text-center py-8 text-slate-400">Loading whistleblower reports...</td></tr>
                 ) : filteredReports.length === 0 ? (
-                  <EmptyRow colSpan={7} message="No whistleblower reports found." />
+                  <EmptyRow cols={7} message="No whistleblower reports found." />
                 ) : (
                   filteredReports.map(report => (
                     <tr key={report.id} className="hover:bg-slate-50/80 transition-colors">
@@ -4241,7 +4233,7 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                         {new Date(report.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4">
-                        <Badge variant="purple" icon="bi bi-tag">{report.category}</Badge>
+                        <Badge label={report.category} variant="purple" />
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-700">
                         {report.department || 'General'} {report.location ? `(${report.location})` : ''}
@@ -4251,10 +4243,9 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
                       </td>
                       <td className="py-3 px-4">
                         <Badge 
-                          variant={report.status === 'New' ? 'amber' : report.status === 'Under Investigation' ? 'blue' : report.status === 'Resolved' ? 'emerald' : 'gray'}
-                        >
-                          {report.status}
-                        </Badge>
+                          label={report.status}
+                          variant={report.status === 'New' ? 'warning' : report.status === 'Under Investigation' ? 'info' : report.status === 'Resolved' ? 'success' : 'default'}
+                        />
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-600">
                         {report.assignedTo ? report.assignedTo : <span className="text-slate-400 italic">Unassigned</span>}
@@ -4357,9 +4348,15 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
 
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
                 <SecBtn onClick={() => setSelectedReportModal(null)}>Cancel</SecBtn>
-                <PrimaryBtn icon="bi bi-check-lg" onClick={handleSaveReportStatus} disabled={savingReport}>
+                <button
+                  type="button"
+                  disabled={savingReport}
+                  onClick={handleSaveReportStatus}
+                  className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 disabled:opacity-50 transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <i className="bi bi-check-lg"></i>
                   {savingReport ? 'Saving...' : 'Save Updates'}
-                </PrimaryBtn>
+                </button>
               </div>
             </div>
           </div>
