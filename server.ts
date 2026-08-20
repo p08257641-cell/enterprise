@@ -6360,8 +6360,18 @@ async function start() {
   }
 
   try {
-    // Fix live DB for testing
+    // Fix live DB schema columns for production table compatibility
+    await pool.query('ALTER TABLE companies ADD COLUMN IF NOT EXISTS "noticePeriodDays" integer');
+    await pool.query('ALTER TABLE companies ADD COLUMN IF NOT EXISTS "companyLogo" text');
+    await pool.query('ALTER TABLE companies ADD COLUMN IF NOT EXISTS "companySignature" text');
+    await pool.query('ALTER TABLE companies ADD COLUMN IF NOT EXISTS "recruitmentInboundEmail" text');
     await pool.query('ALTER TABLE companies ADD COLUMN IF NOT EXISTS "loginImages" text[]');
+
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "loginEnabled" boolean DEFAULT true');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "loginDisabledReason" text');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "signatureUrl" text');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "notificationEmail" text');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS "notificationPhone" text');
     
     await dbUpdate(schema.companies, 'c-acme', { domain: 'acme.core360.site' });
     const hash = await hashPassword('password123');
@@ -6369,7 +6379,7 @@ async function start() {
     for (const uid of acmeUserIds) {
       await dbUpdate(schema.users, uid, { passwordHash: hash });
     }
-    logger.info('Applied live DB fixes: acme domain and role accounts password123');
+    logger.info('Applied live DB fixes: schema migrations, acme domain and role accounts password123');
   } catch (e) {
     logger.error({ err: e }, 'Error applying live DB fixes');
   }
