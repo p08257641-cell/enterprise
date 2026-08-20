@@ -34,12 +34,18 @@ export async function comparePassword(plain: string, hash: string): Promise<bool
 
 export function crudGuard(module: string, action: string, options?: { allowOnEmpty?: boolean }) {
   return (req: any, res: any, next: any) => {
+    const userRole = req.user?.role;
+    if (['Super Admin', 'Company Admin', 'CEO', 'System Administrator', 'IT Department Head'].includes(userRole)) {
+      return next();
+    }
     const perms = req.user?.crudPermissions as string[] | undefined;
-    if (!perms || perms.length === 0) return next();
-    if (perms.includes(`${module}.${action}`)) return next();
+    if (perms && (perms.includes(`${module}.${action}`) || perms.includes(`${module.toLowerCase()}.${action.toLowerCase()}`))) {
+      return next();
+    }
     return res.status(403).json({ error: `Missing ${module}.${action} permission` });
   };
 }
+
 
 import crypto from 'crypto';
 

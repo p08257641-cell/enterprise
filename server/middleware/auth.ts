@@ -43,10 +43,28 @@ export function requirePermission(...permissions: string[]) {
 
 export function enforceTenantIsolation(req: Request, res: Response, next: NextFunction) {
   if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
-  if (req.method === 'GET') {
-    req.query.companyId = req.user.companyId;
-  } else if (req.body && typeof req.body === 'object') {
-    req.body.companyId = req.user.companyId;
+  if (req.user.role !== 'Super Admin') {
+    try {
+      const existingQuery = (req.query && typeof req.query === 'object') ? req.query : {};
+      const newQuery = { ...existingQuery, companyId: req.user.companyId };
+      Object.defineProperty(req, 'query', {
+        value: newQuery,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
+    } catch {
+      // Fallback
+    }
+
+    if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) {
+      try {
+        req.body.companyId = req.user.companyId;
+      } catch {
+        // Fallback
+      }
+    }
   }
   next();
 }
+

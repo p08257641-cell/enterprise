@@ -241,7 +241,7 @@ app.post('/api/auth/login', authLimiter, asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/auth/register', authLimiter, asyncHandler(async (req, res) => {
-  const { email, password, name, companyId, role } = req.body;
+  const { email, password, name, companyId } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: 'Email, password, and name are required' });
   }
@@ -249,16 +249,21 @@ app.post('/api/auth/register', authLimiter, asyncHandler(async (req, res) => {
   if (allUsers.find(u => u.email === email)) {
     return res.status(409).json({ error: 'Email already registered' });
   }
+  
+  // Security Hardening: Public registration is restricted to Employee role only.
+  const assignedRole = 'Employee';
+  const assignedCompanyId = companyId && typeof companyId === 'string' ? companyId : 'c-acme';
+
   const passwordHash = await hashPassword(password);
   const newUser = await dbInsert<any>(schema.users, {
     id: `u-${Date.now()}`,
-    companyId: companyId || 'c-default',
+    companyId: assignedCompanyId,
     name,
     email,
     passwordHash,
-    role: role || 'Employee',
-    roles: [],
-    activeRole: role || 'Employee',
+    role: assignedRole,
+    roles: [assignedRole],
+    activeRole: assignedRole,
     department: '',
     branch: '',
     permissions: [],
@@ -296,27 +301,7 @@ app.post('/api/auth/reset-password', authLimiter, asyncHandler(async (req, res) 
   res.json({ success: true, message: 'Password updated successfully' });
 }));
 
-// Dev-only endpoint: auto-login token (before auth middleware)
-if (process.env.NODE_ENV !== 'production') {
-  app.get('/api/dev-token', asyncHandler(async (req, res) => {
-    const allUsers = await dbAll<any>(schema.users);
-    const devUser = allUsers.find(u => u.role === 'HR Manager') || allUsers[0];
-    if (!devUser) return res.status(404).json({ error: 'No users in DB' });
-    const allRoles = await dbAll<any>(customRoles);
-    const activeRole = allRoles.find((r: any) => r.name === devUser.role && r.companyId === devUser.companyId);
-    const token = signToken({
-      userId: devUser.id,
-      companyId: devUser.companyId,
-      role: devUser.role,
-      roles: devUser.roles || [],
-      permissions: devUser.permissions || [],
-      crudPermissions: activeRole?.crudPermissions || [],
-    });
-    res.json({ token, user: { id: devUser.id, name: devUser.name, email: devUser.email, role: devUser.role, companyId: devUser.companyId, permissions: devUser.permissions || [], crudPermissions: activeRole?.crudPermissions || [] } });
-  }));
-}
-
-// ─── Whisper Reports (Anonymous - before auth middleware) ─────────────────────
+// ─── Whisper Reports (Anonymous Submission - public before auth middleware) ───
 app.post('/api/whisper-reports', asyncHandler(async (req, res) => {
   const { companyId, category, description, location, department } = req.body;
   if (!description || !description.trim()) {
@@ -359,25 +344,6 @@ app.post('/api/whisper-reports', asyncHandler(async (req, res) => {
 
   logAudit(report.companyId, 'anonymous', 'Anonymous', 'WHISPER_REPORT', 'Compliance', `Anonymous ${category} report submitted`);
   res.status(201).json({ success: true, message: 'Report submitted anonymously. Thank you for speaking up.' });
-}));
-
-app.get('/api/whisper-reports', asyncHandler(async (req, res) => {
-  const { companyId } = req.query;
-  let all = await dbAll<any>(schema.whisperReports);
-  if (companyId) all = all.filter((r: any) => r.companyId === companyId);
-  res.json(all);
-}));
-
-app.put('/api/whisper-reports/:id', asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { status, assignedTo, notes } = req.body;
-  const updates: any = {};
-  if (status) updates.status = status;
-  if (assignedTo) updates.assignedTo = assignedTo;
-  if (notes) updates.notes = notes;
-  const updated = await dbUpdate<any>(schema.whisperReports, id, updates);
-  if (!updated) return res.status(404).json({ error: 'Report not found' });
-  res.json(updated);
 }));
 
 // Public endpoint to list tenant companies for the login page (Whistleblower form)
@@ -467,7 +433,32 @@ app.post(['/webhooks/:companyId', '/api/webhooks/:companyId', '/api/public/webho
 
 // Apply auth to all subsequent /api routes
 app.use('/api', authenticate);
+app.use('/api', enforceTenantIsolation);
 
+// Authenticated Whisper Reports Endpoints
+app.get('/api/whisper-reports', asyncHandler(async (req: any, res) => {
+  const isSuperAdmin = req.user?.role === 'Super Admin';
+  const companyId = isSuperAdmin ? ((req.query.companyId as string) || req.user?.companyId) : req.user?.companyId;
+  let all = await dbAll<any>(schema.whisperReports);
+  if (companyId) all = all.filter((r: any) => r.companyId === companyId);
+  res.json(all);
+}));
+
+app.put('/api/whisper-reports/:id', asyncHandler(async (req: any, res) => {
+  const { id } = req.params;
+  const { status, assignedTo, notes } = req.body;
+  const existing = await dbById<any>(schema.whisperReports, id);
+  if (!existing) return res.status(404).json({ error: 'Report not found' });
+  if (req.user?.role !== 'Super Admin' && existing.companyId !== req.user?.companyId) {
+    return res.status(403).json({ error: 'Unauthorized to update report for another tenant' });
+  }
+  const updates: any = {};
+  if (status) updates.status = status;
+  if (assignedTo) updates.assignedTo = assignedTo;
+  if (notes) updates.notes = notes;
+  const updated = await dbUpdate<any>(schema.whisperReports, id, updates);
+  res.json(updated);
+}));
 
 // CRUD permission enforcement
 const CRUD_ROUTES: Array<{ prefix: string; module: string }> = [
@@ -552,14 +543,12 @@ app.use('/api', (req, res, next) => {
   // GET requests are allowed for authenticated company users to read reference data for UI rendering
   if (req.method === 'GET') return next();
 
-  const perms: string[] = (req as any).user?.crudPermissions || [];
-  if (perms.length === 0) return next();
-
   const method = req.method;
   const actionMap: Record<string, string> = { POST: 'Create', PUT: 'Update', PATCH: 'Update', DELETE: 'Delete' };
   const action = actionMap[method];
   if (!action) return next();
 
+  const perms: string[] = (req as any).user?.crudPermissions || [];
   const path = req.path;
   for (const route of CRUD_ROUTES) {
     if (path.startsWith(route.prefix) || path.startsWith('/api' + route.prefix)) {
@@ -574,8 +563,16 @@ app.use('/api', (req, res, next) => {
 });
 
 // ─── Bootstrap Endpoint (Consolidates initial data load into 1 request to prevent NGINX / Cloudflare rate limiting 403s) ───
-app.get('/api/bootstrap', asyncHandler(async (req, res) => {
-  const companyId = (req.query.companyId as string) || '';
+app.get('/api/bootstrap', asyncHandler(async (req: any, res) => {
+  const user = req.user;
+  const isSuperAdmin = user?.role === 'Super Admin';
+  const companyId = isSuperAdmin ? ((req.query.companyId as string) || user?.companyId || '') : (user?.companyId || '');
+
+  const filterComp = <T extends Record<string, any>>(list: T[]): T[] => {
+    if (!Array.isArray(list)) return [];
+    if (isSuperAdmin && !companyId) return list;
+    return list.filter(item => item && typeof item === 'object' && (item.companyId === companyId || item.company_id === companyId));
+  };
 
   const [
     cData, uData, eData, appData, dData, bData, lData, accData, invData, tData,
@@ -654,67 +651,67 @@ app.get('/api/bootstrap', asyncHandler(async (req, res) => {
   const filteredRoles = rolesData.filter((r: any) => r.name !== 'Super Admin' && r.id !== 'role-super');
 
   res.json({
-    companies: cData,
-    users: uData,
-    employees: eData,
-    applicants: appData,
-    departments: dData,
-    branches: bData,
-    leads: lData,
-    accounting: { accounts: accData, invoices },
-    inventory: invData,
-    tickets: tData,
-    workflows: wData,
-    apikeys: kData,
-    auditLogs: logData,
-    posProducts: posProdData,
-    posCustomers: posCustData,
-    posSales: posSalesData,
-    posCategories: posCatData,
-    posTerminals: posTermData,
-    posShifts: posShiftData,
-    posDiscounts: posDiscData,
-    posReturns: posRetData,
-    posDailyReports: posReportData,
-    leaves: leavesData,
-    attendance: attData,
-    okrs: okrsData,
-    payslips: slipsData,
-    journalEntries: jeData,
-    expenses: expData,
-    fiscalPeriods: fpData,
-    openingBalances: obData,
-    bills: billData,
-    billPayments: bpPayData,
-    customerPayments: cpData,
-    bankAccounts: baData,
-    bankTransactions: btxData,
-    bankReconciliations: brData,
-    fixedAssets: faData,
-    depreciationEntries: deData,
-    budgets: budData,
-    costCenters: ccData,
-    onboardings: onbData,
-    payrollGroups: pgData,
-    salaryBands: sbData,
-    salesOrders: soData,
-    salesCustomers: scData,
-    salesQuotations: sqData,
-    salesTargets: stData,
-    kbArticles: kbData,
-    lmsCourses: lmsData,
-    announcements: annData,
-    workflowTriggers: wtData,
-    emailTemplates: etData,
-    chatMessages: companyId ? chatData.filter((m: any) => m.companyId === companyId) : chatData,
-    chatGroups: companyId ? chatGroupsData.filter((g: any) => g.companyId === companyId) : chatGroupsData,
-    polls: companyId ? pollsData.filter((p: any) => p.companyId === companyId) : pollsData,
-    pollOptions: companyId ? pollOptsData.filter((o: any) => o.companyId === companyId) : pollOptsData,
-    pollVotes: companyId ? pollVotesData.filter((v: any) => v.companyId === companyId) : pollVotesData,
-    companyImages: companyId ? imgData.filter((i: any) => i.companyId === companyId) : imgData,
-    roles: companyId ? filteredRoles.filter((r: any) => r.companyId === companyId) : filteredRoles,
-    approvalPolicies: companyId ? policiesData.filter((p: any) => p.companyId === companyId) : policiesData,
-    pendingApprovals: companyId ? approvalsData.filter((a: any) => a.companyId === companyId) : approvalsData,
+    companies: isSuperAdmin ? cData : cData.filter((c: any) => c.id === companyId),
+    users: filterComp(uData).map((u: any) => { if (!u || typeof u !== 'object') return u; const { passwordHash, ...rest } = u; return rest; }),
+    employees: filterComp(eData),
+    applicants: filterComp(appData),
+    departments: filterComp(dData),
+    branches: filterComp(bData),
+    leads: filterComp(lData),
+    accounting: { accounts: filterComp(accData), invoices: filterComp(invoices) },
+    inventory: filterComp(invData),
+    tickets: filterComp(tData),
+    workflows: filterComp(wData),
+    apikeys: isSuperAdmin ? filterComp(kData) : [],
+    auditLogs: filterComp(logData),
+    posProducts: filterComp(posProdData),
+    posCustomers: filterComp(posCustData),
+    posSales: filterComp(posSalesData),
+    posCategories: filterComp(posCatData),
+    posTerminals: filterComp(posTermData),
+    posShifts: filterComp(posShiftData),
+    posDiscounts: filterComp(posDiscData),
+    posReturns: filterComp(posRetData),
+    posDailyReports: filterComp(posReportData),
+    leaves: filterComp(leavesData),
+    attendance: filterComp(attData),
+    okrs: filterComp(okrsData),
+    payslips: filterComp(slipsData),
+    journalEntries: filterComp(jeData),
+    expenses: filterComp(expData),
+    fiscalPeriods: filterComp(fpData),
+    openingBalances: filterComp(obData),
+    bills: filterComp(billData),
+    billPayments: filterComp(bpPayData),
+    customerPayments: filterComp(cpData),
+    bankAccounts: filterComp(baData),
+    bankTransactions: filterComp(btxData),
+    bankReconciliations: filterComp(brData),
+    fixedAssets: filterComp(faData),
+    depreciationEntries: filterComp(deData),
+    budgets: filterComp(budData),
+    costCenters: filterComp(ccData),
+    onboardings: filterComp(onbData),
+    payrollGroups: filterComp(pgData),
+    salaryBands: filterComp(sbData),
+    salesOrders: filterComp(soData),
+    salesCustomers: filterComp(scData),
+    salesQuotations: filterComp(sqData),
+    salesTargets: filterComp(stData),
+    kbArticles: filterComp(kbData),
+    lmsCourses: filterComp(lmsData),
+    announcements: filterComp(annData),
+    workflowTriggers: filterComp(wtData),
+    emailTemplates: filterComp(etData),
+    chatMessages: filterComp(chatData),
+    chatGroups: filterComp(chatGroupsData),
+    polls: filterComp(pollsData),
+    pollOptions: filterComp(pollOptsData),
+    pollVotes: filterComp(pollVotesData),
+    companyImages: filterComp(imgData),
+    roles: filterComp(filteredRoles),
+    approvalPolicies: filterComp(policiesData),
+    pendingApprovals: filterComp(approvalsData),
   });
 }));
 

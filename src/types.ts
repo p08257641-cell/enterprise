@@ -79,6 +79,7 @@ export interface User {
     signatureUrl?: string;
   notificationEmail?: string;
   notificationPhone?: string;
+  employeeId?: string;
   permissions: string[];
   status: 'Active' | 'Inactive';
   loginEnabled: boolean; // HR can toggle to block/unblock employee login
