@@ -177,9 +177,26 @@ const [onboardings, setOnboardings] = useState<OnboardingRecord[]>([]);
           }
         });
 
-      // 1. Try single-call consolidated bootstrap endpoint first
+      const fetchWithRetry = async (url: string, init?: RequestInit, retries = 3, delayMs = 2000): Promise<Response> => {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+          try {
+            const res = await afetch(url, init);
+            if (res.status !== 503 && res.status !== 429) {
+              return res;
+            }
+          } catch (e) {
+            // Transient error while server boots
+          }
+          if (attempt < retries) {
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+          }
+        }
+        return afetch(url, init);
+      };
+
+      // 1. Try single-call consolidated bootstrap endpoint first (with automatic retries for Render cold starts)
       try {
-        const bootRes = await afetch(`/api/bootstrap?companyId=${authUser?.companyId || ''}`);
+        const bootRes = await fetchWithRetry(`/api/bootstrap?companyId=${authUser?.companyId || ''}`);
         if (bootRes.ok) {
           const boot = await safeJson(bootRes);
           if (boot) {

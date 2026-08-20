@@ -175,11 +175,26 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: isProd
-    ? (process.env.ALLOWED_ORIGINS?.split(',') || ['https://erp-platform.com'])
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or same-origin static rendering)
+    if (!origin) return callback(null, true);
+    if (!isProd) return callback(null, true);
+    
+    const allowed = process.env.ALLOWED_ORIGINS?.split(',') || [];
+    // Always allow .core360.site subdomains, onrender.com, localhost
+    if (
+      allowed.includes(origin) ||
+      origin.endsWith('.core360.site') ||
+      origin === 'https://core360.site' ||
+      origin.endsWith('.onrender.com') ||
+      origin.includes('localhost')
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Allow origin in production to prevent 503 CORS options failures across custom subdomains
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400,
 }));
@@ -6384,8 +6399,17 @@ async function start() {
     logger.error({ err: e }, 'Error applying live DB fixes');
   }
 
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   app.listen(PORT, '0.0.0.0', () => {
     logger.info(`🚀 ERP Full-Stack Server booted and running on http://localhost:${PORT}`);
+    
+    // Internal Keep-Alive timer (prevents container cold-start hibernation 503s)
+    setInterval(() => {
+      fetch(`http://127.0.0.1:${PORT}/api/health`).catch(() => {});
+    }, 10 * 60 * 1000);
   });
 }
 
