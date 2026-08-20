@@ -692,11 +692,6 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
         <div className="flex flex-col md:flex-row md:items-start md:justify-between pb-4 border-b border-slate-200 gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              {selectedCompany.companyLogo ? (
-                <img src={selectedCompany.companyLogo} alt={selectedCompany.name} className="h-6 w-6 object-contain rounded" />
-              ) : selectedCompany.logo && selectedCompany.logo !== '🏭' && selectedCompany.logo !== '🏢' ? (
-                <span className="fs-2xl">{selectedCompany.logo}</span>
-              ) : null}
               <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full fs-2xs fw-bold uppercase tracking-wider">
                 {role === 'CEO' ? 'Chief Executive Officer' : 'Company Administrator'}
               </span>
@@ -706,8 +701,7 @@ export const RoleDashboards: React.FC<RoleDashboardsProps> = ({
                 </span>
               )}
             </div>
-            <h1 className="fs-xl fw-bold tracking-tight text-slate-900">{selectedCompany.name} — Control Panel</h1>
-            <p className="fs-sm text-slate-500 mt-0.5">Company-wide settings, workforce overview, approvals, module licensing &amp; activity monitoring.</p>
+            <h1 className="fs-xl fw-bold tracking-tight text-slate-900">{selectedCompany.name}</h1>
           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={() => onNavigateView('admin-settings')} className="flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 fw-semibold fs-xs px-3.5 py-2 rounded-lg transition-all cursor-pointer">
