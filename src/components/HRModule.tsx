@@ -4084,6 +4084,290 @@ export const HRModule: React.FC<HRModuleProps & { applicants?: any[], onUpdateAp
     );
   }
 
+  // ── VIEW: WHISTLEBLOWER REPORTS ───────────────────────────────────────────
+  if (activeView === 'hr-whistleblower') {
+    const [whisperReports, setWhisperReports] = useState<any[]>([]);
+    const [loadingWhisper, setLoadingWhisper] = useState(true);
+    const [whisperSearch, setWhisperSearch] = useState('');
+    const [whisperStatusFilter, setWhisperStatusFilter] = useState('All');
+    const [whisperCategoryFilter, setWhisperCategoryFilter] = useState('All');
+    const [selectedReportModal, setSelectedReportModal] = useState<any | null>(null);
+    const [modalStatus, setModalStatus] = useState('');
+    const [modalAssignedTo, setModalAssignedTo] = useState('');
+    const [modalNotes, setModalNotes] = useState('');
+    const [savingReport, setSavingReport] = useState(false);
+
+    useEffect(() => {
+      const storedToken = localStorage.getItem('erp_token');
+      fetch(`/api/whisper-reports?companyId=${selectedCompany.id}`, {
+        headers: { 'Authorization': `Bearer ${storedToken}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setWhisperReports(data);
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoadingWhisper(false));
+    }, [selectedCompany.id]);
+
+    const handleSaveReportStatus = async () => {
+      if (!selectedReportModal) return;
+      setSavingReport(true);
+      try {
+        const storedToken = localStorage.getItem('erp_token');
+        const res = await fetch(`/api/whisper-reports/${selectedReportModal.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${storedToken}`
+          },
+          body: JSON.stringify({
+            status: modalStatus,
+            assignedTo: modalAssignedTo,
+            notes: modalNotes
+          })
+        });
+        const updated = await res.json();
+        if (res.ok) {
+          setWhisperReports(prev => prev.map(r => r.id === selectedReportModal.id ? updated : r));
+          setSelectedReportModal(null);
+          toast('Report status updated', 'success', 'Saved');
+        } else {
+          toast(updated.error || 'Failed to update report', 'error', 'Error');
+        }
+      } catch (err) {
+        toast('Network error', 'error', 'Error');
+      }
+      setSavingReport(false);
+    };
+
+    const companyReports = whisperReports.filter(r => r.companyId === selectedCompany.id);
+    const filteredReports = companyReports.filter(r => {
+      const matchesStatus = whisperStatusFilter === 'All' || r.status === whisperStatusFilter;
+      const matchesCat = whisperCategoryFilter === 'All' || r.category === whisperCategoryFilter;
+      const matchesSearch = !whisperSearch || 
+        r.description?.toLowerCase().includes(whisperSearch.toLowerCase()) ||
+        r.department?.toLowerCase().includes(whisperSearch.toLowerCase()) ||
+        r.location?.toLowerCase().includes(whisperSearch.toLowerCase());
+      return matchesStatus && matchesCat && matchesSearch;
+    });
+
+    const countNew = companyReports.filter(r => r.status === 'New').length;
+    const countInvestigating = companyReports.filter(r => r.status === 'Under Investigation').length;
+    const countResolved = companyReports.filter(r => r.status === 'Resolved').length;
+
+    return (
+      <div className="space-y-6">
+        <SectionHeader 
+          title="Whistleblower & Anonymous Reports" 
+          subtitle="Review and manage anonymous concerns submitted to HR. Reporter identities are never logged."
+          action={
+            <SecBtn icon="bi bi-download" onClick={() => downloadCSV(`whistleblower-reports-${selectedCompany.id}`, ['Report ID', 'Category', 'Status', 'Department', 'Location', 'Submitted At', 'Description'], filteredReports.map(r => [r.id, r.category, r.status, r.department || 'N/A', r.location || 'N/A', new Date(r.createdAt).toLocaleDateString(), r.description]))}>
+              Export CSV
+            </SecBtn>
+          }
+        />
+
+        <div className="grid gap-4 sm:grid-cols-4">
+          <StatCard label="Total Submissions" value={companyReports.length} icon="bi bi-eye-slash" sub="All recorded reports" />
+          <StatCard label="New / Action Needed" value={countNew} icon="bi bi-exclamation-circle" sub="Requires initial review" accent />
+          <StatCard label="Under Investigation" value={countInvestigating} icon="bi bi-search" sub="Active investigations" />
+          <StatCard label="Resolved / Closed" value={countResolved} icon="bi bi-check-circle" sub="Case concluded" />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex-1 relative">
+            <i className="bi bi-search absolute left-3 top-2.5 text-slate-400"></i>
+            <input 
+              type="text" 
+              placeholder="Search reports by description, location, department..."
+              value={whisperSearch}
+              onChange={e => setWhisperSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-slate-900"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select 
+              value={whisperStatusFilter} 
+              onChange={e => setWhisperStatusFilter(e.target.value)}
+              className="py-2 px-3 text-sm border border-slate-200 rounded-lg bg-slate-50 font-medium cursor-pointer"
+            >
+              <option value="All">All Statuses</option>
+              <option value="New">New</option>
+              <option value="Under Investigation">Under Investigation</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Dismissed">Dismissed</option>
+            </select>
+            <select 
+              value={whisperCategoryFilter} 
+              onChange={e => setWhisperCategoryFilter(e.target.value)}
+              className="py-2 px-3 text-sm border border-slate-200 rounded-lg bg-slate-50 font-medium cursor-pointer"
+            >
+              <option value="All">All Categories</option>
+              <option value="harassment">Harassment / Bullying</option>
+              <option value="safety">Workplace Safety</option>
+              <option value="fraud">Fraud / Financial</option>
+              <option value="discrimination">Discrimination</option>
+              <option value="policy">Policy Violation</option>
+              <option value="ethics">Ethics Concern</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Reports Table */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <TableHead>
+                <Th>Submitted</Th>
+                <Th>Category</Th>
+                <Th>Department / Location</Th>
+                <Th>Concern Summary</Th>
+                <Th>Status</Th>
+                <Th>Assigned To</Th>
+                <Th>Action</Th>
+              </TableHead>
+              <tbody className="divide-y divide-slate-100">
+                {loadingWhisper ? (
+                  <tr><td colSpan={7} className="text-center py-8 text-slate-400">Loading whistleblower reports...</td></tr>
+                ) : filteredReports.length === 0 ? (
+                  <EmptyRow colSpan={7} message="No whistleblower reports found." />
+                ) : (
+                  filteredReports.map(report => (
+                    <tr key={report.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 text-xs font-mono text-slate-500 whitespace-nowrap">
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge variant="purple" icon="bi bi-tag">{report.category}</Badge>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-700">
+                        {report.department || 'General'} {report.location ? `(${report.location})` : ''}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-800 max-w-xs truncate" title={report.description}>
+                        {report.description}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge 
+                          variant={report.status === 'New' ? 'amber' : report.status === 'Under Investigation' ? 'blue' : report.status === 'Resolved' ? 'emerald' : 'gray'}
+                        >
+                          {report.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600">
+                        {report.assignedTo ? report.assignedTo : <span className="text-slate-400 italic">Unassigned</span>}
+                      </td>
+                      <td className="py-3 px-4">
+                        <button 
+                          onClick={() => {
+                            setSelectedReportModal(report);
+                            setModalStatus(report.status || 'New');
+                            setModalAssignedTo(report.assignedTo || '');
+                            setModalNotes(report.notes || '');
+                          }}
+                          className="px-3 py-1 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 cursor-pointer transition-all flex items-center gap-1"
+                        >
+                          <i className="bi bi-pencil-square"></i> Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Modal for reviewing/updating whistleblower report */}
+        {selectedReportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-violet-100 text-violet-700 rounded-lg">
+                    <i className="bi bi-eye-slash text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="fs-sm font-bold text-slate-900">Whistleblower Report</h3>
+                    <p className="text-xs text-slate-500">ID: {selectedReportModal.id}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedReportModal(null)} className="text-slate-400 hover:text-slate-600">
+                  <i className="bi bi-x-lg"></i>
+                </button>
+              </div>
+
+              <div className="p-3 bg-violet-50 border border-violet-200 rounded-xl text-xs text-violet-800 flex items-center gap-2">
+                <i className="bi bi-shield-lock text-base"></i>
+                <span>Submitted anonymously on {new Date(selectedReportModal.createdAt).toLocaleString()}. Sender identity is protected.</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-slate-500 font-medium">
+                  <span>Category: <strong className="text-slate-800 uppercase">{selectedReportModal.category}</strong></span>
+                  <span>Location: <strong className="text-slate-800">{selectedReportModal.location || 'N/A'}</strong></span>
+                </div>
+                <div className="text-xs text-slate-500 font-medium">
+                  <span>Department: <strong className="text-slate-800">{selectedReportModal.department || 'N/A'}</strong></span>
+                </div>
+              </div>
+
+              <div>
+                <Label>Report Description</Label>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-normal leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                  {selectedReportModal.description}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div>
+                  <Label>Report Status</Label>
+                  <Select value={modalStatus} onChange={e => setModalStatus(e.target.value)}>
+                    <option value="New">New</option>
+                    <option value="Under Investigation">Under Investigation</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Dismissed">Dismissed</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Assigned Investigator</Label>
+                  <Select value={modalAssignedTo} onChange={e => setModalAssignedTo(e.target.value)}>
+                    <option value="">Unassigned</option>
+                    {localEmployees.map(e => (
+                      <option key={e.id} value={`${e.firstName} ${e.lastName}`}>
+                        {e.firstName} {e.lastName} ({e.department})
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Internal HR Investigation Notes</Label>
+                <textarea 
+                  rows={3}
+                  value={modalNotes}
+                  onChange={e => setModalNotes(e.target.value)}
+                  placeholder="Record investigation steps, interview details, or resolution summary..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-slate-900 focus:bg-white resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                <SecBtn onClick={() => setSelectedReportModal(null)}>Cancel</SecBtn>
+                <PrimaryBtn icon="bi bi-check-lg" onClick={handleSaveReportStatus} disabled={savingReport}>
+                  {savingReport ? 'Saving...' : 'Save Updates'}
+                </PrimaryBtn>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // ── VIEW: BANK ACCOUNT UPDATES ─────────────────────────────────────────────
   if (activeView === 'hr-bank-updates') {
     const companyUpdates = bankAccountUpdates?.filter(u => u.companyId === selectedCompany.id) || [];

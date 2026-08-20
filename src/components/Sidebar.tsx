@@ -185,6 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { id: 'hr-orgchart', label: 'Org Chart', viewId: 'hr-orgchart', iconClass: 'bi bi-diagram-2' },
             { id: 'hr-exit', label: 'Exit Management', viewId: 'hr-exit', iconClass: 'bi bi-door-closed' },
             { id: 'hr-departments', label: 'Departments', viewId: 'hr-departments', iconClass: 'bi bi-diagram-3' },
+            { id: 'hr-whistleblower', label: 'Whistleblower Reports', viewId: 'hr-whistleblower', iconClass: 'bi bi-eye-slash' },
             { id: 'hr-bank-updates', label: 'Bank Account Updates', viewId: 'hr-bank-updates', iconClass: 'bi bi-bank' },
             { id: 'hr-profile-updates', label: 'Profile Update Requests', viewId: 'hr-profile-updates', iconClass: 'bi bi-person-gear' },
             { id: 'pending-approvals', label: 'Pending Approvals', viewId: 'pending-approvals', iconClass: 'bi bi-clipboard-check' },
